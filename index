@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="default">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <title>Kacida Bersatu - Aplikasi Pro Android</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+
+    <!-- LIBRARY SWIPER, SWEETALERT2, CHART.JS, HTML2CANVAS, & CANVAS-CONFETTI -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- FIREBASE SDK COMPAT V9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+
+    <style>
+        :root, html[data-theme="default"], html[data-theme="light"] {
+            --bg-main: #f3f8f5;
+            --header-bg: #ffffff;
+            --card-bg: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+            --card-border: rgba(16, 185, 129, 0.22);
+            --accent-primary: #059669;
+            --accent-green-grad: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            --gold: #d97706;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --input-bg: #f8fafc;
+            --wa-bubble-me: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --wa-bubble-other: #ffffff;
+        }
+
+        html[data-theme="dark"] {
+            --bg-main: #04170d;
+            --header-bg: #051e11;
+            --card-bg: linear-gradient(145deg, #0a2d18 0%, #051a0e 100%);
+            --card-border: rgba(52, 211, 153, 0.3);
+            --accent-primary: #00FF66;
+            --accent-green-grad: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+            --gold: #f59e0b;
+            --text-main: #ffffff;
+            --text-sub: #a7f3d0;
+            --input-bg: #082414;
+            --wa-bubble-me: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --wa-bubble-other: #13381e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        html, body { 
+            overscroll-behavior-y: none;
+            background: var(--bg-main); color: var(--text-main); min-height: 100vh; width: 100%;
+            padding-top: env(safe-area-inset-top); padding-bottom: calc(85px + env(safe-area-inset-bottom)); 
+            display: flex; flex-direction: column; align-items: center; -webkit-font-smoothing: antialiased; 
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        #loginSection, #appSection { width: 100%; max-width: 600px; margin: 0 auto; padding: 0 12px; }
+
+        .app-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;
+            position: sticky; top: 0; z-index: 100; background: var(--header-bg);
+            border-bottom: 1px solid var(--card-border); width: 100%; max-width: 600px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04); transition: background 0.3s ease;
+        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .btn-hamburger { background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        .brand-title-text { 
+            font-family: 'Poppins', sans-serif; font-weight: 900; 
+            font-size: clamp(1rem, 4.2vw, 1.15rem); 
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.5px;
+        }
+
+        .ocean-3d-badge-transparent { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-primary); font-size: 0.65rem; font-weight: 800; margin-top: 1px; }
+        .pulse-green-dot { width: 7px; height: 7px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
+        .pulse-red-dot { width: 7px; height: 7px; background-color: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444; animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+
+        .sync-hdr-btn {
+            background: var(--input-bg); border: 1px solid var(--card-border); color: var(--accent-primary);
+            padding: 6px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; display: flex; align-items: center; gap: 5px; cursor: pointer;
+        }
+
+        .disket-badge { background: #fef3c7; border: 1px solid var(--gold); color: var(--gold); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .user-avatar-3d { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent-primary); object-fit: cover; cursor: pointer; }
+
+        .container { margin-top: 12px; width: 100%; }
+
+        /* RUNNING TEXT BAR 3D ANIMATED */
+        .running-text-container {
+            width: 100%; max-width: 600px;
+            background: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%);
+            color: #ffffff; font-size: 0.72rem; font-weight: 800;
+            padding: 8px 14px; box-shadow: 0 4px 15px rgba(4, 120, 87, 0.3);
+            border-bottom: 2px solid var(--accent-primary);
+            display: flex; align-items: center; gap: 8px; overflow: hidden;
+        }
+
+        .ac-metrics-card { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid var(--accent-primary); border-radius: 20px; padding: 14px; margin-bottom: 12px; }
+        .ac-metric-box { background: var(--header-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 8px 4px; }
+
+        .disket-info-bar {
+            background: var(--card-bg); border: 1px solid var(--gold); border-radius: 20px; padding: 12px 14px; margin-bottom: 14px;
+            display: flex; justify-content: space-around; align-items: center; cursor: pointer; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.08);
+        }
+        .disket-bar-item { display: flex; flex-direction: column; align-items: flex-start; cursor: pointer; padding: 2px 4px; }
+        .disket-bar-label { font-size: 0.68rem; color: var(--text-sub); display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .disket-bar-val { font-size: clamp(0.75rem, 3vw, 0.88rem); font-weight: 800; margin-top: 2px; }
+        .disket-divider { width: 1px; height: 28px; background: rgba(0, 0, 0, 0.1); }
+
+        .hero-card {
+            background: var(--accent-green-grad); border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 24px; padding: 18px; position: relative; overflow: hidden; margin-bottom: 16px;
+            color: white; box-shadow: 0 6px 20px rgba(5, 150, 105, 0.2);
+        }
+        .hero-content { position: relative; z-index: 2; max-width: 65%; }
+        .hero-title { font-size: clamp(1.05rem, 4.2vw, 1.3rem); font-weight: 800; margin-top: 2px; line-height: 1.2; text-transform: uppercase; color: #ffffff; }
+        .hero-sub { font-size: 0.72rem; color: #a7f3d0; margin-top: 6px; line-height: 1.3; }
+        .hero-3d-illustration { position: absolute; right: -10px; bottom: -5px; width: 135px; z-index: 1; }
+
+        .mainCarousel { border-radius: 20px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .banner-card { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); padding: 16px; color: #1e293b; }
+        .banner-tag { background: #fed7aa; color: #c2410c; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 4px; }
+        .banner-heading { font-size: 1.3rem; font-weight: 900; color: #dc2626; line-height: 1.1; }
+        .banner-subtext { font-size: 0.72rem; font-weight: 700; color: #1e293b; margin-top: 2px; }
+
+        .metrics-scroll { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px; }
+        .metric-card { position: relative; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 10px 4px; text-align: center; cursor: pointer; transition: transform 0.15s; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .metric-card:active { transform: scale(0.92); }
+        .metric-icon-3d { width: 26px; height: 26px; margin: 0 auto 4px auto; display: block; }
+        .metric-title { font-size: 0.62rem; color: var(--text-sub); display: block; font-weight: 600; }
+        .metric-value { font-size: clamp(0.78rem, 3vw, 0.9rem); font-weight: 800; color: var(--text-main); }
+        .red-dot-badge { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 6px #ef4444; }
+        .num-badge-pill { position: absolute; top: -2px; right: -2px; background: #ef4444; color: #ffffff; font-size: 0.58rem; font-weight: 800; padding: 1px 6px; border-radius: 10px; border: 1px solid #ffffff; z-index: 5; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .section-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 6px; color: var(--text-main); }
+        .btn-see-all { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--accent-primary); padding: 4px 10px; border-radius: 12px; font-size: 0.68rem; text-decoration: none; font-weight: 700; }
+
+        .menu-section-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .menu-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; position: relative; z-index: 2; }
+        .menu-3d-item { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; cursor: pointer; transition: transform 0.15s; }
+        .menu-3d-item:active { transform: scale(0.92); }
+        .icon-box-3d { width: 50px; height: 50px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+        .icon-box-3d img { width: 28px; height: 28px; object-fit: contain; }
+        .menu-label { font-size: clamp(0.74rem, 2.7vw, 0.8rem); font-weight: 800; color: var(--text-main); line-height: 1.25; word-break: break-word; margin-top: 2px; }
+        .rocket-deco { position: absolute; right: -10px; bottom: -10px; width: 85px; z-index: 1; pointer-events: none; opacity: 0.9; }
+
+        #tabChat { display: flex; flex-direction: column; height: calc(100dvh - 160px); }
+        .chat-tab-wrapper { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: 14px; border: 1px solid var(--card-border); margin-bottom: 10px; flex-shrink: 0; }
+        .chat-tab-pill { flex: 1; padding: 8px 12px; font-size: 0.75rem; font-weight: 800; border-radius: 10px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .chat-tab-pill.active { background: var(--accent-green-grad); color: #ffffff; }
+
+        .wa-chat-container { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 16px; flex: 1; min-height: 150px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .wa-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 0.78rem; position: relative; line-height: 1.4; word-wrap: break-word; cursor: pointer; }
+        .wa-bubble.me { align-self: flex-end; background: var(--wa-bubble-me); color: white; border-bottom-right-radius: 2px; }
+        .wa-bubble.other { align-self: flex-start; background: var(--wa-bubble-other); color: var(--text-main); border-bottom-left-radius: 2px; border: 1px solid var(--card-border); }
+        .wa-bubble.ai { align-self: flex-start; background: #ecfdf5; border: 1px solid var(--accent-primary); color: #0f172a; width: 90%; }
+        .wa-sender { font-size: 0.62rem; font-weight: 800; color: #a7f3d0; margin-bottom: 2px; }
+        .wa-time { font-size: 0.58rem; opacity: 0.75; text-align: right; margin-top: 3px; display: block; font-weight: 600; }
+
+        .chat-input-bar { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; flex-shrink: 0; }
+
+        .bottom-nav {
+            position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 500px; height: 65px; 
+            background: var(--header-bg); border: 1px solid var(--card-border); border-radius: 35px;
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+        .nav-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-sub); font-size: 0.68rem; text-decoration: none; font-weight: 600; }
+        .nav-item.active { background: var(--accent-green-grad); color: #ffffff !important; padding: 6px 16px; border-radius: 20px; font-weight: 800; }
+        .nav-item.active i { color: #ffffff !important; }
+
+        .fab-rocket { width: 50px; height: 50px; background: var(--accent-green-grad); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; margin-top: -28px; border: 4px solid var(--bg-main); cursor: pointer; }
+        .hidden { display: none !important; }
+
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.7); z-index: 10000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .custom-modal-overlay:not(.hidden) { opacity: 1; pointer-events: auto; }
+        
+        .custom-modal-card {
+            background: var(--header-bg); width: 100%; max-width: 650px;
+            height: 100dvh; max-height: 100dvh; padding: 16px; color: var(--text-main); position: relative;
+            display: flex; flex-direction: column; overflow-y: auto;
+            transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        @media (min-width: 640px) { .custom-modal-card { height: 92vh; max-height: 92vh; border-radius: 28px 28px 0 0; border: 1px solid var(--card-border); } }
+        .custom-modal-overlay:not(.hidden) .custom-modal-card { transform: translateY(0); }
+        .android-drag-handle { width: 42px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 0 auto 12px auto; }
+        .modal-header-nav { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--card-border); position: sticky; top: 0; background: var(--header-bg); z-index: 10; }
+        .modal-btn-close { background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+
+        .modal-grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .modal-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .modal-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .modal-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .modal-card-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px; }
+
+        .shift-pill { padding: 6px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; text-align: center; border: 1px solid transparent; cursor: pointer; }
+        .shift-p { background: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        .shift-s { background: #fef3c7; color: #b45309; border-color: #fcd34d; }
+        .shift-m { background: #e0e7ff; color: #4338ca; border-color: #a5b4fc; }
+        .shift-ao { background: #cff4fc; color: #0891b2; border-color: #67e8f9; }
+        .shift-off { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+        .shift-locked { opacity: 0.45; cursor: not-allowed !important; filter: grayscale(0.5); }
+
+        .sub-tab-btn { flex: 1; padding: 10px; font-size: 0.75rem; font-weight: 800; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-sub); cursor: pointer; text-align: center; }
+        .sub-tab-btn.active { background: var(--accent-green-grad); color: #ffffff; border-color: var(--accent-primary); }
+
+        .gauge-container { display: flex; flex-direction: column; align-items: center; margin: 8px 0; }
+        .gauge-svg { width: 140px; height: 80px; }
+
+        .mtd-summary-card { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid var(--accent-primary); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+        .mtd-amount-hero { font-size: clamp(1.35rem, 5vw, 1.75rem); font-weight: 800; color: #065f46; letter-spacing: -0.5px; }
+
+        .growth-badge-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; }
+        .growth-badge-pill.up { background: #d1fae5; color: #047857; border: 1px solid #10b981; }
+        .growth-badge-pill.down { background: #fee2e2; color: #b91c1c; border: 1px solid #ef4444; }
+
+        .star-rating-box { display: flex; justify-content: center; gap: 8px; margin: 10px 0; font-size: 1.8rem; color: #cbd5e1; cursor: pointer; }
+        .star-rating-box .fa-star.active { color: var(--gold); }
+
+        .swal2-container { z-index: 25000 !important; }
+        .swal2-popup.swal-light-custom {
+            background: var(--header-bg) !important; border: 1px solid var(--card-border) !important;
+            border-radius: 24px !important; color: var(--text-main) !important;
+            animation: swalBounce3D 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes swalBounce3D { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .swal2-title { color: var(--accent-primary) !important; font-size: 1.1rem !important; font-weight: 800 !important; }
+        .swal2-confirm.swal-btn-green { background: var(--accent-green-grad) !important; color: #ffffff !important; font-weight: 800 !important; border-radius: 12px !important; padding: 10px 20px !important; }
+
+        @keyframes tickerMove { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-wrapper { flex: 1; overflow: hidden; white-space: nowrap; position: relative; height: 100%; display: flex; align-items: center; }
+        .ticker-text { display: inline-block; white-space: nowrap; padding-left: 100%; animation: tickerMove 22s linear infinite; font-weight: 800; font-size: 0.72rem; color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <!-- SPLASH SCREEN ANDROID NATIVE -->
+    <div id="splashScreen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-main); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s ease;">
+        <img src="https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ" style="width:170px; height:170px; border-radius:28px; margin-bottom:18px; border:2px solid var(--accent-primary); box-shadow:0 10px 30px rgba(16,185,129,0.35); object-fit:cover;">
+        <h1 class="brand-title-text" style="font-size:1.8rem; margin-bottom:6px;">KACIDA BERSATU ✦</h1>
+    </div>
+
+    <!-- ANDROID FULL SCREEN MODAL OVERLAY -->
+    <div id="customModalOverlay" class="custom-modal-overlay hidden">
+        <div id="customModalCard" class="custom-modal-card">
+            <div class="android-drag-handle"></div>
+            <div class="modal-header-nav">
+                <h3 id="customModalTitle" style="font-size: 1rem; font-weight: 800; color: var(--accent-primary);">Modal Title</h3>
+                <button onclick="closeCustomModal()" class="modal-btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="customModalBody" style="font-size: 0.78rem; line-height: 1.5; flex: 1;"></div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginSection">
+        <div style="text-align: center; margin-top: 8vh; margin-bottom: 24px;">
+            <img src="https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ" style="width: 85px; height: 85px; border-radius: 22px; border: 2px solid var(--accent-primary); margin-bottom: 14px; object-fit: cover; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2);">
+            <h1 class="brand-title-text" style="font-size: 1.8rem;">KACIDA BERSATU ✦</h1>
+            <p style="font-size: 0.75rem; color: var(--text-sub); margin-top: 4px;">Portal Performa & Operasional Retail Pro</p>
+        </div>
+        <div class="menu-section-card" style="padding: 24px;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 8px;">NIK PENGGUNA</label>
+            <input type="text" id="nikInput" placeholder="Masukkan NIK Anda" style="width: 100%; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 16px; color: var(--text-main); font-size: 0.85rem; margin-bottom: 16px; outline: none;">
+            <button id="btnLoginBtn" onclick="handleLogin()" style="width: 100%; background: var(--accent-green-grad); color: #ffffff; font-weight: 800; padding: 12px; border-radius: 12px; border: none; cursor: pointer;">MASUK APLIKASI</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="appSection" class="hidden">
+        
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn-hamburger" onclick="openMenuSidebar()" title="Pengaturan & Konfigurasi Aplikasi"><i class="fa-solid fa-bars"></i></button>
+                <div class="brand-title">
+                    <div>
+                        <span class="brand-title-text">KACIDA BERSATU ✦</span>
+                        <div class="ocean-3d-badge-transparent" id="hdrOnlineBadgeStatus">
+                            <span id="hdrOnlineDot" class="pulse-green-dot"></span>
+                            <span id="hdrStoreOnlineName">TOKO ONLINE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="sync-hdr-btn" onclick="refreshLiveDashboardData()" title="Refresh Data Live">
+                    <i class="fa-solid fa-arrows-rotate"></i> <span>Sync</span>
+                </button>
+                <div class="disket-badge" onclick="openPerformaPopup()" title="Rincian Data Performance">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <img id="userAvatarHeader" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" class="user-avatar-3d" onclick="switchTab('profil')">
+            </div>
+        </header>
+
+        <!-- RUNNING TEXT 3D SUPERVISI (PURE CSS TICKER) -->
+        <div id="runningTextHeaderBar" class="running-text-container hidden" style="display:flex; align-items:center; gap:8px; overflow:hidden; width:100%; height:38px; max-height:38px; min-height:38px; white-space:nowrap;">
+            <span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:6px; font-size:0.6rem; font-weight:900; white-space:nowrap; z-index:2; flex-shrink:0;">🔥 INFO SUPERVISI</span>
+            <div class="ticker-wrapper">
+                <span id="marqueeTextContent" class="ticker-text">📢 PUSAT SUPERVISI: Memuat Pengumuman Aktif...</span>
+            </div>
+        </div>
+
+        <main id="tabBeranda" class="container">
+            <!-- AC SUMMARY & STORE SELECTOR -->
+            <div id="acSummaryContainer" class="ac-metrics-card hidden">
+                <div style="font-size:0.75rem; font-weight:800; color:var(--accent-primary); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-chart-line"></i> RATA-RATA SALES AREA</span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <select id="acStoreFilterDropdown" onchange="handleACStoreFilterChange(this.value)" style="background:var(--header-bg); color:var(--text-main); border:1px solid var(--card-border); font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:6px; outline:none;">
+                            <option value="ALL">🌐 Semua Toko (Area)</option>
+                        </select>
+                        <span style="font-size:0.6rem; background:#d1fae5; color:#047857; padding:2px 6px; border-radius:4px;" id="acStoreCountBadge">0 Toko</span>
+                    </div>
+                </div>
+                <div class="modal-grid-3" style="text-align:center;">
+                    <div class="ac-metric-box">
+                        <span style="font-size:0.58rem; color:var(--text-sub); display:block; font-weight:700;">AVG SALES</span>
+                        <span style="font-size:0.8rem; font-weight:800; color:var(--accent-primary);" id="acAvgSalesVal">Rp 0</span>
+                    </div>
+                    <div class="ac-metric-box">
+                        <span style="font-size:0.58rem; color:var(--text-sub); display:block; font-weight:700;">AVG STD</span>
+                        <span style="font-size:0.8rem; font-weight:800; color:var(--gold);" id="acAvgSTDVal">0 Struk</span>
+                    </div>
+                    <div class="ac-metric-box">
+                        <span style="font-size:0.58rem; color:var(--text-sub); display:block; font-weight:700;">AVG APC</span>
+                        <span style="font-size:0.8rem; font-weight:800; color:#ef4444;" id="acAvgAPCVal">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DISKET INFO BAR -->
+            <section class="disket-info-bar">
+                <div class="disket-bar-item" onclick="openSalesMTDModal()">
+                    <span class="disket-bar-label"><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> Sales SPD</span>
+                    <span class="disket-bar-val" id="valSales" style="color: var(--accent-primary);">Rp 0</span>
+                </div>
+                <div class="disket-divider"></div>
+                <div class="disket-bar-item" onclick="openPerformaPopup()">
+                    <span class="disket-bar-label"><i class="fa-solid fa-bullseye" style="color: var(--gold);"></i> IKT Toko</span>
+                    <span class="disket-bar-val" id="valIKT" style="color: var(--gold);">-</span>
+                </div>
+                <div class="disket-divider"></div>
+                <div class="disket-bar-item" onclick="openPerformaPopup()">
+                    <span class="disket-bar-label"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Penawaran</span>
+                    <span class="disket-bar-val" id="valPenawaran" style="color: #ef4444;">-</span>
+                </div>
+            </section>
+
+            <!-- HERO GREETING CARD -->
+            <section class="hero-card">
+                <div class="hero-content">
+                    <span style="font-size: 0.7rem; opacity: 0.9;" id="lblGreetingText">Selamat Pagi,</span>
+                    <h1 class="hero-title" id="lblUserName">USER! 👋</h1>
+                    <p class="hero-sub">Tetap semangat, layani dengan hati dan capai target performa toko!</p>
+                </div>
+                <img src="https://illustrations.popsy.co/emerald/work-from-home.svg" class="hero-3d-illustration" alt="Team">
+            </section>
+
+            <!-- CAROUSEL BANNER PROMO -->
+            <div class="swiper mainCarousel">
+                <div class="swiper-wrapper" id="carouselWrapper"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+
+            <!-- 5 METRIK SCROLL UTAMA -->
+            <section class="metrics-scroll">
+                <div class="metric-card" onclick="switchTab('aksiCepat')">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2620/2620522.png" class="metric-icon-3d">
+                    <span class="metric-title">Tugas</span>
+                    <span class="metric-value" id="valTasks">0</span>
+                </div>
+                
+                <div class="metric-card" onclick="openPengumumanModal()">
+                    <span id="dotAnnounce" class="red-dot-badge hidden"></span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/3602/3602145.png" class="metric-icon-3d">
+                    <span class="metric-title">Pengumuman</span>
+                    <span class="metric-value" id="valAnnounce">0</span>
+                </div>
+
+                <div class="metric-card" onclick="openNotifModal()">
+                    <span id="dotNotif" class="red-dot-badge hidden"></span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/3602/3602123.png" class="metric-icon-3d">
+                    <span class="metric-title">Notifikasi</span>
+                    <span class="metric-value" id="valNotifCount">0</span>
+                </div>
+
+                <div class="metric-card">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" class="metric-icon-3d">
+                    <span class="metric-title">Point Active</span>
+                    <span class="metric-value" id="valPoints" style="color: var(--gold);">0</span>
+                </div>
+                
+                <div class="metric-card" onclick="switchTab('leaderboard')">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" class="metric-icon-3d">
+                    <span class="metric-title">Rank Active</span>
+                    <span class="metric-value" id="valRank" style="color: var(--accent-primary);">#-</span>
+                </div>
+            </section>
+            <!-- MENU UTAMA -->
+            <div class="section-header">
+                <h3 class="section-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold);"></i> Menu Utama</h3>
+                <a href="#" class="btn-see-all" onclick="openAllMenuModal('Utama')">Lihat Semua <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <section class="menu-section-card">
+                <div id="gridMenuUtama" class="menu-grid-5"></div>
+                <img src="https://cdn-icons-png.flaticon.com/512/1356/1356479.png" class="rocket-deco" alt="Rocket">
+            </section>
+
+            <!-- LAYANAN LAINNYA -->
+            <div class="section-header">
+                <h3 class="section-title"><i class="fa-solid fa-star" style="color: var(--gold);"></i> Layanan Lainnya</h3>
+                <a href="#" class="btn-see-all" onclick="openAllMenuModal('Lainnya')">Lihat Semua <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <section class="menu-section-card">
+                <div id="gridMenuLainnya" class="menu-grid-5"></div>
+            </section>
+        </main>
+
+        <!-- TAB CHAT NAVBAR -->
+        <div id="tabChat" class="hidden container">
+            <h2 class="section-title" id="chatTitleHeader"><i class="fa-solid fa-comments" style="color: var(--accent-primary);"></i> Room Chat Tim Kacida</h2>
+            
+            <div class="chat-tab-wrapper">
+                <button id="btnTabTeam" class="chat-tab-pill active" onclick="switchChatRoomMode('team')"><i class="fa-solid fa-users"></i> Chat Tim</button>
+                <button id="btnTabAI" class="chat-tab-pill" onclick="switchChatRoomMode('ai')"><i class="fa-solid fa-robot"></i> Kacida AI</button>
+            </div>
+
+            <div id="chatBox" class="wa-chat-container"></div>
+
+            <div class="chat-input-bar">
+                <div id="chatReplyBar" class="hidden" style="background:var(--card-bg); border-left:4px solid var(--accent-primary); padding:6px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <p style="font-size:0.6rem; font-weight:800; color:var(--accent-primary);" id="replySenderName">Membalas Pesan</p>
+                        <p style="font-size:0.7rem; color:var(--text-sub);" id="replyTextSnippet">Pesan...</p>
+                    </div>
+                    <button onclick="cancelChatReply()" style="background:none; border:none; color:#ef4444; font-size:0.9rem; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="inputChatMsg" placeholder="Ketik pesan..." onkeypress="if(event.key==='Enter') handleSendChatAction()" style="flex: 1; background: var(--header-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px 14px; font-size: 0.78rem; color: var(--text-main); outline: none;">
+                    <button onclick="handleSendChatAction()" style="background: var(--accent-green-grad); color: #ffffff; padding: 0 16px; height: 40px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB MISI HARI INI -->
+        <div id="tabAksiCepat" class="hidden container">
+            <div class="menu-section-card">
+                <h2 class="section-title" style="color: var(--accent-primary);"><i class="fa-solid fa-rocket"></i> Target Misi Hari Ini</h2>
+                <p style="font-size: 0.7rem; color: var(--text-sub); margin-top: 2px;">Selesaikan misi operasional di bawah untuk mengumpulkan Poin Reward!</p>
+                <div id="misiList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+            </div>
+        </div>
+
+        <!-- TAB LEADERBOARD -->
+        <div id="tabLeaderboard" class="hidden container">
+            <h2 class="section-title" style="color: var(--gold); margin-bottom: 12px;"><i class="fa-solid fa-crown"></i> 🏆 Leaderboard Area</h2>
+            <div id="leaderboardList" class="modal-grid-1"></div>
+        </div>
+
+        <!-- TAB PROFIL -->
+        <div id="tabProfil" class="hidden container" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="menu-section-card" style="text-align: center; padding: 20px;">
+                <input type="file" id="pwaStaticProfilFileInput" accept="image/*" class="hidden" onchange="handleProfilPhotoUploadPreviewDirect(event)">
+
+                <div style="position:relative; display:inline-block; margin-bottom:8px;">
+                    <img id="profilFoto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" style="width: 75px; height: 75px; border-radius: 50%; border: 2.5px solid var(--accent-primary); object-fit: cover; cursor:pointer;" title="Klik untuk perbesar foto">
+                    <button onclick="triggerPWAProfilPhotoChooser()" style="position:absolute; bottom:0; right:-4px; background:var(--accent-green-grad); color:#fff; border:2px solid #fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; cursor:pointer;" title="Ganti Foto Profil">📷</button>
+                </div>
+                <h2 id="profilNama" style="font-size: 1.1rem; font-weight: 800;">Nama</h2>
+                <p id="profilJabatan" style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 700;">Jabatan</p>
+                <p id="profilToko" style="font-size: 0.72rem; color: var(--text-sub);">Toko</p>
+                <p id="profilNik" style="font-size: 0.65rem; color: var(--text-sub); margin-top: 2px;">NIK: -</p>
+                
+                <div style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
+                    <button onclick="triggerPWAProfilPhotoChooser()" style="background:var(--input-bg); color:var(--accent-primary); border:1px solid var(--card-border); padding:8px 14px; border-radius:10px; font-size:0.72rem; font-weight:800; cursor:pointer;">📷 Ganti Foto</button>
+                    <button onclick="handleLogout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding:8px 14px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">Logout / Ganti NIK</button>
+                </div>
+            </div>
+
+            <div class="menu-section-card">
+                <h3 class="section-title" style="margin-bottom: 10px;"><i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Bagan Struktur Toko / Area</h3>
+                <div id="timTokoContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+        </div>
+
+        <!-- FIXED BOTTOM NAVIGATION BAR -->
+        <nav class="bottom-nav">
+            <a href="#" onclick="switchTab('beranda')" id="navBeranda" class="nav-item active"><i class="fa-solid fa-house"></i><span>Beranda</span></a>
+            <a href="#" onclick="switchTab('chat')" id="navChat" class="nav-item">
+                <span id="chatNavBadge" class="num-badge-pill hidden">0</span>
+                <i class="fa-solid fa-comment-dots"></i><span>Chat</span>
+            </a>
+            <div class="fab-rocket" onclick="switchTab('aksiCepat')"><i class="fa-solid fa-rocket"></i></div>
+            <a href="#" onclick="switchTab('leaderboard')" id="navLeaderboard" class="nav-item"><i class="fa-solid fa-crown"></i><span>Leaderboard</span></a>
+            <a href="#" onclick="switchTab('profil')" id="navProfil" class="nav-item"><i class="fa-solid fa-user"></i><span>Profil</span></a>
+        </nav>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5XnXm_4BHFfn6TwWbbyH9FXzSfWvX6PgUj7figskjWfCi2yk4jEmKuf3pygJZww/exec";
+
+        const FIREBASE_VAPID_KEY = "BOe2mPoXWbNfXX-Rx91lERUrbmQ-w7Loi-bXu4xGpIYZF--9rGueeiG1x37siSfQyQfbtMpdqeM7ukrx3oXWDng";
+        const firebaseConfig = {
+          apiKey: "AIzaSyBceAg0_W6NPMG8KPIGp0zf2qUnUE7Ypj8",
+          authDomain: "kacida-bersatu.firebaseapp.com",
+          databaseURL: "https://kacida-bersatu-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "kacida-bersatu",
+          storageBucket: "kacida-bersatu.firebasestorage.app",
+          messagingSenderId: "135044863376",
+          appId: "1:135044863376:web:0791a1c161b80287958f15"
+        };
+
+        if (typeof firebase !== "undefined" && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const rtdb = (typeof firebase !== "undefined" && firebase.apps.length) ? firebase.database() : null;
+
+        // APPLICATION STATES
+        let currentNik = localStorage.getItem("NIK_KACIDA") || "";
+        let currentTheme = localStorage.getItem("KACIDA_THEME") || "default";
+        let lastChatReadTimestamp = parseInt(localStorage.getItem("LAST_CHAT_READ_TS") || "0", 10);
+        let dashboardData = null;
+        let selectedKodeTokoAC = null;
+        let selectedShiftKodeToko = null;
+        let chatRoomMode = "team";
+        let cachedChatList = [];
+        let salesChartInstance = null;
+        let swiperInstance = null;
+        let currentMtdDetailData = null;
+        let deferredPrompt = null;
+        let selectedSurveyRating = 5;
+        let activeReplyData = null;
+        let activeAnnouncementsList = [];
+
+        // SHIFT & HANDOVER STATES
+        let currentShiftMonth = new Date().toISOString().substring(0,7); 
+        let localShiftMatrix = {}; 
+        let activeHandoversList = [];
+        let handoverCheckDoneThisSession = false;
+
+        // CEKLIS EXPIRED STATE
+        let expShelves = [];
+        let expProducts = [];
+        let expHistoryList = [];
+        let expPhotoPreview = null;
+        let selectedExpHistoryMonth = new Date().toISOString().substring(0, 7);
+        let searchShelfAssignee = "";
+        let selectedRakStatusFilter = "ALL";
+        let trackingViewMode = 'date_list';
+        let selectedTrackingDate = '';
+        let selectedTrackingStoreKode = '';
+
+        // BELANJA KARYAWAN STATE
+        let belanjaTransactions = [];
+        let belanjaPhotoPreview = null;
+        let belanjaFilterStart = "";
+        let belanjaFilterEnd = "";
+
+        // JOBDESK HARIAN STATE
+        let jobdeskReports = [];
+        let selectedJobdeskDay = getTodayNameIndo();
+        let selectedJobdeskCategory = 'Daily Activity';
+        let jobdeskPhotoPreview = null;
+        let searchJobdeskQuery = "";
+        let selectedJobdeskResumeFilter = "ALL";
+
+        let userCustomProfilesMap = {};
+        let customProfilPhotoPreview = null;
+        let superAdminRawData = { presence: {}, logs: [], surveys: [] };
+
+        function getTodayNameIndo() {
+            const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+            return days[new Date().getDay()];
+        }
+
+        function getStartOfWeekKey() {
+            const now = new Date();
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(now.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            return monday.toDateString();
+        }
+
+        // =================================================================
+        // MASTER DATA & SOP JOBDESK HARIAN LENGKAP
+        // =================================================================
+        const JOBDESK_MASTER_TASKS = {
+            "Daily Activity": {
+                "Senin": [
+                    { title: "KEBERSIHAN TOILET", cara: "Sikat lantai & kloset pakai karbol, bersihkan cermin/wastafel, isi ulang sabun & tisu. Paraf ceklis dinding.", poin: "Bebas bau, kloset tidak berkerak, lantai kering, ceklis terisi." },
+                    { title: "CLEANING BEAN SPOT", cara: "Lap body mesin kopi, cuci portafilter, bersihkan drip tray, serta lap meja bar & grinder dengan kain mikrofiber.", poin: "Area saji steril, bebas noda susu/kopi, peralatan kering higienis." },
+                    { title: "KEBERSIHAN KESET MERAH DI CUCI", cara: "Cuci keset merah dengan sikat & detergen, bilas bersih, jemur hingga kering sebelum dipasang di pintu masuk.", poin: "Bebas lumpur, tidak berbau apak, terpasang simetris." },
+                    { title: "UPDATE SEWA", cara: "Cek area sewa tenant (ATM/SPACE), bersihkan area sekitar, cocokkan status sewa dengan SKS.", poin: "Area sewa bersih, Visual sewa sesuai dengan sistem." },
+                    { title: "KEBERSIHAN GALON", cara: "Lap bagian luar seluruh galon display dan stok gudang menggunakan kain lembab.", poin: "Galon bebas debu distributor & tidak ada air menetes di lantai." },
+                    { title: "KEBERSIHAN GENSET", cara: "Lap bodi luar genset, periksa oli & BBM, panaskan mesin genset 5–10 menit.", poin: "Genset siap pakai, bebas genangan oli, area genset bersih." }
+                ],
+                "Selasa": [
+                    { title: "KEBERSIHAN KACA LUAR DAN DALAM", cara: "Semprot cairan pembersih kaca, gosok dengan kain halus, tarik air dengan wiper dari atas ke bawah.", poin: "Bebas noda sidik jari, tidak bergaris bekas air, bening." },
+                    { title: "KEBERSIHAN TERAS DAN SARANG LABA-LABA AREA SALES", cara: "Sapu teras luar. Gunakan sapu bertangkai panjang untuk sarang laba-laba di sudut plafon sales.", poin: "Plafon bebas jaring debu, teras bebas puntung rokok/sampah." },
+                    { title: "KEBERSIHAN KOLONG RAK", cara: "Lepas shelving bawah / gunakan sapu tipis untuk menarik debu & sampah dari kolong rak sales.", poin: "Tidak ada produk jatuh tertinggal, kolong rak bebas debu tebal." },
+                    { title: "KEBERSIHAN CHILLER & FREEZER", cara: "Lap bagian pintu kaca dan tray dalam chiller, buang bunga es jika menumpuk di freezer.", poin: "Kaca chiller bening, produk dingin merata & higienis." }
+                ],
+                "Rabu": [
+                    { title: "KEBERSIHAN KERANJANG BELANJA (STANDAR 24 PCS)", cara: "Lap luar-dalam keranjang dengan kanebo/serbet. Susun rapi di pintu masuk.", poin: "Jumlah pas 24 pcs, pegangan tidak lengket, dasar bersih." },
+                    { title: "KEBERSIHAN KOLONG RAK GUDANG", cara: "Pindahkan karton bawah jika memungkinkan, sapu dan pel lantai di bawah rak gudang.", poin: "Gudang bebas serangga/hama, karton tidak basah dan memakai pallet." },
+                    { title: "KEBERSIHAN MEJA KASIR & PERANGKAT POS", cara: "Lap permukaan meja kasir, layar komputer, keyboard, mesin EDC, dan pemindai barcode.", poin: "Meja kasir rapi, area bebas debu/minyak, perangkat siap pakai." },
+                    { title: "GENERAL CEK EXP ALL ITEM BKL ICE CREAM", cara: "Pemeriksaan tanggal kedaluwarsa pada seluruh item kategori Ice Cream.", poin: "FEFO berjalan baik, produk expired terpisah dari rak sales." }
+                ],
+                "Kamis": [
+                    { title: "CLEANING BEAN SPOT BASIC & MEDIUM", cara: "Bersihkan seluruh utensil dan cek Expnya, Untuk Basic WB Berfungsi", poin: "Planogram dan Harga Update, higienitas terjaga." },
+                    { title: "GENERAL CEK EXP ALL ITEM BKL DC FRESH", cara: "Sisir seluruh Item BKL DC FRESH rawan Exp, cek tanggal exp tiap item, Input item mendekati exp di Menu CEKLIS EXP.", poin: "Data exp ter-input 100% akurat, tidak ada barang exp lolos." },
+                    { title: "KEBERSIHAN AREA SELASAR", cara: "Box return steril dari BKE/BR Ajukan OTP untuk dilakukan return, Selasar tidak berantakan.", poin: "Box return steril dan bebas noda minyak/jelantah." },
+                    { title: "KEBERSIHAN AREA GUDANG DAN KANTOR", cara: "Sapu dan pel, buang sampah yang sudah tidak terpakai.", poin: "Gudang dan kantor rapih." }
+                ],
+                "Jumat": [
+                    { title: "KEBERSIHAN TOILET DEEP CLEANING", cara: "Deep cleaning pembuangan air, sikat keramik dinding toilet, Tempat sampah bersih dan tersedia pewangi.", poin: "Bebas bau tidak sedap, tidak ada genangan air." },
+                    { title: "SO RPC MATERIAL BEANSPOT", cara: "Hitung fisik bahan baku Bean Spot (kopi, susu, sirup, cup), cocokkan dengan data RPC.", poin: "Selisih stok fisik dan sistem adalah 0 (pasti & akurat)." },
+                    { title: "GROUPING RAK ATK , Z51 DAN 979", cara: "Rapihkan Dan Grouping Kartonan dan Receh di rak gudang.", poin: "Gudang tertata rapi, proses SO mudah dan cepat." },
+                    { title: "PENGECEKAN ALAT PEMADAM (APAR)", cara: "Periksa tekanan jarum indikator APAR, lap tabung, pastikan segel utuh dan akses tidak terhalang.", poin: "APAR siap pakai, kondisi fisik bersih dan aman." }
+                ],
+                "Sabtu": [
+                    { title: "KEBERSIHAN AREA KASIR DAN SERVER", cara: "Lap meja kasir, monitor POS, EDC, serta bersihkan debu halus CPU server & UPS dengan kain kering.", poin: "Bebas debu, kabel tertata rapi, perangkat tidak overheat." },
+                    { title: "KEBERSIHAN BACKWALL KASIR", cara: "Lap seluruh backwal kasir.", poin: "Tampilan Area kasir rapih dan bersih, produk rokok terdisplay dengan rapih." },
+                    { title: "PEMASANGAN LABEL EXP KARTON", cara: "Cetak label exp, catat tanggal exp memakai spidol daan tempel di kartonan.", poin: "Memudahkan proses FEFO agar terdisplay lebih dulu,dan memudahkan monitor EXP In carton." },
+                    { title: "PERSIAPAN STOCK REFILL FAST MOVING", cara: "Pindahkan produk fast-moving (air mineral, minyak, gula) dari gudang ke area kasir/sales.", poin: "Rak sales selalu terisi penuh menjelang jam ramai weekend." }
+                ],
+                "Minggu": [
+                    { title: "PENGECEKAN LINGKUNGAN HALAMAN PARKIR", cara: "Sapu area parkir dari sampah plastik & daun. Rapikan posisi marka parkir.", poin: "Halaman bersih, rapi, menyambut kedatangan pelanggan." },
+                    { title: "PENATAAN & SANITASI TEMPAT SAMPAH", cara: "Kosongkan dan Cuci tempat sampah luar & dalam.", poin: "Tidak berbau busuk, tidak berlalat dan terpasang rapi." },
+                    { title: "CEK BANNER & POP PROMOSI", cara: "Pastikan seluruh POP harga & banner promo terpasang simetris dan tidak ada yang sobek.", poin: "Informasi promo akurat dan menarik perhatian konsumen." }
+                ]
+            },
+            "Materi Briefing Shift 1 & 2": {
+                "Senin": [
+                    { title: "[SHIFT 1] MATERI BSP & TARGET MINGGUAN", cara: "Sampaikan materi BSP Dan Basic Store Performance & target sales pekan baru kepada seluruh tim.", poin: "Tim paham target nominal sales & fokus produk pekan ini." },
+                    { title: "[SHIFT 2] MATERI BSP & CEK PENCAPAIAN IKT", cara: "Sampaikan materi BSP Dan Basic Store Performance & target sales pekan baru kepada seluruh tim.", poin: "Tim paham target nominal sales & fokus produk pekan ini." }
+                ],
+                "Selasa": [
+                    { title: "[SHIFT 1] EVALUASI PROMO & TARGET SHIFT 1", cara: "Briefing pencapaian promo mingguan dan breakdown target sales Shift 1 hari Selasa.", poin: "Tim memahami item promo utama dan fokus penawaran kasir." },
+                    { title: "[SHIFT 2] SERAH TERIMA KASIR & DRAFT SO", cara: "Cek selisih kasir Shift 1 ke Shift 2, Evaluasi pencapaian Shift 1.", poin: "Tim memahami item promo utama dan fokus penawaran kasir." }
+                ],
+                "Rabu": [
+                    { title: "[SHIFT 1] REVIEW ITEM FOCUS & CEK EXPIRED", cara: "Briefing penawaran item fokus minggu ini dan sosialisasi pencegahan produk mendekati expired.", poin: "Peningkatan transaksi item fokus dan nol barang expired terlewat." },
+                    { title: "[SHIFT 2] SERAH TERIMA & KEBERSIHAN AREA SALES", cara: "Briefing pergantian shift, serah terima Pending meter, serta kerapihan area kasir.", poin: "Tidak miss komunikasi dan area sales teratur rapi." }
+                ],
+                "Kamis": [
+                    { title: "[SHIFT 1] STANDAR PELAYANAN & GREETING", cara: "Ingatkan kembali penerapan TSS (Tatap,Senyum,Sapa) dan kecepatan transaksi kasir.", poin: "Pelayanan ramah, standar greeting konsisten, antrean terkendali." },
+                    { title: "[SHIFT 2] SERAH TERIMA & PERSIAPAN PROMO JUMAT", cara: "Update tag harga bila ada promo esok hari.", poin: "Label harga akurat dan pencatatan serah terima selesai." }
+                ],
+                "Jumat": [
+                    { title: "[SHIFT 1] BRIEFING JUMAT BERKAH & TARGET WEEKEND", cara: "Briefing kesiapan stok produk fast-moving dan strategi peningkatan sales menyambut weekend.", poin: "Stok produk siap & target penjualan Jumat tercapai." },
+                    { title: "[SHIFT 2] SERAH TERIMA SHIFT & CEK STOK BEAN SPOT", cara: "Sampaikan evaluasi sales shift 1 dan pastikan bahan baku Bean Spot aman untuk operational malam.", poin: "Bahan baku Bean Spot memadai & serah terima terinput." }
+                ],
+                "Sabtu": [
+                    { title: "[SHIFT 1] BRIEFING PEAK TIME WEEKEND SHIFT 1", cara: "Pengaturan kecepatan transaksi saat peak time, pencegahan penumpukan antrean, & penawaran promo.", poin: "Antrean kasir terurai cepat dan sales maksimal." },
+                    { title: "[SHIFT 2] BRIEFING PEAK TIME WEEKEND SHIFT 2", cara: "Briefing kelengkapan display produk saat ramai dan pencatatan kasir di link serah terima.", poin: "Display rak tetap terisi rapi & data serah terima valid." }
+                ],
+                "Minggu": [
+                    { title: "[SHIFT 1] REVIEW IKT & CLOSING MINGGU", cara: "Evaluasi ketercapaian sales mingguan dan dorong penyelesaian target akhir pekan.", poin: "Tim termotivasi mencapai target mingguan toko." },
+                    { title: "[SHIFT 2] SERAH TERIMA SHIFT & PREPARASI OPERASIONAL SENIN", cara: "Cek kebersihan area toko, dan persiapan pergantian modal kerja pekan baru.", poin: "Toko siap 100% untuk operasional awal pekan." }
+                ]
+            }
+        };
+
+        // DETEKSI PERANGKAT PRESISI
+        function getDeviceHardwareMetadata() {
+            const ua = navigator.userAgent || "";
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || Boolean(navigator.standalone);
+
+            if (/android/i.test(ua)) {
+                return isStandalone ? "📱 Android (PWA Installed)" : "🌐 Android (Chrome Browser)";
+            }
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                return isStandalone ? "🍎 iPhone (PWA Installed)" : "🌐 iPhone (Safari Browser)";
+            }
+            return "🌐 Desktop / PC Web";
+        }
+
+        // CONFETTI BURST 3D ANIMATION
+        function triggerConfettiBurst() {
+            if (typeof confetti === "function") {
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 },
+                    colors: ['#10b981', '#34d399', '#f59e0b', '#059669']
+                });
+            }
+        }
+
+        function showSwalSuccess(title, text, callback = null) {
+            triggerAndroidHaptic('success');
+            triggerConfettiBurst();
+            Swal.fire({
+                icon: 'success', title: title, text: text,
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' },
+                buttonsStyling: false
+            }).then(() => { if (callback) callback(); });
+        }
+
+        function showSwalWarning(title, text) {
+            triggerAndroidHaptic('medium');
+            Swal.fire({
+                icon: 'warning', title: title, text: text,
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' },
+                buttonsStyling: false
+            });
+        }
+
+        function showLoading(msg = "Memuat Data...") {
+            Swal.fire({
+                title: msg, allowOutsideClick: false, allowEscapeKey: false,
+                didOpen: () => { Swal.showLoading(); },
+                customClass: { popup: 'swal-light-custom' }
+            });
+        }
+
+        function hideLoading() { Swal.close(); }
+
+        function triggerAndroidHaptic(type = 'light') {
+            if ('vibrate' in navigator) navigator.vibrate(type === 'success' ? [20, 50, 20] : 12);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function getTimeGreeting() {
+            const hour = new Date().getHours();
+            if (hour >= 3 && hour < 11) return "Selamat Pagi 🌅";
+            if (hour >= 11 && hour < 15) return "Selamat Siang ☀️";
+            if (hour >= 15 && hour < 18) return "Selamat Sore 🌆";
+            return "Selamat Malam 🌙";
+        }
+
+        function getRealisticHumanAvatar(nama, fotoUrl, userNik = "") {
+            const targetNikStr = String(userNik || currentNik || "").trim();
+            if (targetNikStr && userCustomProfilesMap[targetNikStr]) return userCustomProfilesMap[targetNikStr];
+            if (targetNikStr && targetNikStr === String(currentNik).trim()) {
+                try {
+                    const myLocal = localStorage.getItem('kacida_custom_foto_' + targetNikStr);
+                    if (myLocal && myLocal.length > 10) return myLocal;
+                } catch(e) {}
+            }
+            if (fotoUrl && String(fotoUrl).trim().length > 10) return fotoUrl;
+            return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
+        }
+
+        function showFullImageModal(imgUrl) {
+            if (!imgUrl) return;
+            triggerAndroidHaptic('light');
+            Swal.fire({
+                imageUrl: imgUrl,
+                imageAlt: 'Pratinjau Foto',
+                showCloseButton: true,
+                confirmButtonText: 'Tutup',
+                allowOutsideClick: true,
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            });
+        }
+
+        function showCustomModal(title, htmlBody) {
+            triggerAndroidHaptic('medium');
+            document.getElementById("customModalTitle").innerText = title;
+            document.getElementById("customModalBody").innerHTML = htmlBody;
+            document.getElementById("customModalOverlay").classList.remove("hidden");
+        }
+
+        function closeCustomModal() {
+            triggerAndroidHaptic('light');
+            document.getElementById("customModalOverlay").classList.add("hidden");
+        }
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem("KACIDA_THEME", theme);
+            document.documentElement.setAttribute("data-theme", theme);
+        }
+
+        function toggleThemeSwitcher() {
+            if (currentTheme === "default") applyTheme("light");
+            else if (currentTheme === "light") applyTheme("dark");
+            else applyTheme("default");
+        }
+
+        function isUserAC() {
+            if (dashboardData?.user?.isAC) return true;
+            const j = String(dashboardData?.user?.jabatan || dashboardData?.user?.JABATAN || '').toUpperCase();
+            return j.includes("AC") || j.includes("AREA");
+        }
+
+        function isUserCOS() {
+            const j = String(dashboardData?.user?.jabatan || dashboardData?.user?.JABATAN || '').toUpperCase();
+            if (j.includes("ACOS") || j.includes("ASSISTANT") || j.includes("ASISTEN") || j.includes("CREW") || j.includes("STAFF")) return false;
+            return (j.includes("COS") || j.includes("CHIEF") || j.includes("STORE MANAGER") || j.includes("KEPALA TOKO")) && !isUserAC();
+        }
+
+        function canEditShift() {
+            if (!dashboardData || !dashboardData.user) return false;
+            const j = String(dashboardData.user.jabatan || dashboardData.user.JABATAN || '').toUpperCase();
+            return (j.includes("CHIEF") || j.includes("COS") || j.includes("ACOS") || j.includes("ASSISTANT")) && !isUserAC();
+        }
+
+        function handleACStoreFilterChange(kode) {
+            selectedKodeTokoAC = kode === "ALL" ? null : kode;
+            showLoading("Memuat Data Toko...");
+            initDashboard(selectedKodeTokoAC, false);
+        }
+
+        function isProductInAlertWindow(expDateStr, rhDaysVal) {
+            if (!expDateStr) return false;
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const expDate = new Date(expDateStr);
+                expDate.setHours(0, 0, 0, 0);
+
+                const rhDays = Number(rhDaysVal) || 30;
+                const spareDays = 10;
+                const totalLeadDays = rhDays + spareDays;
+
+                const alertDate = new Date(expDate);
+                alertDate.setDate(alertDate.getDate() - totalLeadDays);
+                return today >= alertDate;
+            } catch(e) { return true; }
+        }
+
+        function compressImageBase64(base64Str, maxWidth, maxHeight, quality, callback) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', quality || 0.75));
+            };
+            img.src = base64Str;
+        }
+
+        // =================================================================
+        // HYBRID API DISPATCHER (APPS SCRIPT WEB APP & FETCH POST)
+        // =================================================================
+        async function apiCall(action, params = {}, method = 'GET') {
+            try {
+                if (typeof google !== "undefined" && google.script && google.script.run && method === 'GET') {
+                    return new Promise((resolve, reject) => {
+                        let r = google.script.run.withSuccessHandler(res => resolve(res)).withFailureHandler(err => reject(err));
+                        if (action === "login") r.loginUser(params.nik);
+                        else if (action === "getDashboard") r.getDashboardData(currentNik, selectedKodeTokoAC);
+                        else if (action === "getPerforma") r.getPerformaPopup(currentNik, selectedKodeTokoAC);
+                        else if (action === "getDetailSalesMTD") r.getDetailSalesMTD(currentNik, selectedKodeTokoAC, params.bulanPilihan);
+                        else if (action === "askAI") r.askKacidaAI(currentNik, params.pertanyaan);
+                        else if (action === "getLeaderboard") r.getLeaderboard();
+                        else if (action === "getDaftarToko") r.getDaftarToko(currentNik);
+                        else if (action === "getBelanja") r.getBelanjaDataSpreadsheet(currentNik, selectedKodeTokoAC, params.filterStart, params.filterEnd);
+                        else if (action === "getCeklisExp") r.getCeklisExpDataSpreadsheet(currentNik, selectedKodeTokoAC);
+                        else if (action === "getJobdesk") r.getJobdeskDataSpreadsheet(currentNik, selectedKodeTokoAC, params.day);
+                        else if (action === "getMonthlyShift") r.getMonthlyShiftDataSpreadsheet(currentNik, params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear);
+                    });
+                } else {
+                    if (method === 'POST') {
+                        const res = await fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify({ action: action, nik: currentNik, ...params })
+                        });
+                        return await res.json();
+                    } else {
+                        const url = new URL(SCRIPT_URL);
+                        url.searchParams.append("action", action);
+                        url.searchParams.append("nik", currentNik);
+                        if (selectedKodeTokoAC) url.searchParams.append("kodeToko", selectedKodeTokoAC);
+                        Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+
+                        const res = await fetch(url);
+                        return await res.json();
+                    }
+                }
+            } catch(err) {
+                return { status: "offline", message: err.toString() };
+            }
+        }
+        // =================================================================
+        // PLAN MASTER SHIFT BULANAN (OPTIMISTIC UI & ENGINE AC)
+        // =================================================================
+        function openPlanMasterShiftModal(kodeTokoPilihan = null) {
+            showLoading("Memuat Jadwal Shift...");
+            const targetKode = kodeTokoPilihan || selectedShiftKodeToko || dashboardData?.user?.kodeToko || "2J7K";
+            selectedShiftKodeToko = targetKode;
+
+            apiCall("getMonthlyShift", { kodeToko: targetKode, bulanYear: currentShiftMonth }).then(res => {
+                hideLoading();
+                if (res && res.shiftData) localShiftMatrix = res.shiftData;
+                else localShiftMatrix = {};
+                renderPlanMasterShiftModal();
+            }).catch(() => {
+                hideLoading();
+                renderPlanMasterShiftModal();
+            });
+        }
+
+        function renderPlanMasterShiftModal() {
+            const canEdit = canEditShift();
+            const userAC = isUserAC();
+            const daftarToko = dashboardData?.daftarToko || [];
+            const targetKode = selectedShiftKodeToko || dashboardData?.user?.kodeToko || "2J7K";
+
+            let personil = [];
+            if (targetKode === dashboardData?.user?.kodeToko && dashboardData?.struktur?.personilToko) {
+                personil = dashboardData.struktur.personilToko;
+            } else if (dashboardData?.allMasterUsers) {
+                personil = dashboardData.allMasterUsers.filter(u => u.kodeToko === targetKode);
+            }
+            if (personil.length === 0) personil = dashboardData?.struktur?.personilToko || [];
+
+            const [yr, mo] = currentShiftMonth.split("-");
+            const daysInMonth = new Date(parseInt(yr, 10), parseInt(mo, 10), 0).getDate();
+            const dayNamesShort = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
+            let shiftHeaderColsHtml = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dt = new Date(parseInt(yr, 10), parseInt(mo, 10) - 1, d);
+                shiftHeaderColsHtml += `
+                    <th style="padding:4px; min-width:38px; text-align:center; font-size:0.6rem; border:1px solid var(--card-border);">
+                        <div>${d}</div>
+                        <div style="font-size:0.52rem; opacity:0.8;">${dayNamesShort[dt.getDay()]}</div>
+                    </th>
+                `;
+            }
+
+            let personilRowsHtml = personil.map(p => {
+                let dayCellsHtml = '';
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const shiftCode = localShiftMatrix[p.nik]?.[d] || 'off';
+                    dayCellsHtml += `
+                        <td style="padding:3px; text-align:center; border:1px solid var(--card-border);">
+                            <div class="shift-pill shift-${shiftCode}" onclick="${canEdit ? `openShiftPickerModal('${p.nik}', ${d}, '${shiftCode}')` : `showSwalWarning('Read Only 👁️', 'Hanya COS/ACOS yang dapat mengubah shift toko ini.')`}">
+                                ${shiftCode.toUpperCase()}
+                            </div>
+                        </td>
+                    `;
+                }
+                return `<tr><td style="padding:8px; font-weight:800; border:1px solid var(--card-border); position:sticky; left:0; background:var(--header-bg); z-index:2; min-width:130px;"><div>${escapeHTML(p.nama)}</div><div style="font-size:0.6rem; color:var(--text-sub);">${escapeHTML(p.jabatan)}</div></td>${dayCellsHtml}</tr>`;
+            }).join("");
+
+            let storeSelectHtml = '';
+            if (userAC && daftarToko.length > 0) {
+                const options = daftarToko.map(t => `<option value="${t.kodeToko}" ${t.kodeToko === targetKode ? 'selected' : ''}>🏪 ${escapeHTML(t.namaToko)} (${t.kodeToko})</option>`).join("");
+                storeSelectHtml = `
+                    <div class="modal-card-box" style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:0.72rem; font-weight:800; color:var(--accent-primary);"><i class="fa-solid fa-store"></i> PILIH TOKO (AC):</span>
+                        <select onchange="openPlanMasterShiftModal(this.value)" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); font-weight:800; font-size:0.75rem; padding:6px 10px; border-radius:10px;">
+                            ${options}
+                        </select>
+                    </div>
+                `;
+            }
+
+            const htmlBox = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    ${storeSelectHtml}
+                    <div class="modal-card-box" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h4 style="font-size:0.9rem; font-weight:800; color:var(--accent-primary);">📅 PLAN MASTER SHIFT</h4>
+                            <p style="font-size:0.68rem; color:var(--text-sub);">Status: <b>${canEdit ? '✏️ Editor Toko' : '👁️ Read-Only Area'}</b></p>
+                        </div>
+                        <input type="month" value="${currentShiftMonth}" onchange="currentShiftMonth=this.value; openPlanMasterShiftModal();" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:6px; border-radius:8px; outline:none; font-weight:700; font-size:0.75rem;">
+                    </div>
+
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <span class="shift-pill shift-p">P (Pagi)</span>
+                        <span class="shift-pill shift-s">S (Siang)</span>
+                        <span class="shift-pill shift-m">M (Malam)</span>
+                        <span class="shift-pill shift-ao">AO (Add Off)</span>
+                        <span class="shift-pill shift-off">OFF (Libur)</span>
+                    </div>
+
+                    <div style="overflow-x:auto; border:1px solid var(--card-border); border-radius:14px; background:var(--header-bg);">
+                        <table style="width:100%; border-collapse:collapse; text-align:left;">
+                            <thead><tr style="background:var(--input-bg);"><th style="padding:8px; border:1px solid var(--card-border); font-size:0.7rem; position:sticky; left:0; background:var(--input-bg); z-index:3;">Personil</th>${shiftHeaderColsHtml}</tr></thead>
+                            <tbody>${personilRowsHtml}</tbody>
+                        </table>
+                    </div>
+
+                    ${canEdit ? `
+                        <div class="modal-grid-3">
+                            <button onclick="openInstantSwapModal()" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-weight:800; padding:12px; border-radius:12px; cursor:pointer;">🔄 Tukar Instan</button>
+                            <button onclick="autoGenerateMonthlyShift()" style="background:#fef3c7; color:#b45309; border:1px solid #fcd34d; font-weight:800; padding:12px; border-radius:12px; cursor:pointer;">✨ Auto-Generate</button>
+                            <button onclick="saveMonthlyShiftDataAction()" style="background:var(--accent-green-grad); color:#ffffff; font-weight:800; padding:12px; border-radius:12px; border:none; cursor:pointer;">💾 SIMPAN SHIFT</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            showCustomModal("Plan Master Shift", htmlBox);
+        }
+
+        function openShiftPickerModal(nik, dayNum, currentCode) {
+            Swal.fire({
+                title: `Pilih Shift (Tgl ${dayNum})`,
+                input: 'select',
+                inputOptions: { 'p': 'P - Shift Pagi', 's': 'S - Shift Siang', 'm': 'M - Shift Malam', 'ao': 'AO - Add Off', 'off': 'OFF - Libur' },
+                inputValue: currentCode,
+                showCancelButton: true,
+                confirmButtonText: 'Terapkan',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed && res.value) {
+                    if (!localShiftMatrix[nik]) localShiftMatrix[nik] = {};
+                    localShiftMatrix[nik][dayNum] = res.value;
+                    renderPlanMasterShiftModal();
+                }
+            });
+        }
+
+        function openInstantSwapModal() {
+            const targetKode = selectedShiftKodeToko || dashboardData?.user?.kodeToko;
+            let personil = (dashboardData?.allMasterUsers || []).filter(u => u.kodeToko === targetKode);
+            if (personil.length === 0) personil = dashboardData?.struktur?.personilToko || [];
+            if (personil.length < 2) { showSwalWarning('Data Kurang', 'Minimal harus ada 2 personil toko.'); return; }
+
+            const personilOptions = personil.map(p => `<option value="${p.nik}">${escapeHTML(p.nama)} (${p.jabatan})</option>`).join("");
+            const htmlContent = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div class="modal-card-box">
+                        <label style="font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Pilih Karyawan Pertama (A):</label>
+                        <select id="swapNikA" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); border-radius:10px; padding:10px; margin-bottom:10px;">${personilOptions}</select>
+                        <label style="font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Pilih Karyawan Kedua (B):</label>
+                        <select id="swapNikB" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); border-radius:10px; padding:10px; margin-bottom:10px;">${personilOptions}</select>
+                        <label style="font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Tanggal Penukaran (Hari Ke-):</label>
+                        <input type="number" id="swapDayNum" min="1" max="31" value="${new Date().getDate()}" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); border-radius:10px; padding:10px; margin-bottom:14px;">
+                        <button onclick="executeInstantSwapAction()" style="width:100%; background:var(--accent-green-grad); color:#ffffff; font-weight:800; padding:12px; border-radius:12px; border:none; cursor:pointer;">🔄 PROSES TUKAR SHIFT</button>
+                    </div>
+                </div>
+            `;
+            showCustomModal("🔄 Tukar Shift Instan", htmlContent);
+        }
+
+        function executeInstantSwapAction() {
+            const nikA = document.getElementById("swapNikA").value;
+            const nikB = document.getElementById("swapNikB").value;
+            const dayNum = parseInt(document.getElementById("swapDayNum").value, 10);
+
+            if (nikA === nikB) { showSwalWarning('Swap Gagal', 'Pilih 2 karyawan yang berbeda!'); return; }
+
+            if (!localShiftMatrix[nikA]) localShiftMatrix[nikA] = {};
+            if (!localShiftMatrix[nikB]) localShiftMatrix[nikB] = {};
+
+            const shiftA = localShiftMatrix[nikA][dayNum] || 'off';
+            const shiftB = localShiftMatrix[nikB][dayNum] || 'off';
+
+            localShiftMatrix[nikA][dayNum] = shiftB;
+            localShiftMatrix[nikB][dayNum] = shiftA;
+
+            closeCustomModal();
+            renderPlanMasterShiftModal();
+            showSwalSuccess('Swap Berhasil! 🔄', `Berhasil menukar jadwal tanggal ${dayNum} antara kedua karyawan!`);
+        }
+
+        function autoGenerateMonthlyShift() {
+            Swal.fire({
+                title: 'Konfirmasi Auto-Generate',
+                text: 'Apakah Anda yakin ingin menyusun pola jadwal shift bulanan otomatis?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Susun Jadwal',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const targetKode = selectedShiftKodeToko || dashboardData?.user?.kodeToko;
+                    let personil = (dashboardData?.allMasterUsers || []).filter(u => u.kodeToko === targetKode);
+                    if (personil.length === 0) personil = dashboardData?.struktur?.personilToko || [];
+
+                    const [yr, mo] = currentShiftMonth.split("-");
+                    const daysInMonth = new Date(parseInt(yr, 10), parseInt(mo, 10), 0).getDate();
+                    const shifts = ['p', 's', 'm', 'ao'];
+
+                    personil.forEach((p, pIdx) => {
+                        localShiftMatrix[p.nik] = {};
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            localShiftMatrix[p.nik][d] = (d % 6 === 0) ? 'off' : shifts[(pIdx + d) % shifts.length];
+                        }
+                    });
+                    renderPlanMasterShiftModal();
+                    showSwalSuccess('Jadwal Digenerate! ✨', 'Pola shift bulanan berhasil dibuat!');
+                }
+            });
+        }
+
+        function saveMonthlyShiftDataAction() {
+            Swal.fire({
+                title: 'Konfirmasi Simpan Shift',
+                text: 'Apakah Anda yakin ingin menyimpan Master Shift ini ke database pusat?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const targetKode = selectedShiftKodeToko || dashboardData?.user?.kodeToko;
+                    const jsonStr = JSON.stringify(localShiftMatrix);
+                    showSwalSuccess('Tersimpan! 💾', 'Jadwal Master Shift berhasil disimpan.');
+                    trackUserActivity(1, "Simpan Master Shift");
+                    apiCall("saveMonthlyShift", { kodeToko: targetKode, bulanYear: currentShiftMonth, shiftDataJson: jsonStr }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        // =================================================================
+        // CEKLIS EXPIRED & MANAJEMEN RAK (DENGAN PENEGASAN EDIT/HAPUS)
+        // =================================================================
+        function openCeklisExpiredModal(activeTab = 'rak') {
+            showLoading("Memuat Data Expired...");
+            apiCall("getCeklisExp").then(res => {
+                hideLoading();
+                if (res && res.status === "success") {
+                    expShelves = res.shelves || [];
+                    expProducts = res.products || [];
+                    expHistoryList = res.history || [];
+                }
+                renderCeklisExpiredModal(activeTab);
+            }).catch(() => {
+                hideLoading();
+                renderCeklisExpiredModal(activeTab);
+            });
+        }
+
+        function renderCeklisExpiredModal(activeTab = 'rak') {
+            const userCOS = isUserCOS();
+            const userAC = isUserAC();
+            const userKodeToko = dashboardData?.user?.kodeToko || '';
+            const currentMonthKey = new Date().toISOString().substring(0, 7);
+
+            let storeShelves = userAC ? expShelves : expShelves.filter(s => (s.KODE_TOKO || s.kodeToko) === userKodeToko);
+            let storeProducts = userAC ? expProducts : expProducts.filter(p => (p.KODE_TOKO || p.kodeToko) === userKodeToko);
+
+            const totalRak = storeShelves.length;
+            const selesaiRak = storeShelves.filter(s => (s.STATUS || s.status) === 'Selesai').length;
+            const pendingValidasiRak = storeShelves.filter(s => (s.STATUS || s.status) === 'Menunggu Validasi COS').length;
+            const belumCeklisRak = Math.max(0, totalRak - (selesaiRak + pendingValidasiRak));
+            const pendingExpCount = storeProducts.filter(p => (p.STATUS || p.status) !== 'selesai' && isProductInAlertWindow(p.EXP_DATE || p.expDate, p.RH_DAYS || p.rhDays)).length;
+
+            let tabContentHtml = '';
+
+            if (activeTab === 'rak') {
+                let rakListCards = storeShelves.map(s => {
+                    const statusVal = s.STATUS || s.status || 'Belum Ceklis';
+                    const isDone = statusVal === 'Selesai';
+                    const isPendingVal = statusVal === 'Menunggu Validasi COS';
+                    const isRejected = statusVal === 'Ditolak';
+                    const sId = s.ID || s.id;
+                    const sName = s.NAMA_RAK || s.name || 'Rak';
+                    const sNo = s.NO_RAK || s.noRak || '-';
+                    const sPj = s.ASSIGNED_NAME || s.assignedName || 'Belum Didelegasikan';
+                    const sPhoto = s.PHOTO_URL || s.photoUrl;
+
+                    return `
+                        <div class="modal-card-box" style="border-left: 4px solid ${isDone ? '#10b981' : (isPendingVal ? '#f59e0b' : (isRejected ? '#ef4444' : '#64748b'))};">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <h4 style="font-weight:800; font-size:0.9rem; color:var(--text-main);">${escapeHTML(sName)}</h4>
+                                    <p style="font-size:0.68rem; color:var(--text-sub); margin-top:2px;">
+                                        No. Rak: <b>${escapeHTML(sNo)}</b> | PJ: <b style="color:var(--accent-primary);">${escapeHTML(sPj)}</b>
+                                    </p>
+                                </div>
+                                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                                    <span style="font-size:0.65rem; padding:3px 8px; border-radius:6px; font-weight:800; ${isDone ? 'background:#d1fae5; color:#047857;' : (isPendingVal ? 'background:#fef3c7; color:#b45309;' : 'background:#fee2e2; color:#dc2626;')}">
+                                        ${isDone ? '✅ Selesai' : (isPendingVal ? '⏳ Menunggu COS' : (isRejected ? '🚫 Ditolak' : '❌ Belum'))}
+                                    </span>
+                                    ${userCOS ? `
+                                        <div style="display:flex; gap:4px;">
+                                            <button onclick="editShelfModalCOS('${sId}')" style="background:#e0e7ff; color:#3730a3; border:none; padding:3px 8px; border-radius:6px; font-size:0.6rem; font-weight:bold; cursor:pointer;">✏️ Edit</button>
+                                            <button onclick="deleteShelfAction('${sId}')" style="background:#fee2e2; color:#dc2626; border:none; padding:3px 8px; border-radius:6px; font-size:0.6rem; font-weight:bold; cursor:pointer;">🗑️ Hapus</button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            ${sPhoto ? `<img src="${sPhoto}" onclick="showFullImageModal('${sPhoto}')" style="width:100%; height:110px; object-fit:cover; border-radius:8px; margin-top:8px; cursor:pointer;" title="Lihat Foto Fullscreen">` : ''}
+
+                            <div style="margin-top:10px; display:flex; gap:6px;">
+                                ${isPendingVal && userCOS ? `
+                                    <button onclick="validateShelfAction('${sId}', 'Ditolak')" style="flex:1; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:8px; border-radius:10px; font-weight:800; cursor:pointer;">❌ Tolak</button>
+                                    <button onclick="validateShelfAction('${sId}', 'Selesai')" style="flex:1; background:var(--accent-green-grad); color:#fff; border:none; padding:8px; border-radius:10px; font-weight:800; cursor:pointer;">✅ Setujui</button>
+                                ` : (isDone && !userCOS ? `
+                                    <button disabled style="width:100%; background:var(--input-bg); color:var(--text-sub); border:1px solid var(--card-border); padding:8px; border-radius:10px; font-weight:800; opacity:0.7;">🔒 Rak Telah Selesai Divalidasi</button>
+                                ` : `
+                                    <button onclick="promptShelfCompletionModal('${sId}', '${escapeHTML(sName)}', '${escapeHTML(sNo)}', '${escapeHTML(sPj)}')" style="flex:1; background:var(--accent-green-grad); color:#ffffff; border:none; padding:8px; border-radius:10px; font-weight:800; cursor:pointer;">📸 Tandai Selesai + Foto</button>
+                                `)}
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                let configSectionHtml = '';
+                if (userCOS) {
+                    let personilList = dashboardData?.struktur?.personilToko || [];
+                    if (personilList.length === 0) personilList = (dashboardData?.allMasterUsers || []).filter(u => u.kodeToko === userKodeToko);
+                    const personilOptsHtml = `<option value="">-- Pilih PJ Rak --</option>` + 
+                        personilList.map(p => `<option value="${p.nik || p.NIK}">👤 ${escapeHTML(p.nama || p.NAMA)} (${p.jabatan || p.JABATAN || 'Staff'})</option>`).join("");
+
+                    configSectionHtml = `
+                        <div class="modal-card-box">
+                            <h5 style="font-size:0.8rem; font-weight:800; color:var(--accent-primary); margin-bottom:8px;">➕ TAMBAH RAK MANUAL (KHUSUS COS)</h5>
+                            <div class="modal-grid-2" style="margin-bottom:8px;">
+                                <input type="text" id="addNoRakInput" placeholder="No. Rak (Cth: R-01)" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:0.75rem;">
+                                <input type="text" id="addNamaRakInput" placeholder="Nama Rak (Cth: Snack A)" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:0.75rem;">
+                            </div>
+                            <div class="modal-grid-2" style="margin-bottom:8px;">
+                                <select id="addCatRakInput" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:0.75rem;">
+                                    <option value="Makanan">Makanan</option>
+                                    <option value="Minuman">Minuman</option>
+                                    <option value="Kosmetik">Kosmetik</option>
+                                    <option value="Non-Food">Non-Food</option>
+                                </select>
+                                <select id="addAssignedNikInput" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:0.75rem;">${personilOptsHtml}</select>
+                            </div>
+                            <button onclick="addShelfManualAction()" style="width:100%; background:var(--accent-green-grad); color:#fff; font-weight:800; padding:10px; border-radius:8px; border:none; cursor:pointer;">+ Tambah Rak Baru</button>
+                        </div>
+                    `;
+                }
+
+                tabContentHtml = `
+                    <div class="modal-grid-4" style="margin-bottom:12px;">
+                        <div class="modal-card-box" style="text-align:center;"><span style="font-size:0.58rem; color:var(--text-sub); font-weight:700;">TOTAL</span><p style="font-size:1.1rem; font-weight:800;">${totalRak}</p></div>
+                        <div class="modal-card-box" style="text-align:center;"><span style="font-size:0.58rem; color:var(--text-sub); font-weight:700;">SELESAI</span><p style="font-size:1.1rem; font-weight:800; color:#10b981;">${selesaiRak}</p></div>
+                        <div class="modal-card-box" style="text-align:center;"><span style="font-size:0.58rem; color:var(--text-sub); font-weight:700;">PENDING</span><p style="font-size:1.1rem; font-weight:800; color:#f59e0b;">${pendingValidasiRak}</p></div>
+                        <div class="modal-card-box" style="text-align:center;"><span style="font-size:0.58rem; color:var(--text-sub); font-weight:700;">BELUM</span><p style="font-size:1.1rem; font-weight:800; color:#ef4444;">${belumCeklisRak}</p></div>
+                    </div>
+                    ${configSectionHtml}
+                    <div class="modal-grid-1">${rakListCards || '<p style="text-align:center; color:var(--text-sub);">Belum ada data rak di toko ini.</p>'}</div>
+                `;
+            } else if (activeTab === 'input' && !userAC) {
+                const shelfOpts = storeShelves.map(s => `<option value="${s.ID || s.id}">${escapeHTML(s.NAMA_RAK || s.name)} (${escapeHTML(s.NO_RAK || s.noRak)})</option>`).join("");
+                
+                let inputHistoryCardsHtml = storeProducts.map(p => {
+                    const pId = p.ID || p.id;
+                    const pName = p.NAMA_PRODUK || p.name;
+                    const pExp = p.EXP_DATE || p.expDate;
+                    const pRh = p.RH_DAYS || p.rhDays || 30;
+
+                    return `
+                        <div class="modal-card-box" style="padding:10px; margin-bottom:6px; border-left:4px solid var(--accent-primary);">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <b style="font-size:0.82rem; color:var(--text-main);">${escapeHTML(pName)}</b>
+                                    <p style="font-size:0.65rem; color:var(--text-sub); margin-top:2px;">Exp: <b style="color:#ef4444;">${pExp}</b> | RH: <b>${pRh} Hari</b></p>
+                                </div>
+                                <div style="display:flex; gap:4px;">
+                                    <button onclick="confirmEditExpProduct('${pId}')" style="background:#e0e7ff; color:#3730a3; border:none; padding:4px 8px; border-radius:6px; font-size:0.62rem; font-weight:800; cursor:pointer;">✏️ Edit</button>
+                                    <button onclick="confirmDeleteExpProduct('${pId}')" style="background:#fee2e2; color:#dc2626; border:none; padding:4px 8px; border-radius:6px; font-size:0.62rem; font-weight:800; cursor:pointer;">🗑️ Hapus</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                tabContentHtml = `
+                    <div class="modal-card-box" style="margin-bottom:12px;">
+                        <h4 style="font-size:0.9rem; font-weight:800; color:var(--accent-primary); margin-bottom:10px;">➕ INPUT PRODUK EXPIRED & RH</h4>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">Pilih Rak:</label>
+                            <select id="expShelfIdInput" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">${shelfOpts}</select>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">Nama Produk:</label>
+                            <input type="text" id="expProductNameInput" placeholder="Contoh: Susu UHT 250ml" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                        </div>
+                        <div class="modal-grid-2" style="margin-bottom:14px;">
+                            <div>
+                                <label style="font-weight:700; display:block; margin-bottom:4px;">Tanggal Expired:</label>
+                                <input type="date" id="expDateInput" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                            </div>
+                            <div>
+                                <label style="font-weight:700; display:block; margin-bottom:4px;">RH (Hari Return):</label>
+                                <input type="number" id="expRhDaysInput" value="30" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                            </div>
+                        </div>
+                        <button onclick="submitExpProductAction()" style="width:100%; background:var(--accent-green-grad); color:#ffffff; font-weight:800; padding:12px; border-radius:12px; border:none; cursor:pointer;">💾 SIMPAN ITEM EXP</button>
+                    </div>
+
+                    <div class="modal-card-box">
+                        <h5 style="font-size:0.8rem; font-weight:800; color:var(--accent-primary); margin-bottom:8px;"><i class="fa-solid fa-list-check"></i> DAFTAR INPUT EXP TOKO INI (${storeProducts.length})</h5>
+                        <div style="max-height:40vh; overflow-y:auto;">${inputHistoryCardsHtml || '<p style="text-align:center; color:var(--text-sub);">Belum ada produk expired dicatat.</p>'}</div>
+                    </div>
+                `;
+            } else if (activeTab === 'alert') {
+                const targetAlerts = storeProducts.filter(p => isProductInAlertWindow(p.EXP_DATE || p.expDate, p.RH_DAYS || p.rhDays));
+                let alertHtml = targetAlerts.map(p => {
+                    const pId = p.ID || p.id;
+                    const pName = p.NAMA_PRODUK || p.name;
+                    const pExp = p.EXP_DATE || p.expDate;
+                    const isHandled = (p.STATUS || p.status) === 'selesai';
+
+                    return `
+                        <div class="modal-card-box" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <p style="font-weight:800; color:var(--text-main);">${escapeHTML(pName)}</p>
+                                <p style="font-size:0.65rem; color:var(--text-sub);">Exp: <b style="color:#ef4444;">${pExp}</b> | RH: <b>${p.RH_DAYS || p.rhDays || 30} Hari</b></p>
+                            </div>
+                            <div>
+                                ${!isHandled ? `<button onclick="handleExpProductAction('${pId}', 'selesai')" style="background:#d1fae5; color:#047857; border:1px solid var(--accent-primary); padding:6px 10px; border-radius:8px; font-weight:800; font-size:0.68rem; cursor:pointer;">✅ Tangani</button>` : `<span style="font-size:0.65rem; background:#d1fae5; color:#047857; padding:4px 8px; border-radius:6px; font-weight:800;">Selesai</span>`}
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                tabContentHtml = `<div class="modal-grid-1">${alertHtml || '<p style="text-align:center; color:var(--text-sub);">Tidak ada alert expired aktif saat ini.</p>'}</div>`;
+            }
+
+            const htmlBox = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div style="display:flex; gap:6px;">
+                        <button class="sub-tab-btn ${activeTab==='rak'?'active':''}" onclick="renderCeklisExpiredModal('rak')">📂 Rak Toko</button>
+                        ${!userAC ? `<button class="sub-tab-btn ${activeTab==='input'?'active':''}" onclick="renderCeklisExpiredModal('input')">➕ Input Exp</button>` : ''}
+                        <button class="sub-tab-btn ${activeTab==='alert'?'active':''}" onclick="renderCeklisExpiredModal('alert')">🔔 Alert (${pendingExpCount})</button>
+                    </div>
+                    ${tabContentHtml}
+                </div>
+            `;
+            showCustomModal("⚠️ CEKLIS EXP & MANAJEMEN RAK", htmlBox);
+        }
+
+        // FUNGSI PENEGASAN EDIT & HAPUS RAK COS
+        function editShelfModalCOS(shelfId) {
+            Swal.fire({
+                title: 'Konfirmasi Edit Rak',
+                text: 'Apakah Anda yakin ingin mengubah konfigurasi rak ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ubah Rak',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const shelf = expShelves.find(s => (s.ID || s.id) === shelfId);
+                    if (!shelf) return;
+
+                    let personilList = dashboardData?.struktur?.personilToko || [];
+                    if (personilList.length === 0) personilList = (dashboardData?.allMasterUsers || []).filter(u => u.kodeToko === (shelf.KODE_TOKO || shelf.kodeToko));
+
+                    const personilOptsHtml = `<option value="">-- Pilih PJ --</option>` + 
+                        personilList.map(p => `<option value="${p.nik || p.NIK}" ${(p.nik || p.NIK) === (shelf.ASSIGNED_NIK || shelf.assignedNik) ? 'selected' : ''}>👤 ${escapeHTML(p.nama || p.NAMA)}</option>`).join("");
+
+                    Swal.fire({
+                        title: 'Edit Konfigurasi Rak',
+                        html: `
+                            <div style="text-align:left; font-size:0.75rem;">
+                                <label style="font-weight:bold;">No. Rak:</label>
+                                <input type="text" id="editNoRakVal" value="${escapeHTML(shelf.NO_RAK || shelf.noRak || '')}" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; margin-bottom:8px;">
+                                <label style="font-weight:bold;">Nama Rak:</label>
+                                <input type="text" id="editNamaRakVal" value="${escapeHTML(shelf.NAMA_RAK || shelf.name || '')}" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; margin-bottom:8px;">
+                                <label style="font-weight:bold;">Penanggung Jawab:</label>
+                                <select id="editAssignedNikVal" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px;">${personilOptsHtml}</select>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '💾 Simpan',
+                        customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+                    }).then((editRes) => {
+                        if (editRes.isConfirmed) {
+                            const newNo = document.getElementById("editNoRakVal").value.trim();
+                            const newName = document.getElementById("editNamaRakVal").value.trim();
+                            const sel = document.getElementById("editAssignedNikVal");
+                            const newNik = sel?.value || "";
+                            const newPjName = sel && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].text.replace(/^[👤\s]+/, '') : "Belum Didelegasikan";
+
+                            const idx = expShelves.findIndex(s => (s.ID || s.id) === shelfId);
+                            if (idx >= 0) {
+                                expShelves[idx].NO_RAK = newNo; expShelves[idx].noRak = newNo;
+                                expShelves[idx].NAMA_RAK = newName; expShelves[idx].name = newName;
+                                expShelves[idx].ASSIGNED_NIK = newNik; expShelves[idx].assignedNik = newNik;
+                                expShelves[idx].ASSIGNED_NAME = newPjName; expShelves[idx].assignedName = newPjName;
+                            }
+                            showSwalSuccess('Rak Diperbarui! ✅', 'Data rak berhasil diubah.');
+                            renderCeklisExpiredModal('rak');
+                            apiCall("saveShelf", { id: shelfId, noRak: newNo, name: newName, category: 'Umum', assignedNik: newNik, assignedName: newPjName, kodeToko: dashboardData?.user?.kodeToko }, 'POST').catch(()=>{});
+                        }
+                    });
+                }
+            });
+        }
+
+        function deleteShelfAction(shelfId) {
+            Swal.fire({
+                title: 'Konfirmasi Hapus Rak',
+                text: 'Apakah Anda yakin ingin menghapus rak ini secara permanen?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    expShelves = expShelves.filter(s => (s.ID || s.id) !== shelfId);
+                    showSwalSuccess('Dihapus 🗑️', 'Data rak berhasil dihapus.');
+                    renderCeklisExpiredModal('rak');
+                }
+            });
+        }
+
+        // FUNGSI PENEGASAN EDIT & HAPUS EXP PRODUCT
+        function confirmEditExpProduct(prodId) {
+            Swal.fire({
+                title: 'Konfirmasi Edit Item',
+                text: 'Apakah Anda yakin ingin mengubah rincian produk expired ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Edit Item',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const p = expProducts.find(item => (item.ID || item.id) === prodId);
+                    if (!p) return;
+
+                    const userKodeToko = dashboardData?.user?.kodeToko || '';
+                    const storeShelves = expShelves.filter(s => (s.KODE_TOKO || s.kodeToko) === userKodeToko);
+                    const shelfOptionsHtml = storeShelves.map(s => `<option value="${s.ID || s.id}" ${(s.ID || s.id) === (p.SHELF_ID || p.shelfId) ? 'selected' : ''}>${escapeHTML(s.NAMA_RAK || s.name)}</option>`).join("");
+
+                    Swal.fire({
+                        title: 'Edit Produk Expired',
+                        html: `
+                            <div style="text-align:left; font-size:0.75rem;">
+                                <label style="font-weight:bold;">Pilih Rak:</label>
+                                <select id="editExpShelfId" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; margin-bottom:8px;">${shelfOptionsHtml}</select>
+                                <label style="font-weight:bold;">Nama Produk:</label>
+                                <input type="text" id="editExpName" value="${escapeHTML(p.NAMA_PRODUK || p.name || '')}" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; margin-bottom:8px;">
+                                <label style="font-weight:bold;">Tanggal Expired:</label>
+                                <input type="date" id="editExpDate" value="${p.EXP_DATE || p.expDate || ''}" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px; margin-bottom:8px;">
+                                <label style="font-weight:bold;">RH (Hari Return):</label>
+                                <input type="number" id="editExpRh" value="${p.RH_DAYS || p.rhDays || 30}" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px;">
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '💾 Simpan Perubahan',
+                        customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+                    }).then((editRes) => {
+                        if (editRes.isConfirmed) {
+                            const newShelfId = document.getElementById("editExpShelfId").value;
+                            const newName = document.getElementById("editExpName").value.trim();
+                            const newDate = document.getElementById("editExpDate").value;
+                            const newRh = parseInt(document.getElementById("editExpRh").value, 10) || 30;
+
+                            const idx = expProducts.findIndex(item => (item.ID || item.id) === prodId);
+                            if (idx >= 0) {
+                                expProducts[idx].SHELF_ID = newShelfId; expProducts[idx].shelfId = newShelfId;
+                                expProducts[idx].NAMA_PRODUK = newName; expProducts[idx].name = newName;
+                                expProducts[idx].EXP_DATE = newDate; expProducts[idx].expDate = newDate;
+                                expProducts[idx].RH_DAYS = newRh; expProducts[idx].rhDays = newRh;
+                            }
+                            showSwalSuccess('Item Diperbarui! ✅', 'Data produk expired berhasil diubah.');
+                            renderCeklisExpiredModal('input');
+                            apiCall("saveExpProduct", { id: prodId, name: newName, shelfId: newShelfId, expDate: newDate, rhDays: newRh, addedBy: dashboardData?.user?.NAMA, kodeToko: dashboardData?.user?.kodeToko, namaToko: dashboardData?.user?.namaToko }, 'POST').catch(()=>{});
+                        }
+                    });
+                }
+            });
+        }
+
+        function confirmDeleteExpProduct(prodId) {
+            Swal.fire({
+                title: 'Konfirmasi Hapus Item',
+                text: 'Apakah Anda yakin ingin menghapus catatan produk expired ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    expProducts = expProducts.filter(item => (item.ID || item.id) !== prodId);
+                    showSwalSuccess('Dihapus 🗑️', 'Catatan produk expired berhasil dihapus.');
+                    renderCeklisExpiredModal('input');
+                    apiCall("handleExpProduct", { id: prodId, status: "deleted" }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        function promptShelfCompletionModal(shelfId, name, noRak, assignedName) {
+            expPhotoPreview = null;
+            Swal.fire({
+                title: 'Tandai Selesai Rak',
+                html: `
+                    <div style="text-align:left; font-size:0.75rem; color:var(--text-main);">
+                        <label style="font-weight:bold; display:block; margin-bottom:4px; color:#dc2626;">* Foto Bukti Kebersihan / Ceklis (Wajib):</label>
+                        <input type="file" id="shelfPhotoFileInput" accept="image/*" onchange="handleShelfPhotoPreview(event)" style="width:100%; background:var(--input-bg); padding:8px; border-radius:8px; border:1px solid var(--card-border); margin-bottom:8px;">
+                        <label style="font-weight:bold; display:block; margin-bottom:4px;">Catatan (Opsional):</label>
+                        <input type="text" id="shelfNotesInput" placeholder="Rak rapi & bersih..." style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:8px; border-radius:8px;">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '📸 Submit Hasil',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' },
+                preConfirm: () => {
+                    if (!expPhotoPreview) {
+                        Swal.showValidationMessage('Wajib menyertakan foto bukti pengerjaan rak!');
+                        return false;
+                    }
+                    return { notes: document.getElementById("shelfNotesInput")?.value || '' };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const userCOS = isUserCOS();
+                    const statusTarget = userCOS ? 'Selesai' : 'Menunggu Validasi COS';
+                    const userName = dashboardData?.user?.NAMA || 'User';
+
+                    const idx = expShelves.findIndex(s => (s.ID || s.id) === shelfId);
+                    if (idx >= 0) {
+                        expShelves[idx].STATUS = statusTarget;
+                        expShelves[idx].status = statusTarget;
+                    }
+
+                    showSwalSuccess('Ceklis Berhasil! 📸', userCOS ? 'Rak ditandai Selesai!' : 'Laporan terkirim ke Chief of Store (COS).');
+                    trackUserActivity(1, "Ceklis Rak " + name);
+                    renderCeklisExpiredModal('rak');
+
+                    apiCall("checkShelf", {
+                        shelfId: shelfId, name: name, noRak: noRak, category: 'Umum',
+                        assignedName: assignedName, checkedBy: userName, status: statusTarget,
+                        notes: res.value.notes, photoBase64: expPhotoPreview,
+                        kodeToko: dashboardData?.user?.kodeToko, namaToko: dashboardData?.user?.namaToko
+                    }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        function handleShelfPhotoPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    compressImageBase64(evt.target.result, 600, 600, 0.75, (c) => { expPhotoPreview = c; });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function validateShelfAction(shelfId, status) {
+            const idx = expShelves.findIndex(s => (s.ID || s.id) === shelfId);
+            if (idx >= 0) {
+                expShelves[idx].STATUS = status;
+                expShelves[idx].status = status;
+            }
+            showSwalSuccess('Validasi Selesai ✅', `Status rak diubah menjadi: ${status}`);
+            renderCeklisExpiredModal('rak');
+            apiCall("validateShelf", { shelfId: shelfId, status: status, notes: "COS Validation" }, 'POST').catch(()=>{});
+        }
+
+        function addShelfManualAction() {
+            const noRak = document.getElementById("addNoRakInput").value.trim();
+            const name = document.getElementById("addNamaRakInput").value.trim();
+            const cat = document.getElementById("addCatRakInput").value;
+            const sel = document.getElementById("addAssignedNikInput");
+            const assignedNik = sel?.value || "";
+            const assignedName = sel && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].text.replace(/^[👤\s]+/, '').split('(')[0].trim() : "Belum Didelegasikan";
+
+            if (!name) { showSwalWarning('Form Kosong', 'Mohon masukkan nama rak!'); return; }
+
+            const shelfId = 'shelf_' + Date.now();
+            expShelves.push({
+                id: shelfId, ID: shelfId, noRak: noRak || 'R-0' + (expShelves.length + 1), NO_RAK: noRak || 'R-0' + (expShelves.length + 1),
+                name: name, NAMA_RAK: name, category: cat, KATEGORI: cat,
+                assignedNik: assignedNik, ASSIGNED_NIK: assignedNik, assignedName: assignedName, ASSIGNED_NAME: assignedName,
+                status: 'Belum Ceklis', STATUS: 'Belum Ceklis',
+                kodeToko: dashboardData?.user?.kodeToko, KODE_TOKO: dashboardData?.user?.kodeToko
+            });
+
+            showSwalSuccess('Rak Ditambahkan! 📦', `Rak berhasil dibuat dan ditugaskan ke ${assignedName}!`);
+            renderCeklisExpiredModal('rak');
+            apiCall("saveShelf", { id: shelfId, noRak: noRak, name: name, category: cat, assignedNik: assignedNik, assignedName: assignedName, kodeToko: dashboardData?.user?.kodeToko }, 'POST').catch(()=>{});
+        }
+
+        function submitExpProductAction() {
+            const shelfId = document.getElementById("expShelfIdInput").value;
+            const name = document.getElementById("expProductNameInput").value.trim();
+            const expDate = document.getElementById("expDateInput").value;
+            const rhDays = parseInt(document.getElementById("expRhDaysInput").value, 10) || 30;
+
+            if (!name || !expDate) { showSwalWarning('Form Belum Lengkap', 'Mohon isi nama produk dan tanggal expired!'); return; }
+
+            const prodId = 'prod_' + Date.now();
+            expProducts.unshift({
+                id: prodId, ID: prodId, name: name, NAMA_PRODUK: name,
+                shelfId: shelfId, SHELF_ID: shelfId, expDate: expDate, EXP_DATE: expDate,
+                rhDays: rhDays, RH_DAYS: rhDays, status: 'pending', STATUS: 'pending',
+                kodeToko: dashboardData?.user?.kodeToko, KODE_TOKO: dashboardData?.user?.kodeToko
+            });
+
+            showSwalSuccess('Tersimpan! 📦', `Item expired berhasil dicatat dengan RH ${rhDays} Hari!`);
+            trackUserActivity(1, "Catat Item Expired");
+            renderCeklisExpiredModal('alert');
+
+            apiCall("saveExpProduct", {
+                id: prodId, name: name, shelfId: shelfId, expDate: expDate, rhDays: rhDays,
+                addedBy: dashboardData?.user?.NAMA || 'User', kodeToko: dashboardData?.user?.kodeToko, namaToko: dashboardData?.user?.namaToko
+            }, 'POST').catch(()=>{});
+        }
+
+        function handleExpProductAction(prodId, status) {
+            const idx = expProducts.findIndex(p => (p.ID || p.id) === prodId);
+            if (idx >= 0) {
+                expProducts[idx].STATUS = status;
+                expProducts[idx].status = status;
+            }
+            showSwalSuccess('Item Selesai ✅', 'Penanganan produk expired dicatat!');
+            renderCeklisExpiredModal('alert');
+            apiCall("handleExpProduct", { id: prodId, status: status }, 'POST').catch(()=>{});
+        }
+        // =================================================================
+        // BELANJA KARYAWAN (HYBRID STORAGE & CUTOFF 25-24)
+        // =================================================================
+        function openBelanjaKaryawanModal() {
+            showLoading("Memuat Data Belanja...");
+            apiCall("getBelanja").then(res => {
+                hideLoading();
+                if (res && res.data) belanjaTransactions = res.data;
+                renderBelanjaKaryawanModal('input');
+            }).catch(() => {
+                hideLoading();
+                renderBelanjaKaryawanModal('input');
+            });
+        }
+
+        function getBelanjaCutoffCycle() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+
+            let startYear = year, startMonth = month, endYear = year, endMonth = month + 1;
+            if (day < 25) {
+                startMonth = month - 1;
+                if (startMonth === 0) { startMonth = 12; startYear = year - 1; }
+                endMonth = month;
+            } else {
+                if (endMonth > 12) { endMonth = 1; endYear = year + 1; }
+            }
+
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+            const startStr = `${startYear}-${String(startMonth).padStart(2, '0')}-25`;
+            const endStr = `${endYear}-${String(endMonth).padStart(2, '0')}-24`;
+
+            return {
+                label: `Periode: 25 ${monthNames[startMonth-1]} - 24 ${monthNames[endMonth-1]} ${endYear}`,
+                startDateStr: startStr, endDateStr: endStr
+            };
+        }
+
+        function renderBelanjaKaryawanModal(activeTab = 'input') {
+            const cycle = getBelanjaCutoffCycle();
+            if (!belanjaFilterStart) belanjaFilterStart = cycle.startDateStr;
+            if (!belanjaFilterEnd) belanjaFilterEnd = cycle.endDateStr;
+
+            const userCOS = isUserCOS();
+            const userAC = isUserAC();
+            const canValidate = userCOS || userAC;
+            const userKodeToko = dashboardData?.user?.kodeToko || '';
+            const daftarToko = dashboardData?.daftarToko || [];
+            const allMaster = dashboardData?.allMasterUsers || [];
+
+            const pendingValidasiCount = belanjaTransactions.filter(t => {
+                const s = t.STATUS || t.status;
+                const k = t.KODE_TOKO || t.kodeToko;
+                return (userAC && s === "Menunggu AC") || (userCOS && s === "Menunggu COS" && k === userKodeToko);
+            }).length;
+
+            const filteredTx = belanjaTransactions.filter(t => {
+                const tDate = new Date(t.TIMESTAMP || t.timestamp || t.date);
+                const filterStart = new Date(belanjaFilterStart + "T00:00:00");
+                const filterEnd = new Date(belanjaFilterEnd + "T23:59:59");
+                const matchDate = tDate >= filterStart && tDate <= filterEnd;
+                const matchStore = userAC || ((t.KODE_TOKO || t.kodeToko) === userKodeToko);
+                return matchDate && matchStore;
+            });
+
+            const totalNominalSales = filteredTx
+                .filter(t => (t.STATUS || t.status) === "Disetujui" || (t.STATUS || t.status) === "Menunggu AC")
+                .reduce((sum, t) => sum + (Number(t.NOMINAL || t.nominal) || 0), 0);
+
+            let tabContentHtml = '';
+
+            if (activeTab === 'input') {
+                tabContentHtml = `
+                    <div class="modal-card-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="font-size:0.88rem; font-weight:800; color:var(--accent-primary);">🧾 INPUT STRUK BELANJA</h4>
+                            <span style="font-size:0.62rem; color:var(--text-sub); font-weight:700; background:var(--input-bg); padding:4px 8px; border-radius:6px;">${cycle.label}</span>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">No. Bon Transaksi:</label>
+                            <input type="text" id="belanjaNoBonVal" placeholder="Cth: 2J7K-111-2808xxxx" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">No. Member Karyawan:</label>
+                            <input type="text" id="belanjaNoMemberVal" placeholder="0812xxxx" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">Nominal Belanja (Rp):</label>
+                            <input type="number" id="belanjaNominalVal" placeholder="0" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--card-border); padding:10px; border-radius:10px;">
+                        </div>
+                        <div style="margin-bottom:14px;">
+                            <label style="font-weight:700; display:block; margin-bottom:4px;">Foto Struk (Wajib):</label>
+                            <input type="file" id="belanjaPhotoFileInput" accept="image/*" onchange="handleBelanjaPhotoPreview(event)" style="width:100%; background:var(--input-bg); padding:8px; border-radius:10px; border:1px solid var(--card-border);">
+                        </div>
+                        <button onclick="submitBelanjaTransactionAction()" style="width:100%; background:var(--accent-green-grad); color:#ffffff; font-weight:800; padding:12px; border-radius:12px; border:none; cursor:pointer;">🚀 SUBMIT STRUK</button>
+                    </div>
+                `;
+            } else if (activeTab === 'validasi') {
+                let validasiList = belanjaTransactions.filter(t => {
+                    const s = t.STATUS || t.status;
+                    const k = t.KODE_TOKO || t.kodeToko;
+                    if (userAC) return s === "Menunggu AC";
+                    if (userCOS) return s === "Menunggu COS" && k === userKodeToko;
+                    return false;
+                });
+
+                let cardsHtml = validasiList.map(tx => {
+                    const txId = tx.ID || tx.id;
+                    const txNama = tx.NAMA || tx.penginputNama;
+                    const txNominal = cleanNum(tx.NOMINAL || tx.nominal);
+                    const txPhoto = tx.PHOTO_URL || tx.photoUrl;
+
+                    return `
+                        <div class="modal-card-box">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <b style="font-size:0.85rem; color:var(--text-main);">${escapeHTML(txNama)}</b>
+                                    <h4 style="font-size:1rem; font-weight:800; color:var(--accent-primary);">Rp ${txNominal.toLocaleString('id-ID')}</h4>
+                                </div>
+                                <span style="font-size:0.65rem; background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-weight:bold;">Menunggu Validasi</span>
+                            </div>
+                            ${txPhoto ? `<img src="${txPhoto}" onclick="showFullImageModal('${txPhoto}')" style="width:100%; height:120px; object-fit:cover; border-radius:10px; margin:8px 0; cursor:pointer;" title="Lihat Foto Struk">` : ''}
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <button onclick="updateBelanjaStatusAction('${txId}', 'Ditolak')" style="flex:1; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">Tolak</button>
+                                <button onclick="updateBelanjaStatusAction('${txId}', '${userAC ? 'Disetujui' : 'Menunggu AC'}')" style="flex:1; background:var(--accent-green-grad); color:#ffffff; border:none; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">${userAC ? 'Setujui Final' : 'Teruskan ke AC'}</button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                tabContentHtml = `<div class="modal-grid-1">${cardsHtml || '<p style="text-align:center; color:var(--text-sub);">Tidak ada antrean validasi struk.</p>'}</div>`;
+            } else if (activeTab === 'resume') {
+                tabContentHtml = `
+                    <div class="modal-grid-1">
+                        <div class="mtd-summary-card">
+                            <span style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">💰 TOTAL SALES BELANJA KARYAWAN</span>
+                            <div class="mtd-amount-hero">Rp ${totalNominalSales.toLocaleString('id-ID')}</div>
+                            <p style="font-size:0.62rem; color:var(--text-sub); margin-top:4px;">Periode: ${belanjaFilterStart} s/d ${belanjaFilterEnd}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const htmlBox = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div style="display:flex; gap:6px;">
+                        <button class="sub-tab-btn ${activeTab==='input'?'active':''}" onclick="renderBelanjaKaryawanModal('input')">🧾 Input Struk</button>
+                        ${canValidate ? `<button class="sub-tab-btn ${activeTab==='validasi'?'active':''}" onclick="renderBelanjaKaryawanModal('validasi')">📋 Validasi (${pendingValidasiCount})</button>` : ''}
+                        <button class="sub-tab-btn ${activeTab==='resume'?'active':''}" onclick="renderBelanjaKaryawanModal('resume')">📊 Monitoring</button>
+                    </div>
+                    ${tabContentHtml}
+                </div>
+            `;
+            showCustomModal("🛒 BELANJA KARYAWAN", htmlBox);
+        }
+
+        function handleBelanjaPhotoPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    compressImageBase64(evt.target.result, 600, 600, 0.75, (c) => { belanjaPhotoPreview = c; });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitBelanjaTransactionAction() {
+            const noBon = document.getElementById("belanjaNoBonVal").value.trim();
+            const noMember = document.getElementById("belanjaNoMemberVal").value.trim();
+            const nominal = document.getElementById("belanjaNominalVal").value;
+
+            if (!noBon || !nominal) { showSwalWarning('Form Belum Lengkap', 'Mohon isi No. Bon dan Nominal Belanja!'); return; }
+
+            Swal.fire({
+                title: 'Konfirmasi Submit Struk',
+                text: 'Apakah Anda yakin data dan foto struk belanja sudah sesuai?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Kirim',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const isCOS = isUserCOS();
+                    const initialStatus = isCOS ? "Menunggu AC" : "Menunggu COS";
+                    const txId = 'tx_' + Date.now();
+
+                    belanjaTransactions.unshift({
+                        id: txId, ID: txId, noBon: noBon, NO_BON: noBon,
+                        noMember: noMember, NO_MEMBER: noMember, nominal: parseFloat(nominal), NOMINAL: parseFloat(nominal),
+                        penginputNama: dashboardData?.user?.NAMA, NAMA: dashboardData?.user?.NAMA,
+                        status: initialStatus, STATUS: initialStatus,
+                        kodeToko: dashboardData?.user?.kodeToko, KODE_TOKO: dashboardData?.user?.kodeToko
+                    });
+
+                    showSwalSuccess('Data Terkirim! 🚀', 'Struk belanja karyawan berhasil dicatat.');
+                    trackUserActivity(1, "Submit Struk Belanja");
+                    renderBelanjaKaryawanModal('input');
+
+                    apiCall("saveBelanja", {
+                        penginputNama: dashboardData?.user?.NAMA || 'User',
+                        kodeToko: dashboardData?.user?.kodeToko, namaToko: dashboardData?.user?.namaToko,
+                        noBon: noBon, noMember: noMember, nominal: nominal,
+                        photoBase64: belanjaPhotoPreview, status: initialStatus
+                    }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        function updateBelanjaStatusAction(txId, status) {
+            Swal.fire({
+                title: 'Konfirmasi Validasi',
+                text: `Apakah Anda yakin ingin mengubah status menjadi: ${status}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Konfirmasi',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const idx = belanjaTransactions.findIndex(t => (t.ID || t.id) === txId);
+                    if (idx >= 0) {
+                        belanjaTransactions[idx].STATUS = status;
+                        belanjaTransactions[idx].status = status;
+                    }
+                    showSwalSuccess('Status Diperbarui ✅', `Status transaksi: ${status}`);
+                    renderBelanjaKaryawanModal('validasi');
+                    apiCall("updateBelanjaStatus", { id: txId, status: status, approverName: dashboardData?.user?.NAMA }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        // =================================================================
+        // JOBDESK HARIAN & BRIEFING (HYBRID STORAGE & PENEGASAN DIALOG)
+        // =================================================================
+        function openJobdeskHarianModal(activeTab = 'input') {
+            showLoading("Memuat Data Jobdesk...");
+            apiCall("getJobdesk", { day: selectedJobdeskDay }).then(res => {
+                hideLoading();
+                if (res && res.data) jobdeskReports = res.data;
+                renderJobdeskModalView(activeTab);
+            }).catch(() => {
+                hideLoading();
+                renderJobdeskModalView(activeTab);
+            });
+        }
+
+        function renderJobdeskModalView(activeTab = 'input') {
+            const userCOS = isUserCOS();
+            const userAC = isUserAC();
+            const userKodeToko = dashboardData?.user?.kodeToko || '';
+
+            const pendingCosCount = jobdeskReports.filter(j => (j.STATUS || j.status) === 'PENDING_COS' && (j.KODE_TOKO || j.kodeToko) === userKodeToko).length;
+            const pendingAcCount = jobdeskReports.filter(j => (j.STATUS || j.status) === 'PENDING_AC').length;
+
+            let tabContentHtml = '';
+
+            if (activeTab === 'input' && !userAC) {
+                const tasks = JOBDESK_MASTER_TASKS[selectedJobdeskCategory]?.[selectedJobdeskDay] || [];
+                let taskCardsHtml = tasks.map(task => {
+                    const existing = jobdeskReports.find(r => (r.TASK_TITLE || r.taskTitle) === task.title && (r.HARI || r.day) === selectedJobdeskDay && (r.KODE_TOKO || r.kodeToko) === userKodeToko);
+                    const isDone = existing && (existing.STATUS || existing.status) === 'APPROVED';
+
+                    return `
+                        <div class="modal-card-box" style="border-left:4px solid ${isDone ? '#10b981' : 'var(--accent-primary)'};">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <h4 style="font-size:0.82rem; font-weight:800; color:var(--text-main);">${escapeHTML(task.title)}</h4>
+                                <span style="font-size:0.62rem; padding:2px 8px; border-radius:8px; ${isDone ? 'background:#d1fae5; color:#047857;' : 'background:var(--input-bg); color:var(--text-sub);'} font-weight:bold;">${isDone ? '✅ Selesai' : 'Belum Selesai'}</span>
+                            </div>
+                            <button onclick="promptJobdeskTaskAction('${escapeHTML(task.title)}', '${escapeHTML(task.cara)}', '${escapeHTML(task.poin)}')" style="width:100%; background:var(--accent-green-grad); color:#fff; border:none; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">📖 Lihat SOP & Kerjakan</button>
+                        </div>
+                    `;
+                }).join("");
+
+                tabContentHtml = `
+                    <div class="modal-grid-2" style="margin-bottom:8px;">
+                        <button onclick="selectedJobdeskCategory='Daily Activity'; renderJobdeskModalView('input');" class="sub-tab-btn ${selectedJobdeskCategory==='Daily Activity'?'active':''}">Daily Activity</button>
+                        <button onclick="selectedJobdeskCategory='Materi Briefing Shift 1 & 2'; renderJobdeskModalView('input');" class="sub-tab-btn ${selectedJobdeskCategory==='Materi Briefing Shift 1 & 2'?'active':''}">Briefing Shift 1 & 2</button>
+                    </div>
+                    <div class="modal-grid-1">${taskCardsHtml}</div>
+                `;
+            } else if (activeTab === 'approval') {
+                let pendingList = jobdeskReports.filter(r => {
+                    const s = r.STATUS || r.status;
+                    const k = r.KODE_TOKO || r.kodeToko;
+                    return (userAC && s === 'PENDING_AC') || (userCOS && s === 'PENDING_COS' && k === userKodeToko);
+                });
+
+                let cardsHtml = pendingList.map(item => {
+                    const rId = item.ID || item.id;
+                    const rTitle = item.TASK_TITLE || item.taskTitle;
+                    const rPhoto = item.PHOTO_URL || item.photoUrl;
+
+                    return `
+                        <div class="modal-card-box">
+                            <b style="font-size:0.85rem; color:var(--text-main);">${escapeHTML(rTitle)}</b>
+                            <p style="font-size:0.65rem; color:var(--text-sub);">Oleh: ${escapeHTML(item.SUBMITTED_BY || item.submittedBy)}</p>
+                            ${rPhoto ? `<img src="${rPhoto}" onclick="showFullImageModal('${rPhoto}')" style="width:100%; height:120px; object-fit:cover; border-radius:10px; margin:8px 0; cursor:pointer;">` : ''}
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <button onclick="updateJobdeskStatusAction('${rId}', '${userAC ? 'REJECTED_AC' : 'REJECTED_COS'}')" style="flex:1; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">Tolak</button>
+                                <button onclick="updateJobdeskStatusAction('${rId}', '${userAC ? 'APPROVED' : 'PENDING_AC'}')" style="flex:1; background:var(--accent-green-grad); color:#ffffff; border:none; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">${userAC ? 'Approve Final' : 'Setujui (Lanjut AC)'}</button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                tabContentHtml = `<div class="modal-grid-1">${cardsHtml || '<p style="text-align:center; color:var(--text-sub);">Tidak ada antrean approval jobdesk.</p>'}</div>`;
+            }
+
+            const htmlBox = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div style="display:flex; gap:6px; overflow-x:auto; margin-bottom:4px;">
+                        ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(d => `
+                            <button onclick="selectedJobdeskDay='${d}'; renderJobdeskModalView('${activeTab}');" class="sub-tab-btn ${selectedJobdeskDay === d ? 'active' : ''}" style="white-space:nowrap; padding:6px 12px; font-size:0.7rem;">${d}</button>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex; gap:6px; margin-bottom:6px;">
+                        ${!userAC ? `<button class="sub-tab-btn ${activeTab==='input'?'active':''}" onclick="renderJobdeskModalView('input')">📝 Jobdesk</button>` : ''}
+                        ${(userCOS || userAC) ? `<button class="sub-tab-btn ${activeTab==='approval'?'active':''}" onclick="renderJobdeskModalView('approval')">⏳ Approval (${userAC ? pendingAcCount : pendingCosCount})</button>` : ''}
+                    </div>
+                    ${tabContentHtml}
+                </div>
+            `;
+            showCustomModal("📋 JOBDESK HARIAN & BRIEFING", htmlBox);
+        }
+
+        function promptJobdeskTaskAction(taskTitle, cara, poin) {
+            jobdeskPhotoPreview = null;
+            Swal.fire({
+                title: taskTitle,
+                html: `
+                    <div style="text-align:left; font-size:0.75rem; color:var(--text-main);">
+                        <div style="background:var(--input-bg); padding:8px; border-radius:8px; margin-bottom:8px;">
+                            <b style="color:var(--accent-primary);">SOP:</b> ${cara}<br/>
+                            <b style="color:var(--gold);">Poin Evaluasi:</b> ${poin}
+                        </div>
+                        <label style="font-weight:bold; color:#dc2626;">* Foto Bukti Pengerjaan (Wajib):</label>
+                        <input type="file" accept="image/*" onchange="handleJobdeskPhotoPreview(event)" style="width:100%; background:var(--input-bg); padding:6px; border-radius:8px; border:1px solid var(--card-border); margin-bottom:8px;">
+                        <input type="text" id="jobdeskNotesVal" placeholder="Catatan tambahan..." style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:8px; border-radius:8px;">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '🚀 Kirim Laporan',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' },
+                preConfirm: () => {
+                    if (!jobdeskPhotoPreview) {
+                        Swal.showValidationMessage('Wajib menyertakan foto bukti pengerjaan!');
+                        return false;
+                    }
+                    return { notes: document.getElementById("jobdeskNotesVal")?.value || '' };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const isCOS = isUserCOS();
+                    const initialStatus = isCOS ? 'PENDING_AC' : 'PENDING_COS';
+                    const reportId = 'jobdesk_' + Date.now();
+
+                    jobdeskReports.unshift({
+                        id: reportId, ID: reportId, taskTitle: taskTitle, TASK_TITLE: taskTitle,
+                        day: selectedJobdeskDay, HARI: selectedJobdeskDay,
+                        category: selectedJobdeskCategory, KATEGORI: selectedJobdeskCategory,
+                        status: initialStatus, STATUS: initialStatus,
+                        kodeToko: dashboardData?.user?.kodeToko, KODE_TOKO: dashboardData?.user?.kodeToko
+                    });
+
+                    showSwalSuccess('Laporan Terkirim! 🚀', 'Tugas harian berhasil dilaporkan.');
+                    trackUserActivity(1, "Submit Jobdesk " + taskTitle);
+                    renderJobdeskModalView('input');
+
+                    apiCall("saveJobdesk", {
+                        taskTitle: taskTitle, category: selectedJobdeskCategory, day: selectedJobdeskDay,
+                        weekKey: getStartOfWeekKey(), kodeToko: dashboardData?.user?.kodeToko, namaToko: dashboardData?.user?.namaToko,
+                        submittedBy: dashboardData?.user?.NAMA || 'User', role: dashboardData?.user?.JABATAN || 'Crew',
+                        notes: res.value.notes, photoBase64: jobdeskPhotoPreview, status: initialStatus,
+                        submittedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                    }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        function handleJobdeskPhotoPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    compressImageBase64(evt.target.result, 600, 600, 0.75, (c) => { jobdeskPhotoPreview = c; });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateJobdeskStatusAction(reportId, status) {
+            Swal.fire({
+                title: 'Konfirmasi Approval',
+                text: `Apakah Anda yakin ingin memproses status tugas ini?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Lanjutkan',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const idx = jobdeskReports.findIndex(r => (r.ID || r.id) === reportId);
+                    if (idx >= 0) {
+                        jobdeskReports[idx].STATUS = status;
+                        jobdeskReports[idx].status = status;
+                    }
+                    showSwalSuccess('Approval Selesai ✅', `Status tugas diubah menjadi: ${status}`);
+                    renderJobdeskModalView('approval');
+                    apiCall("updateJobdeskStatus", { id: reportId, status: status, approverName: dashboardData?.user?.NAMA }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        // =================================================================
+        // PERFORMA POPUP, MTD SALES & DOWNLOAD CANVAS HD
+        // =================================================================
+        async function openPerformaPopup() {
+            showLoading("Memuat Performance Toko...");
+            const res = await apiCall("getPerforma");
+            hideLoading();
+            if (res) renderPerformaModalView(res);
+        }
+
+        function renderPerformaModalView(d) {
+            const ptNum = parseFloat(String(d.pointDash || '0%').replace('%','').replace(',','.')) || 0;
+            const realPt = (ptNum <= 1 && ptNum > 0) ? ptNum * 100 : ptNum;
+            const gaugeRotation = Math.min(Math.max((realPt / 150) * 180, 0), 180);
+            const isHarianGrowth = d.growthHarian >= 0;
+
+            const htmlBox = `
+                <div class="modal-grid-1" id="performaHDCardContainer" style="font-size:0.78rem;">
+                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:12px; align-items:center; background:var(--card-bg); border:1px solid var(--card-border); border-radius:18px; padding:12px;">
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="12"/>
+                                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#gaugeGradHD)" stroke-width="12" stroke-dasharray="126" stroke-dashoffset="${126 - (realPt/150)*126}"/>
+                                <line x1="50" y1="50" x2="20" y2="50" stroke="#d97706" stroke-width="3.5" stroke-linecap="round" transform="rotate(${gaugeRotation}, 50, 50)" style="transition: transform 1s ease;"/>
+                                <defs>
+                                    <linearGradient id="gaugeGradHD" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444" />
+                                        <stop offset="50%" stop-color="#f59e0b" />
+                                        <stop offset="100%" stop-color="#10b981" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <span style="font-size:1rem; font-weight:900; color:var(--accent-primary); margin-top:-6px;">${realPt.toFixed(1)}%</span>
+                            <span style="font-size:0.65rem; font-weight:800; color:var(--accent-primary);">(${d.ketPoint})</span>
+                        </div>
+
+                        <div style="border-left:1px dashed var(--card-border); padding-left:10px;">
+                            <div style="font-size:0.75rem; font-weight:800; color:var(--gold); margin-bottom:4px;">💪 SALES HARIAN</div>
+                            <div style="font-size:0.7rem;">Real : <strong style="color:var(--text-main);">Rp ${Number(d.sales2026||0).toLocaleString('id-ID')}</strong></div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">Prev : Rp ${Number(d.sales2025||0).toLocaleString('id-ID')}</div>
+                            <div style="margin-top:6px;">
+                                <span class="growth-badge-pill ${isHarianGrowth ? 'up' : 'down'}">
+                                    ${isHarianGrowth ? '📈 Growth' : '📉 Growth'} : ${isHarianGrowth?'+':''}${d.growthHarian?.toFixed(1) || 0}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-card-box" style="border:1.5px solid var(--gold); background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:0.78rem; font-weight:800; color:#b45309;"><i class="fa-solid fa-fire" style="color:#ef4444;"></i> PENAWARAN LANGSUNG</span>
+                            <span style="font-size:0.72rem; font-weight:900; background:var(--gold); color:#ffffff; padding:3px 10px; border-radius:20px;">🏆 RANK #${d.rankPenawaran || 1}</span>
+                        </div>
+                        <div class="modal-grid-4" style="text-align:center;">
+                            <div style="background:#ffffff; padding:8px 4px; border-radius:10px; border:1px solid #fcd34d;"><span style="font-size:0.6rem; color:#92400e; display:block;">PSM</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.psm || '100%'}</span></div>
+                            <div style="background:#ffffff; padding:8px 4px; border-radius:10px; border:1px solid #fcd34d;"><span style="font-size:0.6rem; color:#92400e; display:block;">PWP</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.pwp || '95%'}</span></div>
+                            <div style="background:#ffffff; padding:8px 4px; border-radius:10px; border:1px solid #fcd34d;"><span style="font-size:0.58rem; color:#92400e; display:block;">S.GRATIS</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.serbaGratis || '98%'}</span></div>
+                            <div style="background:#ffffff; padding:8px 4px; border-radius:10px; border:1px solid #fcd34d;"><span style="font-size:0.6rem; color:#92400e; display:block;">APC</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.apc || '102%'}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-card-box">
+                        <span style="font-size:0.75rem; font-weight:800; color:var(--accent-primary); display:block; margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> IKT TOKO</span>
+                        <div class="modal-grid-3" style="text-align:center;">
+                            <div style="background:var(--input-bg); padding:8px; border-radius:10px; border:1px solid var(--card-border);"><span style="font-size:0.6rem; color:var(--text-sub); display:block;">ACV SALES</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.acvNetSales || '-'}</span></div>
+                            <div style="background:var(--input-bg); padding:8px; border-radius:10px; border:1px solid var(--card-border);"><span style="font-size:0.6rem; color:var(--text-sub); display:block;">ACV PROFIT</span><span style="font-size:0.85rem; font-weight:800; color:var(--accent-primary);">${d.acvProfit || '-'}</span></div>
+                            <div style="background:var(--input-bg); padding:8px; border-radius:10px; border:1px solid var(--card-border);"><span style="font-size:0.6rem; color:var(--text-sub); display:block;">ACV GM%</span><span style="font-size:0.85rem; font-weight:800; color:var(--gold);">${d.acvGM || '-'}</span></div>
+                        </div>
+                    </div>
+
+                    <button onclick="downloadPerformaCardHD()" style="background:var(--accent-green-grad); color:#ffffff; padding:12px; border-radius:12px; font-weight:800; border:none; cursor:pointer; width:100%;"><i class="fa-solid fa-image"></i> DOWNLOAD KARTU PERFORMA HD 🖼️</button>
+                </div>
+            `;
+            showCustomModal("📊 DATA PERFORMANCE", htmlBox);
+        }
+
+        function downloadPerformaCardHD() {
+            const cardElement = document.getElementById("performaHDCardContainer");
+            if (!cardElement || typeof html2canvas === "undefined") return;
+            showLoading("Membuat Gambar HD...");
+            html2canvas(cardElement, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                hideLoading();
+                const link = document.createElement('a');
+                link.download = `Performa_Kacida_${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                showSwalSuccess('Gambar Tersimpan! 🖼️', 'Kartu performa berhasil diunduh ke galeri.');
+            }).catch(() => { hideLoading(); });
+        }
+
+        async function openSalesMTDModal(bulanPilihan = null) {
+            showLoading("Memuat Data MTD...");
+            const d = await apiCall("getDetailSalesMTD", { bulanPilihan: bulanPilihan });
+            hideLoading();
+            if (d) { currentMtdDetailData = d; renderMtdModalView('semua'); }
+        }
+
+        function renderMtdModalView(filterType = 'semua') {
+            const d = currentMtdDetailData;
+            if (!d) return;
+
+            let filteredList = d.listHarian || [];
+            if (filterType === 'growth') filteredList = filteredList.filter(item => item.growthPct > 0);
+            else if (filterType === 'decline') filteredList = filteredList.filter(item => item.growthPct <= 0);
+
+            let labels = [], dataCurr = [];
+            [...(d.listHarian || [])].sort((a,b) => a.day - b.day).forEach(item => {
+                labels.push(item.day);
+                dataCurr.push(item.sales2026Num);
+            });
+
+            const htmlBox = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div class="mtd-summary-card">
+                        <span style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">💰 TOTAL SALES MTD</span>
+                        <div class="mtd-amount-hero">Rp ${Number(d.totalMtdSales || 0).toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="modal-card-box">
+                        <span style="font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-chart-line" style="color:var(--accent-primary);"></i> GRAFIK HARIAN SALES</span>
+                        <div style="height:150px; position:relative; margin-top:8px;">
+                            <canvas id="chartSalesTrend" style="width:100%; height:150px;"></canvas>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="sub-tab-btn ${filterType==='semua'?'active':''}" onclick="renderMtdModalView('semua')">Semua (${d.listHarian.length})</button>
+                        <button class="sub-tab-btn ${filterType==='growth'?'active':''}" onclick="renderMtdModalView('growth')">Achieved</button>
+                        <button class="sub-tab-btn ${filterType==='decline'?'active':''}" onclick="renderMtdModalView('decline')">Decline</button>
+                    </div>
+                    <div class="modal-grid-1">
+                        ${filteredList.map(item => `
+                            <div class="modal-card-box" style="padding:10px; border-left:4px solid ${item.isGrowth ? '#10b981' : '#ef4444'};">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <b>Tgl ${item.day}</b>
+                                    <span class="growth-badge-pill ${item.isGrowth ? 'up' : 'down'}">${item.isGrowth ? '▲' : '▼'} ${item.growthPct?.toFixed(1)}%</span>
+                                </div>
+                                <p style="font-size:0.75rem; color:var(--accent-primary); font-weight:bold; margin-top:2px;">Sales 2026: ${item.sales2026Formatted}</p>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+            `;
+            showCustomModal(`Sales MTD • ${escapeHTML(d.namaToko)}`, htmlBox);
+
+            setTimeout(() => {
+                const ctx = document.getElementById('chartSalesTrend');
+                if (ctx && typeof Chart !== "undefined") {
+                    if (salesChartInstance) salesChartInstance.destroy();
+                    salesChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Sales (Rp)',
+                                data: dataCurr,
+                                borderColor: '#059669',
+                                borderWidth: 2,
+                                backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                                fill: true, tension: 0.35
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            }, 100);
+        }
+
+        // =================================================================
+        // CHAT TIM, KACIDA AI, & SERAH TERIMA SHIFT
+        // =================================================================
+        function switchChatRoomMode(mode) {
+            chatRoomMode = mode;
+            document.getElementById("btnTabTeam").classList.toggle("active", mode === 'team');
+            document.getElementById("btnTabAI").classList.toggle("active", mode === 'ai');
+            if (mode === 'team') renderChatList(cachedChatList);
+            else renderAIChatRoom();
+        }
+
+        function renderChatList(chats) {
+            const box = document.getElementById("chatBox");
+            if (!box) return;
+            box.innerHTML = (chats || []).map(c => {
+                const isMe = String(c.nik_pengirim || c.NIK).trim() === String(currentNik).trim();
+                return `
+                    <div class="wa-bubble ${isMe ? 'me' : 'other'}">
+                        <div class="wa-sender">${escapeHTML(c.nama_pengirim || c.NAMA || 'User')}</div>
+                        <div>${escapeHTML(c.isi_pesan || c.PESAN || '')}</div>
+                    </div>
+                `;
+            }).join("");
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function renderAIChatRoom() {
+            const box = document.getElementById("chatBox");
+            if (!box) return;
+            box.innerHTML = `<div class="wa-bubble ai">Halo! Saya Kacida AI. Tanyakan data sales, strategi toko, atau ngobrol santai! 😄</div>`;
+        }
+
+        async function handleSendChatAction() {
+            const input = document.getElementById("inputChatMsg");
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = "";
+
+            if (chatRoomMode === 'ai') {
+                const box = document.getElementById("chatBox");
+                box.innerHTML += `<div class="wa-bubble me"><div>${escapeHTML(msg)}</div></div>`;
+                const tempId = "ai_" + Date.now();
+                box.innerHTML += `<div class="wa-bubble ai" id="${tempId}"><div>🤖 Sedang berpikir...</div></div>`;
+                box.scrollTop = box.scrollHeight;
+
+                const res = await apiCall("askAI", { pertanyaan: msg });
+                document.getElementById(tempId).innerHTML = `<div>${escapeHTML(res?.jawaban || 'Maaf, AI sedang berpikir.')}</div>`;
+                box.scrollTop = box.scrollHeight;
+            } else if (rtdb) {
+                rtdb.ref('chats').push({
+                    timestamp: new Date().toISOString(),
+                    nik_pengirim: currentNik,
+                    nama_pengirim: dashboardData?.user?.NAMA || "User",
+                    isi_pesan: msg
+                });
+            }
+        }
+
+        function openSerahTerimaModal() {
+            showCustomModal("🔄 SERAH TERIMA SHIFT", `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    <div class="modal-card-box">
+                        <label style="font-weight:700; display:block; margin-bottom:4px;">Shift Kerja:</label>
+                        <select id="stShiftVal" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:10px; border-radius:10px; margin-bottom:10px;">
+                            <option value="Shift 1">Shift 1</option>
+                            <option value="Shift 2">Shift 2</option>
+                            <option value="Shift 3">Shift 3</option>
+                        </select>
+                        <label style="font-weight:700; display:block; margin-bottom:4px;">Sales Shift (Rp):</label>
+                        <input type="number" id="stSalesShift" placeholder="0" style="width:100%; background:var(--input-bg); border:1px solid var(--card-border); padding:10px; border-radius:10px; margin-bottom:10px;">
+                        <label style="font-weight:700; display:block; margin-bottom:4px;">Catatan Kasir:</label>
+                        <textarea id="stCatatan" placeholder="Kasir aman..." style="width:100%; height:60px; background:var(--input-bg); border:1px solid var(--card-border); border-radius:10px; padding:8px; margin-bottom:12px; outline:none;"></textarea>
+                        <button onclick="saveShiftAction()" style="width:100%; background:var(--accent-green-grad); color:#ffffff; font-weight:800; padding:12px; border-radius:12px; border:none; cursor:pointer;">💾 SIMPAN & SERAH TERIMA</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function saveShiftAction() {
+            const shift = document.getElementById("stShiftVal").value;
+            const salesShift = document.getElementById("stSalesShift").value;
+            if (!salesShift) { showSwalWarning('Form Belum Lengkap', 'Isi nominal sales shift!'); return; }
+
+            Swal.fire({
+                title: 'Konfirmasi Serah Terima',
+                text: `Apakah Anda yakin ingin menyerahkan shift (${shift})?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Serahkan',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    closeCustomModal();
+                    showSwalSuccess('Serah Terima Berhasil! 🤝', 'Catatan shift berhasil disimpan.');
+                    trackUserActivity(1, "Serah Terima Shift");
+
+                    apiCall("submitShiftHandover", {
+                        shift: shift, salesShift: salesShift,
+                        actPsm: 0, actSerbaGratis: 0, actPwp: 0, actNewMember: 0,
+                        catatan: document.getElementById("stCatatan").value || '-'
+                    }, 'POST').catch(()=>{});
+                }
+            });
+        }
+
+        // =================================================================
+        // DASHBOARD SUPER ADMINISTRATOR (NIK 14125034)
+        // =================================================================
+        function openMenuSidebar() {
+            const isSuperAdminUser = String(currentNik).trim() === "14125034";
+            const trackingButtonHtml = isSuperAdminUser ? `
+                <div class="modal-card-box" style="border:1px solid var(--gold); background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); margin-bottom:12px;">
+                    <h4 style="font-size:0.88rem; font-weight:800; color:var(--gold); margin-bottom:6px;"><i class="fa-solid fa-user-gear"></i> MENU SUPER ADMINISTRATOR</h4>
+                    <button onclick="openUserActivityTrackingModal()" style="width:100%; background:var(--gold); color:#ffffff; font-weight:800; padding:10px; border-radius:10px; border:none; cursor:pointer;">
+                        📊 BUKA DASHBOARD SUPER ADMINISTRATOR
+                    </button>
+                </div>
+            ` : '';
+
+            const htmlContent = `
+                <div class="modal-grid-1" style="font-size:0.78rem;">
+                    ${trackingButtonHtml}
+                    <div class="modal-card-box" style="margin-bottom:8px;">
+                        <button class="sub-tab-btn active" onclick="toggleThemeSwitcher()" style="width:100%;"><i class="fa-solid fa-circle-half-stroke"></i> Ubah Tema (Terang/Gelap)</button>
+                    </div>
+                </div>
+            `;
+            showCustomModal("⚙️ Pengaturan & Menu", htmlContent);
+        }
+
+        function openUserActivityTrackingModal() {
+            if (String(currentNik).trim() !== "14125034") return;
+            showLoading("Memuat Dashboard Super Administrator...");
+
+            Promise.all([
+                rtdb ? rtdb.ref('user_presence').once('value') : Promise.resolve(null),
+                rtdb ? rtdb.ref('activity_logs').limitToLast(100).once('value') : Promise.resolve(null)
+            ]).then(([presSnap, logSnap]) => {
+                hideLoading();
+                const presData = presSnap ? (presSnap.val() || {}) : {};
+                const logData = logSnap ? (logSnap.val() || {}) : {};
+                const presenceList = Object.values(presData);
+                const onlineCount = presenceList.length;
+
+                const htmlBox = `
+                    <div style="background:#04170d; color:#ffffff; margin:-16px; padding:16px; min-height:100vh;">
+                        <h2 style="font-size:1.1rem; font-weight:900; color:#00ff66; margin-bottom:10px;">TRACKING SUPER ADMINISTRATOR</h2>
+                        <div class="modal-grid-2" style="margin-bottom:12px;">
+                            <div class="modal-card-box" style="background:#0a2d18;"><span style="font-size:0.6rem; color:#a7f3d0;">USER TERDATA</span><p style="font-size:1.2rem; font-weight:900; color:#00ff66;">${onlineCount}</p></div>
+                            <div class="modal-card-box" style="background:#0a2d18;"><span style="font-size:0.6rem; color:#a7f3d0;">STATUS SERVER</span><p style="font-size:1.2rem; font-weight:900; color:#00ff66;">NORMAL ✅</p></div>
+                        </div>
+                        <h5 style="font-size:0.8rem; color:#00ff66; margin-bottom:8px;">👥 USER TERHUBUNG</h5>
+                        <div style="max-height:50vh; overflow-y:auto;">
+                            ${presenceList.map(u => `
+                                <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; margin-bottom:6px; font-size:0.68rem;">
+                                    <b>${escapeHTML(u.nama || u.nik)}</b> (${u.nik})<br/>
+                                    <span style="color:#a7f3d0;">${escapeHTML(u.toko || '-')} • ${escapeHTML(u.device || 'PWA/Web')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                showCustomModal("📊 SUPER ADMINISTRATOR", htmlBox);
+            }).catch(() => { hideLoading(); });
+        }
+
+        // =================================================================
+        // LIFECYCLE INITIALIZATION
+        // =================================================================
+        window.addEventListener("DOMContentLoaded", () => {
+            applyTheme(currentTheme);
+            if (currentNik) {
+                showLoading("Sinkronisasi Akun...");
+                apiCall("getDashboard").then(res => {
+                    hideLoading();
+                    if (res && res.status === "success") {
+                        dashboardData = res;
+                        document.getElementById("loginSection").classList.add("hidden");
+                        document.getElementById("appSection").classList.remove("hidden");
+                        renderDashboard(res);
+                    }
+                }).catch(() => { hideLoading(); });
+            }
+
+            if (rtdb) {
+                rtdb.ref('chats').limitToLast(40).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    cachedChatList = data ? Object.values(data) : [];
+                    if (chatRoomMode === 'team') renderChatList(cachedChatList);
+                });
+            }
+
+            setTimeout(() => {
+                const splash = document.getElementById("splashScreen");
+                if (splash) {
+                    splash.style.opacity = "0";
+                    setTimeout(() => splash.remove(), 500);
+                }
+            }, 1200);
+        });
+
+        async function handleLogin() {
+            const nik = document.getElementById("nikInput").value.trim();
+            if (!nik) { showSwalWarning('Form Kosong', 'Masukkan NIK Anda!'); return; }
+            showLoading("Memproses Login...");
+
+            const res = await apiCall("login", { nik: nik });
+            hideLoading();
+
+            if (res && res.status === "success") {
+                currentNik = nik;
+                localStorage.setItem("NIK_KACIDA", nik);
+                dashboardData = res;
+                document.getElementById("loginSection").classList.add("hidden");
+                document.getElementById("appSection").classList.remove("hidden");
+                showSwalSuccess('Selamat Datang!', 'Login berhasil.');
+                initDashboard(null, false);
+            } else {
+                showSwalWarning('Login Gagal ⚠️', res?.message || 'NIK Tidak Terdaftar.');
+            }
+        }
+
+        function initDashboard(kodeTokoPilihan = null, isSilent = false) {
+            if (!isSilent) showLoading("Memuat Dashboard...");
+            apiCall("getDashboard").then(res => {
+                if (!isSilent) hideLoading();
+                if (res && res.status === "success") {
+                    dashboardData = res;
+                    renderDashboard(res);
+                }
+            }).catch(() => { if (!isSilent) hideLoading(); });
+        }
+
+        function refreshLiveDashboardData() {
+            showLoading("Sinkronisasi Realtime...");
+            initDashboard(selectedKodeTokoAC, false);
+        }
+
+        function renderDashboard(data) {
+            document.getElementById("lblGreetingText").innerText = getTimeGreeting() + ",";
+            document.getElementById("lblUserName").innerText = (escapeHTML(data.user.NAMA) || "USER") + "! 👋";
+            document.getElementById("hdrStoreOnlineName").innerText = data.user.namaToko || "ONLINE";
+
+            const userPhotoUrl = getRealisticHumanAvatar(data.user.NAMA, data.user["FOTO PROFIL"] || data.user.foto, data.user.NIK);
+            document.getElementById("userAvatarHeader").src = userPhotoUrl;
+            document.getElementById("profilFoto").src = userPhotoUrl;
+
+            document.getElementById("profilNama").innerText = data.user.NAMA || "-";
+            document.getElementById("profilJabatan").innerText = data.user.jabatan || data.user.JABATAN || "-";
+            document.getElementById("profilToko").innerText = data.user.namaToko || "-";
+            document.getElementById("profilNik").innerText = "NIK: " + (data.user.NIK || "-");
+
+            document.getElementById("valSales").innerText = data.dataH1?.spdLabel || "Rp 0";
+            document.getElementById("valIKT").innerText = data.dataH1?.iktNetSales || "-";
+            document.getElementById("valPenawaran").innerText = data.dataH1?.point || "-";
+
+            renderCombinedMenuUtama(data.menu.utama || []);
+            renderMenuGrid("gridMenuLainnya", data.menu.layanan);
+
+            if (isUserAC() && data.acMetrics) {
+                document.getElementById("acSummaryContainer").classList.remove("hidden");
+                document.getElementById("acStoreCountBadge").innerText = `${data.acMetrics.totalStoreCount} Toko`;
+                document.getElementById("acAvgSalesVal").innerText = `Rp ${Number(data.acMetrics.avgSales).toLocaleString('id-ID')}`;
+                document.getElementById("acAvgSTDVal").innerText = `${Number(data.acMetrics.avgSTD).toLocaleString('id-ID')} Struk`;
+                document.getElementById("acAvgAPCVal").innerText = `Rp ${Number(data.acMetrics.avgAPC).toLocaleString('id-ID')}`;
+
+                const dropdown = document.getElementById("acStoreFilterDropdown");
+                if (dropdown && data.daftarToko) {
+                    dropdown.innerHTML = `<option value="ALL">🌐 Semua Toko (Area)</option>` + 
+                        data.daftarToko.map(t => `<option value="${t.kodeToko}" ${t.kodeToko === selectedKodeTokoAC ? 'selected' : ''}>🏪 ${escapeHTML(t.namaToko)}</option>`).join("");
+                }
+            } else {
+                document.getElementById("acSummaryContainer").classList.add("hidden");
+            }
+        }
+
+        function renderCombinedMenuUtama(sheetUtamaMenus) {
+            const container = document.getElementById("gridMenuUtama");
+            const builtInMenus = [
+                { name: "Jobdesk Harian", icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png", action: "openJobdeskHarianModal()" },
+                { name: "Plan Master Shift", icon: "https://cdn-icons-png.flaticon.com/512/3652/3652191.png", action: "openPlanMasterShiftModal()" },
+                { name: "Ceklis Expired", icon: "https://cdn-icons-png.flaticon.com/512/7518/7518748.png", action: "openCeklisExpiredModal()" },
+                { name: "Serah Terima", icon: "https://icons.iconarchive.com/icons/microsoft/fluentui-emoji-3d/128/Handshake-3d-icon.png", action: "openSerahTerimaModal()" },
+                { name: "Belanja Karyawan", icon: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png", action: "openBelanjaKaryawanModal()" }
+            ];
+
+            let allUtamaCards = [
+                ...builtInMenus.map(m => `
+                    <div class="menu-3d-item" onclick="${m.action}">
+                        <div class="icon-box-3d"><img src="${m.icon}"></div>
+                        <span class="menu-label">${m.name}</span>
+                    </div>
+                `),
+                ...(sheetUtamaMenus || []).map(m => `
+                    <div class="menu-3d-item" onclick="onMenuClick('${escapeHTML(m["Nama Menu"])}', '${m["Link Tujuan"] || '#'}')">
+                        <div class="icon-box-3d"><img src="${m["Icon URL"] || 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'}"></div>
+                        <span class="menu-label">${escapeHTML(m["Nama Menu"])}</span>
+                    </div>
+                `)
+            ];
+
+            container.innerHTML = allUtamaCards.slice(0, 10).join("");
+        }
+
+        function renderMenuGrid(elementId, items) {
+            let cards = (items || []).map(m => `
+                <div class="menu-3d-item" onclick="onMenuClick('${escapeHTML(m["Nama Menu"])}', '${m["Link Tujuan"] || '#'}')">
+                    <div class="icon-box-3d"><img src="${m["Icon URL"] || 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'}"></div>
+                    <span class="menu-label">${escapeHTML(m["Nama Menu"])}</span>
+                </div>
+            `);
+            document.getElementById(elementId).innerHTML = cards.slice(0, 10).join("");
+        }
+
+        function onMenuClick(namaMenu, link) {
+            trackUserActivity(1, "Klik " + namaMenu);
+            if (link && link !== "#") window.open(link, "_blank");
+        }
+
+        function switchTab(tabName) {
+            ["beranda", "chat", "aksiCepat", "leaderboard", "profil"].forEach(t => {
+                const el = document.getElementById("tab" + t.charAt(0).toUpperCase() + t.slice(1));
+                const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
+                if (el) el.classList.add("hidden");
+                if (nav) nav.classList.remove("active");
+            });
+
+            const activeTab = document.getElementById("tab" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            const activeNav = document.getElementById("nav" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if (activeTab) activeTab.classList.remove("hidden");
+            if (activeNav) activeNav.classList.add("active");
+        }
+
+        function handleLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Logout',
+                text: 'Apakah Anda yakin ingin keluar dan mengganti NIK?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal',
+                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    localStorage.clear();
+                    currentNik = "";
+                    dashboardData = null;
+                    document.getElementById("appSection").classList.add("hidden");
+                    document.getElementById("loginSection").classList.remove("hidden");
+                }
+            });
+        }
+
+        function triggerPWAProfilPhotoChooser() {
+            document.getElementById("pwaStaticProfilFileInput").click();
+        }
+
+        function handleProfilPhotoUploadPreviewDirect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showLoading("Mengompresi Foto...");
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    compressImageBase64(evt.target.result, 180, 180, 0.7, (c) => {
+                        hideLoading();
+                        if (rtdb) {
+                            rtdb.ref('user_custom_profiles/' + currentNik).set({ nik: currentNik, foto: c, updatedAt: new Date().toISOString() });
+                        }
+                        document.getElementById("profilFoto").src = c;
+                        document.getElementById("userAvatarHeader").src = c;
+                        showSwalSuccess('Foto Diperbarui! 📸', 'Foto profil berhasil disimpan.');
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html>

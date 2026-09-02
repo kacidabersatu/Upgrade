@@ -879,47 +879,59 @@
         }
 
         // =================================================================
-        // HYBRID API DISPATCHER (APPS SCRIPT WEB APP & FETCH POST)
-        // =================================================================
-        async function apiCall(action, params = {}, method = 'GET') {
-            try {
-                if (typeof google !== "undefined" && google.script && google.script.run && method === 'GET') {
-                    return new Promise((resolve, reject) => {
-                        let r = google.script.run.withSuccessHandler(res => resolve(res)).withFailureHandler(err => reject(err));
-                        if (action === "login") r.loginUser(params.nik);
-                        else if (action === "getDashboard") r.getDashboardData(currentNik, selectedKodeTokoAC);
-                        else if (action === "getPerforma") r.getPerformaPopup(currentNik, selectedKodeTokoAC);
-                        else if (action === "getDetailSalesMTD") r.getDetailSalesMTD(currentNik, selectedKodeTokoAC, params.bulanPilihan);
-                        else if (action === "askAI") r.askKacidaAI(currentNik, params.pertanyaan);
-                        else if (action === "getLeaderboard") r.getLeaderboard();
-                        else if (action === "getDaftarToko") r.getDaftarToko(currentNik);
-                        else if (action === "getBelanja") r.getBelanjaDataSpreadsheet(currentNik, selectedKodeTokoAC, params.filterStart, params.filterEnd);
-                        else if (action === "getCeklisExp") r.getCeklisExpDataSpreadsheet(currentNik, selectedKodeTokoAC);
-                        else if (action === "getJobdesk") r.getJobdeskDataSpreadsheet(currentNik, selectedKodeTokoAC, params.day);
-                        else if (action === "getMonthlyShift") r.getMonthlyShiftDataSpreadsheet(currentNik, params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear);
-                    });
-                } else {
-                    if (method === 'POST') {
-                        const res = await fetch(SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify({ action: action, nik: currentNik, ...params })
-                        });
-                        return await res.json();
-                    } else {
-                        const url = new URL(SCRIPT_URL);
-                        url.searchParams.append("action", action);
-                        url.searchParams.append("nik", currentNik);
-                        if (selectedKodeTokoAC) url.searchParams.append("kodeToko", selectedKodeTokoAC);
-                        Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+// HYBRID API DISPATCHER (DENGAN TIMEOUT FAIL-SAFE 8 DETIK)
+// =================================================================
+async function apiCall(action, params = {}, method = 'GET') {
+    // Controller Timeout 8 Detik agar aplikasi TIDAK BISA STUCK selamanya
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                        const res = await fetch(url);
-                        return await res.json();
-                    }
-                }
-            } catch(err) {
-                return { status: "offline", message: err.toString() };
+    try {
+        if (typeof google !== "undefined" && google.script && google.script.run && method === 'GET') {
+            return new Promise((resolve, reject) => {
+                let r = google.script.run
+                    .withSuccessHandler(res => { clearTimeout(timeoutId); resolve(res); })
+                    .withFailureHandler(err => { clearTimeout(timeoutId); reject(err); });
+
+                if (action === "login") r.loginUser(params.nik);
+                else if (action === "getDashboard") r.getDashboardData(currentNik, selectedKodeTokoAC);
+                else if (action === "getPerforma") r.getPerformaPopup(currentNik, selectedKodeTokoAC);
+                else if (action === "getDetailSalesMTD") r.getDetailSalesMTD(currentNik, selectedKodeTokoAC, params.bulanPilihan);
+                else if (action === "askAI") r.askKacidaAI(currentNik, params.pertanyaan);
+                else if (action === "getLeaderboard") r.getLeaderboard();
+                else if (action === "getDaftarToko") r.getDaftarToko(currentNik);
+                else if (action === "getBelanja") r.getBelanjaDataSpreadsheet(currentNik, selectedKodeTokoAC, params.filterStart, params.filterEnd);
+                else if (action === "getCeklisExp") r.getCeklisExpDataSpreadsheet(currentNik, selectedKodeTokoAC);
+                else if (action === "getJobdesk") r.getJobdeskDataSpreadsheet(currentNik, selectedKodeTokoAC, params.day);
+                else if (action === "getMonthlyShift") r.getMonthlyShiftDataSpreadsheet(currentNik, params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear);
+            });
+        } else {
+            if (method === 'POST') {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: action, nik: currentNik, ...params }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return await res.json();
+            } else {
+                const url = new URL(SCRIPT_URL);
+                url.searchParams.append("action", action);
+                url.searchParams.append("nik", currentNik);
+                if (selectedKodeTokoAC) url.searchParams.append("kodeToko", selectedKodeTokoAC);
+                Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return await res.json();
             }
+        }
+    } catch(err) {
+        clearTimeout(timeoutId);
+        hideLoading(); // Paksa tutup loading jika terjadi timeout / offline
+        return { status: "offline", message: err.toString() };
+    }
         }
         // =================================================================
         // PLAN MASTER SHIFT BULANAN (OPTIMISTIC UI & ENGINE AC)
@@ -2404,36 +2416,34 @@
         // LIFECYCLE INITIALIZATION
         // =================================================================
         window.addEventListener("DOMContentLoaded", () => {
-            applyTheme(currentTheme);
-            if (currentNik) {
-                showLoading("Sinkronisasi Akun...");
-                apiCall("getDashboard").then(res => {
-                    hideLoading();
-                    if (res && res.status === "success") {
-                        dashboardData = res;
-                        document.getElementById("loginSection").classList.add("hidden");
-                        document.getElementById("appSection").classList.remove("hidden");
-                        renderDashboard(res);
-                    }
-                }).catch(() => { hideLoading(); });
-            }
+    applyTheme(currentTheme);
 
-            if (rtdb) {
-                rtdb.ref('chats').limitToLast(40).on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    cachedChatList = data ? Object.values(data) : [];
-                    if (chatRoomMode === 'team') renderChatList(cachedChatList);
-                });
-            }
+    // 1. Tampilkan data dari cache lokal seketika (0.001 detik) jika ada
+    const localCache = localStorage.getItem("kacida_cached_dashboard");
+    if (localCache && currentNik) {
+        try {
+            dashboardData = JSON.parse(localCache);
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("appSection").classList.remove("hidden");
+            renderDashboard(dashboardData);
+        } catch(e) {}
+    }
 
-            setTimeout(() => {
-                const splash = document.getElementById("splashScreen");
-                if (splash) {
-                    splash.style.opacity = "0";
-                    setTimeout(() => splash.remove(), 500);
-                }
-            }, 1200);
-        });
+    // 2. Jalankan background sync tanpa memblokir layar dengan modal
+    if (currentNik) {
+        initDashboard(null, true); // Mode Silent (isSilent = true)
+    }
+
+    // 3. Hilangkan splash screen
+    setTimeout(() => {
+        const splash = document.getElementById("splashScreen");
+        if (splash) {
+            splash.style.opacity = "0";
+            setTimeout(() => splash.remove(), 400);
+        }
+        hideLoading(); // Pastikan tidak ada pop-up loading yang tertinggal
+    }, 1000);
+});
 
         async function handleLogin() {
             const nik = document.getElementById("nikInput").value.trim();
@@ -2457,15 +2467,31 @@
         }
 
         function initDashboard(kodeTokoPilihan = null, isSilent = false) {
-            if (!isSilent) showLoading("Memuat Dashboard...");
-            apiCall("getDashboard").then(res => {
-                if (!isSilent) hideLoading();
-                if (res && res.status === "success") {
-                    dashboardData = res;
-                    renderDashboard(res);
-                }
-            }).catch(() => { if (!isSilent) hideLoading(); });
-        }
+    if (!isSilent && !dashboardData) {
+        showLoading("Memuat Data...");
+    }
+
+    apiCall("getDashboard")
+        .then(res => {
+            hideLoading();
+            if (res && res.status === "success") {
+                dashboardData = res;
+                localStorage.setItem("kacida_cached_dashboard", JSON.stringify(res));
+                document.getElementById("loginSection").classList.add("hidden");
+                document.getElementById("appSection").classList.remove("hidden");
+                renderDashboard(res);
+            }
+        })
+        .catch(() => {
+            hideLoading();
+        });
+}
+
+function hideLoading() {
+    if (typeof Swal !== "undefined" && Swal.isVisible()) {
+        Swal.close();
+    }
+}
 
         function refreshLiveDashboardData() {
             showLoading("Sinkronisasi Realtime...");

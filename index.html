@@ -976,13 +976,25 @@
                     Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
 
                     const res = await fetch(url);
-                    return await res.json();
+                    const text = await res.text();
+                    
+                    // ✅ PENGECEKAN KEAMANAN: Jika server membalas HTML (Error/Unauthorized)
+                    if (text.trim().startsWith("<")) {
+                        console.error("GAS HTML Error Response:", text);
+                        return { 
+                            status: "error", 
+                            message: "Google Apps Script mengembalikan halaman HTML. Pastikan Web App sudah di-deploy ulang dengan akses 'Anyone (Siapa saja)'." 
+                        };
+                    }
+                    
+                    return JSON.parse(text);
                 }
             } catch(err) {
                 hideLoading();
                 return { status: "offline", message: err.toString() };
             }
         }
+        
     <script>
         let isChatInitialLoad = true;
         let isSystemNotifInitialLoad = true;

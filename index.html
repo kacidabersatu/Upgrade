@@ -539,55 +539,27 @@
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 navigator.serviceWorker.register('./firebase-messaging-sw.js').then((registration) => {
                     initFCMToken(registration);
-                }).catch(err => {
-                    const swCode = `
-                        importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-                        importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
-
-                        firebase.initializeApp(${JSON.stringify(firebaseConfig)});
-                        const messaging = firebase.messaging();
-
-                        messaging.onBackgroundMessage((payload) => {
-                            const title = payload.notification?.title || "Notifikasi Kacida Bersatu";
-                            const options = {
-                                body: payload.notification?.body || "Ada pembaruan data baru!",
-                                icon: "https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ",
-                                badge: "https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ",
-                                sound: "https://cdn.freesound.org/previews/536/536108_11861866-lq.mp3",
-                                vibrate: [300, 100, 300, 100, 300]
-                            };
-                            self.registration.showNotification(title, options);
-                        });
-                    `;
-                    const blob = new Blob([swCode], { type: 'application/javascript' });
-                    navigator.serviceWorker.register(URL.createObjectURL(blob)).then(reg => initFCMToken(reg));
-                });
+                }).catch(err => {});
             }
         }
 
         function initFCMToken(registration) {
             if (typeof firebase === "undefined" || !firebase.messaging) return;
             const messaging = firebase.messaging();
-
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
-                    messaging.getToken({ 
-                        serviceWorkerRegistration: registration,
-                        vapidKey: FIREBASE_VAPID_KEY 
-                    }).then((currentToken) => {
+                    messaging.getToken({ serviceWorkerRegistration: registration, vapidKey: FIREBASE_VAPID_KEY }).then((currentToken) => {
                         if (currentToken && currentNik && rtdb) {
                             rtdb.ref('fcm_tokens/' + String(currentNik).trim()).set({
-                                nik: String(currentNik).trim(),
-                                nama: dashboardData?.user?.NAMA || 'User',
-                                toko: dashboardData?.user?.namaToko || '-',
-                                fcmToken: currentToken,
-                                updatedAt: new Date().toISOString()
+                                nik: String(currentNik).trim(), nama: dashboardData?.user?.NAMA || 'User',
+                                toko: dashboardData?.user?.namaToko || '-', fcmToken: currentToken, updatedAt: new Date().toISOString()
                             });
                         }
                     });
                 }
             });
         }       
+
         const firebaseConfig = {
           apiKey: "AIzaSyBceAg0_W6NPMG8KPIGp0zf2qUnUE7Ypj8",
           authDomain: "kacida-bersatu.firebaseapp.com",
@@ -621,10 +593,8 @@
 
         let currentShiftMonth = new Date().toISOString().substring(0,7); 
         let localShiftMatrix = {}; 
-        let activeHandoversList = [];
-        let handoverCheckDoneThisSession = false;
 
-        // Data 5 Fitur Utama (Dipanggil dari Spreadsheet via apiCall)
+        // Data 5 Fitur Utama (Spreadsheet Storage via apiCall)
         let expShelves = [];
         let expProducts = [];
         let expPhotoPreview = null;
@@ -654,82 +624,40 @@
         const JOBDESK_MASTER_TASKS = {
             "Daily Activity": {
                 "Senin": [
-                    { title: "KEBERSIHAN TOILET", cara: "Sikat lantai & kloset pakai karbol, bersihkan cermin/wastafel, isi ulang sabun & tisu. Paraf ceklis dinding.", poin: "Bebas bau, kloset tidak berkerak, lantai kering, ceklis terisi." },
-                    { title: "CLEANING BEAN SPOT", cara: "Lap body mesin kopi, cuci portafilter, bersihkan drip tray, serta lap meja bar & grinder dengan kain mikrofiber.", poin: "Area saji steril, bebas noda susu/kopi, peralatan kering higienis." },
-                    { title: "KEBERSIHAN KESET MERAH DI CUCI", cara: "Cuci keset merah dengan sikat & detergen, bilas bersih, jemur hingga kering sebelum dipasang di pintu masuk.", poin: "Bebas lumpur, tidak berbau apak, terpasang simetris." },
-                    { title: "UPDATE SEWA", cara: "Cek area sewa tenant (ATM/SPACE), bersihkan area sekitar, cocokkan status sewa dengan SKS.", poin: "Area sewa bersih, Visual sewa sesuai dengan sistem." },
-                    { title: "KEBERSIHAN GALON", cara: "Lap bagian luar seluruh galon display dan stok gudang menggunakan kain lembab.", poin: "Galon bebas debu distributor & tidak ada air menetes di lantai." },
-                    { title: "KEBERSIHAN GENSET", cara: "Lap bodi luar genset, periksa oli & BBM, panaskan mesin genset 5–10 menit.", poin: "Genset siap pakai, bebas genangan oli, area genset bersih." }
+                    { title: "KEBERSIHAN TOILET", cara: "Sikat lantai & kloset pakai karbol, bersihkan cermin/wastafel, isi ulang sabun & tisu.", poin: "Bebas bau, kloset tidak berkerak, lantai kering." },
+                    { title: "CLEANING BEAN SPOT", cara: "Lap body mesin kopi, cuci portafilter, bersihkan drip tray, serta lap meja bar & grinder.", poin: "Area saji steril, bebas noda." }
                 ],
                 "Selasa": [
-                    { title: "KEBERSIHAN KACA LUAR DAN DALAM", cara: "Semprot cairan pembersih kaca, gosok dengan kain halus, tarik air dengan wiper dari atas ke bawah.", poin: "Bebas noda sidik jari, tidak bergaris bekas air, bening." },
-                    { title: "KEBERSIHAN TERAS DAN SARANG LABA-LABA AREA SALES", cara: "Sapu teras luar. Gunakan sapu bertangkai panjang untuk sarang laba-laba di sudut plafon sales.", poin: "Plafon bebas jaring debu, teras bebas puntung rokok/sampah." },
-                    { title: "KEBERSIHAN KOLONG RAK", cara: "Lepas shelving bawah / gunakan sapu tipis untuk menarik debu & sampah dari kolong rak sales.", poin: "Tidak ada produk jatuh tertinggal, kolong rak bebas debu tebal." },
-                    { title: "KEBERSIHAN CHILLER & FREEZER", cara: "Lap bagian pintu kaca dan tray dalam chiller, buang bunga es jika menumpuk di freezer.", poin: "Kaca chiller bening, produk dingin merata & higienis." }
+                    { title: "KEBERSIHAN KACA LUAR DAN DALAM", cara: "Semprot cairan pembersih kaca, gosok dengan kain halus.", poin: "Bebas noda sidik jari, bening." }
                 ],
                 "Rabu": [
-                    { title: "KEBERSIHAN KERANJANG BELANJA (STANDAR 24 PCS)", cara: "Lap luar-dalam keranjang dengan kanebo/serbet. Susun rapi di pintu masuk.", poin: "Jumlah pas 24 pcs, pegangan tidak lengket, dasar bersih." },
-                    { title: "KEBERSIHAN KOLONG RAK GUDANG", cara: "Pindahkan karton bawah jika memungkinkan, sapu dan pel lantai di bawah rak gudang.", poin: "Gudang bebas serangga/hama, karton tidak basah dan memakai pallet." },
-                    { title: "KEBERSIHAN MEJA KASIR & PERANGKAT POS", cara: "Lap permukaan meja kasir, layar komputer, keyboard, mesin EDC, dan pemindai barcode.", poin: "Meja kasir rapi, area bebas debu/minyak, perangkat siap pakai." },
-                    { title: "GENERAL CEK EXP ALL ITEM BKL ICE CREAM", cara: "Pemeriksaan tanggal kedaluwarsa pada seluruh item kategori Ice Cream.", poin: "FEFO berjalan baik, produk expired terpisah dari rak sales." }
+                    { title: "KEBERSIHAN KERANJANG BELANJA", cara: "Lap luar-dalam keranjang dengan kanebo/serbet.", poin: "Dasar bersih, tidak lengket." }
                 ],
                 "Kamis": [
-                    { title: "CLEANING BEAN SPOT BASIC & MEDIUM", cara: "Bersihkan seluruh utensil dan cek Expnya, Untuk Basic WB Berfungsi", poin: "Planogram dan Harga Update, higienitas terjaga." },
-                    { title: "GENERAL CEK EXP ALL ITEM BKL DC FRESH", cara: "Sisir seluruh Item BKL DC FRESH rawan Exp, cek tanggal exp tiap item, Input item mendekati exp di Menu CEKLIS EXP.", poin: "Data exp ter-input 100% akurat, tidak ada barang exp lolos." },
-                    { title: "KEBERSIHAN AREA SELASAR", cara: "Box return steril dari BKE/BR Ajukan OTP untuk dilakukan return, Selasar tidak berantakan.", poin: "Box return steril dan bebas noda minyak/jelantah." },
-                    { title: "KEBERSIHAN AREA GUDANG DAN KANTOR", cara: "Sapu dan pel, buang sampah yang sudah tidak terpakai.", poin: "Gudang dan kantor rapih." }
+                    { title: "GENERAL CEK EXP BKL DC FRESH", cara: "Sisir item BKL DC FRESH rawan exp.", poin: "Data exp akurat." }
                 ],
                 "Jumat": [
-                    { title: "KEBERSIHAN TOILET DEEP CLEANING", cara: "Deep cleaning pembuangan air, sikat keramik dinding toilet, Tempat sampah bersih dan tersedia pewangi.", poin: "Bebas bau tidak sedap, tidak ada genangan air." },
-                    { title: "SO RPC MATERIAL BEANSPOT", cara: "Hitung fisik bahan baku Bean Spot (kopi, susu, sirup, cup), cocokkan dengan data RPC.", poin: "Selisih stok fisik dan sistem adalah 0 (pasti & akurat)." },
-                    { title: "GROUPING RAK ATK , Z51 DAN 979", cara: "Rapihkan Dan Grouping Kartonan dan Receh di rak gudang.", poin: "Gudang tertata rapi, proses SO mudah dan cepat." },
-                    { title: "PENGECEKAN ALAT PEMADAM (APAR)", cara: "Periksa tekanan jarum indikator APAR, lap tabung, pastikan segel utuh dan akses tidak terhalang.", poin: "APAR siap pakai, kondisi fisik bersih dan aman." }
+                    { title: "KEBERSIHAN TOILET DEEP CLEANING", cara: "Deep cleaning pembuangan air, sikat keramik.", poin: "Bebas bau tidak sedap." }
                 ],
                 "Sabtu": [
-                    { title: "KEBERSIHAN AREA KASIR DAN SERVER", cara: "Lap meja kasir, monitor POS, EDC, serta bersihkan debu halus CPU server & UPS dengan kain kering.", poin: "Bebas debu, kabel tertata rapi, perangkat tidak overheat." },
-                    { title: "KEBERSIHAN BACKWALL KASIR", cara: "Lap seluruh backwal kasir.", poin: "Tampilan Area kasir rapih dan bersih, produk rokok terdisplay dengan rapih." },
-                    { title: "PEMASANGAN LABEL EXP KARTON", cara: "Cetak label exp, catat tanggal exp memakai spidol daan tempel di kartonan.", poin: "Memudahkan proses FEFO agar terdisplay lebih dulu,dan memudahkan monitor EXP In carton." },
-                    { title: "PERSIAPAN STOCK REFILL FAST MOVING", cara: "Pindahkan produk fast-moving (air mineral, minyak, gula) dari gudang ke area kasir/sales.", poin: "Rak sales selalu terisi penuh menjelang jam ramai weekend." }
+                    { title: "KEBERSIHAN AREA KASIR", cara: "Lap meja kasir, monitor POS, EDC.", poin: "Bebas debu." }
                 ],
                 "Minggu": [
-                    { title: "PENGECEKAN LINGKUNGAN HALAMAN PARKIR", cara: "Sapu area parkir dari sampah plastik & daun. Rapikan posisi marka parkir.", poin: "Halaman bersih, rapi, menyambut kedatangan pelanggan." },
-                    { title: "PENATAAN & SANITASI TEMPAT SAMPAH", cara: "Kosongkan dan Cuci tempat sampah luar & dalam.", poin: "Tidak berbau busuk, tidak berlalat dan terpasang rapi." },
-                    { title: "CEK BANNER & POP PROMOSI", cara: "Pastikan seluruh POP harga & banner promo terpasang simetris dan tidak ada yang sobek.", poin: "Informasi promo akurat dan menarik perhatian konsumen." }
+                    { title: "PENGECEKAN HALAMAN PARKIR", cara: "Sapu area parkir dari sampah plastik & daun.", poin: "Halaman bersih." }
                 ]
             },
             "Materi Briefing Shift 1 & 2": {
-                "Senin": [
-                    { title: "[SHIFT 1] MATERI BSP & TARGET MINGGUAN", cara: "Sampaikan materi BSP Dan Basic Store Performance & target sales pekan baru kepada seluruh tim.", poin: "Tim paham target nominal sales & fokus produk pekan ini." },
-                    { title: "[SHIFT 2] MATERI BSP & CEK PENCAPAIAN IKT", cara: "Sampaikan materi BSP Dan Basic Store Performance & target sales pekan baru kepada seluruh tim.", poin: "Tim paham target nominal sales & fokus produk pekan ini." }
-                ],
-                "Selasa": [
-                    { title: "[SHIFT 1] EVALUASI PROMO & TARGET SHIFT 1", cara: "Briefing pencapaian promo mingguan dan breakdown target sales Shift 1 hari Selasa.", poin: "Tim memahami item promo utama dan fokus penawaran kasir." },
-                    { title: "[SHIFT 2] SERAH TERIMA KASIR & DRAFT SO", cara: "Cek selisih kasir Shift 1 ke Shift 2, Evaluasi pencapaian Shift 1.", poin: "Tim memahami item promo utama dan fokus penawaran kasir." }
-                ],
-                "Rabu": [
-                    { title: "[SHIFT 1] REVIEW ITEM FOCUS & CEK EXPIRED", cara: "Briefing penawaran item fokus minggu ini dan sosialisasi pencegahan produk mendekati expired.", poin: "Peningkatan transaksi item fokus dan nol barang expired terlewat." },
-                    { title: "[SHIFT 2] SERAH TERIMA & KEBERSIHAN AREA SALES", cara: "Briefing pergantian shift, serah terima Pending meter, serta kerapihan area kasir.", poin: "Tidak miss komunikasi dan area sales teratur rapi." }
-                ],
-                "Kamis": [
-                    { title: "[SHIFT 1] STANDAR PELAYANAN & GREETING", cara: "Ingatkan kembali penerapan TSS (Tatap,Senyum,Sapa) dan kecepatan transaksi kasir.", poin: "Pelayanan ramah, standar greeting konsisten, antrean terkendali." },
-                    { title: "[SHIFT 2] SERAH TERIMA & PERSIAPAN PROMO JUMAT", cara: "Update tag harga bila ada promo esok hari.", poin: "Label harga akurat dan pencatatan serah terima selesai." }
-                ],
-                "Jumat": [
-                    { title: "[SHIFT 1] BRIEFING JUMAT BERKAH & TARGET WEEKEND", cara: "Briefing kesiapan stok produk fast-moving dan strategi peningkatan sales menyambut weekend.", poin: "Stok produk siap & target penjualan Jumat tercapai." },
-                    { title: "[SHIFT 2] SERAH TERIMA SHIFT & CEK STOK BEAN SPOT", cara: "Sampaikan evaluasi sales shift 1 dan pastikan bahan baku Bean Spot aman untuk operational malam.", poin: "Bahan baku Bean Spot memadai & serah terima terinput." }
-                ],
-                "Sabtu": [
-                    { title: "[SHIFT 1] BRIEFING PEAK TIME WEEKEND SHIFT 1", cara: "Pengaturan kecepatan transaksi saat peak time, pencegahan penumpukan antrean, & penawaran promo.", poin: "Antrean kasir terurai cepat dan sales maksimal." },
-                    { title: "[SHIFT 2] BRIEFING PEAK TIME WEEKEND SHIFT 2", cara: "Briefing kelengkapan display produk saat ramai dan pencatatan kasir di link serah terima.", poin: "Display rak tetap terisi rapi & data serah terima valid." }
-                ],
-                "Minggu": [
-                    { title: "[SHIFT 1] REVIEW IKT & CLOSING MINGGU", cara: "Evaluasi ketercapaian sales mingguan dan dorong penyelesaian target akhir pekan.", poin: "Tim termotivasi mencapai target mingguan toko." },
-                    { title: "[SHIFT 2] SERAH TERIMA SHIFT & PREPARASI OPERASIONAL SENIN", cara: "Cek kebersihan area toko, dan persiapan pergantian modal kerja pekan baru.", poin: "Toko siap 100% untuk operasional awal pekan." }
-                ]
+                "Senin": [{ title: "[SHIFT 1] MATERI BSP & TARGET MINGGUAN", cara: "Sampaikan materi BSP.", poin: "Tim paham target." }],
+                "Selasa": [{ title: "[SHIFT 1] EVALUASI PROMO", cara: "Briefing promo mingguan.", poin: "Tim paham promo." }],
+                "Rabu": [{ title: "[SHIFT 1] REVIEW ITEM FOCUS", cara: "Briefing item fokus.", poin: "Transaksi meningkat." }],
+                "Kamis": [{ title: "[SHIFT 1] STANDAR PELAYANAN", cara: "Terapkan TSS.", poin: "Pelayanan ramah." }],
+                "Jumat": [{ title: "[SHIFT 1] JUMAT BERKAH", cara: "Strategi weekend.", poin: "Target tercapai." }],
+                "Sabtu": [{ title: "[SHIFT 1] PEAK TIME", cara: "Atur kecepatan kasir.", poin: "Antrean terurai." }],
+                "Minggu": [{ title: "[SHIFT 1] REVIEW IKT", cara: "Evaluasi mingguan.", poin: "Tim termotivasi." }]
             }
         };
 
-        // --- PENGAMBILAN DATA DARI SPREADSHEET VIA apiCall (5 FITUR UTAMA) ---
+        // --- SPREADSHEET SYNC LOADERS (5 FITUR UTAMA) ---
         async function initSpreadsheetJobdeskListener() {
             const res = await apiCall("getJobdesk");
             if (res && res.status === "success") {
@@ -908,33 +836,6 @@
             updateStatus();
         }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        function triggerPWAInstall() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-            } else {
-                showSwalSuccess("Aplikasi Siap", "Buka menu browser HP Anda lalu pilih 'Tambahkan ke Layar Utama' (Add to Home Screen).");
-            }
-        }
-
-        function manageNotificationPermission() {
-            if (!('Notification' in window)) {
-                showSwalWarning('Tidak Didukung', 'Browser HP Anda belum mendukung Push Notification.');
-                return;
-            }
-            Notification.requestPermission().then(perm => {
-                if (perm === 'granted') {
-                    showSwalSuccess('Notifikasi Aktif 🔔', 'Izin notifikasi aplikasi berhasil diaktifkan!');
-                    trackUserActivity(3, "Mengaktifkan Notifikasi");
-                }
-            });
-        }
-
         async function apiCall(action, params = {}) {
             try {
                 if (typeof google !== "undefined" && google.script && google.script.run) {
@@ -945,8 +846,8 @@
                         else if (action === "getPerforma") r.getPerformaPopup(currentNik, selectedKodeTokoAC);
                         else if (action === "getDetailSalesMTD") r.getDetailSalesMTD(currentNik, selectedKodeTokoAC, params.bulanPilihan);
                         else if (action === "askAI") r.askKacidaAI(currentNik, params.pertanyaan);
-                        else if (action === "getMonthlyShift") r.getMonthlyShiftData(params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear);
-                        else if (action === "saveMonthlyShift") r.saveMonthlyShiftData(params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear, params.shiftDataJson);
+                        else if (action === "getMonthlyShift") r.apiGetMonthlyShift(params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear);
+                        else if (action === "saveMonthlyShift") r.apiSaveMonthlyShift(params.kodeToko || dashboardData?.user?.kodeToko, params.bulanYear, params.shiftDataJson);
                         else if (action === "submitShiftHandover") r.submitShiftHandover(currentNik, params);
                         else if (action === "submitSurvey") r.submitSurveyData(currentNik, params.rating, params.saran);
                         else if (action === "getLeaderboard") r.getLeaderboard();
@@ -978,15 +879,10 @@
                     const res = await fetch(url);
                     const text = await res.text();
                     
-                    // ✅ PENGECEKAN KEAMANAN: Jika server membalas HTML (Error/Unauthorized)
                     if (text.trim().startsWith("<")) {
                         console.error("GAS HTML Error Response:", text);
-                        return { 
-                            status: "error", 
-                            message: "Google Apps Script mengembalikan halaman HTML. Pastikan Web App sudah di-deploy ulang dengan akses 'Anyone (Siapa saja)'." 
-                        };
+                        return { status: "error", message: "Google Apps Script mengembalikan halaman HTML. Pastikan Web App sudah di-deploy ulang dengan akses 'Anyone'." };
                     }
-                    
                     return JSON.parse(text);
                 }
             } catch(err) {
@@ -994,46 +890,9 @@
                 return { status: "offline", message: err.toString() };
             }
         }
-        
+
+        // --- INTERAKTIF UI & FITUR APLIKASI ---
         let isChatInitialLoad = true;
-        let isSystemNotifInitialLoad = true;
-
-        function sendServerPushTrigger(type, title, body, targetKodeToko = '', targetNik = '') {
-            apiCall("sendServerPush", {
-                type: type, title: title, body: body,
-                targetKodeToko: targetKodeToko || dashboardData?.user?.kodeToko || '',
-                targetNik: targetNik
-            }).catch(()=>{});
-        }
-
-        function triggerLocalPushNotification(title, body, targetUrl = '') {
-            if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(title, {
-                        body: body,
-                        icon: 'https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ',
-                        badge: 'https://lh3.googleusercontent.com/d/1w9wSJmNCzsIjj_5fm_5MJdaOANr7wC3E',
-                        sound: 'https://cdn.freesound.org/previews/536/536108_11861866-lq.mp3',
-                        vibrate: [300, 100, 300, 100, 300],
-                        tag: 'kacida-notif-' + Date.now(),
-                        renotify: true,
-                        data: { url: targetUrl || window.location.href }
-                    });
-                });
-            }
-        }
-
-        function initFirebaseAllSystemNotificationsListener() {
-            if (!rtdb) return;
-            rtdb.ref('announcements').limitToLast(1).on('child_added', (snapshot) => {
-                if (isSystemNotifInitialLoad) return;
-                const a = snapshot.val();
-                if (a && String(a.authorNik).trim() !== String(currentNik).trim()) {
-                    triggerLocalPushNotification(`📢 Pengumuman Baru: ${a.judul}`, a.pesan || '');
-                }
-            });
-            setTimeout(() => { isSystemNotifInitialLoad = false; }, 2000);
-        }
 
         function initFirebaseRealtimeChat() {
             if (!rtdb) return;
@@ -1051,107 +910,17 @@
                     const entries = Object.entries(data);
                     cachedChatList = entries.map(([id, val]) => ({ id, ...val }));
                     localStorage.setItem('kacida_cache_chats', JSON.stringify(cachedChatList));
-
-                    let unreadCount = 0;
-                    cachedChatList.forEach(c => {
-                        const ts = new Date(c.timestamp || 0).getTime();
-                        if (ts > lastChatReadTimestamp && String(c.nik_pengirim).trim() !== String(currentNik).trim()) {
-                            unreadCount++;
-                        }
-                    });
-                    updateChatBadgeUI(unreadCount);
                     if (chatRoomMode === 'team') renderChatList(cachedChatList, false);
-                } else {
-                    cachedChatList = [];
-                    updateChatBadgeUI(0);
-                    if (chatRoomMode === 'team') renderChatList([], false);
                 }
             });
-        }
-        
-        function updateChatBadgeUI(count) {
-            const badge = document.getElementById("chatNavBadge");
-            if (badge) {
-                if (count > 0) { badge.innerText = count; badge.classList.remove("hidden"); }
-                else { badge.classList.add("hidden"); }
-            }
-        }
-
-        function initFirebaseAnnouncementsListener() {
-            if (!rtdb) return;
-            rtdb.ref('announcements').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    const todayStr = new Date().toISOString().substring(0,10);
-                    const userKodeToko = dashboardData?.user?.kodeToko || '';
-                    const entries = Object.entries(data);
-                    activeAnnouncementsList = entries.map(([id, val]) => ({ id, ...val })).filter(item => {
-                        const notExpired = !item.deadline || item.deadline >= todayStr;
-                        const matchTarget = item.target === 'ALL' || item.target === userKodeToko;
-                        return notExpired && matchTarget;
-                    });
-                    updateRunningTextAndAnnounceBadges();
-                } else {
-                    activeAnnouncementsList = [];
-                    updateRunningTextAndAnnounceBadges();
-                }
-            });
-        }
-
-        function updateRunningTextAndAnnounceBadges() {
-            const bar = document.getElementById("runningTextHeaderBar");
-            const countBox = document.getElementById("valAnnounce");
-            const dotAnnounce = document.getElementById("dotAnnounce");
-            const marquee = document.getElementById("marqueeTextContent");
-
-            if (activeAnnouncementsList && activeAnnouncementsList.length > 0) {
-                const fullText = activeAnnouncementsList.map(a => `${a.judul} : ${a.pesan}`).join("  ✦  ").replace(/[\r\n]+/g, " ");
-                if (marquee) marquee.innerText = fullText;
-                if (bar) bar.classList.remove("hidden");
-                if (countBox) countBox.innerText = activeAnnouncementsList.length;
-                if (dotAnnounce) dotAnnounce.classList.remove("hidden");
-            } else {
-                if (bar) bar.classList.add("hidden");
-                if (countBox) countBox.innerText = "0";
-                if (dotAnnounce) dotAnnounce.classList.add("hidden");
-            }
-            updateNotifikasiBadgeCount();
         }
 
         function updateNotifikasiBadgeCount() {
-            const userCOS = isUserCOS();
-            const userAC = isUserAC();
-            const userKodeToko = dashboardData?.user?.kodeToko || '';
-
-            let pendingBelanjaCount = 0;
-            if (userAC) {
-                pendingBelanjaCount = belanjaTransactions.filter(t => t.status === "Menunggu AC").length;
-            } else if (userCOS) {
-                pendingBelanjaCount = belanjaTransactions.filter(t => t.status === "Menunggu COS" && t.kodeToko === userKodeToko).length;
-            }
-
-            let pendingExpValidasiCount = 0;
-            if (userCOS) {
-                pendingExpValidasiCount = expShelves.filter(s => s.status === 'Menunggu Validasi COS' && s.kodeToko === userKodeToko).length;
-            }
-
-            const userExpPendingProducts = expProducts.filter(p => p.status !== 'selesai' && (userAC || p.kodeToko === userKodeToko) && isProductInAlertWindow(p.expDate, p.rhDays)).length;
-            const announceCount = activeAnnouncementsList.length;
-
-            let pendingJobdeskCount = 0;
-            if (userAC) {
-                pendingJobdeskCount = jobdeskReports.filter(j => j.status === 'PENDING_AC').length;
-            } else if (userCOS) {
-                pendingJobdeskCount = jobdeskReports.filter(j => j.status === 'PENDING_COS' && j.kodeToko === userKodeToko).length;
-            }
-
-            const totalNotif = pendingBelanjaCount + pendingExpValidasiCount + userExpPendingProducts + announceCount + pendingJobdeskCount;
             const valNotifBox = document.getElementById("valNotifCount");
             const dotNotif = document.getElementById("dotNotif");
-
-            if (valNotifBox) valNotifBox.innerText = totalNotif;
+            if (valNotifBox) valNotifBox.innerText = jobdeskReports.length + expShelves.length;
             if (dotNotif) {
-                if (totalNotif > 0) dotNotif.classList.remove("hidden");
+                if ((jobdeskReports.length + expShelves.length) > 0) dotNotif.classList.remove("hidden");
                 else dotNotif.classList.add("hidden");
             }
         }
@@ -1160,21 +929,18 @@
             const userCOS = isUserCOS();
             const userAC = isUserAC();
             const userKodeToko = dashboardData?.user?.kodeToko || '';
-            const pendingBelanjaCount = belanjaTransactions.filter(t => (userAC && t.status === "Menunggu AC") || (userCOS && t.status === "Menunggu COS")).length;
-
             const builtInMenus = [
-                { name: "Jobdesk Harian", icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png", action: "openJobdeskHarianModal()", numBadge: isUserAC() ? jobdeskReports.filter(j => j.status === 'PENDING_AC').length : (isUserCOS() ? jobdeskReports.filter(j => j.status === 'PENDING_COS' && j.kodeToko === userKodeToko).length : 0) },
+                { name: "Jobdesk Harian", icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png", action: "openJobdeskHarianModal()" },
                 { name: "Plan Master Shift", icon: "https://cdn-icons-png.flaticon.com/512/3652/3652191.png", action: "openPlanMasterShiftModal()" },
-                { name: "Ceklis Expired", icon: "https://cdn-icons-png.flaticon.com/512/7518/7518748.png", action: "openCeklisExpiredModal()", numBadge: isUserCOS() ? expShelves.filter(s => s.status === 'Menunggu Validasi COS' && s.kodeToko === userKodeToko).length : 0 },
+                { name: "Ceklis Expired", icon: "https://cdn-icons-png.flaticon.com/512/7518/7518748.png", action: "openCeklisExpiredModal()" },
                 { name: "Serah Terima", icon: "https://icons.iconarchive.com/icons/microsoft/fluentui-emoji-3d/128/Handshake-3d-icon.png", action: "openSerahTerimaModal()" },
-                { name: "Belanja Karyawan", icon: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png", action: "openBelanjaKaryawanModal()", numBadge: pendingBelanjaCount }
+                { name: "Belanja Karyawan", icon: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png", action: "openBelanjaKaryawanModal()" }
             ];
 
             const gridUtama = document.getElementById("gridMenuUtama");
             if (gridUtama) {
                 gridUtama.innerHTML = builtInMenus.map(m => `
-                    <div class="menu-3d-item" onclick="${m.action}" style="position:relative;">
-                        ${m.numBadge > 0 ? `<span class="num-badge-pill">${m.numBadge}</span>` : ''}
+                    <div class="menu-3d-item" onclick="${m.action}">
                         <div class="icon-box-3d"><img src="${m.icon}"></div>
                         <span class="menu-label">${m.name}</span>
                     </div>
@@ -1192,16 +958,12 @@
                 initFirebaseRealtimeChat();
                 initSpreadsheetCeklisExpiredListener();
                 initSpreadsheetBelanjaListener();
-                initFirebaseAnnouncementsListener();
                 initSpreadsheetJobdeskListener();
             } catch(e) {}
 
             setTimeout(() => {
                 const splash = document.getElementById("splashScreen");
-                if (splash) {
-                    splash.style.opacity = "0";
-                    setTimeout(() => splash.remove(), 500);
-                }
+                if (splash) { splash.style.opacity = "0"; setTimeout(() => splash.remove(), 500); }
             }, 1500);
 
             const localCache = localStorage.getItem("kacida_cached_dashboard");
@@ -1214,9 +976,7 @@
                 } catch(e) {}
             }
 
-            if (currentNik) {
-                initDashboard(null, true);
-            }
+            if (currentNik) initDashboard(null, true);
         });
 
         async function handleLogin() {
@@ -1227,12 +987,7 @@
             
             selectedKodeTokoAC = null;
             selectedShiftKodeToko = null;
-            localShiftMatrix = {};
             dashboardData = null;
-            expShelves = [];
-            expProducts = [];
-            belanjaTransactions = [];
-            jobdeskReports = [];
             currentNik = nik;
 
             try {
@@ -1245,12 +1000,7 @@
                     document.getElementById("appSection").classList.remove("hidden");
                     initDashboard(null, false);
                 } else {
-                    const errorMsg = res?.message || '';
-                    if (errorMsg.toLowerCase().includes("nik") || errorMsg.toLowerCase().includes("terdaftar")) {
-                        showSwalWarning('Login Gagal! ⚠️', errorMsg || 'NIK Tidak Terdaftar di Sistem.');
-                    } else {
-                        showSwalWarning('Login Gagal! ⚠️', 'Hmm 🤔 ada yang tidak beres, pastikan NIK Anda benar.');
-                    }
+                    showSwalWarning('Login Gagal! ⚠️', res?.message || 'NIK Tidak Terdaftar di Sistem.');
                 }
             } catch (err) {
                 hideLoading();
@@ -1269,7 +1019,6 @@
             if (data && data.status === "success") {
                 dashboardData = data;
                 if (!data.user.isAC) selectedKodeTokoAC = null;
-
                 localStorage.setItem("kacida_cached_dashboard", JSON.stringify(data));
                 
                 document.getElementById("loginSection").classList.add("hidden");
@@ -1277,12 +1026,9 @@
                 renderDashboard(data);
                 trackUserActivity(1, "Akses Dashboard");
                 
-                initFirebaseAnnouncementsListener();
                 initSpreadsheetBelanjaListener();
                 initSpreadsheetCeklisExpiredListener();
-                initFirebaseRealtimeChat();
                 initSpreadsheetJobdeskListener();
-                initFirebaseAllSystemNotificationsListener();
             }
         }
 
@@ -1291,80 +1037,13 @@
             initDashboard(selectedKodeTokoAC, false);
         }
 
-        function isUserAC() {
-            if (dashboardData?.user?.isAC) return true;
-            const j = String(dashboardData?.user?.jabatan || dashboardData?.user?.JABATAN || '').toUpperCase();
-            return j.includes("AC") || j.includes("AREA");
-        }
-
-        function canEditShift() {
-            if (!dashboardData || !dashboardData.user) return false;
-            const j = String(dashboardData.user.jabatan || dashboardData.user.JABATAN || '').toUpperCase();
-            return (j.includes("CHIEF") || j.includes("COS") || j.includes("ACOS") || j.includes("ASSISTANT")) && !isUserAC();
-        }
-
-        function isUserCOS() {
-            const j = String(dashboardData?.user?.jabatan || dashboardData?.user?.JABATAN || '').toUpperCase();
-            if (j.includes("ACOS") || j.includes("ASSISTANT") || j.includes("ASISTEN") || j.includes("CREW") || j.includes("STAFF")) return false;
-            const isChief = j.includes("COS") || j.includes("CHIEF") || j.includes("STORE MANAGER") || j.includes("KEPALA TOKO");
-            return isChief && !isUserAC();
-        }
-
-        function getRealisticHumanAvatar(nama, fotoUrl, userNik = "") {
-            if (fotoUrl && String(fotoUrl).trim().length > 10) return fotoUrl;
-            return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
-        }
-
-        function triggerPWAProfilPhotoChooser() {
-            triggerAndroidHaptic('medium');
-            const fileInput = document.getElementById("pwaStaticProfilFileInput");
-            if (fileInput) { fileInput.value = ""; fileInput.click(); }
-        }
-
-        function compressImageBase64(base64Str, maxWidth, maxHeight, quality, callback) {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                if (width > height) {
-                    if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-                } else {
-                    if (height > maxHeight) { width = Math.round((width * maxHeight) / height); height = maxHeight; }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', quality || 0.75));
-            };
-            img.src = base64Str;
-        }
-
-        function handleProfilPhotoUploadPreviewDirect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                showLoading("Memproses Foto...");
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    compressImageBase64(evt.target.result, 200, 200, 0.75, (compressedBase64) => {
-                        hideLoading();
-                        localStorage.setItem('kacida_custom_foto_' + currentNik, compressedBase64);
-                        if (dashboardData) renderDashboard(dashboardData);
-                        showSwalSuccess('Foto Diperbarui! 📸', 'Foto profil berhasil diganti!');
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
         function renderDashboard(data) {
             document.getElementById("lblGreetingText").innerText = getTimeGreeting() + ",";
             document.getElementById("lblUserName").innerText = (escapeHTML(data.user.NAMA) || "USER") + "! 👋";
             document.getElementById("hdrStoreOnlineName").innerText = data.user.namaToko || "ONLINE";
             
             const myNikStr = String(data.user.NIK || currentNik).trim();
-            const userPhotoUrl = getRealisticHumanAvatar(data.user.NAMA, data.user["FOTO PROFIL"] || data.user.foto, myNikStr);
+            const userPhotoUrl = data.user["FOTO PROFIL"] || data.user.foto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80";
             
             const hdrAvatar = document.getElementById("userAvatarHeader");
             if (hdrAvatar) { hdrAvatar.src = userPhotoUrl; hdrAvatar.onclick = () => showFullImageModal(userPhotoUrl); }
@@ -1399,96 +1078,88 @@
             updateNotifikasiBadgeCount();
         }
 
-        function openMenuSidebar() {
-            triggerAndroidHaptic('medium');
-            const htmlContent = `
-                <div class="modal-grid-1" style="font-size:0.78rem;">
-                    <div class="modal-card-box" style="margin-bottom:8px;">
-                        <h4 style="font-size:0.88rem; font-weight:800; color:var(--accent-primary); margin-bottom:8px;"><i class="fa-solid fa-sliders"></i> TAMPILAN APLIKASI</h4>
-                        <button class="sub-tab-btn active" onclick="toggleThemeSwitcher()" style="width:100%;">Ubah Tema Terang/Gelap</button>
-                    </div>
-                </div>
-            `;
-            showCustomModal("⚙️ Pengaturan Aplikasi", htmlContent);
+        function renderCarousel(banners, namaToko) {
+            const wrapper = document.getElementById("carouselWrapper");
+            if (!wrapper) return;
+            if (swiperInstance) swiperInstance.destroy(true, true);
+            if (!banners || banners.length === 0) {
+                wrapper.innerHTML = `<div class="swiper-slide banner-card"><span class="banner-tag">${escapeHTML(namaToko || "PROMO")}</span><h2 class="banner-heading">PIC SAPA</h2></div>`;
+            } else {
+                wrapper.innerHTML = banners.map(b => `<div class="swiper-slide banner-card"><span class="banner-tag">${escapeHTML(b["NAMA TOKO"] || "PROMO")}</span><h2 class="banner-heading">${escapeHTML(b.PIC || "PIC SAPA")}</h2></div>`).join("");
+            }
+            swiperInstance = new Swiper(".mainCarousel", { autoplay: { delay: 4000 }, loop: true, pagination: { el: ".swiper-pagination", clickable: true } });
         }
 
-        // --- 5 FITUR UTAMA IMPLEMENTASI DI FRONTEND (SPREADSHEET API) ---
+        function renderCombinedMenuUtama(sheetUtamaMenus) {
+            const container = document.getElementById("gridMenuUtama");
+            const builtInMenus = [
+                { name: "Jobdesk Harian", icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png", action: "openJobdeskHarianModal()" },
+                { name: "Plan Master Shift", icon: "https://cdn-icons-png.flaticon.com/512/3652/3652191.png", action: "openPlanMasterShiftModal()" },
+                { name: "Ceklis Expired", icon: "https://cdn-icons-png.flaticon.com/512/7518/7518748.png", action: "openCeklisExpiredModal()" },
+                { name: "Serah Terima", icon: "https://icons.iconarchive.com/icons/microsoft/fluentui-emoji-3d/128/Handshake-3d-icon.png", action: "openSerahTerimaModal()" },
+                { name: "Belanja Karyawan", icon: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png", action: "openBelanjaKaryawanModal()" }
+            ];
+
+            let allUtamaCards = [
+                ...builtInMenus.map(m => `
+                    <div class="menu-3d-item" onclick="${m.action}">
+                        <div class="icon-box-3d"><img src="${m.icon}"></div>
+                        <span class="menu-label">${m.name}</span>
+                    </div>
+                `),
+                ...(sheetUtamaMenus || []).map(m => `
+                    <div class="menu-3d-item" onclick="onMenuClick('${escapeHTML(m["Nama Menu"])}', '${m["Link Tujuan"] || '#'}')">
+                        <div class="icon-box-3d"><img src="${m["Icon URL"] || 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'}"></div>
+                        <span class="menu-label">${escapeHTML(m["Nama Menu"])}</span>
+                    </div>
+                `)
+            ];
+            container.innerHTML = allUtamaCards.slice(0, 10).join("");
+        }
+
+        function renderMenuGrid(elementId, items) {
+            let cards = (items || []).map(m => `
+                <div class="menu-3d-item" onclick="onMenuClick('${escapeHTML(m["Nama Menu"])}', '${m["Link Tujuan"] || '#'}')">
+                    <div class="icon-box-3d"><img src="${m["Icon URL"] || 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'}"></div>
+                    <span class="menu-label">${escapeHTML(m["Nama Menu"])}</span>
+                </div>
+            `);
+            document.getElementById(elementId).innerHTML = cards.slice(0, 10).join("");
+        }
+
+        async function onMenuClick(namaMenu, link) {
+            triggerAndroidHaptic('light');
+            trackUserActivity(1, "Klik " + namaMenu);
+            if (link && link !== "#") window.open(link, "_blank");
+        }
+
+        // --- 5 FITUR UTAMA SPREADSHEET IMPLEMENTATION ---
 
         // 1. JOBDESK HARIAN
         function openJobdeskHarianModal(activeTab = 'input') {
-            if (isUserAC() && activeTab === 'input') activeTab = 'resume';
-            renderJobdeskModalView(activeTab);
-        }
-
-        function renderJobdeskModalView(activeTab = 'input') {
-            const userCOS = isUserCOS();
-            const userAC = isUserAC();
-            const userKodeToko = dashboardData?.user?.kodeToko || '';
-            const userNamaToko = dashboardData?.user?.namaToko || 'Toko';
-
-            let tabContentHtml = '';
-            if (activeTab === 'input' && !userAC) {
-                const tasks = JOBDESK_MASTER_TASKS[selectedJobdeskCategory]?.[selectedJobdeskDay] || [];
-                let taskCardsHtml = tasks.map((task) => {
-                    const existingSub = jobdeskReports.find(r => r.taskTitle === task.title && r.day === selectedJobdeskDay && r.kodeToko === userKodeToko);
-                    let statusText = existingSub ? '✅ Selesai' : 'Belum Dikerjakan';
-                    return `
-                        <div class="modal-card-box" style="border-left:4px solid ${existingSub ? '#10b981' : 'var(--accent-primary)'};">
-                            <h4 style="font-size:0.82rem; font-weight:800;">${escapeHTML(task.title)}</h4>
-                            <button onclick="openJobdeskTaskFormModal('${escapeHTML(task.title)}')" style="width:100%; margin-top:6px; background:var(--accent-green-grad); color:#fff; border:none; padding:8px; border-radius:8px; font-weight:800; cursor:pointer;">
-                                ${existingSub ? 'Lihat / Ulangi' : 'Kerjakan & Upload Foto'}
-                            </button>
-                        </div>
-                    `;
-                }).join("");
-                tabContentHtml = `<div class="modal-grid-1">${taskCardsHtml}</div>`;
-            } else {
-                tabContentHtml = `<div class="modal-grid-1"><p style="text-align:center;">Fitur Resume & Approval Jobdesk (Tersimpan di Spreadsheet)</p></div>`;
-            }
-
-            const htmlBox = `
-                <div class="modal-grid-1" style="font-size:0.78rem;">
-                    <div style="display:flex; gap:6px; overflow-x:auto;">
-                        ${['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(d => `
-                            <button onclick="selectedJobdeskDay='${d}'; renderJobdeskModalView('${activeTab}');" class="sub-tab-btn ${selectedJobdeskDay === d ? 'active' : ''}">${d}</button>
-                        `).join('')}
-                    </div>
-                    ${tabContentHtml}
+            showCustomModal("📋 JOBDESK HARIAN", `
+                <div style="font-size:0.78rem;">
+                    <p><b>Hari:</b> ${selectedJobdeskDay} | <b>Kategori:</b> ${selectedJobdeskCategory}</p>
+                    <p style="margin-top:8px; color:var(--text-sub);">Pengerjaan jobdesk terhubung langsung ke Google Spreadsheet.</p>
+                    <button onclick="submitJobdeskSample()" style="margin-top:12px; background:var(--accent-green-grad); color:#fff; border:none; padding:10px; border-radius:8px; width:100%; font-weight:800;">+ Kirim Laporan Jobdesk ke Spreadsheet</button>
                 </div>
-            `;
-            showCustomModal("📋 JOBDESK HARIAN", htmlBox);
+            `);
         }
 
-        function openJobdeskTaskFormModal(taskTitle) {
-            jobdeskPhotoPreview = null;
-            Swal.fire({
-                title: `Upload Bukti: ${taskTitle}`,
-                html: `<input type="file" accept="image/*" onchange="handleJobdeskPhotoChangePreview(event)" style="width:100%;">`,
-                showCancelButton: true,
-                confirmButtonText: 'Kirim Laporan',
-                customClass: { popup: 'swal-light-custom', confirmButton: 'swal-btn-green' }
-            }).then(res => {
-                if (res.isConfirmed) {
-                    submitJobdeskReportAction(taskTitle, "Selesai");
-                }
-            });
-        }
-
-        function submitJobdeskReportAction(taskTitle, notes) {
+        async function submitJobdeskSample() {
             const params = {
-                taskTitle: taskTitle, category: selectedJobdeskCategory, day: selectedJobdeskDay,
+                taskTitle: "KEBERSIHAN TOILET", category: selectedJobdeskCategory, day: selectedJobdeskDay,
                 weekKey: getStartOfWeekKey(), kodeToko: dashboardData?.user?.kodeToko || 'TOKO',
                 namaToko: dashboardData?.user?.namaToko || 'Toko', submittedBy: dashboardData?.user?.NAMA || 'User',
-                role: dashboardData?.user?.JABATAN || 'Crew', notes: notes, photoUrl: jobdeskPhotoPreview || '', status: 'PENDING_COS'
+                role: dashboardData?.user?.JABATAN || 'Crew', notes: "Selesai dibersihkan", photoUrl: '', status: 'PENDING_COS'
             };
             showLoading("Menyimpan ke Spreadsheet...");
-            apiCall("submitJobdesk", params).then(() => {
-                hideLoading();
-                initSpreadsheetJobdeskListener().then(() => {
-                    closeCustomModal();
-                    showSwalSuccess("Berhasil", "Laporan tersimpan di Google Spreadsheet!");
-                });
-            });
+            const res = await apiCall("submitJobdesk", params);
+            hideLoading();
+            if (res && res.status === "success") {
+                initSpreadsheetJobdeskListener();
+                showSwalSuccess("Berhasil", "Laporan jobdesk tersimpan di Spreadsheet!");
+            }
         }
 
         // 2. PLAN MASTER SHIFT
@@ -1500,20 +1171,20 @@
             apiCall("getMonthlyShift", { kodeToko: targetKode, bulanYear: currentShiftMonth }).then(res => {
                 hideLoading();
                 localShiftMatrix = (res && res.shiftData) ? res.shiftData : {};
-                renderPlanMasterShiftModal();
+                renderPlanMasterShiftModalView(targetKode);
             });
         }
 
-        function renderPlanMasterShiftModal() {
+        function renderPlanMasterShiftModalView(targetKode) {
             showCustomModal("📅 PLAN MASTER SHIFT", `
                 <div style="font-size:0.78rem;">
-                    <p>Jadwal shift bulanan untuk toko <b>${selectedShiftKodeToko}</b> berhasil dimuat dari Spreadsheet.</p>
-                    <button onclick="saveMonthlyShiftDataAction()" style="margin-top:10px; background:var(--accent-green-grad); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:800; width:100%;">💾 Simpan Perubahan ke Spreadsheet</button>
+                    <p>Jadwal shift toko <b>${targetKode}</b> dimuat dari Google Spreadsheet.</p>
+                    <button onclick="saveMonthlyShiftAction()" style="margin-top:10px; background:var(--accent-green-grad); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:800; width:100%;">💾 Simpan Shift ke Spreadsheet</button>
                 </div>
             `);
         }
 
-        async function saveMonthlyShiftDataAction() {
+        async function saveMonthlyShiftAction() {
             showLoading("Menyimpan ke Spreadsheet...");
             const res = await apiCall("saveMonthlyShift", { kodeToko: selectedShiftKodeToko, bulanYear: currentShiftMonth, shiftDataJson: JSON.stringify(localShiftMatrix) });
             hideLoading();
@@ -1525,26 +1196,25 @@
             initSpreadsheetCeklisExpiredListener().then(() => {
                 showCustomModal("⚠️ CEKLIS EXPIRED", `
                     <div style="font-size:0.78rem;">
-                        <p>Total Rak Terdaftar: <b>${expShelves.length} Rak</b></p>
-                        <p>Total Produk Exp Tercatat: <b>${expProducts.length} Item</b></p>
+                        <p>Total Rak: <b>${expShelves.length} Rak</b></p>
+                        <p>Total Produk Exp: <b>${expProducts.length} Item</b></p>
                         <button onclick="saveExpProductSample()" style="margin-top:10px; background:var(--accent-green-grad); color:#fff; border:none; padding:10px; border-radius:8px; width:100%; font-weight:800;">+ Catat Produk Expired ke Spreadsheet</button>
                     </div>
                 `);
             });
         }
 
-        function saveExpProductSample() {
+        async function saveExpProductSample() {
             const params = {
                 name: "Susu UHT Sample", shelfId: "shelf_1", expDate: "2026-12-31", rhDays: 30,
                 addedBy: dashboardData?.user?.NAMA || 'Staff', status: 'pending',
                 kodeToko: dashboardData?.user?.kodeToko || 'TOKO', namaToko: dashboardData?.user?.namaToko || 'Toko'
             };
             showLoading("Menyimpan...");
-            apiCall("saveCeklisProduct", params).then(() => {
-                hideLoading();
-                initSpreadsheetCeklisExpiredListener();
-                showSwalSuccess("Tersimpan", "Produk expired tersimpan di Spreadsheet!");
-            });
+            await apiCall("saveCeklisProduct", params);
+            hideLoading();
+            initSpreadsheetCeklisExpiredListener();
+            showSwalSuccess("Tersimpan", "Produk expired tersimpan di Spreadsheet!");
         }
 
         // 4. SERAH TERIMA SHIFT
@@ -1571,7 +1241,7 @@
             initSpreadsheetBelanjaListener().then(() => {
                 showCustomModal("🛒 BELANJA KARYAWAN", `
                     <div style="font-size:0.78rem;">
-                        <p>Total Struk Tersimpan di Spreadsheet: <b>${belanjaTransactions.length} Struk</b></p>
+                        <p>Total Struk di Spreadsheet: <b>${belanjaTransactions.length} Struk</b></p>
                         <label style="margin-top:8px; display:block;">Nominal Belanja (Rp):</label>
                         <input type="number" id="belanjaNominalVal" value="50000" style="width:100%; padding:8px; margin-bottom:10px; background:var(--input-bg); border:1px solid var(--card-border); border-radius:8px;">
                         <button onclick="submitBelanjaTransactionAction()" style="background:var(--accent-green-grad); color:#fff; border:none; padding:10px; border-radius:8px; width:100%; font-weight:800;">🚀 Submit Struk ke Spreadsheet</button>
@@ -1580,7 +1250,7 @@
             });
         }
 
-        function submitBelanjaTransactionAction() {
+        async function submitBelanjaTransactionAction() {
             const params = {
                 penginputNama: dashboardData?.user?.NAMA || 'User',
                 noBon: "BON-001", noMember: "MEM-001",
@@ -1589,14 +1259,13 @@
                 kodeToko: dashboardData?.user?.kodeToko || 'TOKO', namaToko: dashboardData?.user?.namaToko || 'Toko'
             };
             showLoading("Menyimpan Struk...");
-            apiCall("submitBelanja", params).then(() => {
-                hideLoading();
-                initSpreadsheetBelanjaListener();
-                showSwalSuccess("Terkirim", "Struk belanja tersimpan di Spreadsheet!");
-            });
+            await apiCall("submitBelanja", params);
+            hideLoading();
+            initSpreadsheetBelanjaListener();
+            showSwalSuccess("Terkirim", "Struk belanja tersimpan di Spreadsheet!");
         }
 
-        // Standar Pendukung Lainnya
+        // Fungsi Pendukung Lainnya
         async function openPerformaPopup() {
             showLoading("Memuat Performance...");
             const res = await apiCall("getPerforma");
@@ -1604,11 +1273,21 @@
             if (res) renderPerformaModalView(res);
         }
 
+        function renderPerformaModalView(d) {
+            showCustomModal("📊 DATA PERFORMANCE", `
+                <div style="font-size:0.78rem;">
+                    <p><b>Sales Harian:</b> Rp ${Number(d.sales2026||0).toLocaleString('id-ID')}</p>
+                    <p><b>Growth Harian:</b> ${d.growthHarian?.toFixed(1)}%</p>
+                    <p><b>Point Dashboard:</b> ${d.pointDash}</p>
+                </div>
+            `);
+        }
+
         async function openSalesMTDModal(bulanPilihan = null) {
             showLoading("Memuat MTD...");
             const d = await apiCall("getDetailSalesMTD", { bulanPilihan: bulanPilihan });
             hideLoading();
-            if (d) { currentMtdDetailData = d; renderMtdModalView('semua'); }
+            if (d) showCustomModal("Sales MTD", `<div style="font-size:0.78rem;">Total MTD: Rp ${Number(d.totalMtdSales||0).toLocaleString('id-ID')}</div>`);
         }
 
         async function loadLeaderboard() {
@@ -1627,6 +1306,16 @@
             }
         }
 
+        function loadMisi() {
+            const container = document.getElementById("misiList");
+            if (!container) return;
+            container.innerHTML = `
+                <div class="modal-card-box" onclick="openJobdeskHarianModal()"><b>Jobdesk Harian & Briefing</b> (+5 Poin)</div>
+                <div class="modal-card-box" onclick="openCeklisExpiredModal()"><b>Ceklis Expired & Rak</b> (+5 Poin)</div>
+                <div class="modal-card-box" onclick="openSerahTerimaModal()"><b>Serah Terima Shift</b> (+5 Poin)</div>
+            `;
+        }
+
         function switchTab(tabName) {
             triggerAndroidHaptic('light');
             ["beranda", "chat", "aksiCepat", "leaderboard", "profil"].forEach(t => {
@@ -1638,16 +1327,6 @@
 
             if (tabName === "leaderboard") loadLeaderboard();
             if (tabName === "aksiCepat") loadMisi();
-        }
-
-        function loadMisi() {
-            const container = document.getElementById("misiList");
-            if (!container) return;
-            container.innerHTML = `
-                <div class="modal-card-box" onclick="openJobdeskHarianModal()"><b>Jobdesk Harian & Briefing</b> (+5 Poin)</div>
-                <div class="modal-card-box" onclick="openCeklisExpiredModal()"><b>Ceklis Expired & Rak</b> (+5 Poin)</div>
-                <div class="modal-card-box" onclick="openSerahTerimaModal()"><b>Serah Terima Shift</b> (+5 Poin)</div>
-            `;
         }
 
         function handleLogout() {

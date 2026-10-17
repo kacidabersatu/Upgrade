@@ -57,7 +57,7 @@ const App = {
     localStorage.setItem("kacida_demo_mode", "true");
     this.currentUser = {
       nik: "12345678",
-      nama: "Budi Santoso (DEMO)",
+      nama: "Bung Rocky (DEMO)",
       jabatan: "Chief Of Store",
       role: "Chief of Store",
       namaToko: "2J16 - CARINGIN KULON",

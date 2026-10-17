@@ -1,44 +1,54 @@
 /**
  * ============================================================================
- * KACIDA BERSATU — API CLIENT LAYER
+ * KACIDA BERSATU — API CLIENT LAYER (TERINTEGRASI & FIX)
  * File: api.js
  * ============================================================================
  */
 
 const Api = {
-  config: null,
+  // Gunakan URL deployment asli Anda sebagai default utama
+  config: {
+    apiUrl: "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec",
+    superAdminNik: "14125034"
+  },
 
   async init() {
     try {
-      const res = await fetch("./config.json");
-      this.config = await res.json();
+      const res = await fetch("./config.json?v=" + Date.now());
+      if (res.ok) {
+        const json = await res.json();
+        // Hanya ganti jika URL di config.json valid dan bukan teks placeholder
+        if (json.apiUrl && !json.apiUrl.includes("GANTI_DENGAN")) {
+          this.config.apiUrl = json.apiUrl;
+        }
+        if (json.superAdminNik) {
+          this.config.superAdminNik = json.superAdminNik;
+        }
+      }
     } catch (e) {
-      console.warn("Fallback local config:", e);
-      this.config = {
-        apiUrl: "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec",
-        superAdminNik: "14125034"
-      };
+      console.warn("Memakai konfigurasi default internal:", e);
     }
   },
 
   async call(action, payload = {}) {
-    // 1. Cek Mode Demo
+    // 1. CEK MODE DEMO DULU (Jalankan instan tanpa request server)
     if (localStorage.getItem("kacida_demo_mode") === "true") {
       return this.mockDemoResponse(action, payload);
     }
 
-    const url = this.config ? this.config.apiUrl : "";
+    const url = this.config.apiUrl;
+
     const requestData = {
       action: action,
       ...payload
     };
 
     try {
-      // POST ke Google Apps Script Web App
+      // Gunakan text/plain agar Google Apps Script tidak menolak CORS
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8" // Mengakomodasi CORS Apps Script
+          "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(requestData)
       });
@@ -51,15 +61,14 @@ const Api = {
       return result;
     } catch (error) {
       console.error(`API Call failed [${action}]:`, error);
-      // Fallback response offline
       return {
         status: "error",
-        message: "Koneksi ke server terputus atau offline. Menampilkan data lokal terakhir."
+        message: "Gagal terhubung ke Google Apps Script. Pastikan setelan deployment 'Who has access' adalah 'Anyone'."
       };
     }
   },
 
-  // Mock data demo jika user menekan "Login Demo"
+  // Mock data responsif untuk Mode Demo
   mockDemoResponse(action, payload) {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -95,10 +104,16 @@ const Api = {
               }
             });
             break;
+          case "chatAi":
+            resolve({
+              status: "success",
+              reply: "Halo Budi! Ini adalah simulasi asisten AI Kacida Bersatu pada Mode Demo. Data toko 2J16 menunjukkan sales harian H-1 mencapai Rp 15,8 Jt. Ada yang ingin dianalisis lebih lanjut?"
+            });
+            break;
           default:
             resolve({ status: "success", message: "Aksi demo tersimulasi.", data: [] });
         }
-      }, 400);
+      }, 250);
     });
   }
 };

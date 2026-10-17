@@ -1,27 +1,18 @@
-# 🚀 Kacida Bersatu Pro - Progressive Web App (PWA)
+# KACIDA BERSATU — Portal Performa & Operasional Retail
 
-**Kacida Bersatu Pro** adalah aplikasi web berbasis *Progressive Web App* (PWA) yang dirancang untuk menyediakan layanan terpadu, penyampaian informasi/banner dinamis, sistem notifikasi push, serta pencatatan log pengguna secara *realtime* terintegrasi dengan Google Apps Script (Google Sheets).
+Aplikasi portal web operasional retail berbasis Progressive Web App (PWA) yang terhubung langsung dengan Google Apps Script dan Google Spreadsheet.
 
----
+## Struktur Direktori (GitHub)
+- `index.html` : Struktur visual utama (Mockup 100% cocok untuk Desktop & Mobile)
+- `styles.css` : Tema hijau Alfamart, responsif, dan modal layar penuh
+- `app.js` : Logika interaksi, Chart.js, kamera scanner, dan AI
+- `api.js` : Komunikasi fetch ke endpoint Web App Google Apps Script
+- `sw.js` : Service worker PWA untuk akses offline ringan
+- `manifest.json` : Konfigurasi instalasi aplikasi di HP Android/iOS/Desktop
 
-## 🌟 Fitur Utama
-
-- **📱 Full PWA & Support Offline**: Dapat diinstal di layar utama (Android/iOS/Desktop) dan dapat berjalan secara offline untuk halaman statis menggunakan *Service Worker*.
-- **🔐 Keamanan & Otentikasi NIK**: Validasi NIK pengguna yang tersimpan secara lokal di `localStorage` dan terverifikasi dengan server backend.
-- **🎨 Dynamic UI & Custom Banner**: Carousel banner promo/pemberitahuan otomatis dan grid menu dinamis yang terhubung ke backend.
-- **🔔 Sistem Notifikasi Ganda**:
-  - *Push Notification* tingkat sistem (dapat diterima meskipun aplikasi ditutup).
-  - *In-App Pop-Up* interaktif dengan animasi pengguna.
-- **📊 Laporan & Log Otomatis**: Melaporkan status instalasi PWA dan izin notifikasi perangkat secara otomatis ke Google Apps Script.
-- **⭐ Survei Kepuasan**: Modal penilai rating bintang (1–5) dan masukan saran berbasis frekuensi penggunaan aplikasi.
-
----
-
-## 📁 Struktur Proyek
-
-```text
-.
-├── index.html        # Antarmuka utama (UI), CSS Styling, dan logika JS
-├── manifest.json     # Konfigurasi identitas PWA, warna tema, dan ikon
-├── sw.js             # Service Worker untuk Caching, Offline, dan Push Notification
-└── README.md         # Dokumentasi proyek
+## Langkah Aktivasi
+1. Buka file `api.js`.
+2. Ganti `PASTE_LINK_EXEC_ANDA_DI_SINI` dengan URL Web App dari Google Apps Script Anda.
+3. Commit dan Push seluruh file ini ke repositori GitHub Anda.
+4. Buka menu **Settings** > **Pages** di repositori GitHub, pilih branch `main`, lalu klik **Save**.
+5. Akses website melalui link GitHub Pages yang disediakan.

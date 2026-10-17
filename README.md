@@ -1,18 +1,21 @@
-# 🌿 KACIDA BERSATU — Portal Performa & Operasional Retail
+# 🚀 KACIDA BERSATU — Portal Performa & Operasional Retail
 
-> **Slogan:** Bersama Kita Kuat  
-> **Subjudul:** Portal Performa & Operasional Retail Alfamart  
-> **Kesiapan Platform:** PWA (Progressive Web App) Desktop PC & Mobile HP (Android / iOS)
-
-Aplikasi berbasis web modern untuk pengelolaan operasional retail, monitoring pencapaian Key Performance Indicator (IKT, Sales MTD, Sales Harian, Penawaran Langsung), checklist kepatuhan toko (EXP, Serah Terima, Mastershift, Belanja Karyawan), pemindai barcode, konversi sandi nota, serta asisten AI interaktif dengan injeksi data kontekstual.
+> **Slogan:** *Bersama Kita Kuat*  
+> **Target:** 100% Fidelity Visual & Functional PWA Retail System (Desktop PC & Smartphone).
 
 ---
 
-## 📁 Struktur File Proyek
+## 📁 Struktur Berkas Proyek
 
-```plaintext
-├── Code.gs             # Backend Google Apps Script (REST API, Auth, Drive LH3, AI Groq Proxy)
-├── index.html          # Frontend Tunggal (HTML5, Tailwind, Chart.js, Modals, Camera Scanner, JS Engine)
-├── manifest.json       # Metadata Instalasi PWA (Desktop & Mobile Home Screen)
-├── sw.js               # Service Worker PWA (Offline Caching & Background Network Sync)
-└── README.md           # Panduan Lengkap Instalasi, Konfigurasi, & Deployment
+```
+kacida-bersatu/
+├── Code.gs             # Backend Google Apps Script (Engine Spreadsheet, DB Migration, RBAC, LockService)
+├── AiService.gs        # Layanan AI Groq API dengan Llama-3.3-70b & Store Isolation
+├── index.html          # Antarmuka Single Page Application (15 Menu, Modals Fullscreen, Desktop/Mobile)
+├── styles.css          # Design System, Responsif Desktop/HP, Tema Siang/Malam/Default, Watermark
+├── app.js              # Business logic, state management, SweetAlert, formula perhitungannya
+├── api.js              # Lapisan transport AJAX lintas origin ke Web App Apps Script
+├── config.json         # Konfigurasi publik client-side
+├── manifest.json       # PWA Application Manifest
+├── sw.js               # Service Worker & Offline Fallback Caching
+└── README.md           # Dokumentasi Pemasangan & Pengujian

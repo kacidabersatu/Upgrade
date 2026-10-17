@@ -33,6 +33,69 @@
     .screen-container { display: none; width: 100vw; min-height: 100vh; }
     .screen-container.active { display: flex; }
     
+    /* ==========================================================================
+   PENYETELAN KHUSUS: LOGO & WATERMARK TANPA BACKGROUND (TRANSPARAN PENUH)
+   ========================================================================== */
+
+/* 1. Logo Login & Loading (Transparan & Anti-Kotak Putih) */
+.brand-logo-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: transparent !important;
+  background-image: url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  mix-blend-mode: multiply; /* Menghilangkan latar putih jika file JPG/PNG berlatar belakang */
+  filter: drop-shadow(0 4px 10px rgba(11, 77, 60, 0.2));
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 auto 12px;
+}
+
+.brand-logo-large {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 12px;
+  background-color: transparent !important;
+  background-image: url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 6px 14px rgba(16, 185, 129, 0.25));
+}
+
+/* 2. Watermark Resmi Hero Card (Menyatu Lembut & Transparan pada Hijau Botol) */
+.hero-card {
+  position: relative;
+  background: linear-gradient(135deg, #0b4d3c 0%, #064031 100%),
+              url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V') right center / 320px no-repeat !important;
+  background-blend-mode: screen !important; /* Membuat watermark menyatu alami tanpa warna latar kotak */
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* Watermark Halus di Seluruh Modal Pop-Up */
+.fullscreen-modal .modal-body-scrollable {
+  background-image: url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V');
+  background-position: right 20px bottom 20px;
+  background-repeat: no-repeat;
+  background-size: 240px;
+  background-blend-mode: multiply;
+  opacity: 0.98;
+}
+    
     /* 1. LOGIN */
     .login-screen {
       position: relative; align-items: center; justify-content: center; padding: 20px;
@@ -537,7 +600,7 @@
      * FRONTEND JAVASCRIPT ENGINE (CONSOLIDATED)
      * ========================================================================
      */
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9Z-RkOouVfhVgJ-j5aixfgnNAkjUtE-FRLnx8CwCNO_G1S6o___szxaUsh-AnRf5y2Q/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec";
 
     let currentUser = null;
     let currentStoreCode = "2J16";

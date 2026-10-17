@@ -1,23 +1,23 @@
 {
-  "name": "Kacida Bersatu - Retail Portal",
+  "name": "Kacida Bersatu - Portal Performa & Operasional Retail",
   "short_name": "Kacida Bersatu",
-  "description": "Portal Performa & Operasional Retail Modern - Bersama Kita Kuat",
+  "description": "Portal Performa dan Operasional Toko Retail Alfamart - Bersama Kita Kuat",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#054C36",
-  "theme_color": "#006C4E",
+  "background_color": "#0e6935",
+  "theme_color": "#0e6935",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><circle cx='96' cy='96' r='88' fill='%23006C4E'/><path d='M96 32 C60 32 32 60 32 96 C32 132 60 160 96 160 C120 160 140 148 150 128 C130 136 108 126 100 106 C92 86 102 64 122 56 C114 42 106 32 96 32 Z' fill='%2322C55E'/><circle cx='128' cy='80' r='18' fill='%23FFFFFF'/></svg>",
+      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='240' fill='%23006C4E'/><path d='M256 80 C160 80 80 160 80 256 C80 352 160 432 256 432 C320 432 376 398 404 344 C348 366 288 338 266 284 C244 230 272 170 326 148 C304 108 282 80 256 80 Z' fill='%2322C55E'/><circle cx='340' cy='212' r='48' fill='%23FFFFFF'/></svg>",
+      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

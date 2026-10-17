@@ -2,881 +2,1658 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0b4d3c">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#006C4E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
+
+  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23006C4E'/><path d='M50 18 C30 18 18 32 18 50 C18 68 32 82 50 82 C64 82 74 74 80 62 C70 66 58 60 54 48 C50 36 56 26 66 22 C61 19 56 18 50 18 Z' fill='%2322C55E'/><circle cx='68' cy='42' r='8' fill='%23FFFFFF'/></svg>">
+
+  <!-- Font Awesome Icons & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS & jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <style>
-    /* CSS MOCKUP PIXEL PERFECT */
-    :root {
-      --k-forest: #0b4d3c; --k-deep: #07382b; --k-emerald: #10b981;
-      --k-mint: #d1fae5; --k-mint-light: #ecfdf5; --k-amber: #f59e0b;
-      --k-blue: #3b82f6; --k-rose: #ef4444; --k-dark: #1e293b;
-      --k-gray: #64748b; --k-light: #f8fafc; --k-border: #e2e8f0;
-      --k-card: #ffffff; --radius-xl: 20px; --radius-lg: 14px;
-      --radius-md: 10px; --radius-sm: 6px; --radius-full: 9999px;
-      --shadow: 0 4px 14px rgba(11, 77, 60, 0.08);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--k-light); color: var(--k-dark); overflow-x: hidden; }
-    .screen-container { display: none; width: 100vw; min-height: 100vh; }
-    .screen-container.active { display: flex; }
-    
-    /* ==========================================================================
-   PENYETELAN KHUSUS: LOGO & WATERMARK TANPA BACKGROUND (TRANSPARAN PENUH)
-   ========================================================================== */
-
-/* 1. Logo Login & Loading (Transparan & Anti-Kotak Putih) */
-.brand-logo-circle {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background-color: transparent !important;
-  background-image: url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  background-size: contain !important;
-  mix-blend-mode: multiply; /* Menghilangkan latar putih jika file JPG/PNG berlatar belakang */
-  filter: drop-shadow(0 4px 10px rgba(11, 77, 60, 0.2));
-  border: none !important;
-  box-shadow: none !important;
-  margin: 0 auto 12px;
-}
-
-.brand-logo-large {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 12px;
-  background-color: transparent !important;
-  background-image: url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  background-size: contain !important;
-  mix-blend-mode: multiply;
-  filter: drop-shadow(0 6px 14px rgba(16, 185, 129, 0.25));
-}
-
-/* 2. Watermark Resmi Hero Card (Menyatu Lembut & Transparan pada Hijau Botol) */
-.hero-card {
-  position: relative;
-  background: linear-gradient(135deg, #0b4d3c 0%, #064031 100%),
-              url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V') right center / 320px no-repeat !important;
-  background-blend-mode: screen !important; /* Membuat watermark menyatu alami tanpa warna latar kotak */
-  color: #ffffff;
-  border-radius: var(--radius-xl);
-  padding: 24px 28px;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-/* Watermark Halus di Seluruh Modal Pop-Up */
-.fullscreen-modal .modal-body-scrollable {
-  background-image: url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V');
-  background-position: right 20px bottom 20px;
-  background-repeat: no-repeat;
-  background-size: 240px;
-  background-blend-mode: multiply;
-  opacity: 0.98;
-}
-    
-    /* 1. LOGIN */
-    .login-screen {
-      position: relative; align-items: center; justify-content: center; padding: 20px;
-      background: linear-gradient(180deg, rgba(11,77,60,0.85), rgba(7,56,43,0.92)),
-                  url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9') center/cover no-repeat !important;
-    }
-    .login-card {
-      width: 100%; max-width: 400px; background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(12px); border-radius: var(--radius-xl); padding: 32px 26px;
-      box-shadow: 0 16px 36px rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.7); text-align: center;
-    }
-    .brand-logo-circle {
-      width: 68px; height: 68px; border-radius: 50%;
-      background: #ffffff url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') center/80% no-repeat !important;
-      margin: 0 auto 10px; border: 2px solid var(--k-mint); box-shadow: 0 4px 12px rgba(11,77,60,0.15);
-    }
-    .brand-title { font-size: 23px; font-weight: 800; color: var(--k-forest); }
-    .brand-subtitle { font-size: 12px; color: var(--k-gray); margin-bottom: 6px; }
-    .brand-slogan { display: inline-block; background: var(--k-mint-light); color: var(--k-forest); font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: var(--radius-full); margin-bottom: 20px; border: 1px solid var(--k-mint); }
-    .form-title { font-size: 16px; font-weight: 800; text-align: left; margin-bottom: 4px; }
-    .form-desc { font-size: 12px; color: var(--k-gray); text-align: left; margin-bottom: 14px; }
-    .input-group { position: relative; margin-bottom: 14px; }
-    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px; }
-    .input-group input { width: 100%; padding: 12px 14px 12px 42px; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; }
-    .btn-primary-login { width: 100%; padding: 12px; background: var(--k-forest); color: #fff; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-demo-login { width: 100%; padding: 10px; background: #fff; color: var(--k-forest); border: 1.5px solid var(--k-forest); border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-    /* 2. LOADING SCREEN */
-    .loading-screen { background: #fff; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 99999; }
-    .loading-content { text-align: center; }
-    .brand-logo-large { width: 84px; height: 84px; margin: 0 auto 10px; background: url('https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-') center/contain no-repeat !important; }
-    .progress-ring-wrapper { position: relative; width: 100px; height: 100px; margin: 16px auto; }
-    .progress-ring__circle { transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round; transition: stroke-dashoffset 0.3s; }
-    .progress-percent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: var(--k-forest); }
-
-    /* 3. LAYOUT DASHBOARD */
-    .app-layout { display: flex; min-height: 100vh; width: 100vw; }
-    .sidebar-desktop { width: 250px; background: var(--k-forest); color: #fff; height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-header { padding: 18px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .sidebar-scrollable { flex: 1; overflow-y: auto; padding: 12px; }
-    .sidebar-section-title { font-size: 10px; text-transform: uppercase; color: #a7f3d0; font-weight: 800; padding: 10px 8px 4px; }
-    .nav-list { list-style: none; margin-bottom: 12px; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; color: #e2e8f0; cursor: pointer; margin-bottom: 2px; }
-    .nav-item:hover, .nav-item.active { background: rgba(16,185,129,0.18); color: #fff; }
-    .nav-item.active i { color: var(--k-emerald); }
-
-    .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .topbar { height: 60px; background: #fff; border-bottom: 1px solid var(--k-border); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 90; }
-    .store-badge-box { display: flex; align-items: center; gap: 8px; background: var(--k-mint-light); border: 1px solid var(--k-mint); padding: 4px 10px; border-radius: var(--radius-full); font-size: 12px; font-weight: 700; color: var(--k-forest); }
-    .status-pill.online { background: #d1fae5; color: #065f46; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-full); }
-    .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .btn-sync-action { background: #fff; border: 1.5px solid var(--k-border); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    .user-profile-chip img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--k-emerald); object-fit: cover; }
-
-    .dashboard-scrollable { flex: 1; overflow-y: auto; padding: 18px 20px 80px; }
-    .hero-card {
-      position: relative; background: linear-gradient(135deg, #0b4d3c, #064031),
-                  url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V') right center/300px no-repeat !important;
-      background-blend-mode: overlay; color: #fff; border-radius: var(--radius-xl); padding: 22px 24px; box-shadow: var(--shadow);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;
-    }
-    .hero-avatar { width: 56px; height: 56px; border-radius: 50%; border: 2.5px solid #34d399; object-fit: cover; }
-    .hero-pill-badge { background: rgba(255,255,255,0.18); font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full); }
-    .hero-pill-badge.store { background: var(--k-emerald); color: #064e3b; font-weight: 800; }
-    .hero-sales-highlight { background: rgba(255,255,255,0.12); padding: 10px 16px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.2); text-align: right; }
-    .highlight-value { font-size: 21px; font-weight: 900; }
-
-    /* 4. KPI CAROUSEL & MENU GRID */
-    .kpi-carousel-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
-    .kpi-card { background: #fff; border-radius: var(--radius-lg); padding: 14px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--k-border); cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-    .kpi-icon-bubble { width: 42px; height: 42px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .kpi-icon-bubble.green { background: var(--k-mint-light); color: #059669; }
-    .kpi-icon-bubble.yellow { background: #fef3c7; color: #d97706; }
-    .kpi-icon-bubble.blue { background: #dbeafe; color: #2563eb; }
-    .kpi-icon-bubble.teal { background: #ccfbf1; color: #0d9488; }
-    .kpi-number { font-size: 19px; font-weight: 800; }
-
-    .menu-utama-section { background: #fff; border-radius: var(--radius-xl); padding: 20px; border: 1px solid var(--k-border); margin-bottom: 20px; box-shadow: var(--shadow); }
-    .menu-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; }
-    .menu-tile { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; padding: 6px 2px; }
-    .tile-icon-box { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.04); }
-    .tile-label { font-size: 11px; font-weight: 700; color: var(--k-dark); line-height: 1.2; }
-
-    /* CHARTS & PROFIL TOKO */
-    .charts-performance-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
-    .perf-card { background: #fff; border-radius: var(--radius-lg); padding: 14px; border: 1px solid var(--k-border); display: flex; flex-direction: column; justify-content: space-between; }
-    .store-profile-panel { background: #fff; border-radius: var(--radius-xl); padding: 18px 20px; border: 1px solid var(--k-border); }
-    .profile-details-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-
-    /* MODALS */
-    .fullscreen-modal { display: none; position: fixed; inset: 0; background: var(--k-light); z-index: 1000; flex-direction: column; }
-    .fullscreen-modal.active { display: flex; }
-    .modal-header { background: var(--k-forest); color: #fff; padding: 12px 18px; display: flex; align-items: center; gap: 12px; }
-    .btn-modal-back, .btn-modal-close { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .modal-tabs { background: #fff; border-bottom: 1px solid var(--k-border); padding: 0 16px; display: flex; gap: 6px; overflow-x: auto; }
-    .modal-tab-btn { background: none; border: none; padding: 10px 14px; font-size: 12.5px; font-weight: 600; color: var(--k-gray); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
-    .modal-tab-btn.active { color: var(--k-forest); border-color: var(--k-emerald); font-weight: 700; }
-    .modal-body-scrollable { flex: 1; overflow-y: auto; padding: 18px; max-width: 1140px; width: 100%; margin: 0 auto; }
-    .subtab-pane { display: none; }
-    .subtab-pane.active { display: block; }
-    .summary-cards-4grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-    .summary-mini-card { background: #fff; border: 1px solid var(--k-border); border-radius: var(--radius-md); padding: 10px 14px; display: flex; flex-direction: column; }
-    .summary-mini-card strong { font-size: 18px; font-weight: 800; }
-    .responsive-table-container { background: #fff; border: 1px solid var(--k-border); border-radius: var(--radius-md); overflow-x: auto; margin-bottom: 16px; }
-    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .data-table th { background: #f8fafc; padding: 10px 12px; border-bottom: 1px solid var(--k-border); white-space: nowrap; font-weight: 700; }
-    .data-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
-
-    /* MOBILE BOTTOM NAV WITH (+) */
-    .mobile-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100vw; height: 60px; background: #fff; border-top: 1px solid var(--k-border); z-index: 95; justify-content: space-around; align-items: center; }
-    .mobile-nav-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 9.5px; font-weight: 700; color: #94a3b8; cursor: pointer; flex: 1; }
-    .mobile-nav-btn.active { color: var(--k-forest); }
-    .mobile-fab-center { width: 46px; height: 46px; background: var(--k-emerald); color: #fff; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 4px 12px rgba(16,185,129,0.4); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; margin-top: -14px; }
-
-    @media (max-width: 1024px) {
-      .menu-grid { grid-template-columns: repeat(4, 1fr); }
-      .kpi-carousel-wrapper, .charts-performance-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 768px) {
-      .sidebar-desktop { display: none; }
-      .mobile-bottom-nav { display: flex; }
-      .dashboard-scrollable { padding: 14px 14px 80px; }
-      .hero-card { flex-direction: column; align-items: flex-start; }
-      .kpi-carousel-wrapper, .charts-performance-grid, .profile-details-grid { grid-template-columns: 1fr; }
-      .summary-cards-4grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
 </head>
+<body class="theme-default">
 
-<body>
-  <!-- 1. LOGIN -->
-  <div id="loginScreen" class="screen-container login-screen active">
+  <!-- ====================================================================
+       1. SCREEN: LOGIN
+       ==================================================================== -->
+  <section id="loginScreen" class="screen-container login-wrapper active">
+    <div class="login-background"></div>
+    <div class="login-overlay"></div>
+    
     <div class="login-card">
-      <div class="brand-logo-circle"></div>
-      <h1 class="brand-title">Kacida Bersatu</h1>
-      <p class="brand-subtitle">Portal Performa & Operasional Retail</p>
-      <span class="brand-slogan"><i class="fa-solid fa-handshake"></i> Bersama Kita Kuat</span>
-      <div class="login-form-box">
-        <h2 class="form-title">Masuk ke Aplikasi</h2>
-        <p class="form-desc">Silakan masukkan NIK Anda</p>
-        <form id="formLogin" onsubmit="handleLoginSubmit(event)">
+      <div class="brand-header">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 100 100" class="svg-logo">
+            <circle cx="50" cy="50" r="46" fill="#006C4E"/>
+            <path d="M50 16 C30 16 16 32 16 52 C16 72 32 86 52 86 C68 86 78 76 84 64 C72 68 58 62 54 48 C50 34 58 22 70 18 C64 16 57 16 50 16 Z" fill="#22C55E"/>
+            <circle cx="68" cy="40" r="9" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">Kacida Bersatu</h1>
+        <p class="brand-subtitle">Portal Performa & Operasional Retail</p>
+        <span class="brand-slogan">Bersama Kita Kuat</span>
+      </div>
+
+      <div class="login-box">
+        <h2 class="login-heading">Masuk ke Aplikasi</h2>
+        <p class="login-subheading">Silakan masukkan NIK Anda</p>
+
+        <form id="loginForm" onsubmit="event.preventDefault(); App.handleLogin();">
           <div class="input-group">
-            <span class="input-icon"><i class="fa-solid fa-user"></i></span>
-            <input type="text" id="inputNik" placeholder="Contoh: 17060061 / 14125034" autocomplete="off" required inputmode="numeric">
+            <label for="loginNik"><i class="fa-solid fa-user"></i> NIK</label>
+            <input type="text" id="loginNik" placeholder="Contoh: 12345678" autocomplete="off" required inputmode="numeric">
           </div>
-          <button type="submit" class="btn-primary-login"><span>Masuk</span> <i class="fa-solid fa-arrow-right"></i></button>
+
+          <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
+            <span>Masuk</span> <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <button type="button" class="btn btn-demo btn-block" onclick="App.loginDemo()">
+            <i class="fa-solid fa-laptop-code"></i> Login Demo
+          </button>
         </form>
-        <button type="button" class="btn-demo-login" onclick="handleDemoLogin()"><i class="fa-solid fa-key"></i> <span>Login Demo (Pratinjau)</span></button>
+
+        <div class="login-footer">
+          <p>Belum punya akun? <a href="javascript:void(0)" onclick="App.openHelpModal()">Hubungi Admin</a></p>
+          <div class="footer-slogan">Bersama Kita Lebih Kuat</div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- 2. LOADING SCREEN -->
-  <div id="loadingScreen" class="screen-container loading-screen">
-    <div class="loading-content">
-      <div class="brand-logo-large"></div>
-      <h2 style="font-size: 22px; font-weight: 800; color: #0b4d3c;">Kacida Bersatu</h2>
-      <p style="font-size: 12px; color: #10b981; font-weight: 700; margin-bottom: 12px;">Bersama Kita Kuat</p>
-      <div class="progress-ring-wrapper">
-        <svg width="100" height="100">
-          <circle stroke="#d1fae5" stroke-width="6" fill="transparent" r="44" cx="50" cy="50"/>
-          <circle id="loadingRingProgress" class="progress-ring__circle" stroke="#10b981" stroke-width="6" fill="transparent" r="44" cx="50" cy="50"/>
+  <!-- ====================================================================
+       2. SCREEN: LOADING & SYNC SCREEN
+       ==================================================================== -->
+  <div id="syncLoadingScreen" class="loading-screen-modal">
+    <div class="loading-card-content">
+      <div class="loading-logo-box">
+        <svg viewBox="0 0 100 100" class="svg-logo pulse-anim">
+          <circle cx="50" cy="50" r="46" fill="#006C4E"/>
+          <path d="M50 16 C30 16 16 32 16 52 C16 72 32 86 52 86 C68 86 78 76 84 64 C72 68 58 62 54 48 C50 34 58 22 70 18 C64 16 57 16 50 16 Z" fill="#22C55E"/>
+          <circle cx="68" cy="40" r="9" fill="#FFFFFF"/>
         </svg>
-        <div id="loadingPercentText" class="progress-percent">0%</div>
       </div>
-      <p id="loadingStatusText" style="font-size: 13px; color: #64748b; font-weight: 600;">Sedang memproses data...</p>
+      <h2 class="loading-brand">Kacida Bersatu</h2>
+      <p class="loading-sub">Portal Performa & Operasional Retail</p>
+      <div class="loading-slogan">Bersama Kita Kuat</div>
+
+      <div class="spinner-circle"></div>
+      <p id="loadingStatusText" class="loading-text">Sedang memproses data...</p>
+      
+      <div class="progress-bar-container">
+        <div id="loadingProgressBar" class="progress-bar-fill" style="width: 25%;"></div>
+      </div>
+      <span id="loadingPercentage" class="loading-percentage">25%</span>
     </div>
   </div>
 
-  <!-- 3. MAIN DASHBOARD LAYOUT -->
-  <div id="appContainer" class="app-layout" style="display: none;">
+  <!-- ====================================================================
+       3. SCREEN: MAIN DASHBOARD (Desktop & Mobile)
+       ==================================================================== -->
+  <div id="dashboardApp" class="app-layout" style="display: none;">
+    
+    <!-- SIDEBAR NAV (Desktop Layout) -->
     <aside class="sidebar-desktop">
       <div class="sidebar-header">
-        <div class="brand-logo-circle" style="width: 36px; height: 36px; margin: 0;"></div>
-        <div><h3 style="font-size: 15px; font-weight: 800;">Kacida Bersatu</h3><p style="font-size: 10.5px; color: #a7f3d0;">Bersama Kita Kuat</p></div>
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 100 100" class="sidebar-svg">
+            <circle cx="50" cy="50" r="46" fill="#006C4E"/>
+            <path d="M50 16 C30 16 16 32 16 52 C16 72 32 86 52 86 C68 86 78 76 84 64 C72 68 58 62 54 48 C50 34 58 22 70 18 C64 16 57 16 50 16 Z" fill="#22C55E"/>
+            <circle cx="68" cy="40" r="9" fill="#FFFFFF"/>
+          </svg>
+          <div class="sidebar-brand-text">
+            <h2>Kacida Bersatu</h2>
+            <span>Portal Retail Operasional</span>
+          </div>
+        </div>
       </div>
-      <div class="sidebar-scrollable">
-        <div class="sidebar-section-title">Navigasi Utama</div>
-        <ul class="nav-list">
-          <li class="nav-item active"><i class="fa-solid fa-house"></i> <span>Beranda</span></li>
-          <li class="nav-item" onclick="openChatAiModal()"><i class="fa-solid fa-robot"></i> <span>Chat AI</span></li>
-          <li class="nav-item" onclick="openKalenderModal()"><i class="fa-solid fa-calendar-days"></i> <span>Kalender</span></li>
-          <li class="nav-item" onclick="openProfilModal()"><i class="fa-solid fa-user-circle"></i> <span>Profil</span></li>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active" onclick="App.navigateTo('dashboard')">
+            <i class="fa-solid fa-house"></i> <span>Beranda</span>
+          </li>
+          <li onclick="App.openChatAiModal()">
+            <i class="fa-solid fa-comments"></i> <span>Chat AI</span>
+          </li>
+          <li onclick="App.openCalendarModal()">
+            <i class="fa-solid fa-calendar-days"></i> <span>Kalender</span>
+          </li>
+          <li onclick="App.openProfileModal()">
+            <i class="fa-solid fa-circle-user"></i> <span>Profil</span>
+          </li>
+          <li id="menuAuditLog" style="display: none;" onclick="App.openAuditModal()">
+            <i class="fa-solid fa-shield-halved"></i> <span>Tracking Log</span>
+          </li>
         </ul>
-        <div class="sidebar-section-title">Menu Utama (15 Fitur)</div>
-        <ul class="nav-list">
-          <li class="nav-item" onclick="openMenuModal(1)"><i class="fa-solid fa-clipboard-check"></i> <span>Ceklis EXP</span></li>
-          <li class="nav-item" onclick="openMenuModal(2)"><i class="fa-solid fa-hand-holding-hand"></i> <span>Serah Terima</span></li>
-          <li class="nav-item" onclick="openMenuModal(3)"><i class="fa-solid fa-users-gear"></i> <span>Plan Mastershift</span></li>
-          <li class="nav-item" onclick="openMenuModal(4)"><i class="fa-solid fa-basket-shopping"></i> <span>Belanja Karyawan</span></li>
-          <li class="nav-item" onclick="openMenuModal(5)"><i class="fa-solid fa-calculator"></i> <span>Simulasi GM RP IKT</span></li>
-          <li class="nav-item" onclick="openMenuModal(6)"><i class="fa-solid fa-chart-line"></i> <span>Sales MTD</span></li>
-          <li class="nav-item" onclick="openMenuModal(7)"><i class="fa-solid fa-chart-simple"></i> <span>Sales Harian</span></li>
-          <li class="nav-item" onclick="openMenuModal(8)"><i class="fa-solid fa-chart-pie"></i> <span>Monitoring IKT</span></li>
-          <li class="nav-item" onclick="openMenuModal(9)"><i class="fa-solid fa-receipt"></i> <span>Konversi No Bon/Struk</span></li>
-          <li class="nav-item" onclick="openMenuModal(10)"><i class="fa-solid fa-bullhorn"></i> <span>Penawaran Langsung</span></li>
-          <li class="nav-item" onclick="openMenuModal(11)"><i class="fa-solid fa-cash-register"></i> <span>Rekap PSM Kasir</span></li>
-          <li class="nav-item" onclick="openMenuModal(12)"><i class="fa-solid fa-clock"></i> <span>Monitoring Sales OPR</span></li>
-          <li class="nav-item" onclick="openMenuModal(13)"><i class="fa-solid fa-bolt"></i> <span>Monitoring KWH</span></li>
-          <li class="nav-item" onclick="openMenuModal(14)"><i class="fa-solid fa-truck-ramp-box"></i> <span>Catatan Return</span></li>
-          <li class="nav-item" onclick="openMenuModal(15)"><i class="fa-solid fa-barcode"></i> <span>Scan Barang</span></li>
-        </ul>
+      </nav>
+
+      <div class="sidebar-section-title">Menu Utama</div>
+      <div class="sidebar-shortcuts">
+        <a href="javascript:void(0)" onclick="App.openModal('modalCeklisExp')"><i class="fa-solid fa-clipboard-check"></i> Ceklis EXP</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalSerahTerima')"><i class="fa-solid fa-handshake"></i> Serah Terima</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalMastershift')"><i class="fa-solid fa-calendar-check"></i> Plan Mastershift</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalBelanjaKaryawan')"><i class="fa-solid fa-receipt"></i> Belanja Karyawan</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalSimulasiGm')"><i class="fa-solid fa-calculator"></i> Simulasi GM RP IKT</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalSalesMtd')"><i class="fa-solid fa-chart-line"></i> Sales MTD</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalSalesHarian')"><i class="fa-solid fa-calendar-day"></i> Sales Harian</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalMonitoringIkt')"><i class="fa-solid fa-chart-pie"></i> Monitoring IKT</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalKonversiBon')"><i class="fa-solid fa-barcode"></i> Konversi No Bon</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalPenawaranLangsung')"><i class="fa-solid fa-bullhorn"></i> Penawaran Langsung</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalPsmKasir')"><i class="fa-solid fa-cash-register"></i> Rekap PSM Kasir</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalSalesOpr')"><i class="fa-solid fa-clock-rotate-left"></i> Monitoring Sales OPR</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalKwh')"><i class="fa-solid fa-bolt"></i> Monitoring KWH</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalReturn')"><i class="fa-solid fa-truck-ramp-box"></i> Catatan Return</a>
+        <a href="javascript:void(0)" onclick="App.openModal('modalScanBarang')"><i class="fa-solid fa-qrcode"></i> Scan Barang</a>
+        <a href="javascript:void(0)" onclick="App.openHelpModal()"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
       </div>
-      <div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <button style="width: 100%; padding: 8px; background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #fca5a5; border-radius: 6px; cursor: pointer;" onclick="handleLogout()">Keluar Sesi</button>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout-sidebar" onclick="App.logout()">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+        </button>
       </div>
     </aside>
 
+    <!-- MAIN BODY CONTENT AREA -->
     <main class="main-content">
-      <header class="topbar">
-        <div class="store-badge-box">
-          <i class="fa-solid fa-store"></i>
-          <span id="topbarStoreName">2J16 - CARINGIN KULON</span>
-          <span class="status-pill online">Online</span>
+      
+      <!-- Top Navbar (Desktop + Mobile Header) -->
+      <header class="top-header">
+        <div class="header-left">
+          <div class="mobile-logo-box">
+            <svg viewBox="0 0 100 100" class="header-svg">
+              <circle cx="50" cy="50" r="46" fill="#006C4E"/>
+              <path d="M50 16 C30 16 16 32 16 52 C16 72 32 86 52 86 C68 86 78 76 84 64 C72 68 58 62 54 48 C50 34 58 22 70 18 C64 16 57 16 50 16 Z" fill="#22C55E"/>
+              <circle cx="68" cy="40" r="9" fill="#FFFFFF"/>
+            </svg>
+            <div class="mobile-app-name">Kacida Bersatu</div>
+          </div>
+          <div class="store-badge-pill">
+            <i class="fa-solid fa-store"></i>
+            <span id="headerStoreName">2J16 - CARINGIN KULON</span>
+            <span id="headerNetworkStatus" class="status-indicator online">Online</span>
+          </div>
         </div>
-        <div class="topbar-right">
-          <button class="btn-sync-action" onclick="triggerManualSync()"><i class="fa-solid fa-rotate"></i> Sync Manual</button>
-          <div class="user-profile-chip" onclick="openProfilModal()">
-            <img id="topbarUserPhoto" src="https://lh3.googleusercontent.com/d/1TQmADZlb7Gv6JupdThBSBfG7_S1Qn" alt="Foto">
+
+        <div class="header-right">
+          <!-- Tombol Sync Manual -->
+          <button id="btnManualSync" class="btn-sync" onclick="App.triggerManualSync()" title="Sinkronisasi Data Terbaru">
+            <i class="fa-solid fa-arrows-rotate"></i> <span>Sync Manual</span>
+          </button>
+
+          <!-- Toggle Theme: Default, Siang, Malam -->
+          <div class="theme-selector-group">
+            <button class="btn-theme" onclick="App.setTheme('theme-default')" title="Tema Default"><i class="fa-solid fa-circle-half-stroke"></i></button>
+            <button class="btn-theme" onclick="App.setTheme('theme-light')" title="Tema Siang"><i class="fa-solid fa-sun"></i></button>
+            <button class="btn-theme" onclick="App.setTheme('theme-dark')" title="Tema Malam"><i class="fa-solid fa-moon"></i></button>
+          </div>
+
+          <!-- User Info & Avatar -->
+          <div class="user-profile-header" onclick="App.openProfileModal()">
+            <img id="headerUserAvatar" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23006C4E'/><circle cx='50' cy='38' r='20' fill='%23FFFFFF'/><path d='M20 90 C20 70 34 62 50 62 C66 62 80 70 80 90 Z' fill='%23FFFFFF'/></svg>" alt="User">
+            <div class="user-text">
+              <span id="headerUserName" class="user-name">Budi Santoso</span>
+              <span id="headerUserRole" class="user-role">Chief Of Store</span>
+            </div>
+            <div id="badgePendingApproval" class="approval-badge" style="display: none;">0</div>
           </div>
         </div>
       </header>
 
-      <div class="dashboard-scrollable">
-        <section class="hero-card">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <img id="heroUserPhoto" src="https://lh3.googleusercontent.com/d/1TQmADZlb7Gv6JupdThBSBfG7_S1Qn" class="hero-avatar">
-            <div>
-              <h2 id="heroGreetingText">Selamat Pagi</h2>
-              <div style="display: flex; gap: 6px; margin-top: 4px;">
-                <span id="heroRoleBadge" class="hero-pill-badge">Chief Of Store</span>
-                <span id="heroStoreBadge" class="hero-pill-badge store">2J16 - CARINGIN KULON</span>
+      <!-- Scrollable Dashboard Body -->
+      <div class="content-body">
+        
+        <!-- Hero Greeting Card with Watermark -->
+        <div class="hero-card">
+          <div class="hero-watermark">
+            <div class="watermark-logo-text">Kacida Bersatu</div>
+            <div class="watermark-slogan">Bersama Kita Kuat</div>
+          </div>
+          <div class="hero-content">
+            <div class="hero-user-meta">
+              <img id="heroAvatar" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23006C4E'/><circle cx='50' cy='38' r='20' fill='%23FFFFFF'/><path d='M20 90 C20 70 34 62 50 62 C66 62 80 70 80 90 Z' fill='%23FFFFFF'/></svg>" class="hero-avatar" alt="User">
+              <div>
+                <h2 id="heroGreeting" class="hero-title">Selamat Pagi, Budi Santoso <span class="wave">👋</span></h2>
+                <div class="hero-tags">
+                  <span id="heroRoleBadge" class="badge-role">Chief Of Store</span>
+                  <span id="heroStoreBadge" class="badge-store">Toko 2J16 - CARINGIN KULON</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="hero-sales-highlight">
-            <div style="font-size: 11px; color: #a7f3d0;">Sales H-1</div>
-            <div id="heroSalesHMin1Value" class="highlight-value">Rp 15.830.750</div>
-            <div style="font-size: 10.5px; color: #6ee7b7;"><i class="fa-solid fa-arrow-trend-up"></i> +12.5% vs target</div>
-          </div>
-        </section>
 
-        <!-- KPI ROW -->
-        <section class="kpi-carousel-wrapper">
-          <div class="kpi-card" onclick="openMenuModal(8)">
-            <div class="kpi-icon-bubble green"><i class="fa-solid fa-chart-pie"></i></div>
-            <div><span style="font-size: 11.5px; color: #64748b;">IKT</span><div id="kpiIktValue" class="kpi-number">92%</div></div>
+            <!-- Sales H-1 Highlights inside Hero -->
+            <div class="hero-sales-hmin1" onclick="App.openModal('modalSalesHarian')">
+              <span class="hmin1-label">Sales H-1</span>
+              <h3 id="heroSalesHMin1Value" class="hmin1-value">Rp 15.830.750</h3>
+              <span id="heroSalesHMin1Growth" class="hmin1-growth positive"><i class="fa-solid fa-arrow-trend-up"></i> +12.5% dari target</span>
+            </div>
           </div>
-          <div class="kpi-card" onclick="openMenuModal(6)">
-            <div class="kpi-icon-bubble yellow"><i class="fa-solid fa-coins"></i></div>
-            <div><span style="font-size: 11.5px; color: #64748b;">MTD Sales</span><div id="kpiMtdSalesValue" class="kpi-number">Rp 482,1 Jt</div></div>
-          </div>
-          <div class="kpi-card" onclick="openMenuModal(10)">
-            <div class="kpi-icon-bubble blue"><i class="fa-solid fa-bullhorn"></i></div>
-            <div><span style="font-size: 11.5px; color: #64748b;">Penawaran Langsung</span><div id="kpiPlValue" class="kpi-number">76%</div></div>
-          </div>
-          <div class="kpi-card" onclick="openMenuModal(7)">
-            <div class="kpi-icon-bubble teal"><i class="fa-solid fa-cash-register"></i></div>
-            <div><span style="font-size: 11.5px; color: #64748b;">Sales Harian</span><div id="kpiSalesHarianValue" class="kpi-number">Rp 18,1 Jt</div></div>
-          </div>
-        </section>
+        </div>
 
-        <!-- 15 MENU UTAMA -->
-        <section class="menu-utama-section">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 14px;">
-            <h3 style="font-size: 15px; font-weight: 800;">Menu Utama</h3>
+        <!-- KPI Summary Carousel / Card Grid -->
+        <div class="kpi-carousel-wrapper">
+          <div class="kpi-carousel-track">
+            
+            <!-- KPI 1: IKT -->
+            <div class="kpi-card" onclick="App.openModal('modalMonitoringIkt')">
+              <div class="kpi-icon-box bg-emerald">
+                <i class="fa-solid fa-chart-pie"></i>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-title">IKT</span>
+                <h3 id="kpiIktAcv" class="kpi-value text-emerald">92%</h3>
+                <span class="kpi-sub text-muted">Target 100%</span>
+              </div>
+              <div class="kpi-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
+
+            <!-- KPI 2: MTD Sales -->
+            <div class="kpi-card" onclick="App.openModal('modalSalesMtd')">
+              <div class="kpi-icon-box bg-amber">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-title">MTD Sales</span>
+                <h3 id="kpiMtdSales" class="kpi-value text-amber">Rp 482,1 Jt</h3>
+                <span class="kpi-sub text-emerald"><i class="fa-solid fa-arrow-up"></i> Growth 4.2%</span>
+              </div>
+              <div class="kpi-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
+
+            <!-- KPI 3: Penawaran Langsung -->
+            <div class="kpi-card" onclick="App.openModal('modalPenawaranLangsung')">
+              <div class="kpi-icon-box bg-teal">
+                <i class="fa-solid fa-bullhorn"></i>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-title">Penawaran Langsung</span>
+                <h3 id="kpiPenawaranAcv" class="kpi-value text-teal">76%</h3>
+                <span class="kpi-sub text-muted">Point: 1.250</span>
+              </div>
+              <div class="kpi-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
+
+            <!-- KPI 4: Sales Harian -->
+            <div class="kpi-card" onclick="App.openModal('modalSalesHarian')">
+              <div class="kpi-icon-box bg-blue">
+                <i class="fa-solid fa-calendar-day"></i>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-title">Sales Harian</span>
+                <h3 id="kpiSalesHarian" class="kpi-value text-blue">Rp 18,1 Jt</h3>
+                <span class="kpi-sub text-emerald">ACV 102.7%</span>
+              </div>
+              <div class="kpi-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
+
           </div>
+        </div>
+
+        <!-- Section: Menu Utama Grid (15 Fitur Lengkap) -->
+        <div class="section-container">
+          <div class="section-header">
+            <h3><i class="fa-solid fa-grid-2"></i> Menu Utama</h3>
+            <button class="btn-link" onclick="App.toggleAllMenus()">View All <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+
           <div class="menu-grid">
-            <div class="menu-tile" onclick="openMenuModal(1)"><div class="tile-icon-box" style="background: #dcfce7; color: #16a34a;"><i class="fa-solid fa-clipboard-check"></i></div><span class="tile-label">Ceklis EXP</span></div>
-            <div class="menu-tile" onclick="openMenuModal(2)"><div class="tile-icon-box" style="background: #ffedd5; color: #ea580c;"><i class="fa-solid fa-handshake"></i></div><span class="tile-label">Serah Terima</span></div>
-            <div class="menu-tile" onclick="openMenuModal(3)"><div class="tile-icon-box" style="background: #e0e7ff; color: #4f46e5;"><i class="fa-solid fa-calendar-check"></i></div><span class="tile-label">Plan Mastershift</span></div>
-            <div class="menu-tile" onclick="openMenuModal(4)"><div class="tile-icon-box" style="background: #fce7f3; color: #db2777;"><i class="fa-solid fa-bag-shopping"></i></div><span class="tile-label">Belanja Karyawan</span></div>
-            <div class="menu-tile" onclick="openMenuModal(5)"><div class="tile-icon-box" style="background: #ecfeff; color: #0891b2;"><i class="fa-solid fa-calculator"></i></div><span class="tile-label">Simulasi GM RP</span></div>
-            <div class="menu-tile" onclick="openMenuModal(6)"><div class="tile-icon-box" style="background: #fef08a; color: #ca8a04;"><i class="fa-solid fa-chart-line"></i></div><span class="tile-label">Sales MTD</span></div>
-            <div class="menu-tile" onclick="openMenuModal(7)"><div class="tile-icon-box" style="background: #dbeafe; color: #2563eb;"><i class="fa-solid fa-calendar-day"></i></div><span class="tile-label">Sales Harian</span></div>
-            <div class="menu-tile" onclick="openMenuModal(8)"><div class="tile-icon-box" style="background: #fae8ff; color: #9333ea;"><i class="fa-solid fa-chart-pie"></i></div><span class="tile-label">Monitoring IKT</span></div>
-            <div class="menu-tile" onclick="openMenuModal(9)"><div class="tile-icon-box" style="background: #f1f5f9; color: #475569;"><i class="fa-solid fa-receipt"></i></div><span class="tile-label">Konversi No Bon</span></div>
-            <div class="menu-tile" onclick="openMenuModal(10)"><div class="tile-icon-box" style="background: #ffe4e6; color: #e11d48;"><i class="fa-solid fa-bullhorn"></i></div><span class="tile-label">Penawaran Langsung</span></div>
-            <div class="menu-tile" onclick="openMenuModal(11)"><div class="tile-icon-box" style="background: #ccfbf1; color: #0d9488;"><i class="fa-solid fa-cash-register"></i></div><span class="tile-label">Rekap PSM Kasir</span></div>
-            <div class="menu-tile" onclick="openMenuModal(12)"><div class="tile-icon-box" style="background: #fed7aa; color: #c2410c;"><i class="fa-solid fa-clock"></i></div><span class="tile-label">Sales OPR</span></div>
-            <div class="menu-tile" onclick="openMenuModal(13)"><div class="tile-icon-box" style="background: #fef9c3; color: #a16207;"><i class="fa-solid fa-bolt"></i></div><span class="tile-label">Monitoring KWH</span></div>
-            <div class="menu-tile" onclick="openMenuModal(14)"><div class="tile-icon-box" style="background: #ede9fe; color: #7c3aed;"><i class="fa-solid fa-boxes-packing"></i></div><span class="tile-label">Catatan Return</span></div>
-            <div class="menu-tile" onclick="openMenuModal(15)"><div class="tile-icon-box" style="background: #d1fae5; color: #059669;"><i class="fa-solid fa-barcode"></i></div><span class="tile-label">Scan Barang</span></div>
-          </div>
-        </section>
+            <!-- 1. Ceklis EXP -->
+            <div class="menu-item-card" onclick="App.openModal('modalCeklisExp')">
+              <div class="menu-icon-box"><i class="fa-solid fa-clipboard-check"></i></div>
+              <span class="menu-label">Ceklis EXP</span>
+              <div id="badgeExpAlert" class="item-tag alert" style="display: none;">!</div>
+            </div>
 
-        <!-- CHARTS & PROFIL TOKO -->
-        <section class="charts-performance-grid">
-          <div class="perf-card">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b;">GM% Toko</span>
-            <div style="display:flex; justify-content:center; margin: 8px 0;"><canvas id="chartDonutGM" width="110" height="110"></canvas></div>
-            <span style="font-size: 11px; color: #059669; font-weight: 700; text-align: center;">Pencapaian: 68% (Target 95%)</span>
-          </div>
-          <div class="perf-card">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b;">Sales Harian</span>
-            <div style="height: 70px;"><canvas id="chartBarSalesHarian"></canvas></div>
-            <span style="font-size: 11px; font-weight: 700;">Rp 18,1 Jt <small style="color: #10b981;">+12.5%</small></span>
-          </div>
-          <div class="perf-card">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b;">IKT</span>
-            <div style="height: 70px;"><canvas id="chartBarIKT"></canvas></div>
-            <span style="font-size: 11px; font-weight: 700;">92% <small style="color: #10b981;">Target 90%</small></span>
-          </div>
-          <div class="perf-card">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b;">Penawaran Langsung</span>
-            <div style="height: 70px;"><canvas id="chartBarPL"></canvas></div>
-            <span style="font-size: 11px; font-weight: 700;">76% <small style="color: #10b981;">Target 70%</small></span>
-          </div>
-        </section>
+            <!-- 2. Serah Terima -->
+            <div class="menu-item-card" onclick="App.openModal('modalSerahTerima')">
+              <div class="menu-icon-box"><i class="fa-solid fa-handshake"></i></div>
+              <span class="menu-label">Serah Terima</span>
+            </div>
 
-        <section class="store-profile-panel">
-          <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 12px;"><i class="fa-solid fa-building-user" style="color: #10b981;"></i> Profil Toko</h4>
-          <div class="profile-details-grid">
-            <div><span style="font-size: 11px; color: #64748b;">Kode & Nama Toko</span><div id="profPanelStoreName" style="font-weight: 700; font-size: 12.5px;">2J16 - CARINGIN KULON</div></div>
-            <div><span style="font-size: 11px; color: #64748b;">Area</span><div style="font-weight: 700; font-size: 12.5px;">Area Sukabumi</div></div>
-            <div><span style="font-size: 11px; color: #64748b;">Kepala Toko (COS)</span><div id="profPanelCosName" style="font-weight: 700; font-size: 12.5px;">YULIANTI FAUZIAH RAMDANI</div></div>
-            <div><span style="font-size: 11px; color: #64748b;">Status Sistem</span><div style="font-weight: 700; font-size: 12.5px; color: #10b981;">TERHUBUNG PERSISTEN</div></div>
+            <!-- 3. Plan Mastershift -->
+            <div class="menu-item-card" onclick="App.openModal('modalMastershift')">
+              <div class="menu-icon-box"><i class="fa-solid fa-calendar-days"></i></div>
+              <span class="menu-label">Plan Mastershift</span>
+            </div>
+
+            <!-- 4. Belanja Karyawan -->
+            <div class="menu-item-card" onclick="App.openModal('modalBelanjaKaryawan')">
+              <div class="menu-icon-box"><i class="fa-solid fa-receipt"></i></div>
+              <span class="menu-label">Belanja Karyawan</span>
+            </div>
+
+            <!-- 5. Simulasi GM RP IKT -->
+            <div class="menu-item-card" onclick="App.openModal('modalSimulasiGm')">
+              <div class="menu-icon-box"><i class="fa-solid fa-calculator"></i></div>
+              <span class="menu-label">Simulasi GM RP IKT</span>
+            </div>
+
+            <!-- 6. Sales MTD -->
+            <div class="menu-item-card" onclick="App.openModal('modalSalesMtd')">
+              <div class="menu-icon-box"><i class="fa-solid fa-chart-line"></i></div>
+              <span class="menu-label">Sales MTD</span>
+            </div>
+
+            <!-- 7. Sales Harian -->
+            <div class="menu-item-card" onclick="App.openModal('modalSalesHarian')">
+              <div class="menu-icon-box"><i class="fa-solid fa-calendar-week"></i></div>
+              <span class="menu-label">Sales Harian</span>
+            </div>
+
+            <!-- 8. Monitoring IKT -->
+            <div class="menu-item-card" onclick="App.openModal('modalMonitoringIkt')">
+              <div class="menu-icon-box"><i class="fa-solid fa-chart-pie"></i></div>
+              <span class="menu-label">Monitoring IKT</span>
+            </div>
+
+            <!-- 9. Konversi No Bon/Struk -->
+            <div class="menu-item-card" onclick="App.openModal('modalKonversiBon')">
+              <div class="menu-icon-box"><i class="fa-solid fa-barcode"></i></div>
+              <span class="menu-label">Konversi No Bon/Struk</span>
+            </div>
+
+            <!-- 10. Penawaran Langsung -->
+            <div class="menu-item-card" onclick="App.openModal('modalPenawaranLangsung')">
+              <div class="menu-icon-box"><i class="fa-solid fa-bullhorn"></i></div>
+              <span class="menu-label">Penawaran Langsung</span>
+            </div>
+
+            <!-- 11. Rekap PSM Kasir -->
+            <div class="menu-item-card" onclick="App.openModal('modalPsmKasir')">
+              <div class="menu-icon-box"><i class="fa-solid fa-cash-register"></i></div>
+              <span class="menu-label">Rekap PSM Kasir</span>
+            </div>
+
+            <!-- 12. Monitoring Sales OPR -->
+            <div class="menu-item-card" onclick="App.openModal('modalSalesOpr')">
+              <div class="menu-icon-box"><i class="fa-solid fa-clock-rotate-left"></i></div>
+              <span class="menu-label">Monitoring Sales OPR</span>
+            </div>
+
+            <!-- 13. Monitoring KWH -->
+            <div class="menu-item-card" onclick="App.openModal('modalKwh')">
+              <div class="menu-icon-box"><i class="fa-solid fa-bolt"></i></div>
+              <span class="menu-label">Monitoring KWH</span>
+            </div>
+
+            <!-- 14. Catatan Return -->
+            <div class="menu-item-card" onclick="App.openModal('modalReturn')">
+              <div class="menu-icon-box"><i class="fa-solid fa-truck-ramp-box"></i></div>
+              <span class="menu-label">Catatan Return</span>
+            </div>
+
+            <!-- 15. Scan Barang -->
+            <div class="menu-item-card" onclick="App.openModal('modalScanBarang')">
+              <div class="menu-icon-box"><i class="fa-solid fa-qrcode"></i></div>
+              <span class="menu-label">Scan Barang</span>
+            </div>
+
+            <!-- Menu Bantuan -->
+            <div class="menu-item-card" onclick="App.openHelpModal()">
+              <div class="menu-icon-box"><i class="fa-solid fa-circle-question"></i></div>
+              <span class="menu-label">Bantuan</span>
+            </div>
           </div>
-        </section>
+        </div>
+
+        <!-- Section: Ringkasan Performa & Profil Toko (Desktop & Tablet) -->
+        <div class="section-container">
+          <div class="section-header">
+            <h3><i class="fa-solid fa-chart-simple"></i> Ringkasan Performa</h3>
+          </div>
+
+          <div class="performance-grid">
+            
+            <!-- Pencapaian GM% Card -->
+            <div class="perf-card">
+              <div class="perf-header">
+                <span>Pencapaian GM%</span>
+                <a href="javascript:void(0)" onclick="App.openModal('modalSimulasiGm')">Detail</a>
+              </div>
+              <div class="perf-body-radial">
+                <div class="radial-progress-box">
+                  <svg viewBox="0 0 36 36" class="circular-chart green">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path class="circle" stroke-dasharray="68, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <text x="18" y="20.35" class="percentage">68%</text>
+                  </svg>
+                </div>
+                <div class="radial-meta">
+                  <span>Target: 65%</span>
+                  <span class="badge-status ok">OK</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pencapaian Sales Harian Card -->
+            <div class="perf-card">
+              <div class="perf-header">
+                <span>Pencapaian Sales Harian</span>
+                <a href="javascript:void(0)" onclick="App.openModal('modalSalesHarian')">Detail</a>
+              </div>
+              <div class="perf-stat">
+                <h4>Rp 18,1 Jt</h4>
+                <span class="growth-label positive"><i class="fa-solid fa-arrow-up"></i> 12.5%</span>
+              </div>
+              <div class="chart-mini-container">
+                <canvas id="chartMiniSalesHarian"></canvas>
+              </div>
+              <div class="perf-footer">
+                <span>Target: Rp 16,0 Jt</span>
+                <span class="badge-status ok">OK</span>
+              </div>
+            </div>
+
+            <!-- Pencapaian IKT Card -->
+            <div class="perf-card">
+              <div class="perf-header">
+                <span>Pencapaian IKT</span>
+                <a href="javascript:void(0)" onclick="App.openModal('modalMonitoringIkt')">Detail</a>
+              </div>
+              <div class="perf-stat">
+                <h4>92%</h4>
+                <span class="growth-label negative"><i class="fa-solid fa-arrow-down"></i> -8%</span>
+              </div>
+              <div class="chart-mini-container">
+                <canvas id="chartMiniIkt"></canvas>
+              </div>
+              <div class="perf-footer">
+                <span>Target: 100%</span>
+                <span class="badge-status nok">NOK</span>
+              </div>
+            </div>
+
+            <!-- Penawaran Langsung Card -->
+            <div class="perf-card">
+              <div class="perf-header">
+                <span>Penawaran Langsung</span>
+                <a href="javascript:void(0)" onclick="App.openModal('modalPenawaranLangsung')">Detail</a>
+              </div>
+              <div class="perf-stat">
+                <h4>76%</h4>
+                <span class="growth-label negative"><i class="fa-solid fa-arrow-down"></i> Point 1.250</span>
+              </div>
+              <div class="chart-mini-container">
+                <canvas id="chartMiniPenawaran"></canvas>
+              </div>
+              <div class="perf-footer">
+                <span>Target: 70%</span>
+                <span class="badge-status ok">OK</span>
+              </div>
+            </div>
+
+            <!-- Profil Toko Card -->
+            <div class="perf-card store-profile-card">
+              <div class="perf-header">
+                <span>Profil Toko</span>
+                <a href="javascript:void(0)" onclick="App.openStoreProfileDetail()">Lihat Detail</a>
+              </div>
+              <div class="store-meta-box">
+                <div class="store-avatar-icon"><i class="fa-solid fa-store"></i></div>
+                <div>
+                  <h4 id="cardStoreNameTitle">2J16 - CARINGIN KULON</h4>
+                  <p class="store-area-text">Area: KAB. SUKABUMI / KADUDAMPIT</p>
+                  <span class="store-personnel-badge"><i class="fa-solid fa-users"></i> Personil: 12 Orang</span>
+                </div>
+              </div>
+              <div class="store-status-row">
+                <span class="status-indicator online">● Online & Terhubung</span>
+                <span class="last-sync-tag" id="lastSyncTag">Synced Barusan</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
-    </main>
 
-    <!-- MOBILE BOTTOM NAV -->
-    <nav class="mobile-bottom-nav">
-      <button class="mobile-nav-btn active"><i class="fa-solid fa-house"></i><span>Beranda</span></button>
-      <button class="mobile-nav-btn" onclick="openChatAiModal()"><i class="fa-solid fa-robot"></i><span>Chat AI</span></button>
-      <div class="mobile-fab-center" onclick="triggerManualSync()"><i class="fa-solid fa-plus"></i></div>
-      <button class="mobile-nav-btn" onclick="openKalenderModal()"><i class="fa-solid fa-calendar-days"></i><span>Kalender</span></button>
-      <button class="mobile-nav-btn" onclick="openProfilModal()"><i class="fa-solid fa-user"></i><span>Profil</span></button>
-    </nav>
+      <!-- BOTTOM NAVIGATION BAR (Mobile Phones) -->
+      <nav class="bottom-nav-mobile">
+        <button class="nav-tab active" onclick="App.navigateTo('dashboard')">
+          <i class="fa-solid fa-house"></i>
+          <span>Beranda</span>
+        </button>
+        <button class="nav-tab" onclick="App.openChatAiModal()">
+          <i class="fa-solid fa-comments"></i>
+          <span>Chat AI</span>
+        </button>
+        <button class="nav-tab nav-tab-center" onclick="App.toggleAllMenus()" title="Buka Semua Menu">
+          <div class="center-bubble-btn">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+        </button>
+        <button class="nav-tab" onclick="App.openCalendarModal()">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Kalender</span>
+        </button>
+        <button class="nav-tab" onclick="App.openProfileModal()">
+          <i class="fa-solid fa-user"></i>
+          <span>Profil</span>
+        </button>
+      </nav>
+
+    </main>
   </div>
 
-  <!-- CONTAINER 15 MODAL RESMI -->
+  <!-- ====================================================================
+       4. MODAL FULLSCREEN: SELURUH 15 FITUR & TAMBAHAN
+       ==================================================================== -->
+
   <!-- MODAL 1: CEKLIS EXP -->
-  <div id="modalMenu1" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalMenu1')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>5. Ceklis EXP</h3><p style="font-size: 11px; color: #a7f3d0;">Kontrol rak & alert tanggal eksekusi RH</p></div>
-      <button class="btn-modal-close" onclick="closeModal('modalMenu1')"><i class="fa-solid fa-xmark"></i></button>
+  <div id="modalCeklisExp" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalCeklisExp')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Ceklis EXP</h2>
+      <div class="modal-header-actions">
+        <button class="btn-icon" onclick="App.refreshRakData()"><i class="fa-solid fa-rotate"></i></button>
+      </div>
     </div>
-    <div class="modal-tabs">
-      <button class="modal-tab-btn active" onclick="switchModalSubtab('m1', 'dataRak')">Data Rak</button>
-      <button class="modal-tab-btn" onclick="switchModalSubtab('m1', 'inputExp')">Input EXP</button>
+    
+    <div class="modal-subnav-tabs">
+      <button class="subtab active" onclick="App.switchCeklisTab('tabRak')">Data Rak</button>
+      <button class="subtab" onclick="App.switchCeklisTab('tabInputExp')">Input EXP</button>
+      <button class="subtab" onclick="App.switchCeklisTab('tabAlertExp')">Alert EXP</button>
+      <button class="subtab" onclick="App.switchCeklisTab('tabRiwayatExp')">Riwayat Input</button>
     </div>
+
     <div class="modal-body-scrollable">
-      <div id="m1_subtab_dataRak" class="subtab-pane active">
-        <div class="summary-cards-4grid">
-          <div class="summary-mini-card"><span>Total Rak</span><strong>24</strong></div>
-          <div class="summary-mini-card" style="color:#059669;"><span>Selesai</span><strong>16</strong></div>
-          <div class="summary-mini-card" style="color:#dc2626;"><span>Belum Selesai</span><strong>6</strong></div>
-          <div class="summary-mini-card" style="color:#d97706;"><span>Validasi</span><strong>2</strong></div>
+      
+      <!-- SUBTAB 1: DATA RAK -->
+      <div id="subtabRak" class="subtab-pane active">
+        <div class="search-bar-row">
+          <div class="search-input-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchRakInput" placeholder="Cari Rak / Kategori / Penanggung Jawab..." onkeyup="App.filterRakList()">
+          </div>
+          <button id="btnTambahRak" class="btn btn-primary" onclick="App.openTambahRakDialog()">
+            <i class="fa-solid fa-plus"></i> Tambah Rak
+          </button>
         </div>
-        <div class="responsive-table-container">
-          <table class="data-table">
-            <thead><tr><th>No Rak</th><th>Kategori</th><th>Penanggung Jawab</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td>A01</td><td>Makanan</td><td>Rina Nur</td><td><span style="background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:700;">Selesai</span></td></tr>
-              <tr><td>A02</td><td>Minuman</td><td>Andi Saputra</td><td><span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-weight:700;">Validasi</span></td></tr>
+
+        <div class="summary-stat-pills">
+          <div class="stat-pill" onclick="App.filterRakByStatus('ALL')">
+            <span class="pill-title">Total Rak</span>
+            <span id="statRakTotal" class="pill-number">24</span>
+          </div>
+          <div class="stat-pill green" onclick="App.filterRakByStatus('SELESAI')">
+            <span class="pill-title">Selesai</span>
+            <span id="statRakSelesai" class="pill-number">16</span>
+          </div>
+          <div class="stat-pill red" onclick="App.filterRakByStatus('BELUM')">
+            <span class="pill-title">Belum</span>
+            <span id="statRakBelum" class="pill-number">6</span>
+          </div>
+          <div class="stat-pill orange" onclick="App.filterRakByStatus('MENUNGGU_VALIDASI')">
+            <span class="pill-title">Validasi</span>
+            <span id="statRakValidasi" class="pill-number">2</span>
+          </div>
+        </div>
+
+        <div class="table-responsive-box">
+          <table class="app-table" id="tableDataRak">
+            <thead>
+              <tr>
+                <th>No Rak</th>
+                <th>Kategori</th>
+                <th>Penanggung Jawab</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDataRak">
+              <!-- Render otomatis via JS -->
             </tbody>
           </table>
         </div>
       </div>
-      <div id="m1_subtab_inputExp" class="subtab-pane">
-        <form onsubmit="handleSaveExp(event)" style="background:#fff; padding:16px; border-radius:10px; border:1px solid #e2e8f0;">
-          <div style="margin-bottom:10px;"><label style="font-size:12px; font-weight:700;">Nama Item</label><input type="text" id="expNama" style="width:100%; padding:8px;" required></div>
-          <div style="margin-bottom:10px;"><label style="font-size:12px; font-weight:700;">Posisi Rak</label><input type="text" id="expRak" style="width:100%; padding:8px;" required></div>
-          <div style="display:flex; gap:10px; margin-bottom:12px;">
-            <div style="flex:1;"><label style="font-size:12px; font-weight:700;">Qty</label><input type="number" id="expQty" style="width:100%; padding:8px;" required></div>
-            <div style="flex:1;"><label style="font-size:12px; font-weight:700;">Tanggal EXP</label><input type="date" id="expTgl" style="width:100%; padding:8px;" required></div>
-            <div style="flex:1;"><label style="font-size:12px; font-weight:700;">RH</label><input type="number" id="expRh" style="width:100%; padding:8px;" value="30" required></div>
+
+      <!-- SUBTAB 2: INPUT EXP -->
+      <div id="subtabInputExp" class="subtab-pane">
+        <div class="form-card-container">
+          <form id="formInputExp" onsubmit="event.preventDefault(); App.submitInputExp();">
+            <div class="form-row">
+              <div class="form-col">
+                <label>Nama Item</label>
+                <input type="text" id="expNamaItem" required placeholder="Contoh: Susu UHT 200ml">
+              </div>
+              <div class="form-col">
+                <label>Posisi Rak</label>
+                <input type="text" id="expPosisiRak" required placeholder="Contoh: A01 - Rak Minuman">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-col">
+                <label>Qty (Pcs)</label>
+                <input type="number" id="expQty" required min="1" value="1">
+              </div>
+              <div class="form-col">
+                <label>Tanggal EXP</label>
+                <input type="date" id="expTglExp" required>
+              </div>
+              <div class="form-col">
+                <label>Return Hari (RH)</label>
+                <input type="number" id="expRh" required min="0" value="30">
+              </div>
+            </div>
+
+            <div class="alert-info-box">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Estimasi Tanggal Eksekusi dihitung otomatis: Tanggal EXP dikurangi RH dikurangi 10 hari spare.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Data EXP
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SUBTAB 3: ALERT EXP -->
+      <div id="subtabAlertExp" class="subtab-pane">
+        <div class="table-responsive-box">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Nama Item</th>
+                <th>Rak</th>
+                <th>Qty</th>
+                <th>Tgl EXP</th>
+                <th>RH</th>
+                <th>Estimasi Eksekusi</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAlertExp">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBTAB 4: RIWAYAT INPUT -->
+      <div id="subtabRiwayatExp" class="subtab-pane">
+        <div class="table-responsive-box">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Tanggal Input</th>
+                <th>Penginput</th>
+                <th>Nama Item</th>
+                <th>Rak</th>
+                <th>Tgl EXP</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRiwayatExp">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL 2: SERAH TERIMA -->
+  <div id="modalSerahTerima" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalSerahTerima')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Serah Terima Shift</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-subnav-tabs">
+      <button class="subtab active" onclick="App.switchSerahTerimaTab('tabInputST')">Input Data</button>
+      <button class="subtab" onclick="App.switchSerahTerimaTab('tabRiwayatST')">Riwayat Input</button>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div id="tabInputST" class="subtab-pane active">
+        <form id="formSerahTerima" onsubmit="event.preventDefault(); App.submitSerahTerima();">
+          <div class="form-row">
+            <div class="form-col">
+              <label>Pilih Shift</label>
+              <select id="stShift" class="form-select">
+                <option value="Shift 1">Shift 1 (06:00 - 14:00)</option>
+                <option value="Shift 2">Shift 2 (14:00 - 22:00)</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label>Sales Shift (Rp)</label>
+              <input type="number" id="stSales" required placeholder="Contoh: 8500000">
+            </div>
           </div>
-          <button type="submit" style="background:#0b4d3c; color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:700; cursor:pointer;">Simpan Data EXP</button>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label>Redeem Serba Gratis</label>
+              <input type="number" id="stRedeemSerbaGratis" required placeholder="0">
+            </div>
+            <div class="form-col">
+              <label>QTY PSM</label>
+              <input type="number" id="stQtyPsm" required placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label>Redeem PWP</label>
+              <input type="number" id="stRedeemPwp" required placeholder="0">
+            </div>
+            <div class="form-col">
+              <label>New Member</label>
+              <input type="number" id="stNewMember" required placeholder="0">
+            </div>
+            <div class="form-col">
+              <label>% Contribution Struk</label>
+              <input type="text" id="stPersenContrib" required placeholder="Contoh: 12.5%">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Catatan Kendala Operasional</label>
+            <textarea id="stKendala" rows="3" placeholder="Masukkan kendala teknis, stok, atau kasir..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fa-solid fa-floppy-disk"></i> Simpan Serah Terima
+          </button>
         </form>
+      </div>
+
+      <div id="tabRiwayatST" class="subtab-pane">
+        <div class="table-responsive-box">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Shift</th>
+                <th>Sales</th>
+                <th>PSM</th>
+                <th>New Member</th>
+                <th>Penginput</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRiwayatST"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PLAN MASTERSHIFT -->
+  <div id="modalMastershift" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalMastershift')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Plan Mastershift</h2>
+      <div class="modal-header-actions">
+        <button class="btn btn-sm btn-primary" onclick="App.saveMastershift()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+      </div>
+    </div>
+
+    <div class="modal-filter-bar">
+      <label>Pilih Periode:</label>
+      <input type="month" id="mastershiftMonth" value="2026-06" onchange="App.loadMastershiftData()">
+      <div class="legend-pills">
+        <span class="legend-badge p">P: Pagi</span>
+        <span class="legend-badge s">S: Siang</span>
+        <span class="legend-badge m">M: Malam</span>
+        <span class="legend-badge off">OFF: Libur</span>
+        <span class="legend-badge ao">AO: Add Off</span>
+        <span class="legend-badge ct">CT: Cuti</span>
+        <span class="legend-badge skt">Sakit</span>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="table-responsive-box full-grid">
+        <table class="app-table mastershift-table" id="tableMastershift">
+          <thead>
+            <tr id="theadMastershiftRow">
+              <th class="sticky-col">Nama Personel</th>
+              <!-- Render 1..31 via JS -->
+            </tr>
+          </thead>
+          <tbody id="tbodyMastershift">
+            <!-- Render personil rows via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: BELANJA KARYAWAN -->
+  <div id="modalBelanjaKaryawan" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalBelanjaKaryawan')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Belanja Karyawan</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-subnav-tabs">
+      <button class="subtab active" onclick="App.switchBelanjaTab('tabInputBelanja')">Input</button>
+      <button class="subtab" id="tabHeadApprovalBelanja" onclick="App.switchBelanjaTab('tabApprovalBelanja')">Approval</button>
+      <button class="subtab" onclick="App.switchBelanjaTab('tabRiwayatBelanja')">Riwayat</button>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <!-- INPUT -->
+      <div id="tabInputBelanja" class="subtab-pane active">
+        <form id="formBelanjaKaryawan" onsubmit="event.preventDefault(); App.submitBelanjaKaryawan();">
+          <div class="form-group">
+            <label>No Member Alfagift</label>
+            <input type="text" id="blkNoMember" required placeholder="0812-3456-7890">
+          </div>
+          <div class="form-group">
+            <label>No Bon / Nomor Struk</label>
+            <input type="text" id="blkNoBon" required placeholder="Contoh: 666-1018HKZZ">
+          </div>
+          <div class="form-group">
+            <label>Nominal Belanja (Rp)</label>
+            <input type="number" id="blkNominal" required placeholder="Contoh: 250000">
+          </div>
+          <div class="form-group">
+            <label>Foto Struk Bukti Belanja (Wajib)</label>
+            <div class="photo-upload-container" onclick="document.getElementById('blkFotoStrukInput').click()">
+              <input type="file" id="blkFotoStrukInput" accept="image/*" capture="environment" style="display: none;" onchange="App.handleStrukPhotoSelect(this)">
+              <div id="strukPreviewBox" class="photo-placeholder">
+                <i class="fa-solid fa-camera"></i>
+                <span>Ketuk untuk Unggah / Foto Struk</span>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-paper-plane"></i> Submit Belanja Karyawan</button>
+        </form>
+      </div>
+
+      <!-- APPROVAL (COS Only) -->
+      <div id="tabApprovalBelanja" class="subtab-pane">
+        <div class="table-responsive-box">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Nama Personil</th>
+                <th>No Bon</th>
+                <th>Nominal</th>
+                <th>Foto Struk</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyApprovalBelanja"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIWAYAT -->
+      <div id="tabRiwayatBelanja" class="subtab-pane">
+        <div class="table-responsive-box">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Personel</th>
+                <th>No Bon</th>
+                <th>Nominal</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRiwayatBelanja"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- MODAL 5: SIMULASI GM RP IKT -->
-  <div id="modalMenu5" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalMenu5')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>9. Simulasi GM RP IKT</h3><p style="font-size:11px; color:#a7f3d0;">Kalkulasi instan margin rupiah</p></div>
-      <button class="btn-modal-close" onclick="closeModal('modalMenu5')"><i class="fa-solid fa-xmark"></i></button>
+  <div id="modalSimulasiGm" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalSimulasiGm')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Simulasi GM RP IKT</h2>
+      <div class="modal-header-actions"></div>
     </div>
+
     <div class="modal-body-scrollable">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
-        <div style="background:#fff; padding:18px; border-radius:12px; border:1px solid #e2e8f0;">
-          <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <div style="flex:1;"><label style="font-size:11.5px; font-weight:700;">HK</label><input type="number" id="simHk" value="26" style="width:100%; padding:8px;"></div>
-            <div style="flex:1;"><label style="font-size:11.5px; font-weight:700;">JHK</label><input type="number" id="simJhk" value="22" style="width:100%; padding:8px;"></div>
+      <div class="form-card-container">
+        <div class="form-row">
+          <div class="form-col">
+            <label>HK (Total Hari Kerja Bulan Ini)</label>
+            <input type="number" id="simHk" value="30" oninput="App.calculateSimulasiGm()">
           </div>
-          <div style="margin-bottom:10px;"><label style="font-size:11.5px; font-weight:700;">Target Net Sales (Rp)</label><input type="number" id="simTargetSales" value="500000000" style="width:100%; padding:8px;"></div>
-          <div style="margin-bottom:10px;"><label style="font-size:11.5px; font-weight:700;">Actual Net Sales (Rp)</label><input type="number" id="simActualSales" value="482000000" style="width:100%; padding:8px;"></div>
-          <div style="display:flex; gap:10px; margin-bottom:14px;">
-            <div style="flex:1;"><label style="font-size:11.5px; font-weight:700;">Target GM%</label><input type="number" step="0.01" id="simTargetGmPct" value="18.0" style="width:100%; padding:8px;"></div>
-            <div style="flex:1;"><label style="font-size:11.5px; font-weight:700;">Actual GM%</label><input type="number" step="0.01" id="simActualGmPct" value="18.5" style="width:100%; padding:8px;"></div>
+          <div class="form-col">
+            <label>JHK (Jumlah Hari Berjalan)</label>
+            <input type="number" id="simJhk" value="22" oninput="App.calculateSimulasiGm()">
           </div>
-          <button style="background:#0b4d3c; color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:700; cursor:pointer;" onclick="calculateSimulationGMRp()">Hitung Simulasi</button>
         </div>
-        <div style="background:#fff; padding:18px; border-radius:12px; border:1px solid #e2e8f0;">
-          <h4 style="font-size:14px; font-weight:800; margin-bottom:10px;">Hasil Simulasi</h4>
-          <p style="margin-bottom:6px; font-size:13px;">Gap Sales: <strong id="resSimGapSales" style="color:#ef4444;">-Rp 18.000.000</strong></p>
-          <p style="margin-bottom:6px; font-size:13px;">Actual Margin: <strong id="resSimActGmRp">Rp 89.170.000</strong></p>
-          <p style="margin-bottom:6px; font-size:13px;">Time Factor: <strong id="resSimTimeFactor">84.6%</strong></p>
-          <div style="margin-top:10px;"><span id="resSimStatusPill" style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;">STATUS: NOK</span></div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label>Target Net Sales (Rp)</label>
+            <input type="number" id="simTargetSales" value="500000000" oninput="App.calculateSimulasiGm()">
+          </div>
+          <div class="form-col">
+            <label>Actual Net Sales (Rp)</label>
+            <input type="number" id="simActualSales" value="482000000" oninput="App.calculateSimulasiGm()">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label>Target Margin (%)</label>
+            <input type="number" id="simTargetMargin" value="18" step="0.1" oninput="App.calculateSimulasiGm()">
+          </div>
+          <div class="form-col">
+            <label>Actual Margin (%)</label>
+            <input type="number" id="simActualMargin" value="18" step="0.1" oninput="App.calculateSimulasiGm()">
+          </div>
+        </div>
+
+        <div class="sim-result-card">
+          <div class="sim-row">
+            <span>Time Factor</span>
+            <strong id="simResultTf">73.3%</strong>
+          </div>
+          <div class="sim-row">
+            <span>ACV Net Sales</span>
+            <strong id="simResultAcvSales">96.4%</strong>
+          </div>
+          <div class="sim-row">
+            <span>Gap Net Sales</span>
+            <strong id="simResultGapSales" class="negative">-Rp 18.000.000</strong>
+          </div>
+          <div class="sim-row">
+            <span>Target Margin Rp</span>
+            <strong id="simResultTargetGmRp">Rp 90.000.000</strong>
+          </div>
+          <div class="sim-row">
+            <span>Actual Margin Rp</span>
+            <strong id="simResultActualGmRp">Rp 86.760.000</strong>
+          </div>
+          <div class="sim-row">
+            <span>Gap Margin Rupiah</span>
+            <strong id="simResultGapGmRp" class="negative">-Rp 3.240.000</strong>
+          </div>
+          <div class="sim-row highlight">
+            <span>Status Kelayakan</span>
+            <span id="simResultStatus" class="badge-status nok">NOK</span>
+          </div>
+        </div>
+
+        <div class="form-actions-row">
+          <button type="button" class="btn btn-secondary" onclick="App.resetSimulasiGm()">Reset</button>
+          <button type="button" class="btn btn-primary" onclick="App.exportSimulasiGm()">Simpan Hasil</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 9: KONVERSI NO BON -->
-  <div id="modalMenu9" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalMenu9')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>13. Konversi No Bon/Struk</h3></div>
-      <button class="btn-modal-close" onclick="closeModal('modalMenu9')"><i class="fa-solid fa-xmark"></i></button>
+  <!-- MODAL 6: SALES MTD -->
+  <div id="modalSalesMtd" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalSalesMtd')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Sales MTD</h2>
+      <div class="modal-header-actions">
+        <button class="btn-icon" onclick="App.exportTableToExcel('tableSalesMtd', 'Sales_MTD')"><i class="fa-solid fa-file-excel"></i></button>
+      </div>
     </div>
+
+    <div class="modal-filter-bar">
+      <div class="filter-pills-row">
+        <button class="filter-pill active" onclick="App.filterMtdGrowth('ALL')">All</button>
+        <button class="filter-pill" onclick="App.filterMtdGrowth('GROWTH')">Growth</button>
+        <button class="filter-pill" onclick="App.filterMtdGrowth('DISGROWTH')">Disgrowth</button>
+      </div>
+    </div>
+
     <div class="modal-body-scrollable">
-      <div style="max-width:380px; margin:30px auto; background:#fff; padding:24px; border-radius:16px; border:1px solid #e2e8f0; text-align:center;">
-        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:8px;">Masukkan 4 Digit Terakhir No Bon:</label>
-        <input type="text" id="inputNoBonConvert" maxlength="4" placeholder="1123" inputmode="numeric" oninput="handleConvertBonInput(this.value)" style="font-size:18px; text-align:center; padding:10px; width:100%; border:1.5px solid #cbd5e1; border-radius:8px;">
-        <div id="convertBonResult" style="font-size:36px; font-weight:900; letter-spacing:6px; color:#0b4d3c; background:#ecfdf5; padding:16px; border-radius:10px; margin:16px 0; border:2px dashed #10b981;">OOYD</div>
-        <button style="background:#0b4d3c; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;" onclick="copyConvertedBon()"><i class="fa-solid fa-copy"></i> Salin Kode</button>
+      <div class="kpi-mini-strip">
+        <div class="strip-item">
+          <span>Total Sales 2026</span>
+          <h4 id="mtdTotalSalesVal">Rp 482.000.000</h4>
+        </div>
+        <div class="strip-item">
+          <span>Avg STD</span>
+          <h4 id="mtdAvgStdVal">82</h4>
+        </div>
+        <div class="strip-item">
+          <span>Avg APC</span>
+          <h4 id="mtdAvgApcVal">Rp 12.560</h4>
+        </div>
+      </div>
+
+      <div class="chart-card-container">
+        <canvas id="chartTrendSalesMtd"></canvas>
+      </div>
+
+      <div class="table-responsive-box">
+        <table class="app-table" id="tableSalesMtd">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>SPD Sales</th>
+              <th>STD</th>
+              <th>APC</th>
+              <th>Growth</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySalesMtd"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: SALES HARIAN -->
+  <div id="modalSalesHarian" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalSalesHarian')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Sales Harian</h2>
+      <div class="modal-header-actions">
+        <button class="btn-icon" onclick="App.exportTableToExcel('tableSalesHarian', 'Sales_Harian')"><i class="fa-solid fa-file-excel"></i></button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="kpi-mini-strip">
+        <div class="strip-item">
+          <span>Total Bulan Lalu</span>
+          <h4 id="shTotalBulanLalu">Rp 210,4 Jt</h4>
+        </div>
+        <div class="strip-item">
+          <span>Total Target</span>
+          <h4 id="shTotalTarget">Rp 205,8 Jt</h4>
+        </div>
+        <div class="strip-item">
+          <span>Total Actual</span>
+          <h4 id="shTotalActual">Rp 218,6 Jt</h4>
+        </div>
+        <div class="strip-item">
+          <span>ACV Sales</span>
+          <h4 id="shAcvSales" class="text-emerald">106.2%</h4>
+        </div>
+      </div>
+
+      <div class="table-responsive-box">
+        <table class="app-table" id="tableSalesHarian">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Bulan Lalu</th>
+              <th>Target</th>
+              <th>Actual</th>
+              <th>STD</th>
+              <th>APC</th>
+              <th>Gap Target</th>
+              <th>ACV %</th>
+              <th>NSB</th>
+              <th>% NSB</th>
+              <th>% OOS</th>
+              <th>GM %</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySalesHarian"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: MONITORING IKT -->
+  <div id="modalMonitoringIkt" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalMonitoringIkt')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Monitoring IKT</h2>
+      <div class="modal-header-actions">
+        <button class="btn btn-sm btn-primary" onclick="App.openModal('modalSimulasiGm')"><i class="fa-solid fa-calculator"></i> Simulasi GM RP IKT</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="kpi-summary-quad">
+        <div class="quad-item">
+          <span>ACV Sales</span>
+          <h3 id="iktQuadSales">92%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV GM%</span>
+          <h3 id="iktQuadGm">88%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV GM RP</span>
+          <h3 id="iktQuadGmRp">85%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV Net Profit</span>
+          <h3 id="iktQuadProfit">80%</h3>
+        </div>
+      </div>
+
+      <div class="table-responsive-box">
+        <table class="app-table" id="tableMonitoringIkt">
+          <thead>
+            <tr>
+              <th>Indikator</th>
+              <th>Target</th>
+              <th>Aktual</th>
+              <th>% ACV</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyMonitoringIkt">
+            <tr>
+              <td>Net Sales</td>
+              <td id="iktTargetSales">-</td>
+              <td id="iktActualSales">-</td>
+              <td id="iktAcvSales">-</td>
+              <td><span id="iktKetSales" class="badge-status ok">OK</span></td>
+            </tr>
+            <tr>
+              <td>GM %</td>
+              <td id="iktTargetGm">-</td>
+              <td id="iktActualGm">-</td>
+              <td id="iktAcvGm">-</td>
+              <td><span id="iktKetGm" class="badge-status nok">NOK</span></td>
+            </tr>
+            <tr>
+              <td>GM Rupiah</td>
+              <td id="iktTargetGmRp">-</td>
+              <td id="iktActualGmRp">-</td>
+              <td id="iktAcvGmRp">-</td>
+              <td><span id="iktKetGmRp" class="badge-status ok">OK</span></td>
+            </tr>
+            <tr>
+              <td>Net Profit</td>
+              <td id="iktTargetProfit">-</td>
+              <td id="iktActualProfit">-</td>
+              <td id="iktAcvProfit">-</td>
+              <td><span id="iktKetProfit" class="badge-status nok">NOK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: KONVERSI NO BON/STRUK -->
+  <div id="modalKonversiBon" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalKonversiBon')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Konversi No Bon/Struk</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="form-card-container bon-converter-box">
+        <div class="form-group">
+          <label>Masukkan 4 Digit Angka Nomor Bon</label>
+          <input type="text" id="bonInputDigits" maxlength="4" placeholder="Contoh: 1123" oninput="App.convertBonNumber(this.value)">
+        </div>
+
+        <div class="bon-output-display">
+          <span class="bon-label">Hasil Sandi Konversi</span>
+          <div id="bonConvertedResult" class="bon-result-text">----</div>
+        </div>
+
+        <div class="form-actions-row">
+          <button type="button" class="btn btn-primary" onclick="App.copyBonResult()"><i class="fa-solid fa-copy"></i> Salin Sandi</button>
+          <button type="button" class="btn btn-secondary" onclick="App.resetBonInput()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 10: PENAWARAN LANGSUNG -->
+  <div id="modalPenawaranLangsung" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalPenawaranLangsung')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Penawaran Langsung</h2>
+      <div class="modal-header-actions">
+        <button class="btn-icon" onclick="App.exportTableToExcel('tablePenawaranLangsung', 'Penawaran_Langsung')"><i class="fa-solid fa-file-excel"></i></button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="kpi-summary-quad">
+        <div class="quad-item">
+          <span>ACV PSM</span>
+          <h3 id="plQuadPsm">85%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV PWP</span>
+          <h3 id="plQuadPwp">76%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV Serba Gratis</span>
+          <h3 id="plQuadSerba">69%</h3>
+        </div>
+        <div class="quad-item">
+          <span>ACV APC</span>
+          <h3 id="plQuadApc">82%</h3>
+        </div>
+      </div>
+
+      <div class="point-rank-card">
+        <div class="point-box">
+          <span>Point Dashboard</span>
+          <h2 id="plPointDashboard">1.250</h2>
+        </div>
+        <div class="rank-box">
+          <span>Rank Area</span>
+          <h2 id="plRankArea">#5</h2>
+        </div>
+      </div>
+
+      <div class="table-responsive-box">
+        <table class="app-table" id="tablePenawaranLangsung">
+          <thead>
+            <tr>
+              <th>Indikator</th>
+              <th>Target</th>
+              <th>Aktual</th>
+              <th>% ACV</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPenawaranLangsung"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 11: REKAP PSM KASIR -->
+  <div id="modalPsmKasir" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalPsmKasir')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Rekap PSM Kasir</h2>
+      <div class="modal-header-actions">
+        <button class="btn btn-sm btn-primary" onclick="App.savePsmKasir()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="table-responsive-box">
+        <table class="app-table" id="tablePsmKasir">
+          <thead>
+            <tr>
+              <th>Item PSM</th>
+              <th>Target H1-H8</th>
+              <th>Aktual H1-H8</th>
+              <th>ACV %</th>
+              <th>Gap</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPsmKasir"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-secondary mt-3" onclick="App.addNewPsmRow()"><i class="fa-solid fa-plus"></i> Tambah Item Baru</button>
+    </div>
+  </div>
+
+  <!-- MODAL 12: MONITORING SALES OPR -->
+  <div id="modalSalesOpr" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalSalesOpr')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Monitoring Sales OPR</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-subnav-tabs">
+      <button class="subtab active" onclick="App.switchOprTab('06:07')">Rekap Jam 06:07</button>
+      <button class="subtab" onclick="App.switchOprTab('22:23')">Rekap Jam 22:23</button>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="form-card-container">
+        <form id="formSalesOpr" onsubmit="event.preventDefault(); App.submitSalesOpr();">
+          <div class="form-row">
+            <div class="form-col">
+              <label>Jam Transaksi</label>
+              <input type="text" id="oprJam" placeholder="06:30" required>
+            </div>
+            <div class="form-col">
+              <label>Sales (Rp)</label>
+              <input type="number" id="oprSales" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label>STD</label>
+              <input type="number" id="oprStd" required>
+            </div>
+            <div class="form-col">
+              <label>APC</label>
+              <input type="number" id="oprApc" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label>Qty Transaksi</label>
+              <input type="number" id="oprQty" required>
+            </div>
+            <div class="form-col">
+              <label>ETRANS</label>
+              <input type="number" id="oprEtrans" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Simpan Catatan OPR</button>
+        </form>
+      </div>
+
+      <div class="table-responsive-box mt-4">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Jam</th>
+              <th>Sales</th>
+              <th>STD</th>
+              <th>APC</th>
+              <th>Qty</th>
+              <th>ETRANS</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySalesOpr"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 13: MONITORING KWH -->
+  <div id="modalKwh" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalKwh')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Monitoring KWH Listrik</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="form-card-container">
+        <form id="formKwh" onsubmit="event.preventDefault(); App.submitKwh();">
+          <div class="form-row">
+            <div class="form-col">
+              <label>KWH Meter Awal</label>
+              <input type="number" id="kwhAwal" step="0.1" required oninput="App.calcKwhPreview()">
+            </div>
+            <div class="form-col">
+              <label>KWH Meter Akhir</label>
+              <input type="number" id="kwhAkhir" step="0.1" required oninput="App.calcKwhPreview()">
+            </div>
+            <div class="form-col">
+              <label>Tarif per KWH (Rp)</label>
+              <input type="number" id="kwhTarif" value="1500" required oninput="App.calcKwhPreview()">
+            </div>
+          </div>
+
+          <div class="kwh-preview-box">
+            <div>Pemakaian: <strong id="kwhPreviewUsage">0 KWH</strong></div>
+            <div>Estimasi Biaya: <strong id="kwhPreviewCost">Rp 0</strong></div>
+          </div>
+
+          <div class="form-group mt-2">
+            <label>Keterangan Tambahan</label>
+            <input type="text" id="kwhKeterangan" placeholder="Contoh: AC 2 unit diservis sore hari">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Simpan Meter KWH</button>
+        </form>
+      </div>
+
+      <div class="table-responsive-box mt-4">
+        <table class="app-table" id="tableKwh">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>KWH Awal</th>
+              <th>KWH Akhir</th>
+              <th>Pemakaian</th>
+              <th>Biaya Listrik</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKwh"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 14: CATATAN RETURN -->
+  <div id="modalReturn" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalReturn')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Catatan Return</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-subnav-tabs">
+      <button class="subtab active" onclick="App.switchReturnSubtipe('DC REG')">DC REG</button>
+      <button class="subtab" onclick="App.switchReturnSubtipe('DC FRESH')">DC FRESH</button>
+      <button class="subtab" onclick="App.switchReturnSubtipe('BKL')">BKL</button>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="form-card-container">
+        <form id="formReturn" onsubmit="event.preventDefault(); App.submitReturn();">
+          <div class="form-row">
+            <div class="form-col">
+              <label>Nomor Faktur</label>
+              <input type="text" id="retNoFaktur" required placeholder="Contoh: FKT-2026-009">
+            </div>
+            <div class="form-col">
+              <label>Nama Driver</label>
+              <input type="text" id="retNamaDriver" required placeholder="Contoh: Budi Gunawan">
+            </div>
+            <div class="form-col">
+              <label>Nomor Polisi Mobil</label>
+              <input type="text" id="retNoPolisi" required placeholder="Contoh: B 9912 SXZ">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Catatan / Alasan Return</label>
+            <textarea id="retCatatan" rows="2" placeholder="Barang pecah / rusak / mendekati kadaluarsa..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Simpan Catatan Return</button>
+        </form>
+      </div>
+
+      <div class="table-responsive-box mt-4">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Faktur</th>
+              <th>Driver</th>
+              <th>No Polisi</th>
+              <th>Subtipe</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyReturn"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <!-- MODAL 15: SCAN BARANG -->
-  <div id="modalMenu15" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalMenu15')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>19. Scan Barang</h3></div>
-      <button class="btn-modal-close" onclick="closeModal('modalMenu15')"><i class="fa-solid fa-xmark"></i></button>
+  <div id="modalScanBarang" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalScanBarang')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Scan Barang Retail</h2>
+      <div class="modal-header-actions"></div>
     </div>
-    <div class="modal-body-scrollable">
-      <div style="max-width:440px; margin:0 auto; background:#fff; padding:20px; border-radius:14px; border:1px solid #e2e8f0; text-align:center;">
-        <div id="cameraScannerBox" style="display:none; margin-bottom:14px;"><div id="interactiveScannerArea"></div><button style="margin-top:6px; background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px;" onclick="stopCameraScanner()">Tutup Kamera</button></div>
-        <svg id="barcodeVisualSvg"></svg>
-        <div id="barcodeNumberDisplay" style="font-size:20px; font-weight:800; color:#0b4d3c; margin:10px 0;">8991234567890</div>
-        <button style="background:#0b4d3c; color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:700; cursor:pointer; width:100%;" onclick="startCameraScanner()"><i class="fa-solid fa-camera"></i> Buka Kamera Scanner</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- MODAL CHAT AI -->
-  <div id="modalChatAi" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalChatAi')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>Kacida AI Assistant</h3><p style="font-size:11px; color:#a7f3d0;">Didukung Llama 3.3 via Groq</p></div>
-      <button class="btn-modal-close" onclick="closeModal('modalChatAi')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div id="chatMessagesBox" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px;">
-      <div style="align-self:flex-start; background:#fff; padding:12px 14px; border-radius:14px; border:1px solid #e2e8f0; font-size:13px; max-width:80%;">
-        <strong>Kacida AI:</strong> Halo! Ada yang bisa saya bantu untuk performa toko atau sekadar ngobrol santai hari ini?
-      </div>
-    </div>
-    <div style="padding:12px; background:#fff; border-top:1px solid #e2e8f0; display:flex; gap:8px;">
-      <textarea id="chatInputMessage" rows="1" placeholder="Ketik pesan... (Shift + Enter untuk baris baru)" style="flex:1; padding:10px 14px; border-radius:20px; border:1px solid #cbd5e1; font-family:inherit; font-size:13px; resize:none;" onkeydown="handleChatKeyDown(event)"></textarea>
-      <button onclick="sendChatMessage()" style="width:40px; height:40px; border-radius:50%; background:#10b981; color:#fff; border:none; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-  </div>
-
-  <!-- MODAL KALENDER -->
-  <div id="modalKalender" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalKalender')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>Kalender Retail</h3></div>
-      <button class="btn-modal-close" onclick="closeModal('modalKalender')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
     <div class="modal-body-scrollable">
-      <div style="background:#fff; padding:18px; border-radius:14px; border:1px solid #e2e8f0; max-width:500px; margin:0 auto;">
-        <h4 id="calendarMonthYearTitle" style="text-align:center; margin-bottom:12px; font-weight:800;">Oktober 2026</h4>
-        <div id="interactiveCalendarGrid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; text-align:center; font-size:12px; font-weight:700;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL PROFIL -->
-  <div id="modalProfil" class="fullscreen-modal">
-    <div class="modal-header">
-      <button class="btn-modal-back" onclick="closeModal('modalProfil')"><i class="fa-solid fa-arrow-left"></i></button>
-      <div style="flex:1;"><h3>Profil Saya</h3></div>
-      <button class="btn-modal-close" onclick="closeModal('modalProfil')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body-scrollable">
-      <div style="max-width:360px; margin:20px auto; background:#fff; padding:22px; border-radius:16px; border:1px solid #e2e8f0; text-align:center;">
-        <img id="profileCardAvatar" src="https://lh3.googleusercontent.com/d/1TQmADZlb7Gv6JupdThBSBfG7_S1Qn" style="width:72px; height:72px; border-radius:50%; border:3px solid #10b981; object-fit:cover; margin-bottom:8px;">
-        <h3 id="profileCardName" style="font-size:16px; font-weight:800;">User</h3>
-        <span id="profileCardRole" style="font-size:11px; background:#ecfdf5; color:#065f46; padding:2px 8px; border-radius:10px; font-weight:700;">Role</span>
-        <div style="text-align:left; margin-top:16px; font-size:12px;">
-          <p style="margin-bottom:6px;">NIK: <strong id="profileCardNik">-</strong></p>
-          <p style="margin-bottom:6px;">Toko: <strong id="profileCardStore">-</strong></p>
+      <div class="scanner-card">
+        <div class="scanner-camera-box" id="scannerCameraContainer">
+          <video id="barcodeVideo" playsinline style="display: none; width: 100%; border-radius: 12px;"></video>
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <i class="fa-solid fa-camera"></i>
+            <p>Kamera siap digunakan untuk scan barcode fisik barang kasir</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="App.startBarcodeScanner()"><i class="fa-solid fa-video"></i> Buka Kamera</button>
+          </div>
         </div>
-        <button style="margin-top:16px; width:100%; padding:10px; background:#ef4444; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;" onclick="handleLogout()">Keluar Akun</button>
+
+        <div class="manual-barcode-input-row mt-3">
+          <input type="text" id="manualBarcodeInput" placeholder="Atau ketik Barcode Manual...">
+          <button type="button" class="btn btn-secondary" onclick="App.addManualBarcode()"><i class="fa-solid fa-plus"></i> Tambah</button>
+        </div>
+      </div>
+
+      <div class="scanned-list-card mt-4">
+        <div class="scanned-header">
+          <h4>Daftar Barang Ter-Scan</h4>
+          <span class="total-badge" id="scannedTotalCount">Total: 0 Item</span>
+        </div>
+        <div class="scanned-items-list" id="scannedItemsList">
+          <!-- Render barcode cards via JS -->
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- MODAL: CHAT AI GROQ -->
+  <div id="modalChatAi" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalChatAi')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Kacida AI Assistant</h2>
+      <div class="modal-header-actions">
+        <button class="btn-icon" onclick="App.clearChatAi()"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable chat-body" id="chatAiMessages">
+      <div class="chat-message bot">
+        <div class="bot-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div class="msg-bubble">
+          Halo! Saya <strong>Kacida AI</strong>. Saya siap menganalisis data tokomu, memberikan insight target sales & IKT, maupun sekadar mengobrol santai dan tebak-tebakan. Ada yang bisa saya bantu hari ini?
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-bar">
+      <textarea id="chatAiInput" rows="1" placeholder="Tanya performa toko, strategi rak, atau ngobrol santai..." onkeydown="App.handleChatKeyDown(event)"></textarea>
+      <button class="btn-send-chat" onclick="App.sendChatAi()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- MODAL: KALENDER INTERAKTIF -->
+  <div id="modalCalendar" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalCalendar')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Kalender Operasional</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="calendar-card">
+        <div class="calendar-nav">
+          <button class="btn-icon" onclick="App.prevMonthCalendar()"><i class="fa-solid fa-chevron-left"></i></button>
+          <h3 id="calendarCurrentMonthTitle">Juni 2026</h3>
+          <button class="btn-icon" onclick="App.nextMonthCalendar()"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="calendar-grid-header">
+          <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span>
+          <span class="weekend">Jum</span><span class="weekend">Sab</span><span class="weekend">Min</span>
+        </div>
+        <div class="calendar-grid-cells" id="calendarGridCells">
+          <!-- Render cells via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROFIL USER -->
+  <div id="modalProfile" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalProfile')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Profil Pengguna</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="profile-card-center">
+        <img id="profileCardAvatar" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23006C4E'/><circle cx='50' cy='38' r='20' fill='%23FFFFFF'/><path d='M20 90 C20 70 34 62 50 62 C66 62 80 70 80 90 Z' fill='%23FFFFFF'/></svg>" class="profile-large-avatar" alt="Avatar">
+        <h3 id="profileNameDisplay">Budi Santoso</h3>
+        <span id="profileRoleDisplay" class="badge-role">Chief Of Store</span>
+
+        <div class="profile-info-list mt-4">
+          <div class="info-row">
+            <span>NIK</span>
+            <strong id="profileNikDisplay">12345678</strong>
+          </div>
+          <div class="info-row">
+            <span>Toko Binaan</span>
+            <strong id="profileStoreDisplay">2J16 - CARINGIN KULON</strong>
+          </div>
+          <div class="info-row">
+            <span>Rank Area</span>
+            <strong id="profileRankDisplay">#5</strong>
+          </div>
+          <div class="info-row">
+            <span>Total Poin Misi</span>
+            <strong id="profilePointDisplay">120 Poin</strong>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-block mt-4" onclick="App.switchUserModal()"><i class="fa-solid fa-user-gear"></i> Ganti NIK Pengguna</button>
+        <button class="btn btn-danger btn-block mt-2" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar (Logout)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BANTUAN -->
+  <div id="modalHelp" class="fullscreen-modal">
+    <div class="modal-header-bar">
+      <button class="btn-back" onclick="App.closeModal('modalHelp')"><i class="fa-solid fa-chevron-left"></i></button>
+      <h2>Pusat Bantuan & Panduan</h2>
+      <div class="modal-header-actions"></div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="help-card-list">
+        <div class="help-item">
+          <h4><i class="fa-solid fa-key"></i> Cara Login & Ganti Pengguna</h4>
+          <p>Masukkan NIK yang terdaftar pada sheet <code>Master_User</code>. Jika belum terdaftar, hubungi Area Coordinator atau Super Admin (NIK: 14125034).</p>
+        </div>
+        <div class="help-item">
+          <h4><i class="fa-solid fa-arrows-rotate"></i> Cara Sinkronisasi Data</h4>
+          <p>Gunakan tombol "Sync Manual" di pojok kanan atas untuk memperbarui data langsung dari Google Spreadsheet tanpa harus memuat ulang seluruh halaman.</p>
+        </div>
+        <div class="help-item">
+          <h4><i class="fa-solid fa-mobile-screen"></i> Instal Aplikasi di HP (PWA)</h4>
+          <p>Buka tautan website di browser Chrome/Safari di HP, lalu ketuk opsi <strong>"Tambahkan ke Layar Utama" (Add to Home Screen)</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="api.js"></script>
+  <script src="app.js"></script>
   <script>
-    /**
-     * ========================================================================
-     * FRONTEND JAVASCRIPT ENGINE (CONSOLIDATED)
-     * ========================================================================
-     */
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec";
-
-    let currentUser = null;
-    let currentStoreCode = "2J16";
-    let chartDonutGM = null, chartBarSales = null, chartBarIKT = null, chartBarPL = null, html5QrScanner = null;
-
-    document.addEventListener("DOMContentLoaded", function () {
-      checkExistingSession();
-      initBarcodeDefault();
-    });
-
-    async function apiGet(action, params = {}) {
-      try {
-        const u = new URL(SCRIPT_URL);
-        u.searchParams.append("action", action);
-        const t = sessionStorage.getItem("kacida_session_token");
-        if (t) u.searchParams.append("token", t);
-        for (const k in params) u.searchParams.append(k, params[k]);
-        const res = await fetch(u.toString(), { method: "GET", mode: "cors", redirect: "follow" });
-        return await res.json();
-      } catch (e) {
-        return { success: false, message: e.message };
-      }
-    }
-
-    async function apiPost(action, payload = {}) {
-      try {
-        const t = sessionStorage.getItem("kacida_session_token");
-        const body = { action: action, token: t || "", ...payload };
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST", mode: "cors", redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(body)
-        });
-        return await res.json();
-      } catch (e) {
-        return { success: false, message: e.message };
-      }
-    }
-
-    function checkExistingSession() {
-      const token = sessionStorage.getItem("kacida_session_token");
-      const user = sessionStorage.getItem("kacida_user_data");
-      if (token && user) {
-        currentUser = JSON.parse(user);
-        currentStoreCode = currentUser.kodeToko || "2J16";
-        launchAppDashboard();
-      }
-    }
-
-    async function handleLoginSubmit(e) {
-      e.preventDefault();
-      const raw = document.getElementById("inputNik").value;
-      const nik = raw.replace(/[^0-9]/g, "").trim();
-      if (!nik) return;
-
-      showLoading(true, "Memvalidasi NIK di server...");
-      setProgress(40);
-
-      const res = await apiGet("login", { nik: nik });
-      setProgress(90);
-
-      if (res && res.success) {
-        sessionStorage.setItem("kacida_session_token", res.token);
-        sessionStorage.setItem("kacida_user_data", JSON.stringify(res.user));
-        currentUser = res.user;
-        currentStoreCode = res.user.kodeToko || "2J16";
-        setProgress(100);
-        setTimeout(() => { showLoading(false); launchAppDashboard(); }, 300);
-      } else {
-        showLoading(false);
-        Swal.fire({
-          icon: "error",
-          title: "Login Gagal",
-          text: (res && res.message) ? res.message : "NIK tidak terdaftar dalam Master_User.",
-          confirmButtonColor: "#0b4d3c"
-        });
-      }
-    }
-
-    function handleDemoLogin() {
-      currentUser = {
-        nik: "17060061",
-        nama: "YULIANTI FAUZIAH RAMDANI (DEMO)",
-        jabatan: "Chief Of Store",
-        effectiveRole: "Chief Of Store",
-        namaToko: "2J16 - CARINGIN KULON",
-        kodeToko: "2J16",
-        fotoUrl: "https://lh3.googleusercontent.com/d/1TQmADZlb7Gv6JupdThBSBfG7_S1Qn"
-      };
-      sessionStorage.setItem("kacida_session_token", "DEMO_ACTIVE");
-      sessionStorage.setItem("kacida_user_data", JSON.stringify(currentUser));
-      launchAppDashboard();
-    }
-
-    function launchAppDashboard() {
-      document.getElementById("loginScreen").classList.remove("active");
-      document.getElementById("appContainer").style.display = "flex";
-      applyIdentity();
-      triggerManualSync();
-    }
-
-    function applyIdentity() {
-      if (!currentUser) return;
-      document.getElementById("topbarStoreName").innerText = currentUser.namaToko;
-      document.getElementById("heroGreetingText").innerText = "Selamat Datang, " + currentUser.nama;
-      document.getElementById("heroRoleBadge").innerText = currentUser.effectiveRole;
-      document.getElementById("heroStoreBadge").innerText = currentUser.namaToko;
-      document.getElementById("profileCardName").innerText = currentUser.nama;
-      document.getElementById("profileCardRole").innerText = currentUser.effectiveRole;
-      document.getElementById("profileCardNik").innerText = currentUser.nik;
-      document.getElementById("profileCardStore").innerText = currentUser.namaToko;
-      if (currentUser.fotoUrl) {
-        document.getElementById("topbarUserPhoto").src = currentUser.fotoUrl;
-        document.getElementById("heroUserPhoto").src = currentUser.fotoUrl;
-        document.getElementById("profileCardAvatar").src = currentUser.fotoUrl;
-      }
-    }
-
-    async function triggerManualSync() {
-      showLoading(true, "Sinkronisasi performa retail...");
-      setProgress(40);
-      const res = await apiGet("syncAll", { storeCode: currentStoreCode });
-      setProgress(85);
-      if (res && res.success && res.summary) {
-        const s = res.summary;
-        if (s.kpi) {
-          document.getElementById("kpiIktValue").innerText = s.kpi.ikt + "%";
-          document.getElementById("kpiMtdSalesValue").innerText = "Rp " + (s.kpi.salesMTD / 1000000).toFixed(1) + " Jt";
-          document.getElementById("kpiPlValue").innerText = s.kpi.penawaranLangsung;
-          document.getElementById("kpiSalesHarianValue").innerText = "Rp " + (s.kpi.salesHarian / 1000000).toFixed(1) + " Jt";
-        }
-      }
-      setProgress(100);
-      setTimeout(() => { showLoading(false); renderCharts(); }, 350);
-    }
-
-    function renderCharts() {
-      const ctxD = document.getElementById("chartDonutGM");
-      if (ctxD) {
-        if (chartDonutGM) chartDonutGM.destroy();
-        chartDonutGM = new Chart(ctxD, {
-          type: "doughnut",
-          data: { datasets: [{ data: [68, 32], backgroundColor: ["#10b981", "#e2e8f0"], borderWidth: 0 }] },
-          options: { cutout: "75%", plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-        });
-      }
-      const ctxS = document.getElementById("chartBarSalesHarian");
-      if (ctxS) {
-        if (chartBarSales) chartBarSales.destroy();
-        chartBarSales = new Chart(ctxS, {
-          type: "bar",
-          data: { labels: ["S","S","R","K","J","S","M"], datasets: [{ data: [12,14,11,16,15,18,17], backgroundColor: "#10b981", borderRadius: 3 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-        });
-      }
-      const ctxI = document.getElementById("chartBarIKT");
-      if (ctxI) {
-        if (chartBarIKT) chartBarIKT.destroy();
-        chartBarIKT = new Chart(ctxI, {
-          type: "bar",
-          data: { labels: ["A","B","C","D"], datasets: [{ data: [92,88,85,80], backgroundColor: "#059669", borderRadius: 3 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-        });
-      }
-      const ctxP = document.getElementById("chartBarPL");
-      if (ctxP) {
-        if (chartBarPL) chartBarPL.destroy();
-        chartBarPL = new Chart(ctxP, {
-          type: "bar",
-          data: { labels: ["1","2","3","4"], datasets: [{ data: [85,76,69,82], backgroundColor: "#3b82f6", borderRadius: 3 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-        });
-      }
-    }
-
-    function openMenuModal(num) {
-      const m = document.getElementById("modalMenu" + num);
-      if (m) m.classList.add("active");
-    }
-    function closeModal(id) {
-      const m = document.getElementById(id);
-      if (m) m.classList.remove("active");
-      if (html5QrScanner) stopCameraScanner();
-    }
-    function switchModalSubtab(prefix, tab) {
-      event.target.closest(".fullscreen-modal").querySelectorAll(".modal-tab-btn").forEach(b => b.classList.remove("active"));
-      event.target.classList.add("active");
-      event.target.closest(".fullscreen-modal").querySelectorAll(".subtab-pane").forEach(p => p.classList.remove("active"));
-      const target = document.getElementById(prefix + "_subtab_" + tab);
-      if (target) target.classList.add("active");
-    }
-
-    function handleConvertBonInput(val) {
-      const map = { "0":"M", "1":"O", "2":"Y", "3":"D", "4":"T", "5":"U", "6":"H", "7":"C", "8":"I", "9":"K" };
-      let clean = val.replace(/\D/g, "").slice(0, 4).padStart(4, "0");
-      let out = "";
-      for (let ch of clean) out += map[ch] || "M";
-      document.getElementById("convertBonResult").innerText = out;
-    }
-    function copyConvertedBon() {
-      const code = document.getElementById("convertBonResult").innerText;
-      navigator.clipboard.writeText(code);
-      Swal.fire({ icon: "success", title: "Tersalin!", text: code, timer: 1200, showConfirmButton: false });
-    }
-
-    function calculateSimulationGMRp() {
-      const targetSales = parseFloat(document.getElementById("simTargetSales").value) || 0;
-      const actualSales = parseFloat(document.getElementById("simActualSales").value) || 0;
-      const gapSales = actualSales - targetSales;
-      document.getElementById("resSimGapSales").innerText = "Rp " + gapSales.toLocaleString("id-ID");
-      document.getElementById("resSimActGmRp").innerText = "Rp " + (actualSales * 0.185).toLocaleString("id-ID");
-      document.getElementById("resSimTimeFactor").innerText = "84.6%";
-    }
-
-    function initBarcodeDefault() {
-      try {
-        JsBarcode("#barcodeVisualSvg", "8991234567890", { format: "CODE128", lineColor: "#0b4d3c", width: 2, height: 70, displayValue: false });
-      } catch (e) {}
-    }
-    function startCameraScanner() {
-      document.getElementById("cameraScannerBox").style.display = "block";
-      html5QrScanner = new Html5Qrcode("interactiveScannerArea");
-      html5QrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 140 } }, (code) => {
-        document.getElementById("barcodeNumberDisplay").innerText = code;
-        JsBarcode("#barcodeVisualSvg", code, { format: "CODE128", displayValue: false });
-        stopCameraScanner();
-      }, () => {});
-    }
-    function stopCameraScanner() {
-      if (html5QrScanner) {
-        html5QrScanner.stop().then(() => { document.getElementById("cameraScannerBox").style.display = "none"; }).catch(() => {});
-      }
-    }
-
-    async function sendChatMessage() {
-      const input = document.getElementById("chatInputMessage");
-      const msg = input.value.trim();
-      if (!msg) return;
-      const box = document.getElementById("chatMessagesBox");
-      box.innerHTML += `<div style="align-self:flex-end; background:#0b4d3c; color:#fff; padding:10px 14px; border-radius:14px; font-size:13px; max-width:80%;">${msg}</div>`;
-      input.value = "";
-      box.scrollTop = box.scrollHeight;
-      const res = await apiPost("chatAI", { message: msg });
-      const reply = (res && res.success) ? res.reply : "Maaf, AI sedang offline.";
-      box.innerHTML += `<div style="align-self:flex-start; background:#fff; padding:10px 14px; border-radius:14px; border:1px solid #e2e8f0; font-size:13px; max-width:80%;"><strong>Kacida AI:</strong> ${reply}</div>`;
-      box.scrollTop = box.scrollHeight;
-    }
-    function handleChatKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }
-
-    function openChatAiModal() { document.getElementById("modalChatAi").classList.add("active"); }
-    function openKalenderModal() {
-      document.getElementById("modalKalender").classList.add("active");
-      const grid = document.getElementById("interactiveCalendarGrid");
-      grid.innerHTML = "";
-      ["S","S","R","K","J","S","M"].forEach(d => grid.innerHTML += `<div style="color:#64748b; padding:4px;">${d}</div>`);
-      for (let i = 1; i <= 31; i++) grid.innerHTML += `<div style="padding:6px; background:#f8fafc; border-radius:4px;">${i}</div>`;
-    }
-    function openProfilModal() { document.getElementById("modalProfil").classList.add("active"); }
-    function handleLogout() { sessionStorage.clear(); window.location.reload(); }
-
-    function showLoading(show, txt) {
-      document.getElementById("loadingStatusText").innerText = txt || "Memproses...";
-      if (show) document.getElementById("loadingScreen").classList.add("active");
-      else document.getElementById("loadingScreen").classList.remove("active");
-    }
-    function setProgress(pct) {
-      const c = document.getElementById("loadingRingProgress");
-      const r = c.r.baseVal.value;
-      const circ = 2 * Math.PI * r;
-      c.style.strokeDasharray = `${circ} ${circ}`;
-      c.style.strokeDashoffset = circ - (pct / 100) * circ;
-      document.getElementById("loadingPercentText").innerText = pct + "%";
-    }
-
+    // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Kacida Bersatu ServiceWorker siap:', reg.scope))
+          .catch(err => console.warn('SW registrasi gagal:', err));
+      });
     }
   </script>
 </body>

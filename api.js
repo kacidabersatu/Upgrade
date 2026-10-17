@@ -15,7 +15,7 @@ const Api = {
     } catch (e) {
       console.warn("Fallback local config:", e);
       this.config = {
-        apiUrl: "https://script.google.com/macros/s/AKfycbx_DEMO/exec",
+        apiUrl: "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec",
         superAdminNik: "14125034"
       };
     }

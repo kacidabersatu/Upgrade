@@ -1,24 +1,21 @@
 {
-  "name": "Kacida Bersatu Pro",
+  "name": "Kacida Bersatu — Portal Retail",
   "short_name": "Kacida",
+  "description": "Portal Performa & Operasional Retail Alfamart",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0a2215",
-  "theme_color": "#0a2215",
-  "gcm_sender_id": "103953800507",
+  "background_color": "#0c4a34",
+  "theme_color": "#0c4a34",
   "icons": [
     {
-      "src": "https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ",
+      "src": "https://cdn-icons-png.flaticon.com/512/10473/10473571.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "https://lh3.googleusercontent.com/d/10-ZwZ0NXA55yPuLXfd1KlJjDU-mNPSyQ",
+      "src": "https://cdn-icons-png.flaticon.com/512/10473/10473571.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     }
   ]
 }

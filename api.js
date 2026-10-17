@@ -1,119 +1,116 @@
 /**
  * ============================================================================
- * KACIDA BERSATU — API CLIENT LAYER (TERINTEGRASI & FIX)
- * File: api.js
+ * KACIDA BERSATU — API Layer (api.js)
+ * Jembatan Komunikasi Frontend GitHub Pages dengan Google Apps Script Backend
  * ============================================================================
  */
 
-const Api = {
-  // Gunakan URL deployment asli Anda sebagai default utama
-  config: {
-    apiUrl: "https://script.google.com/macros/s/AKfycbzUtSA9qSOonBzQyEKx2QiP8e7oezvBELTqUaOrVCShA-E-xwgmdXOUWjDJlp4oAYbZBg/exec",
-    superAdminNik: "14125034"
-  },
+const KacidaAPI = {
+  config: null,
 
   async init() {
     try {
-      const res = await fetch("./config.json?v=" + Date.now());
-      if (res.ok) {
-        const json = await res.json();
-        // Hanya ganti jika URL di config.json valid dan bukan teks placeholder
-        if (json.apiUrl && !json.apiUrl.includes("GANTI_DENGAN")) {
-          this.config.apiUrl = json.apiUrl;
-        }
-        if (json.superAdminNik) {
-          this.config.superAdminNik = json.superAdminNik;
-        }
-      }
+      const res = await fetch('./config.json');
+      this.config = await res.json();
     } catch (e) {
-      console.warn("Memakai konfigurasi default internal:", e);
-    }
-  },
-
-  async call(action, payload = {}) {
-    // 1. CEK MODE DEMO DULU (Jalankan instan tanpa request server)
-    if (localStorage.getItem("kacida_demo_mode") === "true") {
-      return this.mockDemoResponse(action, payload);
-    }
-
-    const url = this.config.apiUrl;
-
-    const requestData = {
-      action: action,
-      ...payload
-    };
-
-    try {
-      // Gunakan text/plain agar Google Apps Script tidak menolak CORS
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(requestData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error(`API Call failed [${action}]:`, error);
-      return {
-        status: "error",
-        message: "Gagal terhubung ke Google Apps Script. Pastikan setelan deployment 'Who has access' adalah 'Anyone'."
+      console.warn("Gagal memuat config.json, menggunakan fallback internal:", e);
+      this.config = {
+        gasApiUrl: "",
+        adminWaUrl: "https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu"
       };
     }
   },
 
-  // Mock data responsif untuk Mode Demo
-  mockDemoResponse(action, payload) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        switch (action) {
-          case "login":
-            resolve({
-              status: "success",
-              message: "Login Demo Berhasil",
-              user: {
-                nik: "12345678",
-                nama: "Budi Santoso (Demo)",
-                jabatan: "Chief Of Store",
-                role: "Chief of Store",
-                namaToko: "2J16 - CARINGIN KULON",
-                kodeToko: "2J16",
-                fotoProfil: "",
-                poinTotal: 120,
-                rankArea: "#5",
-                pendingApprovals: 2,
-                isSuperAdmin: false
-              }
-            });
-            break;
-          case "syncDashboard":
-            resolve({
-              status: "success",
-              timestamp: new Date().toLocaleTimeString("id-ID"),
-              data: {
-                salesHMin1: 15830750,
-                iktSummary: { acvSales: "92%", acvGm: "88%", acvNetProfit: "80%" },
-                penawaranSummary: { pointDashboard: "1.250", rank: "5", totalAcv: "76%" },
-                pendingApprovals: 2
-              }
-            });
-            break;
-          case "chatAi":
-            resolve({
-              status: "success",
-              reply: "Halo Budi! Ini adalah simulasi asisten AI Kacida Bersatu pada Mode Demo. Data toko 2J16 menunjukkan sales harian H-1 mencapai Rp 15,8 Jt. Ada yang ingin dianalisis lebih lanjut?"
-            });
-            break;
-          default:
-            resolve({ status: "success", message: "Aksi demo tersimulasi.", data: [] });
-        }
-      }, 250);
+  getAuth() {
+    const raw = localStorage.getItem('kacida_session');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  setAuth(data) {
+    localStorage.setItem('kacida_session', JSON.stringify(data));
+  },
+
+  clearAuth() {
+    localStorage.removeItem('kacida_session');
+    localStorage.removeItem('kacida_cached_dashboard');
+  },
+
+  /**
+   * Mengirim request ke Web App Google Apps Script
+   */
+  async request(action, payload = {}) {
+    if (!this.config) await this.init();
+
+    const auth = this.getAuth();
+    const requestBody = {
+      action: action,
+      auth: auth ? { nik: auth.user.nik, token: auth.token } : {},
+      payload: payload
+    };
+
+    // Jika offline dan bukan login, ambil dari cache lokal
+    if (!navigator.onLine && action !== 'LOGIN') {
+      const cached = localStorage.getItem('kacida_cache_' + action);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+      throw new Error("Perangkat Anda sedang offline dan data belum tersimpan di cache.");
+    }
+
+    try {
+      // Gunakan mode text/plain untuk melewati preflight CORS GAS yang ketat
+      const response = await fetch(this.config.gasApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error("Server merespon dengan status: " + response.status);
+      }
+
+      const json = await response.json();
+
+      // Simpan cache sukses lokal untuk dukungan PWA offline
+      if (json && json.success) {
+        localStorage.setItem('kacida_cache_' + action, JSON.stringify(json));
+      }
+
+      return json;
+    } catch (err) {
+      console.error("API Request Error:", err);
+      // Fallback cache saat fetch gagal
+      const cached = localStorage.getItem('kacida_cache_' + action);
+      if (cached) return JSON.parse(cached);
+      throw err;
+    }
+  },
+
+  // Helper Aksi Spesifik
+  async login(nik) {
+    if (!this.config) await this.init();
+    const res = await fetch(this.config.gasApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'LOGIN', nik: String(nik).trim() })
     });
+    return await res.json();
+  },
+
+  async getInitialData() {
+    return await this.request('GET_INITIAL_DATA');
+  },
+
+  async syncManual() {
+    return await this.request('SYNC_ALL');
+  },
+
+  async askAI(prompt, history) {
+    return await this.request('AI_CHAT', { prompt, history });
   }
 };

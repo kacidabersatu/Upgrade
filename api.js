@@ -8,7 +8,7 @@
 const Api = {
   // Gunakan URL deployment asli Anda sebagai default utama
   config: {
-    apiUrl: "https://script.google.com/macros/s/AKfycbwMrq1R3L8MXT0TH_BG_ZN8MrtQTfq6SxVEV5Vj0DmLDu1qT7UYWQaGeqbVTIA8VaafhA/exec",
+    apiUrl: "https://script.google.com/macros/s/AKfycbzUtSA9qSOonBzQyEKx2QiP8e7oezvBELTqUaOrVCShA-E-xwgmdXOUWjDJlp4oAYbZBg/exec",
     superAdminNik: "14125034"
   },
 

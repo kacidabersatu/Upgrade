@@ -1,21 +1,96 @@
 {
-  "name": "Kacida Bersatu — Portal Retail",
-  "short_name": "Kacida",
-  "description": "Portal Performa & Operasional Retail Alfamart",
+  "name": "Kacida Bersatu — Portal Performa & Operasional Retail",
+  "short_name": "Kacida Bersatu",
+  "description": "Portal Performa & Operasional Retail Alfamart - Bersama Kita Kuat",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0c4a34",
-  "theme_color": "#0c4a34",
+  "background_color": "#0F5132",
+  "theme_color": "#0F5132",
+  "orientation": "portrait-primary",
+  "lang": "id-ID",
+  "dir": "ltr",
+  "scope": "./",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/10473/10473571.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/10473/10473571.png",
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan Barcode",
+      "short_name": "Scanner",
+      "description": "Buka Pemindai Barcode Barang Kasir",
+      "url": "./index.html#scan",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Ceklis EXP",
+      "short_name": "EXP",
+      "description": "Periksa Data Rak dan Alert Kadaluarsa",
+      "url": "./index.html#exp",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Serah Terima",
+      "short_name": "Shift",
+      "description": "Formulir Serah Terima Antar Shift Kasir",
+      "url": "./index.html#shift",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"]
 }

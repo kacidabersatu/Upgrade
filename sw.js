@@ -1,85 +1,61 @@
-/**
- * ============================================================================
- * KACIDA BERSATU - Service Worker PWA (sw.js)
- * Cache-First untuk Aset Visual, Network-Only untuk API Google Apps Script
- * ============================================================================
- */
 
-const CACHE_NAME = "kacida-bersatu-pwa-v2";
-
+const CACHE_NAME = "kacida-bersatu-v1.0.0";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./api.js",
+  "./config.json",
   "./manifest.json",
-  "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap",
-  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css",
-  "https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js",
-  "https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css",
-  "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js",
-  "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js",
-  "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js",
-  "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+  "https://cdn.jsdelivr.net/npm/sweetalert2@11",
+  "https://cdn.jsdelivr.net/npm/chart.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
+  "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
 ];
 
-// 1. Install Service Worker & Simpan Cache Awal
-self.addEventListener("install", (event) => {
-  event.waitUntil(
+self.addEventListener("install", (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
 });
 
-// 2. Aktivasi Service Worker & Bersihkan Cache Versi Usang
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// 3. Strategi Pengambilan Data (Network vs Cache)
-self.addEventListener("fetch", (event) => {
-  const requestUrl = event.request.url;
+self.addEventListener("fetch", (e) => {
+  // Hanya tangani GET requests untuk asset statis
+  if (e.request.method !== "GET") return;
 
-  // JANGAN cache request yang mengarah ke script.google.com atau Google API
-  // agar data transaksi dan autentikasi selalu real-time persisten
-  if (
-    requestUrl.includes("script.google.com") ||
-    requestUrl.includes("script.googleusercontent.com") ||
-    event.request.method !== "GET"
-  ) {
+  // Abaikan request ke Apps Script API dari cache (agar data selalu segar)
+  if (e.request.url.includes("script.google.com") || e.request.url.includes("api.groq.com")) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        // Simpan salinan aset statis baru ke cache
-        if (
-          networkResponse &&
-          networkResponse.status === 200 &&
-          networkResponse.type === "basic"
-        ) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+  e.respondWith(
+    caches.match(e.request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+      return fetch(e.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
+          return networkResponse;
         }
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseToCache));
         return networkResponse;
       }).catch(() => {
-        // Fallback jika offline total
-        return caches.match("./index.html");
+        if (e.request.mode === "navigate") {
+          return caches.match("./index.html");
+        }
       });
     })
   );

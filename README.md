@@ -1,18 +1,18 @@
-# KACIDA BERSATU — Portal Performa & Operasional Retail
+# 🌿 KACIDA BERSATU — Portal Performa & Operasional Retail
 
-Aplikasi portal web operasional retail berbasis Progressive Web App (PWA) yang terhubung langsung dengan Google Apps Script dan Google Spreadsheet.
+> **Slogan:** Bersama Kita Kuat  
+> **Subjudul:** Portal Performa & Operasional Retail Alfamart  
+> **Kesiapan Platform:** PWA (Progressive Web App) Desktop PC & Mobile HP (Android / iOS)
 
-## Struktur Direktori (GitHub)
-- `index.html` : Struktur visual utama (Mockup 100% cocok untuk Desktop & Mobile)
-- `styles.css` : Tema hijau Alfamart, responsif, dan modal layar penuh
-- `app.js` : Logika interaksi, Chart.js, kamera scanner, dan AI
-- `api.js` : Komunikasi fetch ke endpoint Web App Google Apps Script
-- `sw.js` : Service worker PWA untuk akses offline ringan
-- `manifest.json` : Konfigurasi instalasi aplikasi di HP Android/iOS/Desktop
+Aplikasi berbasis web modern untuk pengelolaan operasional retail, monitoring pencapaian Key Performance Indicator (IKT, Sales MTD, Sales Harian, Penawaran Langsung), checklist kepatuhan toko (EXP, Serah Terima, Mastershift, Belanja Karyawan), pemindai barcode, konversi sandi nota, serta asisten AI interaktif dengan injeksi data kontekstual.
 
-## Langkah Aktivasi
-1. Buka file `api.js`.
-2. Ganti `PASTE_LINK_EXEC_ANDA_DI_SINI` dengan URL Web App dari Google Apps Script Anda.
-3. Commit dan Push seluruh file ini ke repositori GitHub Anda.
-4. Buka menu **Settings** > **Pages** di repositori GitHub, pilih branch `main`, lalu klik **Save**.
-5. Akses website melalui link GitHub Pages yang disediakan.
+---
+
+## 📁 Struktur File Proyek
+
+```plaintext
+├── Code.gs             # Backend Google Apps Script (REST API, Auth, Drive LH3, AI Groq Proxy)
+├── index.html          # Frontend Tunggal (HTML5, Tailwind, Chart.js, Modals, Camera Scanner, JS Engine)
+├── manifest.json       # Metadata Instalasi PWA (Desktop & Mobile Home Screen)
+├── sw.js               # Service Worker PWA (Offline Caching & Background Network Sync)
+└── README.md           # Panduan Lengkap Instalasi, Konfigurasi, & Deployment

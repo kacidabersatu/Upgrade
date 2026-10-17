@@ -1,0 +1,26 @@
+```json
+{
+  "appName": "Kacida Bersatu",
+  "appSubtitle": "Portal Performa & Operasional Retail",
+  "slogan": "Bersama Kita Kuat",
+  "version": "1.0.0",
+  "apiUrl": "https://script.google.com/macros/s/AKfycbx_GANTI_DENGAN_DEPLOYMENT_ID_ANDA/exec",
+  "driveFolderId": "1r-ku3tmxhEsTOLCbLzfVbZERVK0UahiG",
+  "superAdminNik": "14125034",
+  "defaultStore": "2J16 - CARINGIN KULON",
+  "timezone": "Asia/Jakarta",
+  "kwhDefaultTarif": 1500,
+  "bonMapping": {
+    "0": "M",
+    "1": "O",
+    "2": "Y",
+    "3": "D",
+    "4": "T",
+    "5": "U",
+    "6": "H",
+    "7": "C",
+    "8": "I",
+    "9": "K"
+  }
+}
+```

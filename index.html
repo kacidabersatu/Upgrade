@@ -4,384 +4,372 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#0e6935">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#046c38">
+  <link rel="stylesheet" href="styles.css">
   
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
-<body>
+<body data-theme="default">
 
-  <!-- 1. LAYAR LOGIN -->
-  <section id="login-screen">
-    <div class="login-overlay"></div>
-    <div class="login-card">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida Bersatu" class="brand-badge-img">
-      <h1 class="app-title-main">Kacida Bersatu</h1>
-      <p class="app-subtitle-main">Portal Performa & Operasional Retail</p>
-      <span class="app-slogan-brush">Bersama Kita Kuat</span>
+  <!-- ================= LAYAR 1: LOGIN ================= -->
+  <section id="loginScreen" class="screen-view active">
+    <div class="login-bg-overlay"></div>
+    <div class="login-container">
+      <div class="login-brand-header">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida Bersatu" class="brand-logo-img">
+        <h1 class="brand-title">Kacida Bersatu</h1>
+        <p class="brand-subtitle">Portal Performa & Operasional Retail</p>
+        <span class="brand-slogan">Bersama Kita Kuat</span>
+      </div>
 
-      <form id="login-form">
-        <div class="login-input-group">
-          <label class="login-label" for="input-nik">Nomor Induk Karyawan (NIK)</label>
-          <input type="text" id="input-nik" class="login-input-box" placeholder="Contoh: 14125034" required autocomplete="off">
+      <div class="login-card">
+        <h2 class="card-title">Masuk ke Aplikasi</h2>
+        <p class="card-desc">Silakan masukkan NIK Anda</p>
+        
+        <form id="loginForm" onsubmit="event.preventDefault(); App.handleLogin();">
+          <div class="form-group-nik">
+            <label for="inputNik">NIK</label>
+            <div class="input-icon-wrapper">
+              <i class="fa-solid fa-user-circle"></i>
+              <input type="text" id="inputNik" placeholder="Contoh: 14125034" autocomplete="off" required>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn-primary-action btn-login">
+            <span>Masuk</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <button type="button" class="btn-secondary-demo" onclick="App.handleDemoLogin()">
+          <i class="fa-solid fa-bolt"></i> Login Demo
+        </button>
+
+        <div class="login-footer-links">
+          <span>Belum punya akun?</span>
+          <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20mohon%20bantuan%20pendaftaran%20NIK%20aplikasi." target="_blank" class="admin-wa-link">
+            <i class="fa-brands fa-whatsapp"></i> Hubungi Admin
+          </a>
         </div>
-        <button type="submit" class="btn-primary-kacida">
-          <span>Masuk ke Portal</span> →
-        </button>
-        <button type="button" id="btn-login-demo" class="btn-secondary-kacida">
-          ⚡ Mode Cepat (Chief Of Store)
-        </button>
-      </form>
-
-      <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20dengan%20NIK..." target="_blank" class="login-help-link">
-        Tidak bisa Login? <strong>Hubungi Admin WhatsApp</strong>
-      </a>
-    </div>
-  </section>
-
-  <!-- 2. LAYAR LOADING -->
-  <section id="loading-screen" style="display:none;">
-    <div class="login-overlay"></div>
-    <div class="loading-content">
-      <div class="spinner-retail"></div>
-      <h3 id="loading-status-text" style="font-size:18px; font-weight:700;">Memuat Aplikasi Retail...</h3>
-      <div class="loading-progress-bar">
-        <div id="loading-bar-fill" class="loading-progress-fill"></div>
       </div>
     </div>
   </section>
 
-  <!-- 3. DASHBOARD UTAMA -->
-  <div id="app-main-layout" class="app-container" style="display:none;">
+  <!-- ================= LAYAR 2: LOADING & SYNC SCREEN ================= -->
+  <div id="syncLoadingScreen" class="sync-screen-overlay hidden">
+    <div class="sync-modal-box">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Sync Logo" class="sync-logo-pulse">
+      <h3 class="sync-brand-name">Kacida Bersatu</h3>
+      <span class="sync-slogan-text">Bersama Kita Kuat</span>
+      <div class="circular-spinner-container">
+        <div class="spinner-ring"></div>
+        <span id="syncProgressText" class="progress-percent">0%</span>
+      </div>
+      <p id="syncStatusLabel" class="sync-status-msg">Sedang memproses data...</p>
+    </div>
+  </div>
+
+  <!-- ================= LAYAR 3 & 4: DASHBOARD UTAMA ================= -->
+  <div id="mainAppLayout" class="app-layout hidden">
     
-    <!-- SIDEBAR DESKTOP -->
+    <!-- SIDEBAR NAVIGASI (Desktop/Tablet) -->
     <aside class="app-sidebar">
       <div class="sidebar-brand">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="sidebar-logo" alt="Logo">
-        <div class="sidebar-brand-text">
-          <h2>Kacida Bersatu</h2>
-          <p>Bersama Kita Kuat</p>
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="sidebar-logo">
+        <div class="brand-text">
+          <span class="brand-name">Kacida Bersatu</span>
+          <span class="brand-tag">Retail Portal</span>
         </div>
       </div>
-      <nav class="sidebar-nav">
-        <button class="nav-link-btn active" onclick="location.reload()">📊 Beranda</button>
-        <button class="nav-link-btn" onclick="KacidaApp.openModal('modal-menu-ai')">🤖 Chat AI Sahabat</button>
-        <button class="nav-link-btn" onclick="KacidaApp.openModal('modal-menu-kalender')">📅 Kalender Operasional</button>
-        <button class="nav-link-btn" onclick="KacidaApp.openModal('modal-menu-profil')">👤 Profil Pengguna</button>
-        <button class="nav-link-btn" onclick="KacidaApp.openModal('modal-menu-help')">❓ Panduan Bantuan</button>
+
+      <nav class="sidebar-nav-list">
+        <a href="javascript:void(0)" class="nav-item active" onclick="App.switchMainTab('beranda')">
+          <i class="fa-solid fa-house"></i> <span>Beranda</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="App.openChatAiModal()">
+          <i class="fa-solid fa-comments"></i> <span>Chat AI</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="App.openCalendarModal()">
+          <i class="fa-solid fa-calendar-days"></i> <span>Kalender</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="App.openProfileModal()">
+          <i class="fa-solid fa-user-gear"></i> <span>Profil</span>
+        </a>
+        <a href="javascript:void(0)" id="sidebarSuperAdminNav" class="nav-item hidden" onclick="App.openAuditLogModal()">
+          <i class="fa-solid fa-shield-halved"></i> <span>Tracking Log</span>
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-title">Menu Utama</div>
+
+        <div class="sidebar-scrollable-menus" id="sidebarCoreMenuContainer">
+          <!-- 15 Menu Core Terinject Otomatis -->
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <a href="javascript:void(0)" class="nav-item" onclick="App.openHelpModal()">
+          <i class="fa-solid fa-circle-question"></i> <span>Bantuan</span>
+        </a>
       </nav>
     </aside>
 
-    <!-- VIEWPORT KONTEN -->
-    <main class="app-main-viewport">
-      <header class="app-header">
-        <div class="header-left">
-          <div class="store-badge-pill">
-            <span class="status-dot"></span>
-            <span id="header-store-badge">2J16 - CARINGIN KULON</span>
+    <!-- WRAPPER KONTEN KANAN -->
+    <div class="app-main-wrapper">
+      
+      <!-- TOPBAR HEADER -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <div class="store-badge-pill" id="headerStoreBadge">
+            <i class="fa-solid fa-store"></i> <span id="lblHeaderStoreName">Memuat Toko...</span>
           </div>
-          <button id="btn-sync-manual" class="btn-header-sync">
-            🔄 Sync Manual
-          </button>
+          <div class="online-indicator-badge online" id="lblConnectionStatus">
+            <span class="status-dot"></span> <span class="status-text">Online</span>
+          </div>
         </div>
 
-        <div class="header-right">
-          <div class="theme-pill-selector">
-            <button class="theme-opt-btn active" data-theme="default">Default</button>
-            <button class="theme-opt-btn" data-theme="siang">Siang</button>
-            <button class="theme-opt-btn" data-theme="malam">Malam</button>
+        <div class="topbar-right">
+          <button class="btn-sync-action" onclick="App.triggerManualSync()" title="Sinkronisasi Data">
+            <i class="fa-solid fa-rotate"></i> <span>Sync Manual</span>
+          </button>
+          
+          <!-- Theme Switcher -->
+          <div class="theme-switcher-box">
+            <button class="theme-btn active" data-theme="default" onclick="App.setTheme('default')" title="Default (Fresh Green)"><i class="fa-solid fa-leaf"></i></button>
+            <button class="theme-btn" data-theme="siang" onclick="App.setTheme('siang')" title="Siang (Bright)"><i class="fa-solid fa-sun"></i></button>
+            <button class="theme-btn" data-theme="malam" onclick="App.setTheme('malam')" title="Malam (Dark Slate)"><i class="fa-solid fa-moon"></i></button>
           </div>
-          <div class="user-profile-header" onclick="KacidaApp.openModal('modal-menu-profil')">
-            <img id="header-avatar-img" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="user-avatar-circle" alt="User">
-            <div class="user-info-meta">
-              <span id="header-user-name" class="user-info-name">Budi Santoso</span>
-              <span id="header-user-role" class="user-info-role">Chief Of Store</span>
+
+          <!-- User Profile Chip -->
+          <div class="user-chip-header" onclick="App.openProfileModal()">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="headerUserAvatar" alt="Avatar" class="user-avatar-circle">
+            <div class="user-details-mini">
+              <span class="user-name-txt" id="lblHeaderUserName">Memuat...</span>
+              <span class="user-role-txt" id="lblHeaderUserRole">-</span>
             </div>
           </div>
         </div>
       </header>
 
-      <div class="content-body">
+      <!-- KONTEN AREA UTAMA BERANDA -->
+      <main class="dashboard-viewport">
         
         <!-- HERO GREETING CARD -->
-        <div class="hero-dashboard-card">
-          <div>
-            <h2 id="hero-greeting" class="hero-greeting-title">Selamat Pagi, Rekan Retail</h2>
-            <div class="hero-badges-row">
-              <span class="hero-pill primary">Store Active</span>
-              <span class="hero-pill">Area: BOGOR 01</span>
-              <span class="hero-pill">Poin Toko: 1.250</span>
-            </div>
-            <div class="hero-sales-highlight">
-              <div>
-                <small style="font-size:11px; color:#64748b;">Sales Harian H-1</small>
-                <div class="hero-sales-value">Rp 15.830.750</div>
+        <div class="hero-greeting-card">
+          <div class="hero-watermark-overlay"></div>
+          <div class="hero-content">
+            <div class="hero-user-profile">
+              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="heroUserAvatar" alt="Profile" class="hero-avatar">
+              <div class="hero-text-block">
+                <span class="greeting-time" id="lblHeroGreeting">Selamat Pagi,</span>
+                <h2 class="hero-name" id="lblHeroUserName">Budi Santoso</h2>
+                <div class="hero-tags-row">
+                  <span class="badge-role" id="lblHeroUserRole">Chief Of Store</span>
+                  <span class="badge-store-detail" id="lblHeroStoreFull">Toko 2J16 - CARINGIN KULON</span>
+                </div>
               </div>
-              <span class="hero-sales-tag">▲ 12,5% dari target</span>
             </div>
-          </div>
-          <img src="https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i" class="hero-watermark-bg" alt="Watermark">
-        </div>
 
-        <!-- CAROUSEL KPI 4 GRID -->
-        <div class="kpi-summary-grid">
-          <div class="kpi-card" onclick="KacidaApp.openModal('modal-menu-ikt')">
-            <span class="kpi-title">Monitoring IKT</span>
-            <div id="kpi-val-ikt" class="kpi-main-val">92%</div>
-            <span class="kpi-status-badge">▲ 8% Time Factor</span>
-          </div>
-
-          <div class="kpi-card" onclick="KacidaApp.openModal('modal-menu-mtd')">
-            <span class="kpi-title">MTD Sales Toko</span>
-            <div id="kpi-val-sales-mtd" class="kpi-main-val">Rp 482,1 Jt</div>
-            <span class="kpi-status-badge">▲ Target Tercapai</span>
-          </div>
-
-          <div class="kpi-card" onclick="KacidaApp.openModal('modal-menu-penawaran')">
-            <span class="kpi-title">Penawaran Langsung</span>
-            <div id="kpi-val-penawaran" class="kpi-main-val">76%</div>
-            <span class="kpi-status-badge">★ Rank 5 Area</span>
-          </div>
-
-          <div class="kpi-card" onclick="KacidaApp.openModal('modal-menu-sales-harian')">
-            <span class="kpi-title">Sales Harian Rata-rata</span>
-            <div id="kpi-val-sales-harian" class="kpi-main-val">Rp 18,1 Jt</div>
-            <span class="kpi-status-badge">▲ +12.5% MTD</span>
+            <!-- Approval Floating Pill (Khusus CoS) -->
+            <div id="cosApprovalAlertPill" class="cos-approval-pill hidden" onclick="App.openModal('belanja_karyawan')">
+              <i class="fa-solid fa-bell fa-shake"></i>
+              <span><b id="lblPendingApprovalBadge">0</b> Approval Tertunda</span>
+            </div>
           </div>
         </div>
 
-        <!-- HEADER MENU & TOGGLE VIEW ALL & SEARCH -->
-        <div class="section-header-row">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <h3 class="section-title">Menu Utama & Navigasi Toko</h3>
-            <input type="text" id="input-search-menu" placeholder="🔍 Cari menu..." class="menu-search-input" />
-          </div>
-          <button id="btn-toggle-view-all" class="btn-view-all">Lihat Semua ▾</button>
-        </div>
-
-        <!-- GRID MENU DINAMIS (DIPENUHI OLEH JS APP.JS) -->
-        <div id="main-menu-grid" class="main-menu-grid">
-          <!-- Render dinamis 15 menu inti + item Menu_Navigasi -->
-        </div>
-
-        <!-- RINGKASAN GRAFIK & PROFIL TOKO -->
-        <div class="performance-overview-grid">
-          <div class="charts-horizontal-strip">
-            <div class="chart-mini-col">
-              <span class="chart-meta-label">GM % Target</span>
-              <div class="chart-canvas-box">
-                <canvas id="chart-gauge-gm"></canvas>
-              </div>
-              <span class="chart-meta-val">68% / 70%</span>
+        <!-- 4 KPI CAROUSEL / SUMMARY CARDS -->
+        <section class="kpi-carousel-grid">
+          <div class="kpi-card" onclick="App.openModal('monitoring_ikt')">
+            <div class="kpi-header">
+              <span class="kpi-title">IKT</span>
+              <div class="kpi-icon-badge ikt"><i class="fa-solid fa-chart-pie"></i></div>
             </div>
-            <div class="chart-mini-col">
-              <span class="chart-meta-label">Growth Sales</span>
-              <div class="chart-canvas-box" style="display:flex; align-items:center; justify-content:center; font-size:24px; color:#107c41; font-weight:800;">
-                +12.5%
-              </div>
-              <span class="chart-meta-val">Tumbuh vs LLY</span>
-            </div>
-            <div class="chart-mini-col">
-              <span class="chart-meta-label">Pencapaian PSM</span>
-              <div class="chart-canvas-box" style="display:flex; align-items:center; justify-content:center; font-size:24px; color:#107c41; font-weight:800;">
-                85%
-              </div>
-              <span class="chart-meta-val">OK / On Track</span>
-            </div>
-            <div class="chart-mini-col">
-              <span class="chart-meta-label">KWH Listrik</span>
-              <div class="chart-canvas-box" style="display:flex; align-items:center; justify-content:center; font-size:24px; color:#16a34a; font-weight:800;">
-                HEMAT
-              </div>
-              <span class="chart-meta-val">124 KWH / Hari</span>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpiValIkt">0%</span>
+              <span class="kpi-status-badge ok" id="kpiBadgeIkt">Target 95%</span>
             </div>
           </div>
 
-          <div class="store-profile-card">
-            <div class="store-profile-header">
-              <h4>Profil Operasional Toko</h4>
+          <div class="kpi-card" onclick="App.openModal('sales_mtd')">
+            <div class="kpi-header">
+              <span class="kpi-title">MTD Sales</span>
+              <div class="kpi-icon-badge mtd"><i class="fa-solid fa-sack-dollar"></i></div>
             </div>
-            <table class="store-profile-table">
-              <tr><td>Kode Toko</td><td><strong>2J16</strong></td></tr>
-              <tr><td>Nama Toko</td><td>CARINGIN KULON</td></tr>
-              <tr><td>Area Binaan</td><td>BOGOR 01</td></tr>
-              <tr><td>Personel</td><td>12 Orang Karyawan</td></tr>
-            </table>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpiValMtd">Rp 0 jt</span>
+              <span class="kpi-sub-text" id="kpiSubMtd">YTD Performance</span>
+            </div>
           </div>
-        </div>
 
-      </div>
-    </main>
+          <div class="kpi-card" onclick="App.openModal('penawaran_langsung')">
+            <div class="kpi-header">
+              <span class="kpi-title">Penawaran Langsung</span>
+              <div class="kpi-icon-badge penawaran"><i class="fa-solid fa-bullhorn"></i></div>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpiValPenawaran">0%</span>
+              <span class="kpi-sub-text" id="kpiSubPenawaran">Point: - | Rank: -</span>
+            </div>
+          </div>
 
-    <!-- MOBILE BOTTOM NAV -->
+          <div class="kpi-card" onclick="App.openModal('sales_harian')">
+            <div class="kpi-header">
+              <span class="kpi-title">Sales Harian</span>
+              <div class="kpi-icon-badge harian"><i class="fa-solid fa-receipt"></i></div>
+            </div>
+            <div class="kpi-body">
+              <span class="kpi-value" id="kpiValHarian">Rp 0 jt</span>
+              <span class="kpi-growth-badge positive" id="kpiGrowthHarian">▲ 0%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- GRID MENU UTAMA (15 Menu Inti + Dynamic Menu Navigasi) -->
+        <section class="section-menu-grid">
+          <div class="section-header-row">
+            <h3 class="section-title"><i class="fa-solid fa-grid-2"></i> Menu Utama</h3>
+            <button class="btn-toggle-all-menus" onclick="App.toggleAllMenus()">
+              <span id="lblToggleMenus">View All</span> <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="main-menu-grid" id="mainMenuGridContainer">
+            <!-- 15 Card Menu Utama + Menu Dinamis Spreadsheet -->
+          </div>
+        </section>
+
+        <!-- RINGKASAN PERFORMA & PROFIL TOKO (Bottom Row) -->
+        <section class="bottom-analytics-grid">
+          <div class="panel-card performance-summary-card">
+            <div class="panel-header">
+              <h4 class="panel-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Performa</h4>
+            </div>
+            <div class="charts-row">
+              <div class="gauge-metric-item">
+                <div class="metric-circle-box">
+                  <span class="gauge-val" id="lblGaugeGm">68%</span>
+                  <span class="gauge-label">GM%</span>
+                </div>
+                <span class="metric-note">Target 70%</span>
+              </div>
+
+              <div class="mini-chart-item">
+                <span class="mini-chart-title">Sales Harian</span>
+                <span class="mini-chart-val" id="lblMiniSalesHarian">Rp 0 jt</span>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="miniSalesChart" height="60"></canvas>
+                </div>
+              </div>
+
+              <div class="mini-chart-item">
+                <span class="mini-chart-title">IKT Net Sales</span>
+                <span class="mini-chart-val" id="lblMiniIktVal">0%</span>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="miniIktChart" height="60"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-card store-profile-card">
+            <div class="panel-header">
+              <h4 class="panel-title"><i class="fa-solid fa-shop"></i> Profil Toko</h4>
+              <a href="javascript:void(0)" class="link-detail-store" onclick="App.openStoreDetailModal()">Lihat Detail</a>
+            </div>
+            <div class="store-details-list">
+              <div class="store-info-row">
+                <span class="info-label">Nama Toko:</span>
+                <span class="info-val bold" id="profStoreName">-</span>
+              </div>
+              <div class="store-info-row">
+                <span class="info-label">Area / Rayon:</span>
+                <span class="info-val" id="profStoreArea">Area KAB. BOGOR</span>
+              </div>
+              <div class="store-info-row">
+                <span class="info-label">Jumlah Personel:</span>
+                <span class="info-val bold" id="profStoreStaffCount">12 Orang</span>
+              </div>
+              <div class="store-info-row">
+                <span class="info-label">Pimpinan Toko:</span>
+                <span class="info-val" id="profStoreCosName">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- BOTTOM NAVBAR MOBILE (Layout HP Sesuai Mockup) -->
     <nav class="mobile-bottom-nav">
-      <button class="bnav-item active" onclick="location.reload()">
-        <span class="bnav-icon">🏠</span>
+      <button class="m-nav-item active" onclick="App.switchMainTab('beranda')">
+        <i class="fa-solid fa-house"></i>
         <span>Beranda</span>
       </button>
-      <button class="bnav-item" onclick="KacidaApp.openModal('modal-menu-ai')">
-        <span class="bnav-icon">🤖</span>
+      <button class="m-nav-item" onclick="App.openChatAiModal()">
+        <i class="fa-solid fa-comments"></i>
         <span>Chat AI</span>
       </button>
-      <button class="bnav-item" onclick="KacidaApp.openModal('modal-menu-kalender')">
-        <span class="bnav-icon">📅</span>
+      <div class="m-nav-action-wrapper">
+        <button class="m-nav-btn-floating" onclick="App.openQuickActionSheet()" title="Aksi Cepat">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      <button class="m-nav-item" onclick="App.openCalendarModal()">
+        <i class="fa-solid fa-calendar-days"></i>
         <span>Kalender</span>
       </button>
-      <button class="bnav-item" onclick="KacidaApp.openModal('modal-menu-profil')">
-        <span class="bnav-icon">👤</span>
+      <button class="m-nav-item" onclick="App.openProfileModal()">
+        <i class="fa-solid fa-user"></i>
         <span>Profil</span>
       </button>
     </nav>
   </div>
 
-  <!-- MODAL MODAL FITUR (SAMA LENGKAP SEPERTI SEBELUMNYA) -->
-  <div id="modal-menu-bon" class="fullscreen-modal">
-    <div class="modal-header-bar">
-      <div class="modal-title-group">
-        <button class="btn-modal-back" onclick="KacidaApp.closeModal('modal-menu-bon')">←</button>
-        <span class="modal-title-text">Konversi No Bon / Struk Kasir</span>
-      </div>
-    </div>
-    <div class="modal-body-content" style="max-width:540px; margin:0 auto; width:100%;">
-      <div class="form-grid-card" style="grid-template-columns:1fr;">
-        <label class="form-input-label">Masukkan 4 Digit Terakhir No Bon:</label>
-        <input type="text" id="input-bon-converter" class="form-control-kacida" placeholder="Contoh: 1123" maxlength="4" style="font-size:24px; text-align:center; letter-spacing:4px;">
-        <div style="background:#f8fafc; border-radius:12px; padding:24px; text-align:center; border:2px dashed #0e6935; margin-top:14px;">
-          <span style="font-size:12px; color:#64748b; font-weight:600;">HASIL KODE KONVERSI:</span>
-          <div id="bon-result-display" style="font-size:42px; font-weight:800; color:#0e6935; letter-spacing:6px; margin:10px 0;">----</div>
-          <button class="btn-primary-kacida" onclick="KacidaApp.copyBonResult()">📋 Salin Kode</button>
+  <!-- ================= CONTAINER SELURUH MODAL FITUR 1 - 15 ================= -->
+  <div id="fullModalContainer" class="modal-layer-fullscreen hidden">
+    
+    <!-- HEADER MODAL UNIFORM -->
+    <div class="modal-master-header">
+      <div class="header-left-part">
+        <button class="btn-modal-back" onclick="App.closeActiveModal()">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="title-meta-part">
+          <h2 id="modalActiveTitle" class="modal-title-text">Nama Fitur</h2>
+          <span id="modalActiveSubtitle" class="modal-subtitle-text">Toko 2J16 - CARINGIN KULON</span>
         </div>
       </div>
+      <div class="header-right-actions" id="modalTopRightActionContainer">
+        <!-- Tombol Tambah / Export / Ekstra diinject di sini -->
+      </div>
+    </div>
+
+    <!-- BODY CONTAINER SCROLLABLE -->
+    <div class="modal-scrollable-body" id="modalActiveContentBody">
+      <!-- Konten masing-masing 15 menu dimuat secara instan di sini -->
     </div>
   </div>
 
-  <div id="modal-menu-simulasi" class="fullscreen-modal">
-    <div class="modal-header-bar">
-      <div class="modal-title-group">
-        <button class="btn-modal-back" onclick="KacidaApp.closeModal('modal-menu-simulasi')">←</button>
-        <span class="modal-title-text">Simulasi GM Rupiah IKT</span>
-      </div>
-    </div>
-    <div class="modal-body-content">
-      <div class="form-grid-card">
-        <div>
-          <label class="form-input-label">HK (Total Hari Kerja Sebulan)</label>
-          <input type="number" id="sim-hk" class="form-control-kacida" value="30">
-        </div>
-        <div>
-          <label class="form-input-label">JHK (Jumlah Hari Kerja Berjalan)</label>
-          <input type="number" id="sim-jhk" class="form-control-kacida" value="22">
-        </div>
-        <div>
-          <label class="form-input-label">Target Net Sales (Rp)</label>
-          <input type="number" id="sim-t-sales" class="form-control-kacida" value="500000000">
-        </div>
-        <div>
-          <label class="form-input-label">Actual Net Sales (Rp)</label>
-          <input type="number" id="sim-a-sales" class="form-control-kacida" value="482000000">
-        </div>
-        <div>
-          <label class="form-input-label">Target Margin (%)</label>
-          <input type="number" id="sim-t-gm" class="form-control-kacida" value="18">
-        </div>
-        <div>
-          <label class="form-input-label">Actual Margin (%)</label>
-          <input type="number" id="sim-a-gm" class="form-control-kacida" value="19.2">
-        </div>
-      </div>
-
-      <div style="background:#fff; padding:18px; border-radius:12px; border:1px solid #e2e8f0; display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; text-align:center;">
-        <div>
-          <span style="font-size:12px; color:#64748b;">Gap Net Sales</span>
-          <h3 id="res-sim-gap-sales" style="color:#dc2626;">-Rp 18.000.000</h3>
-        </div>
-        <div>
-          <span style="font-size:12px; color:#64748b;">Gap Margin Rupiah</span>
-          <h3 id="res-sim-gap-gm" style="color:#16a34a;">+Rp 2.544.000</h3>
-        </div>
-        <div>
-          <span style="font-size:12px; color:#64748b;">Time Factor</span>
-          <h3 id="res-sim-tf" style="color:#0e6935;">73.3%</h3>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-menu-scan" class="fullscreen-modal">
-    <div class="modal-header-bar">
-      <div class="modal-title-group">
-        <button class="btn-modal-back" onclick="KacidaApp.closeModal('modal-menu-scan')">←</button>
-        <span class="modal-title-text">Pemindai Barcode Barang</span>
-      </div>
-    </div>
-    <div class="modal-body-content">
-      <div id="interactive-camera-viewport">
-        <video id="scanner-video" autoplay playsinline></video>
-      </div>
-      <div style="display:flex; justify-content:center; gap:10px;">
-        <button class="btn-primary-kacida" style="max-width:200px;" onclick="KacidaApp.startBarcodeScanner()">📷 Buka Kamera</button>
-      </div>
-
-      <div class="form-grid-card" style="grid-template-columns:2fr 1fr;">
-        <input type="text" id="input-barcode-manual" class="form-control-kacida" placeholder="Atau ketik nomor barcode di sini...">
-        <button class="btn-primary-kacida" onclick="KacidaApp.addBarcodeManual()">+ Tambah Item</button>
-      </div>
-
-      <div class="data-table-container">
-        <table class="kacida-table">
-          <thead>
-            <tr><th>Nomor Barcode</th><th>Tampilan Visual Barcode</th><th>Qty</th><th>Aksi</th></tr>
-          </thead>
-          <tbody id="scanned-items-list"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-menu-ai" class="fullscreen-modal">
-    <div class="modal-header-bar">
-      <div class="modal-title-group">
-        <button class="btn-modal-back" onclick="KacidaApp.closeModal('modal-menu-ai')">←</button>
-        <span class="modal-title-text">Kacida AI — Sahabat Retail</span>
-      </div>
-    </div>
-    <div class="modal-body-content" style="max-width:700px; margin:0 auto; width:100%;">
-      <div id="ai-messages-flow" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding-bottom:12px;">
-        <div style="align-self:flex-start; background:#fff; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; margin-bottom:8px; line-height:1.5;">
-          Halo Rekan Retail! Saya <strong>Kacida AI</strong>. Saya siap menganalisis data tokomu atau sekadar mengobrol santai dan bermain tebak-tebakan. Ada yang bisa saya bantu hari ini?
-        </div>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <textarea id="ai-chat-input" class="form-control-kacida" rows="2" placeholder="Tanyakan performa toko atau sapa Kacida AI..."></textarea>
-        <button class="btn-primary-kacida" style="width:70px;" onclick="KacidaApp.sendChatMessage()">Kirim</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-menu-profil" class="fullscreen-modal">
-    <div class="modal-header-bar">
-      <div class="modal-title-group">
-        <button class="btn-modal-back" onclick="KacidaApp.closeModal('modal-menu-profil')">←</button>
-        <span class="modal-title-text">Profil Pengguna</span>
-      </div>
-    </div>
-    <div class="modal-body-content" style="max-width:400px; margin:0 auto; width:100%; text-align:center;">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" style="width:90px; height:90px; border-radius:50%; border:3px solid #0e6935; margin:0 auto 12px;" alt="Avatar">
-      <h3>Budi Santoso</h3>
-      <p style="color:#64748b; font-size:13px; margin-bottom:20px;">Chief Of Store (Toko 2J16)</p>
-      <button class="btn-primary-kacida" style="background:#dc2626;" onclick="KacidaApp.logout()">Keluar Aplikasi</button>
-    </div>
-  </div>
-
-  <script src="./api.js"></script>
-  <script src="./app.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(console.warn);
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW register failed:', err));
       });
     }
   </script>

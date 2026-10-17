@@ -1,24 +1,30 @@
 /**
  * ============================================================================
  * KACIDA BERSATU - Portal Performa & Operasional Retail
- * File: api.js
- * Fungsi: Jembatan komunikasi data frontend ke backend Google Apps Script.
+ * File: api.js (REVISI LENGKAP - ANTI CORS & DUAL GET/POST ENGINE)
  * ============================================================================
  */
 
-// TEMPEL LINK EXEC GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
+// LINK EXEC WEB APP GOOGLE APPS SCRIPT ANDA
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9Z-RkOouVfhVgJ-j5aixfgnNAkjUtE-FRLnx8CwCNO_G1S6o___szxaUsh-AnRf5y2Q/exec";
+
+// ASET ASLI GOOGLE DRIVE DENGAN DIRECT HIGH-SPEED CDN (ANTI ERROR 400)
+const APP_ASSETS = {
+  BACKGROUND_LOGIN: "https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9",
+  LOGO_LOADING: "https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+  WATERMARK: "https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V"
+};
 
 const ApiService = {
   /**
-   * Helper request GET
+   * Helper request GET dengan penanganan Redirect otomatis
    */
   async get(action, params = {}) {
     try {
       const url = new URL(SCRIPT_URL);
       url.searchParams.append("action", action);
       
-      // Ambil token sesi aktif jika tersimpan di memori
+      // Ambil token sesi aktif jika tersedia
       const sessionToken = sessionStorage.getItem("kacida_session_token");
       if (sessionToken) {
         url.searchParams.append("token", sessionToken);
@@ -32,7 +38,8 @@ const ApiService = {
 
       const response = await fetch(url.toString(), {
         method: "GET",
-        mode: "cors"
+        mode: "cors",
+        redirect: "follow"
       });
 
       if (!response.ok) {
@@ -47,7 +54,7 @@ const ApiService = {
   },
 
   /**
-   * Helper request POST
+   * Helper request POST dengan Content-Type text/plain (Anti Preflight CORS Blokir)
    */
   async post(action, payload = {}) {
     try {
@@ -58,11 +65,10 @@ const ApiService = {
         ...payload
       };
 
-      // Menggunakan mode POST CORS dengan Content-Type text/plain 
-      // untuk mencegah preflight OPTIONS blocking pada Apps Script
       const response = await fetch(SCRIPT_URL, {
         method: "POST",
         mode: "cors",
+        redirect: "follow",
         headers: {
           "Content-Type": "text/plain;charset=utf-8"
         },
@@ -80,12 +86,13 @@ const ApiService = {
     }
   },
 
-  // 1. Autentikasi Login NIK
+  // 1. Autentikasi Login NIK (Menggunakan GET agar kebal blokir CORS pada HP)
   async login(nik) {
-    return await this.post("login", { nik: nik });
+    const cleanNik = String(nik).replace(/[^0-9]/g, "").trim();
+    return await this.get("login", { nik: cleanNik });
   },
 
-  // 2. Sinkronisasi Keseluruhan Data Beranda
+  // 2. Sinkronisasi Keseluruhan Data Beranda & Ringkasan Performa
   async syncAll(storeCode) {
     return await this.get("syncAll", { storeCode: storeCode });
   },

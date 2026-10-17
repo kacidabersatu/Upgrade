@@ -1,24 +1,15 @@
 {
   "appName": "Kacida Bersatu",
-  "appSubtitle": "Portal Performa & Operasional Retail",
+  "subTitle": "Portal Performa & Operasional Retail",
   "slogan": "Bersama Kita Kuat",
-  "version": "1.0.0",
-  "apiUrl": "https://script.google.com/macros/s/AKfycbx_GANTI_DENGAN_DEPLOYMENT_ID_ANDA/exec",
-  "driveFolderId": "1r-ku3tmxhEsTOLCbLzfVbZERVK0UahiG",
-  "superAdminNik": "14125034",
+  "adminPhone": "085862719780",
+  "adminWaUrl": "https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20dengan%20NIK:",
+  "gasApiUrl": "YOUR_GAS_DEPLOYED_WEB_APP_URL_HERE",
+  "assets": {
+    "loginBg": "https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9",
+    "logo": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+    "watermark": "https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i"
+  },
   "defaultStore": "2J16 - CARINGIN KULON",
-  "timezone": "Asia/Jakarta",
-  "kwhDefaultTarif": 1500,
-  "bonMapping": {
-    "0": "M",
-    "1": "O",
-    "2": "Y",
-    "3": "D",
-    "4": "T",
-    "5": "U",
-    "6": "H",
-    "7": "C",
-    "8": "I",
-    "9": "K"
-  }
+  "superAdminNik": "14125034"
 }

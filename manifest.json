@@ -1,21 +1,22 @@
 {
-  "short_name": "KacidaBersatu",
   "name": "Kacida Bersatu - Portal Performa & Operasional Retail",
+  "short_name": "KacidaBersatu",
+  "description": "Portal Performa dan Monitoring Operasional Toko Retail",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d5c3a",
+  "theme_color": "#0b462d",
   "icons": [
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
-      "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "start_url": "./index.html",
-  "background_color": "#0d5c3a",
-  "theme_color": "#0d5c3a",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

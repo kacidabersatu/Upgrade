@@ -4,747 +4,1447 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
+  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d5c3a">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
+
+  <!-- Font & UI Frameworks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+
+  <!-- Core Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    :root {
+      --primary: #0d5c3a;
+      --primary-dark: #083b25;
+      --primary-light: #168b59;
+      --accent: #22c55e;
+      --bg-base: #f0fdf4;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+    }
+
+    [data-theme="siang"] {
+      --primary: #15803d;
+      --primary-dark: #166534;
+      --primary-light: #22c55e;
+      --bg-base: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+    }
+
+    [data-theme="malam"] {
+      --primary: #10b981;
+      --primary-dark: #064e3b;
+      --primary-light: #34d399;
+      --bg-base: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Watermark Background */
+    .watermark-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70vw;
+      max-width: 580px;
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Modal Fullscreen Styling */
+    .modal-fullscreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: var(--bg-base);
+      overflow-y: auto;
+    }
+    .modal-fullscreen.active {
+      display: flex;
+      flex-direction: column;
+      animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #168b59; border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* Touch Friendly Card Elevation */
+    .kacida-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .kacida-card:hover {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Glass Effect */
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    [data-theme="malam"] .glass-nav {
+      background: rgba(30, 41, 59, 0.85);
+    }
+  </style>
 </head>
-<body class="theme-default">
+<body class="relative min-h-screen">
 
-  <!-- OVERLAY LOADING GLOBAL WITH PROGRESS BAR & SYNC BACKGROUND -->
-  <div id="globalLoading" class="loading-overlay hidden">
-    <div class="loading-card">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Kacida Bersatu Logo" class="loading-logo">
-      <h3 id="loadingTitle">Sedang Memproses Data...</h3>
-      <div class="progress-bar-container">
-        <div id="progressBar" class="progress-bar-fill" style="width: 0%;"></div>
+  <!-- Watermark Universal -->
+  <img src="https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i" alt="Watermark" class="watermark-overlay">
+
+  <!-- ===================================================================== -->
+  <!-- 1. LOADING & SYNC PROGRESS SCREEN OVERLAY                             -->
+  <!-- ===================================================================== -->
+  <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-cover bg-center transition-opacity duration-300" style="background-image: linear-gradient(rgba(13, 92, 58, 0.88), rgba(8, 59, 37, 0.94)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center relative overflow-hidden">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida" class="w-20 h-20 mb-4 animate-bounce">
+      <h3 class="text-xl font-bold text-gray-800">Kacida Bersatu</h3>
+      <p class="text-xs text-green-700 font-semibold tracking-wider uppercase mb-5">Bersama Kita Kuat</p>
+      
+      <!-- Progress Bar -->
+      <div class="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+        <div id="loadingProgressBar" class="bg-green-600 h-3 rounded-full transition-all duration-300 w-1/4"></div>
       </div>
-      <p id="loadingStatus">Menghubungkan ke Server...</p>
+      <p id="loadingStatusText" class="text-xs text-gray-500 font-medium">Sedang memproses data... 25%</p>
     </div>
   </div>
 
-  <!-- SCREEN 1: LOGIN -->
-  <div id="loginScreen" class="screen active">
-    <div class="login-bg-container">
-      <img src="https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9" class="login-bg-img" alt="Background Login">
-    </div>
-    <div class="login-box">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="app-logo">
-      <h2>Kacida Bersatu</h2>
-      <p class="subtitle">Portal Performa & Operasional Retail</p>
-      <span class="slogan-badge">Bersama Kita Kuat</span>
+  <!-- ===================================================================== -->
+  <!-- 2. LOGIN SCREEN                                                       -->
+  <!-- ===================================================================== -->
+  <div id="loginScreen" class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+    <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-filter blur-sm"></div>
+    <div class="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 text-center border border-gray-100">
+      
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-24 h-24 mx-auto mb-2">
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Kacida Bersatu</h1>
+      <p class="text-xs font-semibold text-gray-500 mb-6">Portal Performa & Operasional Retail</p>
 
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="nikInput"><i class="fa-solid fa-id-card"></i> NIK Pengguna</label>
-          <input type="text" id="nikInput" placeholder="Contoh: 12345678" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-right-to-bracket"></i> Masuk</button>
-      </form>
-      <div class="login-footer">
-        <p>Tidak bisa Login? <a href="https://wa.me/6285862719780" target="_blank" class="wa-admin-link"><i class="fa-brands fa-whatsapp"></i> Hubungi Admin</a></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN APP WRAPPER -->
-  <div id="mainApp" class="app-container hidden">
-    <!-- WATERMARK OVERLAY -->
-    <div class="watermark-overlay"></div>
-
-    <!-- SIDEBAR NAVIGATION (DESKTOP) -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="sidebar-logo" alt="Logo">
+      <form id="loginForm" onsubmit="event.preventDefault(); handleLoginAction();" class="space-y-4 text-left">
         <div>
-          <h3>Kacida Bersatu</h3>
-          <small>Bersama Kita Kuat</small>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Masukkan NIK Karyawan</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <i class="fa-solid fa-id-card"></i>
+            </span>
+            <input type="text" id="loginNikInput" required placeholder="Contoh: 14125034 / 2J16..." 
+              class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-green-600 focus:bg-white transition">
+          </div>
+        </div>
+
+        <button type="submit" id="loginBtn" class="w-full py-3.5 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+          <span>Masuk ke Aplikasi</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-gray-100 text-center">
+        <a href="https://wa.me/6285862719780?text=Halo%20Admin,%20saya%20mengalami%20kendala%20login%20di%20aplikasi%20Kacida%20Bersatu." 
+           target="_blank" rel="noopener noreferrer" 
+           class="text-xs font-semibold text-green-700 hover:underline inline-flex items-center space-x-1.5">
+          <i class="fa-brands fa-whatsapp text-sm text-green-600"></i>
+          <span>Tidak bisa Login? Hubungi Admin</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 3. MAIN APP WRAPPER (DESKTOP & MOBILE LAYOUT)                         -->
+  <!-- ===================================================================== -->
+  <div id="appContainer" class="hidden min-h-screen flex flex-col md:flex-row pb-20 md:pb-0">
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="hidden md:flex flex-col w-64 bg-green-900 text-white min-h-screen p-5 z-20 flex-shrink-0">
+      <div class="flex items-center space-x-3 pb-6 border-b border-green-800">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-10 h-10">
+        <div>
+          <h2 class="font-bold text-base leading-tight">Kacida Bersatu</h2>
+          <span class="text-xs text-green-300 font-medium">Retail Portal</span>
         </div>
       </div>
-      <nav class="sidebar-nav">
-        <ul>
-          <li class="active" onclick="switchNav('beranda')"><i class="fa-solid fa-house"></i> <span>Beranda</span></li>
-          <li onclick="switchNav('chatai')"><i class="fa-solid fa-robot"></i> <span>Chat AI</span></li>
-          <li onclick="switchNav('kalender')"><i class="fa-solid fa-calendar-days"></i> <span>Kalender</span></li>
-          <li onclick="switchNav('profil')"><i class="fa-solid fa-user"></i> <span>Profil</span></li>
-          <li id="superAdminMenu" class="hidden" onclick="openModal('modalSuperAdmin')"><i class="fa-solid fa-shield-halved"></i> <span>Tracking Log</span></li>
-        </ul>
-        <hr>
-        <div class="menu-section-title">15 Menu Utama</div>
-        <ul class="sub-nav-list" id="sidebarMainMenus">
-          <li onclick="openModal('modalCeklisExp')"><i class="fa-solid fa-box-archive"></i> Ceklis EXP</li>
-          <li onclick="openModal('modalSerahTerima')"><i class="fa-solid fa-handshake"></i> Serah Terima</li>
-          <li onclick="openModal('modalMastershift')"><i class="fa-solid fa-calendar-week"></i> Plan Mastershift</li>
-          <li onclick="openModal('modalBelanjaKaryawan')"><i class="fa-solid fa-cart-shopping"></i> Belanja Karyawan</li>
-          <li onclick="openModal('modalSimulasiGm')"><i class="fa-solid fa-calculator"></i> Simulasi GM RP IKT</li>
-          <li onclick="openModal('modalSalesMtd')"><i class="fa-solid fa-chart-line"></i> Sales MTD</li>
-          <li onclick="openModal('modalSalesHarian')"><i class="fa-solid fa-chart-simple"></i> Sales Harian</li>
-          <li onclick="openModal('modalMonitoringIkt')"><i class="fa-solid fa-bullseye"></i> Monitoring IKT</li>
-          <li onclick="openModal('modalKonversiBon')"><i class="fa-solid fa-barcode"></i> Konversi No Bon/Struk</li>
-          <li onclick="openModal('modalPenawaranLangsung')"><i class="fa-solid fa-tags"></i> Penawaran Langsung</li>
-          <li onclick="openModal('modalRekapPsm')"><i class="fa-solid fa-users"></i> Rekap PSM Kasir</li>
-          <li onclick="openModal('modalSalesOpr')"><i class="fa-solid fa-clock"></i> Monitoring Sales OPR</li>
-          <li onclick="openModal('modalMonitoringKwh')"><i class="fa-solid fa-bolt"></i> Monitoring KWH</li>
-          <li onclick="openModal('modalCatatanReturn')"><i class="fa-solid fa-truck-ramp-box"></i> Catatan Return</li>
-          <li onclick="openModal('modalScanBarang')"><i class="fa-solid fa-qrcode"></i> Scan Barang</li>
-          <li onclick="openModal('modalBantuan')"><i class="fa-solid fa-circle-question"></i> Bantuan</li>
-        </ul>
+
+      <!-- Quick Nav Desktop -->
+      <nav class="mt-6 space-y-1.5 flex-1">
+        <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-green-800 font-semibold text-sm transition">
+          <i class="fa-solid fa-house text-green-300"></i>
+          <span>Beranda</span>
+        </button>
+        <button onclick="openModal('chatAiModal')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-green-800 font-medium text-sm transition text-green-100">
+          <i class="fa-solid fa-robot text-green-400"></i>
+          <span>Chat AI Asisten</span>
+        </button>
+        <button onclick="openModal('calendarModal')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-green-800 font-medium text-sm transition text-green-100">
+          <i class="fa-solid fa-calendar-days text-green-400"></i>
+          <span>Kalender Operasional</span>
+        </button>
+        <button onclick="openModal('profilModal')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-green-800 font-medium text-sm transition text-green-100">
+          <i class="fa-solid fa-user-gear text-green-400"></i>
+          <span>Profil Pengguna</span>
+        </button>
+        <button id="btnSuperAdminMenu" onclick="openModal('auditModal')" class="hidden w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-green-800 font-medium text-sm transition text-yellow-300">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Audit Log (Admin)</span>
+        </button>
       </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="pt-4 border-t border-green-800">
+        <button onclick="confirmLogout()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-red-700 font-medium text-sm transition text-red-200">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Logout Keluar</span>
+        </button>
+      </div>
     </aside>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="main-content">
-      <!-- HEADER HORIZON -->
-      <header class="top-header">
-        <div class="store-badge-container">
-          <span class="badge badge-store" id="topStoreBadge">2J16 - CARINGIN KULON</span>
-          <span class="status-indicator online" id="topOnlineStatus"><i class="fa-solid fa-circle"></i> Online</span>
-        </div>
-        <div class="header-actions">
-          <button class="btn btn-sync" onclick="triggerManualSync()"><i class="fa-solid fa-rotate"></i> <span>Sync Manual</span></button>
-          <div class="theme-selector">
-            <button onclick="setTheme('default')" title="Default"><i class="fa-solid fa-leaf"></i></button>
-            <button onclick="setTheme('siang')" title="Siang"><i class="fa-solid fa-sun"></i></button>
-            <button onclick="setTheme('malam')" title="Malam"><i class="fa-solid fa-moon"></i></button>
+    <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+
+      <!-- TOP HEADER (RESPONSIF DESKTOP & MOBILE) -->
+      <header class="glass-nav sticky top-0 z-30 px-4 md:px-8 py-3.5 border-b border-gray-200 flex items-center justify-between">
+        
+        <!-- Store Identity Badge -->
+        <div class="flex items-center space-x-3">
+          <div class="md:hidden">
+            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-8 h-8">
           </div>
-          <div class="user-profile-badge" onclick="switchNav('profil')">
-            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" id="topUserAvatar" alt="User Avatar">
-            <div class="user-info">
-              <strong id="topUserName">Budi Santoso</strong>
-              <small id="topUserRole">Chief Of Store</small>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="headerStoreBadge" class="bg-green-100 text-green-800 text-xs px-2.5 py-0.5 rounded-full font-bold">2J16 - CARINGIN</span>
+              <span id="onlineStatusBadge" class="bg-green-500 w-2.5 h-2.5 rounded-full animate-ping"></span>
+            </div>
+            <p id="headerUserGreeting" class="text-xs text-gray-500 font-medium hidden sm:block">Portal Operasional Retail</p>
+          </div>
+        </div>
+
+        <!-- Controls: Sync, Theme, Profile -->
+        <div class="flex items-center space-x-3">
+          <!-- Tombol Sync Manual -->
+          <button onclick="triggerManualSync()" class="px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm transition">
+            <i class="fa-solid fa-arrows-rotate" id="syncSpinIcon"></i>
+            <span class="hidden sm:inline">Sync Manual</span>
+          </button>
+
+          <!-- Theme Selector -->
+          <div class="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+            <button onclick="setTheme('default')" title="Default Hijau" class="px-2 py-1 rounded-lg hover:bg-white text-gray-700"><i class="fa-solid fa-leaf"></i></button>
+            <button onclick="setTheme('siang')" title="Siang Terang" class="px-2 py-1 rounded-lg hover:bg-white text-yellow-600"><i class="fa-solid fa-sun"></i></button>
+            <button onclick="setTheme('malam')" title="Malam Gelap" class="px-2 py-1 rounded-lg hover:bg-white text-indigo-600"><i class="fa-solid fa-moon"></i></button>
+          </div>
+
+          <!-- Profile Thumbnail -->
+          <div onclick="openModal('profilModal')" class="flex items-center space-x-2 cursor-pointer p-1 rounded-xl hover:bg-gray-100">
+            <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="User" class="w-8 h-8 rounded-full border border-green-600 object-cover">
+            <div class="hidden lg:block text-left text-xs leading-tight">
+              <p id="headerUserName" class="font-bold text-gray-800">Nama Personel</p>
+              <p id="headerUserRole" class="text-gray-500">Chief Of Store</p>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- VIEW: BERANDA -->
-      <div id="viewBeranda" class="view-panel active">
-        <!-- HERO CARD -->
-        <div class="hero-card">
-          <div class="hero-text">
-            <h2 id="heroGreeting">Selamat Pagi, Budi Santoso</h2>
-            <span class="badge badge-role" id="heroRoleBadge">Chief Of Store</span>
-            <p id="heroStoreInfo">Toko: 2J16 - CARINGIN KULON</p>
-            <small id="syncTimeStatus">Terakhir Sinkronisasi: Baru saja</small>
-          </div>
-          <img src="https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i" class="hero-watermark-img" alt="Watermark">
-        </div>
+      <!-- PAGE BODY (DASHBOARD) -->
+      <main class="flex-1 p-4 md:p-8 space-y-6 max-w-7xl w-full mx-auto">
 
-        <!-- CAROUSEL KPI -->
-        <div class="kpi-carousel-wrapper">
-          <div class="kpi-carousel" id="kpiCarousel">
-            <div class="kpi-card" onclick="openModal('modalMonitoringIkt')">
-              <div class="kpi-title"><i class="fa-solid fa-bullseye"></i> IKT</div>
-              <div class="kpi-value" id="kpiIktVal">92%</div>
-              <small class="text-success"><i class="fa-solid fa-arrow-up"></i> Tepat Target</small>
+        <!-- HERO CARD (Selamat Pagi, Watermark & Sales H-1) -->
+        <div class="kacida-card p-6 md:p-8 relative overflow-hidden bg-gradient-to-r from-green-800 to-green-700 text-white shadow-xl">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span id="heroGreetingBadge" class="bg-green-600 bg-opacity-40 text-green-200 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Shift Pagi</span>
+              <h2 id="heroGreetingText" class="text-2xl md:text-3xl font-extrabold mt-2 tracking-tight">Selamat Pagi, Rekan Toko!</h2>
+              <p id="heroStoreDetails" class="text-green-100 text-xs md:text-sm mt-1">2J16 - CARINGIN KULON • Chief Of Store</p>
             </div>
-            <div class="kpi-card" onclick="openModal('modalSalesMtd')">
-              <div class="kpi-title"><i class="fa-solid fa-chart-line"></i> Sales MTD</div>
-              <div class="kpi-value" id="kpiSalesMtdVal">Rp 482,1 jt</div>
-              <small class="text-success"><i class="fa-solid fa-arrow-up"></i> 12,5% vs Target</small>
-            </div>
-            <div class="kpi-card" onclick="openModal('modalPenawaranLangsung')">
-              <div class="kpi-title"><i class="fa-solid fa-tags"></i> Penawaran Langsung</div>
-              <div class="kpi-value" id="kpiPenawaranVal">76%</div>
-              <small class="text-warning"><i class="fa-solid fa-arrow-up"></i> Rank 5</small>
-            </div>
-            <div class="kpi-card" onclick="openModal('modalSalesHarian')">
-              <div class="kpi-title"><i class="fa-solid fa-chart-simple"></i> Sales Harian</div>
-              <div class="kpi-value" id="kpiSalesHarianVal">Rp 18,1 jt</div>
-              <small class="text-success"><i class="fa-solid fa-arrow-up"></i> 8,2%</small>
+            
+            <div class="bg-white bg-opacity-10 backdrop-filter blur-md border border-white border-opacity-20 rounded-2xl p-4 text-right min-w-[200px]">
+              <span class="text-xs font-semibold text-green-200 block uppercase">Sales H-1 (Actual)</span>
+              <span id="heroSalesH1" class="text-2xl font-black text-white">Rp 15.830.750</span>
+              <span id="heroSalesGrowth" class="text-xs font-bold text-green-300 block mt-0.5">▲ +12.5% vs Target</span>
             </div>
           </div>
         </div>
 
-        <!-- GRID 15 MENU UTAMA -->
-        <section class="section-container">
-          <div class="section-header">
-            <h3>Menu Utama</h3>
-            <button class="btn btn-sm btn-link" onclick="toggleAllMenus()">View All</button>
+        <!-- CAROUSEL RINGKASAN KPI (Auto Scroll / Touch Scroll) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Card 1: IKT -->
+          <div onclick="openModal('iktModal')" class="kacida-card p-4 cursor-pointer hover:border-green-500">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-500">IKT ACV</span>
+              <span class="p-2 bg-green-100 text-green-700 rounded-xl text-xs"><i class="fa-solid fa-chart-line"></i></span>
+            </div>
+            <p id="kpiIktPercent" class="text-2xl font-black text-gray-800 mt-2">92%</p>
+            <span class="text-xs font-semibold text-green-600">Status: OK</span>
           </div>
-          <div class="menu-grid" id="mainMenuGrid">
-            <div class="menu-item" onclick="openModal('modalCeklisExp')">
-              <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
-              <span>Ceklis EXP</span>
-              <span class="badge-pending hidden" id="badgeCeklisExp">0</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalSerahTerima')">
-              <div class="icon-box"><i class="fa-solid fa-handshake"></i></div>
-              <span>Serah Terima</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalMastershift')">
-              <div class="icon-box"><i class="fa-solid fa-calendar-week"></i></div>
-              <span>Plan Mastershift</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalBelanjaKaryawan')">
-              <div class="icon-box"><i class="fa-solid fa-cart-shopping"></i></div>
-              <span>Belanja Karyawan</span>
-              <span class="badge-pending hidden" id="badgeBelanjaKaryawan">0</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalSimulasiGm')">
-              <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
-              <span>Simulasi GM RP IKT</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalSalesMtd')">
-              <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
-              <span>Sales MTD</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalSalesHarian')">
-              <div class="icon-box"><i class="fa-solid fa-chart-simple"></i></div>
-              <span>Sales Harian</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalMonitoringIkt')">
-              <div class="icon-box"><i class="fa-solid fa-bullseye"></i></div>
-              <span>Monitoring IKT</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalKonversiBon')">
-              <div class="icon-box"><i class="fa-solid fa-barcode"></i></div>
-              <span>Konversi No Bon/Struk</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalPenawaranLangsung')">
-              <div class="icon-box"><i class="fa-solid fa-tags"></i></div>
-              <span>Penawaran Langsung</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalRekapPsm')">
-              <div class="icon-box"><i class="fa-solid fa-users"></i></div>
-              <span>Rekap PSM Kasir</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalSalesOpr')">
-              <div class="icon-box"><i class="fa-solid fa-clock"></i></div>
-              <span>Monitoring Sales OPR</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalMonitoringKwh')">
-              <div class="icon-box"><i class="fa-solid fa-bolt"></i></div>
-              <span>Monitoring KWH</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalCatatanReturn')">
-              <div class="icon-box"><i class="fa-solid fa-truck-ramp-box"></i></div>
-              <span>Catatan Return</span>
-            </div>
-            <div class="menu-item" onclick="openModal('modalScanBarang')">
-              <div class="icon-box"><i class="fa-solid fa-qrcode"></i></div>
-              <span>Scan Barang</span>
-            </div>
-          </div>
-          <!-- CONTAINER MENU DINAMIS SPREADSHEET -->
-          <div class="dynamic-menu-section hidden" id="dynamicMenuSection">
-            <h4>Menu Eksternal Spreadsheet</h4>
-            <div class="menu-grid" id="dynamicMenuGrid"></div>
-          </div>
-        </section>
 
-        <!-- DASHBOARD RINGKASAN PERFORMA & GRAFIK -->
-        <section class="section-container">
-          <h3>Ringkasan Performa</h3>
-          <div class="dashboard-summary-grid">
-            <div class="card card-perf">
-              <div class="gauge-container">
-                <canvas id="gaugeGm"></canvas>
-                <div class="gauge-value">GM%<br><strong>68%</strong></div>
+          <!-- Card 2: Sales MTD -->
+          <div onclick="openModal('salesMtdModal')" class="kacida-card p-4 cursor-pointer hover:border-green-500">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-500">Sales MTD</span>
+              <span class="p-2 bg-blue-100 text-blue-700 rounded-xl text-xs"><i class="fa-solid fa-wallet"></i></span>
+            </div>
+            <p id="kpiSalesMtd" class="text-2xl font-black text-gray-800 mt-2">Rp 482,1 Jt</p>
+            <span class="text-xs font-semibold text-blue-600">Growth: +8.2%</span>
+          </div>
+
+          <!-- Card 3: Penawaran Langsung -->
+          <div onclick="openModal('penawaranModal')" class="kacida-card p-4 cursor-pointer hover:border-green-500">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-500">Penawaran</span>
+              <span class="p-2 bg-yellow-100 text-yellow-700 rounded-xl text-xs"><i class="fa-solid fa-bullhorn"></i></span>
+            </div>
+            <p id="kpiPenawaran" class="text-2xl font-black text-gray-800 mt-2">76%</p>
+            <span id="kpiPenawaranRank" class="text-xs font-semibold text-yellow-600">Rank #5 Area</span>
+          </div>
+
+          <!-- Card 4: Sales Harian -->
+          <div onclick="openModal('salesHarianModal')" class="kacida-card p-4 cursor-pointer hover:border-green-500">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-500">Sales Harian</span>
+              <span class="p-2 bg-purple-100 text-purple-700 rounded-xl text-xs"><i class="fa-solid fa-cash-register"></i></span>
+            </div>
+            <p id="kpiSalesHarian" class="text-2xl font-black text-gray-800 mt-2">Rp 18,1 Jt</p>
+            <span class="text-xs font-semibold text-purple-600">ACV: 104%</span>
+          </div>
+        </div>
+
+        <!-- 15 MENU UTAMA OPERASIONAL GRID -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-gray-800">Menu Operasional</h3>
+              <p class="text-xs text-gray-500">15 Layanan Inti Toko & Monitoring Retail</p>
+            </div>
+            <button onclick="toggleAllMenus()" id="btnToggleMenu" class="text-xs font-bold text-green-700 hover:underline">
+              Lihat Semua Menu
+            </button>
+          </div>
+
+          <!-- Grid Menu (Tiru Persis Tampilan Mockup) -->
+          <div id="mainMenuGrid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+            
+            <!-- Menu 1 -->
+            <button onclick="openModal('ceklisExpModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition relative">
+              <span id="badgeExpAlert" class="hidden absolute top-2 right-2 bg-red-600 text-white text-[10px] w-5 h-5 font-black rounded-full flex items-center justify-center">2</span>
+              <div class="w-11 h-11 bg-green-100 text-green-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-calendar-xmark"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Ceklis EXP</span>
+            </button>
+
+            <!-- Menu 2 -->
+            <button onclick="openModal('serahTerimaModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-handshake"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Serah Terima</span>
+            </button>
+
+            <!-- Menu 3 -->
+            <button onclick="openModal('mastershiftModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clipboard-user"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Plan Mastershift</span>
+            </button>
+
+            <!-- Menu 4 -->
+            <button onclick="openModal('belanjaModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition relative">
+              <span id="badgeBelanjaPending" class="hidden absolute top-2 right-2 bg-red-600 text-white text-[10px] w-5 h-5 font-black rounded-full flex items-center justify-center">1</span>
+              <div class="w-11 h-11 bg-pink-100 text-pink-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-basket-shopping"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Belanja Karyawan</span>
+            </button>
+
+            <!-- Menu 5 -->
+            <button onclick="openModal('simulasiGmModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-yellow-100 text-yellow-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-calculator"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Simulasi GM RP</span>
+            </button>
+
+            <!-- Menu 6 -->
+            <button onclick="openModal('salesMtdModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-chart-area"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Sales MTD</span>
+            </button>
+
+            <!-- Menu 7 -->
+            <button onclick="openModal('salesHarianModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-receipt"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Sales Harian</span>
+            </button>
+
+            <!-- Menu 8 -->
+            <button onclick="openModal('iktModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-green-100 text-green-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-chart-pie"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Monitoring IKT</span>
+            </button>
+
+            <!-- Menu 9 -->
+            <button onclick="openModal('konversiBonModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-gray-100 text-gray-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-barcode"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Konversi No Bon</span>
+            </button>
+
+            <!-- Menu 10 -->
+            <button onclick="openModal('penawaranModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-orange-100 text-orange-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-tags"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Penawaran Langsung</span>
+            </button>
+
+            <!-- Menu 11 -->
+            <button onclick="openModal('psmKasirModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-user-check"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Rekap PSM Kasir</span>
+            </button>
+
+            <!-- Menu 12 -->
+            <button onclick="openModal('salesOprModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Sales OPR</span>
+            </button>
+
+            <!-- Menu 13 -->
+            <button onclick="openModal('kwhModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-bolt"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Monitoring KWH</span>
+            </button>
+
+            <!-- Menu 14 -->
+            <button onclick="openModal('returnModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-red-100 text-red-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-truck-ramp-box"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Catatan Return</span>
+            </button>
+
+            <!-- Menu 15 -->
+            <button onclick="openModal('scanModal')" class="kacida-card p-3 flex flex-col items-center justify-center text-center hover:border-green-500 transition">
+              <div class="w-11 h-11 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-camera"></i></div>
+              <span class="text-xs font-bold text-gray-700 leading-tight">Scan Barang</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- DYNAMIC SPREADSHEET MENUS SECTION (FROM Menu_Navigasi SHEET) -->
+        <div id="dynamicMenuSection" class="hidden">
+          <h4 class="text-sm font-bold text-gray-700 mb-3">Tautan Tambahan Toko</h4>
+          <div id="dynamicMenuGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        </div>
+
+        <!-- RINGKASAN GRAFIK OPERASIONAL & PERFORMA -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Grafik Tren Sales Harian -->
+          <div class="kacida-card p-5 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="font-bold text-sm text-gray-800">Tren Sales Harian & Target</h4>
+              <span class="text-xs text-gray-500">Bulan Berjalan</span>
+            </div>
+            <div class="h-64">
+              <canvas id="dashboardSalesChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Mini Profil Toko & PIC -->
+          <div class="kacida-card p-5 flex flex-col justify-between">
+            <div>
+              <h4 class="font-bold text-sm text-gray-800 mb-3">Informasi Toko</h4>
+              <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Kode & Nama:</span>
+                  <span id="infoStoreName" class="font-bold text-gray-800">2J16 - CARINGIN</span>
+                </div>
+                <div class="flex justify-between pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Chief of Store:</span>
+                  <span id="infoCosName" class="font-bold text-gray-800">YULIANTI FAUZIAH</span>
+                </div>
+                <div class="flex justify-between pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Total Personel:</span>
+                  <span id="infoTotalStaff" class="font-bold text-gray-800">7 Karyawan</span>
+                </div>
+                <div class="flex justify-between pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Time Factor Settle:</span>
+                  <span class="font-bold text-green-700">67.7% (H-1)</span>
+                </div>
               </div>
             </div>
-            <div class="card card-perf">
-              <h4>Sales Harian</h4>
-              <div class="perf-number">Rp 18,1 jt <small class="text-success"><i class="fa-solid fa-arrow-up"></i> 12,5%</small></div>
-              <canvas id="chartSalesHarianSummary" height="100"></canvas>
-            </div>
-            <div class="card card-perf">
-              <h4>IKT</h4>
-              <div class="perf-number">92% <small class="text-success">OK</small></div>
-              <canvas id="chartIktSummary" height="100"></canvas>
-            </div>
-            <div class="card card-perf">
-              <h4>Penawaran Langsung</h4>
-              <div class="perf-number">76% <small class="text-warning">Rank 5</small></div>
-              <canvas id="chartPenawaranSummary" height="100"></canvas>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- VIEW: CHAT AI -->
-      <div id="viewChatai" class="view-panel hidden">
-        <div class="chat-container">
-          <div class="chat-header">
-            <h3><i class="fa-solid fa-robot"></i> Asisten AI Kacida Bersatu</h3>
-            <small>Tanyakan seputar data toko, analisis penjualan, atau obrolan santai.</small>
-          </div>
-          <div class="chat-messages" id="chatMessages">
-            <div class="msg msg-ai">
-              Halo! Saya Asisten AI Kacida Bersatu. Ada yang bisa saya bantu terkait performa toko Anda hari ini?
-            </div>
-          </div>
-          <div class="chat-input-area">
-            <textarea id="chatInput" placeholder="Ketik pertanyaan Anda di sini... (Enter untuk baris baru)" rows="2"></textarea>
-            <button class="btn btn-primary" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
+            <button onclick="openModal('bantuanModal')" class="mt-4 w-full py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">
+              <i class="fa-solid fa-circle-question mr-1"></i> Bantuan & SOP Retail
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- VIEW: KALENDER -->
-      <div id="viewKalender" class="view-panel hidden">
-        <div class="card">
-          <div class="calendar-header">
-            <button class="btn btn-sm" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-            <h3 id="calendarMonthTitle">Juni 2026</h3>
-            <button class="btn btn-sm" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-        </div>
-      </div>
+      </main>
 
-      <!-- VIEW: PROFIL -->
-      <div id="viewProfil" class="view-panel hidden">
-        <div class="card profile-card">
-          <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" id="profileAvatar" class="profile-avatar-large" alt="Profile">
-          <h2 id="profileName">Budi Santoso</h2>
-          <p id="profileRole">Chief Of Store</p>
-          <span class="badge badge-store" id="profileStore">2J16 - CARINGIN KULON</span>
+      <!-- BOTTOM NAVIGATION (LAYOUT KHUSUS HP) -->
+      <nav class="md:hidden glass-nav fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 px-4 py-2 flex items-center justify-around">
+        <button onclick="switchView('dashboard')" class="flex flex-col items-center text-green-700">
+          <i class="fa-solid fa-house text-lg"></i>
+          <span class="text-[10px] font-bold mt-1">Beranda</span>
+        </button>
+        <button onclick="openModal('chatAiModal')" class="flex flex-col items-center text-gray-500 hover:text-green-700">
+          <i class="fa-solid fa-robot text-lg"></i>
+          <span class="text-[10px] font-semibold mt-1">Chat AI</span>
+        </button>
+        <button onclick="openModal('calendarModal')" class="flex flex-col items-center text-gray-500 hover:text-green-700">
+          <i class="fa-solid fa-calendar-days text-lg"></i>
+          <span class="text-[10px] font-semibold mt-1">Kalender</span>
+        </button>
+        <button onclick="openModal('profilModal')" class="flex flex-col items-center text-gray-500 hover:text-green-700">
+          <i class="fa-solid fa-user text-lg"></i>
+          <span class="text-[10px] font-semibold mt-1">Profil</span>
+        </button>
+      </nav>
 
-          <div class="profile-details-list">
-            <div class="p-item"><i class="fa-solid fa-id-badge"></i> NIK: <strong id="profileNik">12345678</strong></div>
-            <div class="p-item"><i class="fa-solid fa-location-dot"></i> Area: CARINGIN</div>
-          </div>
-
-          <div class="profile-actions">
-            <button class="btn btn-secondary btn-block" onclick="triggerUploadAvatar()"><i class="fa-solid fa-camera"></i> Ubah Foto Profil</button>
-            <button class="btn btn-danger btn-block" onclick="handleLogout()"><i class="fa-solid fa-power-off"></i> Logout / Ganti User</button>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- NAVBAR HP (MOBILE BOTTOM NAV) -->
-    <nav class="bottom-nav">
-      <div class="nav-item active" onclick="switchNav('beranda')" id="bnavBeranda">
-        <i class="fa-solid fa-house"></i>
-        <span>Beranda</span>
-      </div>
-      <div class="nav-item" onclick="switchNav('chatai')" id="bnavChatai">
-        <i class="fa-solid fa-robot"></i>
-        <span>Chat AI</span>
-      </div>
-      <div class="nav-item-center" onclick="triggerManualSync()">
-        <div class="fab-sync"><i class="fa-solid fa-rotate"></i></div>
-      </div>
-      <div class="nav-item" onclick="switchNav('kalender')" id="bnavKalender">
-        <i class="fa-solid fa-calendar-days"></i>
-        <span>Kalender</span>
-      </div>
-      <div class="nav-item" onclick="switchNav('profil')" id="bnavProfil">
-        <i class="fa-solid fa-user"></i>
-        <span>Profil</span>
-      </div>
-    </nav>
+    </div>
   </div>
 
-  <!-- ALL 15 FULLSCREEN MODALS -->
-  
+  <!-- ===================================================================== -->
+  <!-- 4. MODAL-MODAL LAYAR PENUH (15 MENU UTAMA + EKSPOR & CHAT AI)          -->
+  <!-- ===================================================================== -->
+
   <!-- MODAL 1: CEKLIS EXP -->
-  <div id="modalCeklisExp" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-box-archive"></i> Ceklis EXP</h3>
-      <button class="btn-close" onclick="closeModal('modalCeklisExp')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('ceklisExp', 'tabDataRak')">Data Rak</button>
-        <button class="tab-btn" onclick="switchTab('ceklisExp', 'tabInputExp')">Input EXP</button>
-        <button class="tab-btn" onclick="switchTab('ceklisExp', 'tabAlertExp')">Alert EXP</button>
-        <button class="tab-btn" onclick="switchTab('ceklisExp', 'tabRiwayatExp')">Riwayat Input</button>
+  <div id="ceklisExpModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-5xl w-full mx-auto flex-1 flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('ceklisExpModal')" class="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <h3 class="font-extrabold text-lg text-gray-900">Ceklis EXP Toko</h3>
+            <p class="text-xs text-gray-500">Monitoring & Eksekusi Barang Mendekati Kadaluarsa</p>
+          </div>
+        </div>
       </div>
 
-      <div id="tabDataRak" class="tab-content active">
-        <div class="kpi-summary-4">
-          <div class="card card-sm">Total Rak: <strong>24</strong></div>
-          <div class="card card-sm text-success">Selesai: <strong>16</strong></div>
-          <div class="card card-sm text-danger">Belum: <strong>6</strong></div>
-          <div class="card card-sm text-warning">Validasi: <strong>2</strong></div>
+      <!-- Sub Tabs -->
+      <div class="flex space-x-2 my-4 border-b border-gray-200 pb-2 overflow-x-auto text-xs font-bold">
+        <button onclick="switchExpTab('dataRak')" id="tabExpRak" class="px-4 py-2 bg-green-700 text-white rounded-xl">Data Rak</button>
+        <button onclick="switchExpTab('inputExp')" id="tabExpInput" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl">Input EXP</button>
+        <button onclick="switchExpTab('alertExp')" id="tabExpAlert" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl">Alert EXP</button>
+        <button onclick="switchExpTab('riwayatExp')" id="tabExpRiwayat" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl">Riwayat Input</button>
+      </div>
+
+      <!-- Content Subtab 1: Data Rak -->
+      <div id="expSubtabRak" class="space-y-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="p-3 bg-white border border-gray-200 rounded-xl"><span class="text-xs text-gray-500">Total Rak</span><p class="text-xl font-bold">24</p></div>
+          <div class="p-3 bg-white border border-gray-200 rounded-xl"><span class="text-xs text-green-600">Selesai</span><p class="text-xl font-bold text-green-700">16</p></div>
+          <div class="p-3 bg-white border border-gray-200 rounded-xl"><span class="text-xs text-yellow-600">Butuh Validasi</span><p class="text-xl font-bold text-yellow-600">2</p></div>
+          <div class="p-3 bg-white border border-gray-200 rounded-xl"><span class="text-xs text-red-600">Belum Selesai</span><p class="text-xl font-bold text-red-600">6</p></div>
         </div>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>No Rak</th>
-                <th>Kategori</th>
-                <th>Penanggung Jawab</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
+
+        <div class="overflow-x-auto bg-white rounded-xl border border-gray-200">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-gray-50 border-b font-bold text-gray-600 uppercase">
+              <tr><th class="p-3">No Rak</th><th class="p-3">Kategori</th><th class="p-3">PIC Rak</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr>
             </thead>
-            <tbody id="tbDataRak">
+            <tbody id="rakTableBody" class="divide-y">
               <tr>
-                <td>A01</td>
-                <td>Makanan & Minuman</td>
-                <td>Rina Nur Sari</td>
-                <td><span class="badge badge-success">Selesai</span></td>
-                <td><button class="btn btn-sm btn-secondary" onclick="alert('Rak terkunci.')">Detail</button></td>
+                <td class="p-3 font-bold">A01</td>
+                <td class="p-3">Makanan & Minuman</td>
+                <td class="p-3">Rina Nur Sari</td>
+                <td class="p-3"><span class="px-2 py-0.5 bg-green-100 text-green-800 rounded font-bold">Selesai</span></td>
+                <td class="p-3"><button class="text-blue-600 font-bold hover:underline">Detail</button></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div id="tabInputExp" class="tab-content hidden">
-        <form onsubmit="submitFormExp(event)" class="form-grid">
-          <div class="form-group"><label>Nama Item</label><input type="text" id="expItem" required></div>
-          <div class="form-group"><label>Posisi Rak</label><input type="text" id="expRak" required></div>
-          <div class="form-group"><label>Qty</label><input type="number" id="expQty" required></div>
-          <div class="form-group"><label>Tanggal EXP</label><input type="date" id="expDate" required></div>
-          <div class="form-group"><label>Return Hari (RH)</label><input type="number" id="expRh" value="30" required></div>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan Data EXP</button>
-        </form>
+      <!-- Content Subtab 2: Input EXP -->
+      <div id="expSubtabInput" class="hidden max-w-lg mx-auto w-full bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
+        <h4 class="font-bold text-sm text-gray-800">Input Item Menjelang Kadaluarsa</h4>
+        <input type="text" id="expNamaItem" placeholder="Nama Item / Barcode" class="w-full p-3 bg-gray-50 border rounded-xl text-xs">
+        <input type="text" id="expPosisiRak" placeholder="Posisi Rak (Misal: A02)" class="w-full p-3 bg-gray-50 border rounded-xl text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" id="expQty" placeholder="Quantity Item" class="p-3 bg-gray-50 border rounded-xl text-xs">
+          <input type="number" id="expRh" placeholder="Return Hari (RH)" class="p-3 bg-gray-50 border rounded-xl text-xs">
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 font-bold block mb-1">Tanggal EXP</label>
+          <input type="date" id="expTglKadaluarsa" class="w-full p-3 bg-gray-50 border rounded-xl text-xs">
+        </div>
+        <button onclick="submitExpItemAction()" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl text-xs shadow-md">Simpan Data Item EXP</button>
       </div>
 
-      <div id="tabAlertExp" class="tab-content hidden">
-        <div class="alert alert-warning">Estimasi Eksekusi = Tanggal EXP - RH - 10 Hari Spare.</div>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr><th>Nama Item</th><th>EXP</th><th>Est. Eksekusi</th><th>Status</th><th>Aksi</th></tr>
-            </thead>
-            <tbody id="tbAlertExp"></tbody>
-          </table>
-        </div>
+      <!-- Content Subtab 3 & 4: Alert & Riwayat -->
+      <div id="expSubtabAlert" class="hidden space-y-3">
+        <p class="text-xs text-gray-500">Barang dengan Tanggal Eksekusi = (EXP - RH - 10 Hari)</p>
+        <div id="alertExpList" class="space-y-2"></div>
       </div>
-
-      <div id="tabRiwayatExp" class="tab-content hidden">
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr><th>Tanggal Input</th><th>Penginput</th><th>Nama Item</th><th>Rak</th><th>EXP</th><th>Status</th></tr>
-            </thead>
-            <tbody id="tbRiwayatExp"></tbody>
-          </table>
-        </div>
+      <div id="expSubtabRiwayat" class="hidden space-y-3">
+        <div id="riwayatExpList" class="space-y-2"></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 2: SERAH TERIMA -->
-  <div id="modalSerahTerima" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-handshake"></i> Serah Terima Shift</h3>
-      <button class="btn-close" onclick="closeModal('modalSerahTerima')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <form onsubmit="submitSerahTerima(event)" class="form-grid">
-        <div class="form-group"><label>Sales (Rp)</label><input type="number" id="stSales" required></div>
-        <div class="form-group"><label>Qty PSM</label><input type="number" id="stPsm" required></div>
-        <div class="form-group"><label>Redeem Serba Gratis</label><input type="number" id="stSerba" required></div>
-        <div class="form-group"><label>Redeem PWP</label><input type="number" id="stPwp" required></div>
-        <div class="form-group"><label>New Member</label><input type="number" id="stMember" required></div>
-        <div class="form-group"><label>% Contribution Struk</label><input type="number" step="0.1" id="stContr" required></div>
-        <div class="form-group col-span-2"><label>Catatan Kendala</label><textarea id="stKendala" rows="3"></textarea></div>
-        <button type="submit" class="btn btn-primary col-span-2"><i class="fa-solid fa-paper-plane"></i> Submit Serah Terima</button>
+  <!-- MODAL 2: SERAH TERIMA SHIFT -->
+  <div id="serahTerimaModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-2xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('serahTerimaModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Serah Terima Shift</h3>
+        </div>
+      </div>
+      <form id="formSerahTerima" onsubmit="event.preventDefault(); submitSerahTerimaAction();" class="space-y-3 bg-white p-5 rounded-2xl border border-gray-200">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs font-bold text-gray-600">Shift</label><select id="stShift" class="w-full p-2.5 border rounded-xl text-xs"><option value="1">Shift 1 (Pagi)</option><option value="2">Shift 2 (Siang)</option></select></div>
+          <div><label class="text-xs font-bold text-gray-600">Sales Shift (Rp)</label><input type="number" id="stSales" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="8.500.000"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div><label class="text-xs font-bold text-gray-600">Qty PSM</label><input type="number" id="stPsm" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="45"></div>
+          <div><label class="text-xs font-bold text-gray-600">Redeem SG</label><input type="number" id="stSg" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="12"></div>
+          <div><label class="text-xs font-bold text-gray-600">Redeem PWP</label><input type="number" id="stPwp" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="6"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs font-bold text-gray-600">New Member</label><input type="number" id="stNewMember" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="7"></div>
+          <div><label class="text-xs font-bold text-gray-600">% Contrib Struk</label><input type="text" id="stContrib" required class="w-full p-2.5 border rounded-xl text-xs" placeholder="12.5%"></div>
+        </div>
+        <div><label class="text-xs font-bold text-gray-600">Catatan Kendala Shift</label><textarea id="stKendala" rows="3" class="w-full p-2.5 border rounded-xl text-xs" placeholder="Tulis kendala operasional..."></textarea></div>
+        <button type="submit" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl text-xs shadow-md">Simpan Serah Terima</button>
       </form>
     </div>
   </div>
 
   <!-- MODAL 3: PLAN MASTERSHIFT -->
-  <div id="modalMastershift" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-calendar-week"></i> Plan Mastershift</h3>
-      <button class="btn-close" onclick="closeModal('modalMastershift')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>Nama Personel</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Budi Santoso</td>
-              <td><span class="shift-tag p">P</span></td>
-              <td><span class="shift-tag s">S</span></td>
-              <td><span class="shift-tag m">M</span></td>
-              <td><span class="shift-tag off">OFF</span></td>
-              <td><span class="shift-tag p">P</span></td>
-              <td><span class="shift-tag p">P</span></td>
-              <td><span class="shift-tag s">S</span></td>
-            </tr>
-          </tbody>
+  <div id="mastershiftModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-6xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('mastershiftModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Plan Mastershift Toko</h3>
+        </div>
+        <button onclick="saveScheduleAction()" class="px-4 py-2 bg-green-700 text-white font-bold text-xs rounded-xl shadow-md">Simpan Jadwal</button>
+      </div>
+      <div class="overflow-x-auto bg-white rounded-2xl border border-gray-200 p-4">
+        <div class="flex items-center justify-between mb-3 text-xs font-bold text-gray-600">
+          <span>Legenda: P (Pagi), S (Siang), M (Malam), OFF (Libur), Sakit (Sakit), CT (Cuti)</span>
+        </div>
+        <table class="w-full text-xs text-center border-collapse">
+          <thead><tr id="scheduleHeaderRow" class="bg-gray-100 border"></tr></thead>
+          <tbody id="scheduleBodyRows" class="divide-y border"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <!-- MODAL 4: BELANJA KARYAWAN -->
-  <div id="modalBelanjaKaryawan" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-cart-shopping"></i> Belanja Karyawan</h3>
-      <button class="btn-close" onclick="closeModal('modalBelanjaKaryawan')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <form onsubmit="submitBelanjaKaryawan(event)" class="form-grid">
-        <div class="form-group"><label>Nomor Member</label><input type="text" id="bkMember" required></div>
-        <div class="form-group"><label>Nomor Bon</label><input type="text" id="bkBon" required></div>
-        <div class="form-group"><label>Nominal Belanja (Rp)</label><input type="number" id="bkNominal" required></div>
-        <div class="form-group"><label>Foto Struk</label><input type="file" id="bkFoto" accept="image/*" required></div>
-        <button type="submit" class="btn btn-primary col-span-2"><i class="fa-solid fa-upload"></i> Kirim Permintaan Belanja</button>
+  <div id="belanjaModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-2xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('belanjaModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Belanja Karyawan</h3>
+        </div>
+      </div>
+      <form id="formBelanjaKaryawan" onsubmit="event.preventDefault(); submitBelanjaAction();" class="space-y-4 bg-white p-6 rounded-2xl border border-gray-200">
+        <input type="text" id="belanjaNoMember" required placeholder="Nomor Member Alfagift" class="w-full p-3 border rounded-xl text-xs">
+        <input type="text" id="belanjaNoBon" required placeholder="Nomor Bon Transaksi" class="w-full p-3 border rounded-xl text-xs">
+        <input type="number" id="belanjaNominal" required placeholder="Nominal Belanja (Rp)" class="w-full p-3 border rounded-xl text-xs">
+        <div>
+          <label class="text-xs font-bold text-gray-600 block mb-1">Upload Foto Struk Belanja (Wajib)</label>
+          <input type="file" id="belanjaFotoFile" accept="image/*" required class="w-full text-xs text-gray-500">
+        </div>
+        <button type="submit" class="w-full py-3.5 bg-green-700 text-white font-bold rounded-xl text-xs shadow-md">Kirim Pengajuan Belanja</button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 5: SIMULASI GM RP IKT -->
-  <div id="modalSimulasiGm" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-calculator"></i> Simulasi GM RP IKT</h3>
-      <button class="btn-close" onclick="closeModal('modalSimulasiGm')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group"><label>HK (Hari Kerja)</label><input type="number" id="simHk" value="30"></div>
-        <div class="form-group"><label>JHK (Jumlah HK Settle)</label><input type="number" id="simJhk" value="18"></div>
-        <div class="form-group"><label>Target Net Sales</label><input type="number" id="simTargetSales" value="500000000"></div>
-        <div class="form-group"><label>Actual Net Sales</label><input type="number" id="simActualSales" value="482000000"></div>
-        <div class="form-group"><label>Target Margin %</label><input type="number" id="simTargetMargin" value="18"></div>
-        <div class="form-group"><label>Actual Margin %</label><input type="number" id="simActualMargin" value="17.5"></div>
+  <!-- MODAL 5: SIMULASI GM RP IKT (CALCULATOR RETAIL) -->
+  <div id="simulasiGmModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('simulasiGmModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Simulasi GM RP & Net Sales</h3>
+        </div>
       </div>
-      <button class="btn btn-success btn-block" onclick="runSimulasiGm()"><i class="fa-solid fa-play"></i> Hitung Simulasi</button>
-      <hr>
-      <div id="simulasiResultBox" class="card result-card">
-        <h4>Hasil Simulasi:</h4>
-        <div class="result-grid">
-          <div>ACV Net Sales: <strong id="resAcvSales">-</strong></div>
-          <div>Gap Net Sales: <strong id="resGapSales">-</strong></div>
-          <div>Target Margin Rp: <strong id="resTargetRp">-</strong></div>
-          <div>Actual Margin Rp: <strong id="resActualRp">-</strong></div>
-          <div>Gap Margin Rp: <strong id="resGapRp">-</strong></div>
-          <div>Status: <span id="resStatusBadge" class="badge">-</span></div>
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">HK (Hari Kerja Bulan):</label><input type="number" id="simHk" value="31" class="w-full p-2.5 border rounded-xl mt-1"></div>
+          <div><label class="font-bold">JHK (Hari Berjalan):</label><input type="number" id="simJhk" value="21" class="w-full p-2.5 border rounded-xl mt-1"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">Target Net Sales (Rp):</label><input type="number" id="simTargetSales" value="500000000" class="w-full p-2.5 border rounded-xl mt-1"></div>
+          <div><label class="font-bold">Actual Net Sales (Rp):</label><input type="number" id="simActualSales" value="482000000" class="w-full p-2.5 border rounded-xl mt-1"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">Target Margin (%):</label><input type="number" id="simTargetGm" value="18.5" step="0.1" class="w-full p-2.5 border rounded-xl mt-1"></div>
+          <div><label class="font-bold">Actual Margin (%):</label><input type="number" id="simActualGm" value="18.1" step="0.1" class="w-full p-2.5 border rounded-xl mt-1"></div>
+        </div>
+        <button onclick="calculateSimulasiGmAction()" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl mt-2">Hitung Simulasi</button>
+        
+        <!-- Hasil Kalkulasi -->
+        <div id="simulasiResultBox" class="p-4 bg-green-50 rounded-xl border border-green-200 mt-4 space-y-2">
+          <div class="flex justify-between"><span>Gap Net Sales:</span><span id="simResGapSales" class="font-bold text-red-600">-Rp 18.000.000</span></div>
+          <div class="flex justify-between"><span>Target GM (Rp):</span><span id="simResTargetGmRp" class="font-bold">Rp 92.500.000</span></div>
+          <div class="flex justify-between"><span>Actual GM (Rp):</span><span id="simResActualGmRp" class="font-bold">Rp 87.242.000</span></div>
+          <div class="flex justify-between"><span>Gap GM (Rp):</span><span id="simResGapGmRp" class="font-bold text-red-600">-Rp 5.258.000</span></div>
+          <div class="flex justify-between border-t pt-2"><span>Time Factor:</span><span id="simResTf" class="font-bold">67.7%</span></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- MODAL 6: SALES MTD -->
-  <div id="modalSalesMtd" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-chart-line"></i> Sales MTD</h3>
-      <button class="btn-close" onclick="closeModal('modalSalesMtd')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="export-bar">
-        <button class="btn btn-sm btn-secondary" onclick="exportData('pdf', 'Sales MTD')"><i class="fa-solid fa-file-pdf"></i> Ekspor PDF</button>
-        <button class="btn btn-sm btn-success" onclick="exportData('excel', 'Sales MTD')"><i class="fa-solid fa-file-excel"></i> Ekspor Excel</button>
+  <div id="salesMtdModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-5xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('salesMtdModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Sales MTD & Perbandingan YTD</h3>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="exportTableToExcel('salesMtdTable', 'Sales_MTD')" class="px-3 py-1.5 bg-green-600 text-white font-bold text-xs rounded-xl"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+          <button onclick="exportTableToPdf('salesMtdTable', 'Laporan Sales MTD')" class="px-3 py-1.5 bg-red-600 text-white font-bold text-xs rounded-xl"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+        </div>
       </div>
-      <canvas id="chartSalesMtdFull" height="150"></canvas>
+      <div class="overflow-x-auto bg-white rounded-2xl border border-gray-200">
+        <table id="salesMtdTable" class="w-full text-xs text-left">
+          <thead class="bg-gray-50 border-b font-bold text-gray-600">
+            <tr><th class="p-3">Tanggal</th><th class="p-3">Sales 2026</th><th class="p-3">STD 2026</th><th class="p-3">APC 2026</th><th class="p-3">Sales 2025</th><th class="p-3">Status</th></tr>
+          </thead>
+          <tbody id="salesMtdBody" class="divide-y"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- MODAL 7: SALES HARIAN -->
-  <div id="modalSalesHarian" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-chart-simple"></i> Sales Harian</h3>
-      <button class="btn-close" onclick="closeModal('modalSalesHarian')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr><th>Tanggal</th><th>Bulan Lalu</th><th>Target</th><th>Actual SPD</th><th>ACV %</th><th>Status</th></tr>
+  <div id="salesHarianModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-6xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('salesHarianModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Sales Harian & Key Indicator</h3>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="exportTableToExcel('salesHarianTable', 'Sales_Harian')" class="px-3 py-1.5 bg-green-600 text-white font-bold text-xs rounded-xl"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+          <button onclick="exportTableToPdf('salesHarianTable', 'Laporan Sales Harian')" class="px-3 py-1.5 bg-red-600 text-white font-bold text-xs rounded-xl"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto bg-white rounded-2xl border border-gray-200">
+        <table id="salesHarianTable" class="w-full text-xs text-left">
+          <thead class="bg-gray-50 border-b font-bold text-gray-600">
+            <tr><th class="p-3">Tanggal</th><th class="p-3">Bulan Lalu</th><th class="p-3">Target</th><th class="p-3">Actual SPD</th><th class="p-3">Gap</th><th class="p-3">ACV%</th><th class="p-3">Growth</th></tr>
           </thead>
-          <tbody id="tbSalesHarian"></tbody>
+          <tbody id="salesHarianBody" class="divide-y"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <!-- MODAL 8: MONITORING IKT -->
-  <div id="modalMonitoringIkt" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-bullseye"></i> Monitoring IKT</h3>
-      <button class="btn-close" onclick="closeModal('modalMonitoringIkt')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <button class="btn btn-primary" onclick="openModal('modalSimulasiGm')"><i class="fa-solid fa-calculator"></i> Buka Simulasi GM RP IKT</button>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr><th>Indikator</th><th>Target</th><th>Aktual</th><th>% ACV</th><th>Ket</th></tr>
-          </thead>
-          <tbody id="tbIkt"></tbody>
-        </table>
+  <div id="iktModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('iktModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Monitoring IKT Toko</h3>
+        </div>
+        <button onclick="openModal('simulasiGmModal')" class="px-3 py-1.5 bg-yellow-500 text-white font-bold text-xs rounded-xl"><i class="fa-solid fa-calculator mr-1"></i> Buka Simulasi</button>
+      </div>
+      <div id="iktDetailsCard" class="bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
+        <!-- Render otomatis via JS -->
       </div>
     </div>
   </div>
 
-  <!-- MODAL 9: KONVERSI BON -->
-  <div id="modalKonversiBon" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-barcode"></i> Konversi No Bon/Struk</h3>
-      <button class="btn-close" onclick="closeModal('modalKonversiBon')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body text-center">
-      <div class="form-group">
-        <label>Masukkan Kode Bon (Maksimal 4 Digit):</label>
-        <input type="text" id="inputBon" maxlength="4" placeholder="Contoh: 123" oninput="convertBonCode()" class="input-lg text-center">
+  <!-- MODAL 9: KONVERSI NO BON / STRUK -->
+  <div id="konversiBonModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-md w-full mx-auto flex-1 flex flex-col justify-center space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('konversiBonModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Konversi Nomor Bon</h3>
+        </div>
       </div>
-      <div class="konversi-result-box">
-        <small>Hasil Konversi Rahasia:</small>
-        <h1 id="outputKonversi">MOYD</h1>
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 space-y-4 text-center">
+        <p class="text-xs text-gray-500">Masukkan 1 - 4 Digit Nomor Bon Kasir</p>
+        <input type="text" id="inputNoBonKonversi" maxlength="4" placeholder="Contoh: 1123 / 123" 
+               class="w-full text-center text-2xl font-bold tracking-widest p-3 border rounded-xl uppercase">
+        <div class="p-4 bg-green-50 border border-green-200 rounded-2xl">
+          <span class="text-xs text-green-700 font-bold block mb-1">Hasil Kode Rahasia:</span>
+          <span id="outputKodeBon" class="text-3xl font-black text-green-900 tracking-widest">----</span>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="copyBonCode()" class="flex-1 py-3 bg-green-700 text-white font-bold rounded-xl text-xs"><i class="fa-regular fa-copy mr-1"></i> Salin Kode</button>
+          <button onclick="resetBonCode()" class="px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl text-xs">Reset</button>
+        </div>
       </div>
-      <button class="btn btn-secondary" onclick="copyKonversi()"><i class="fa-solid fa-copy"></i> Salin Hasil</button>
     </div>
   </div>
 
   <!-- MODAL 10: PENAWARAN LANGSUNG -->
-  <div id="modalPenawaranLangsung" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-tags"></i> Penawaran Langsung</h3>
-      <button class="btn-close" onclick="closeModal('modalPenawaranLangsung')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="kpi-summary-4">
-        <div class="card">PSM: <strong>85%</strong></div>
-        <div class="card">PWP: <strong>76%</strong></div>
-        <div class="card">Serba Gratis: <strong>69%</strong></div>
-        <div class="card">APC: <strong>82%</strong></div>
+  <div id="penawaranModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-4xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('penawaranModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Penawaran Langsung Kasir</h3>
+        </div>
       </div>
+      <div id="penawaranContent" class="space-y-4"></div>
     </div>
   </div>
 
   <!-- MODAL 11: REKAP PSM KASIR -->
-  <div id="modalRekapPsm" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-users"></i> Rekap PSM Kasir</h3>
-      <button class="btn-close" onclick="closeModal('modalRekapPsm')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr><th>Nama Item</th><th>Target</th><th>Aktual</th><th>ACV %</th><th>Gap</th></tr>
-          </thead>
-          <tbody id="tbRekapPsm"></tbody>
-        </table>
+  <div id="psmKasirModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-4xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('psmKasirModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Rekap PSM Kasir Harian</h3>
+        </div>
+        <button onclick="addNewPsmItemRow()" class="px-3 py-1.5 bg-green-700 text-white font-bold text-xs rounded-xl">+ Tambah Item</button>
       </div>
+      <div id="psmKasirTableContainer" class="bg-white rounded-2xl border border-gray-200 p-4 overflow-x-auto"></div>
     </div>
   </div>
 
-  <!-- MODAL 12: MONITORING SALES OPR -->
-  <div id="modalSalesOpr" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-clock"></i> Monitoring Sales OPR</h3>
-      <button class="btn-close" onclick="closeModal('modalSalesOpr')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('salesOpr', 'tabJam06')">Rekap Jam 06:07</button>
-        <button class="tab-btn" onclick="switchTab('salesOpr', 'tabJam22')">Rekap Jam 22:23</button>
+  <!-- MODAL 12: SALES OPR -->
+  <div id="salesOprModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('salesOprModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Monitoring Sales OPR</h3>
+        </div>
       </div>
-      <div id="tabJam06" class="tab-content active">
-        <p>Data Penjualan Sesi Pagi (06:00 - 07:00)</p>
+      <div class="flex space-x-2 border-b pb-2">
+        <button onclick="switchOprTab('06:07')" id="tabOprPagi" class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold">Jam 06:07</button>
+        <button onclick="switchOprTab('22:23')" id="tabOprMalam" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Jam 22:23</button>
       </div>
-      <div id="tabJam22" class="tab-content hidden">
-        <p>Data Penjualan Sesi Malam (22:00 - 23:00)</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 13: MONITORING KWH -->
-  <div id="modalMonitoringKwh" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-bolt"></i> Monitoring KWH Listrik</h3>
-      <button class="btn-close" onclick="closeModal('modalMonitoringKwh')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <form onsubmit="submitKwh(event)" class="form-grid">
-        <div class="form-group"><label>KWH Awal</label><input type="number" id="kwhAwal" required></div>
-        <div class="form-group"><label>KWH Akhir</label><input type="number" id="kwhAkhir" required></div>
-        <div class="form-group"><label>Tarif per KWH (Rp)</label><input type="number" id="kwhTarif" value="1500" required></div>
-        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Hitung & Simpan KWH</button>
+      <form id="formSalesOpr" onsubmit="event.preventDefault(); submitSalesOprAction();" class="grid grid-cols-2 gap-3 bg-white p-5 rounded-2xl border text-xs">
+        <div><label class="font-bold">Sales (Rp)</label><input type="number" id="oprSales" required class="w-full p-2.5 border rounded-xl mt-1"></div>
+        <div><label class="font-bold">STD (Struk)</label><input type="number" id="oprStd" required class="w-full p-2.5 border rounded-xl mt-1"></div>
+        <div><label class="font-bold">APC (Rp)</label><input type="number" id="oprApc" required class="w-full p-2.5 border rounded-xl mt-1"></div>
+        <div><label class="font-bold">ETRANS (Rp)</label><input type="number" id="oprEtrans" required class="w-full p-2.5 border rounded-xl mt-1"></div>
+        <button type="submit" class="col-span-2 py-3 bg-green-700 text-white font-bold rounded-xl mt-2">Simpan Sales OPR</button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL 13: MONITORING KWH -->
+  <div id="kwhModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('kwhModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Monitoring KWH Listrik Toko</h3>
+        </div>
+      </div>
+      <form id="formKwh" onsubmit="event.preventDefault(); submitKwhAction();" class="bg-white p-5 rounded-2xl border text-xs space-y-3">
+        <div class="grid grid-cols-3 gap-2">
+          <div><label class="font-bold">KWH Awal</label><input type="number" id="kwhAwal" required class="w-full p-2.5 border rounded-xl"></div>
+          <div><label class="font-bold">KWH Akhir</label><input type="number" id="kwhAkhir" required class="w-full p-2.5 border rounded-xl"></div>
+          <div><label class="font-bold">Tarif per KWH (Rp)</label><input type="number" id="kwhTarif" value="1500" required class="w-full p-2.5 border rounded-xl"></div>
+        </div>
+        <div><label class="font-bold">Keterangan Opsional</label><input type="text" id="kwhKet" placeholder="AC suhu 24°C, chiller normal" class="w-full p-2.5 border rounded-xl"></div>
+        <button type="submit" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl">Catat Pemakaian Listrik</button>
+      </form>
+      <div id="kwhHistoryTable" class="bg-white rounded-2xl border p-4"></div>
+    </div>
+  </div>
+
   <!-- MODAL 14: CATATAN RETURN -->
-  <div id="modalCatatanReturn" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-truck-ramp-box"></i> Catatan Return</h3>
-      <button class="btn-close" onclick="closeModal('modalCatatanReturn')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('catatanReturn', 'tabDcReg')">DC REG</button>
-        <button class="tab-btn" onclick="switchTab('catatanReturn', 'tabDcFresh')">DC FRESH</button>
-        <button class="tab-btn" onclick="switchTab('catatanReturn', 'tabBkl')">BKL</button>
+  <div id="returnModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('returnModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Catatan Return Barang</h3>
+        </div>
       </div>
-      <div id="tabDcReg" class="tab-content active">
-        <p>Data Return DC Regular</p>
-      </div>
+      <form id="formReturn" onsubmit="event.preventDefault(); submitReturnAction();" class="bg-white p-5 rounded-2xl border text-xs space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">Tipe Return</label><select id="retTipe" class="w-full p-2.5 border rounded-xl"><option value="DC REG">DC REG</option><option value="DC FRESH">DC FRESH</option><option value="BKL">BKL</option></select></div>
+          <div><label class="font-bold">Nomor Faktur</label><input type="text" id="retNoFaktur" required class="w-full p-2.5 border rounded-xl"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold">Nama Driver</label><input type="text" id="retDriver" required class="w-full p-2.5 border rounded-xl"></div>
+          <div><label class="font-bold">Nomor Polisi Mobil</label><input type="text" id="retNopol" required class="w-full p-2.5 border rounded-xl"></div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl">Simpan Return</button>
+      </form>
     </div>
   </div>
 
-  <!-- MODAL 15: SCAN BARANG -->
-  <div id="modalScanBarang" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-qrcode"></i> Scan Barang Barcode</h3>
-      <button class="btn-close" onclick="closeModal('modalScanBarang')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body text-center">
-      <button class="btn btn-primary" onclick="startBarcodeCamera()"><i class="fa-solid fa-camera"></i> Buka Kamera Scan</button>
-      <div id="scannerContainer" class="scanner-box hidden"></div>
-      <hr>
-      <div class="form-group">
-        <label>Atau Input Barcode Manual:</label>
-        <input type="text" id="manualBarcode" placeholder="Ketik nomor barcode...">
-        <button class="btn btn-secondary" onclick="addManualBarcode()">Tambah</button>
+  <!-- MODAL 15: SCAN BARANG (KAMERA & GENERATOR BARCODE) -->
+  <div id="scanModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-2xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="stopCameraAndClose('scanModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-extrabold text-lg text-gray-900">Scan & Generator Barcode</h3>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- MODAL BANTUAN -->
-  <div id="modalBantuan" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-circle-question"></i> Bantuan & Panduan</h3>
-      <button class="btn-close" onclick="closeModal('modalBantuan')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <h4>Panduan Penggunaan App</h4>
-      <ul>
-        <li>Login menggunakan NIK resmi terdaftar.</li>
-        <li>Semua transaksi membutuhkan koneksi online saat menyimpan ke server.</li>
-        <li>Gunakan Sync Manual untuk memperbarui data terkini.</li>
-      </ul>
-      <p>Kontak Support: <a href="https://wa.me/6285862719780">085862719780 (WhatsApp)</a></p>
-    </div>
-  </div>
+      <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4">
+        <!-- Kamera Scanner -->
+        <div id="cameraPreviewBox" class="w-full h-56 bg-black rounded-xl overflow-hidden relative flex items-center justify-center text-white text-xs">
+          <div id="qr-reader" class="w-full h-full"></div>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="startBarcodeCamera()" class="flex-1 py-2.5 bg-green-700 text-white font-bold rounded-xl text-xs"><i class="fa-solid fa-camera mr-1"></i> Buka Kamera</button>
+          <button onclick="stopBarcodeCamera()" class="px-4 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-xl text-xs">Tutup Kamera</button>
+        </div>
 
-  <!-- MODAL SUPER ADMIN LOG TRACKING -->
-  <div id="modalSuperAdmin" class="modal-fullscreen hidden">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-shield-halved"></i> Audit Log & Monitoring System</h3>
-      <button class="btn-close" onclick="closeModal('modalSuperAdmin')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr><th>Timestamp</th><th>NIK</th><th>Nama</th><th>Aksi</th><th>Detail</th></tr>
-          </thead>
-          <tbody id="tbAuditLogs"></tbody>
-        </table>
+        <!-- Manual Input & Generator Barcode Kasir -->
+        <div class="border-t pt-4 space-y-3">
+          <label class="text-xs font-bold text-gray-700 block">Input Manual Barcode Kasir</label>
+          <div class="flex space-x-2">
+            <input type="text" id="manualBarcodeInput" placeholder="Contoh: 8991234567890" class="flex-1 p-2.5 border rounded-xl text-xs">
+            <button onclick="generateVisualBarcode()" class="px-4 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl">Generate</button>
+          </div>
+          <!-- Barcode SVG untuk discan scanner kasir -->
+          <div class="p-4 bg-gray-50 border rounded-2xl text-center flex flex-col items-center">
+            <svg id="barcodeCanvas"></svg>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="api.js"></script>
-  <script src="app.js"></script>
+  <!-- MODAL ASISTEN CHAT AI (GROQ LLAMA 3) -->
+  <div id="chatAiModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-2xl w-full mx-auto flex-1 flex flex-col h-full">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal('chatAiModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <h3 class="font-extrabold text-base text-gray-900">Chat AI Retail Assistant</h3>
+            <span class="text-[10px] text-green-700 font-bold">Llama 3.3 Versatile • Terhubung Toko</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Area Pesan -->
+      <div id="chatMessagesContainer" class="flex-1 overflow-y-auto py-4 space-y-3 text-xs">
+        <div class="flex items-start space-x-2">
+          <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-xs">AI</div>
+          <div class="bg-gray-100 p-3 rounded-2xl max-w-[80%] text-gray-800">
+            Halo! Saya asisten retail Kacida Bersatu. Anda bisa bertanya tentang performa penjualan toko, estimasi IKT, atau sekadar ngobrol santai dan tebak-tebakan. Ada yang bisa saya bantu?
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Chat -->
+      <div class="pt-3 border-t border-gray-200 flex space-x-2">
+        <textarea id="chatInputMessage" rows="1" placeholder="Ketik pertanyaan / enter untuk baris baru..." class="flex-1 p-3 border rounded-xl text-xs resize-none"></textarea>
+        <button onclick="sendChatMessageAction()" class="px-5 bg-green-700 text-white font-bold rounded-xl text-xs"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KALENDER & PROFIL -->
+  <div id="calendarModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <button onclick="closeModal('calendarModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i> Kembali</button>
+        <h3 class="font-extrabold text-base">Kalender Operasional Retail</h3>
+      </div>
+      <div class="bg-white p-6 rounded-2xl border text-center text-xs">
+        <p class="text-gray-500 font-medium">Jumat, Sabtu, dan Minggu ditandai secara khusus sebagai Hari Peak Sales.</p>
+        <div id="retailCalendarGrid" class="mt-4 grid grid-cols-7 gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profilModal" class="modal-fullscreen p-4 md:p-8">
+    <div class="max-w-md w-full mx-auto flex-1 flex flex-col justify-center space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+        <button onclick="closeModal('profilModal')" class="p-2 bg-gray-100 rounded-xl text-gray-700"><i class="fa-solid fa-arrow-left"></i> Kembali</button>
+        <h3 class="font-extrabold text-base">Profil Pengguna</h3>
+      </div>
+      <div class="bg-white p-6 rounded-2xl border text-center space-y-4">
+        <img id="profileModalAvatar" src="https://ui-avatars.com/api/?name=User" class="w-24 h-24 rounded-full mx-auto border-2 border-green-600 object-cover">
+        <div>
+          <h4 id="profileModalName" class="font-bold text-base text-gray-800">Nama Pengguna</h4>
+          <p id="profileModalRole" class="text-xs text-gray-500">Jabatan • NIK</p>
+          <span id="profileModalStore" class="inline-block mt-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">2J16 - CARINGIN</span>
+        </div>
+        <button onclick="confirmLogout()" class="w-full py-3 bg-red-600 text-white font-bold rounded-xl text-xs">Keluar Akun</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 5. CORE LOGIC ENGINE (FRONTEND INTEGRATION SCRIPT)                    -->
+  <!-- ===================================================================== -->
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('SW Registered:', reg.scope);
-        }).catch(err => {
-          console.error('SW Registration Failed:', err);
+    // Konfigurasi URL Apps Script Web App Deployment Anda
+    const API_ENDPOINT = "https://script.google.com/macros/s/AKfycbw6zW5iQ2nXKb0OQzj6XdX5b-3uWNb7e0s8WAG8UUD1McnoKQZjkh91q48XjBKhueLQug/exec"; 
+
+    // State Aplikasi
+    let APP_STATE = {
+      token: localStorage.getItem('kb_token') || null,
+      user: JSON.parse(localStorage.getItem('kb_user') || 'null'),
+      storeData: {},
+      isOnline: navigator.onLine,
+      html5QrCode: null
+    };
+
+    // Peta Sandi Konversi No Bon
+    const BON_MAP = { '0': 'M', '1': 'O', '2': 'Y', '3': 'D', '4': 'T', '5': 'U', '6': 'H', '7': 'C', '8': 'I', '9': 'K' };
+
+    // Inisialisasi Aplikasi Saat Memuat Halaman
+    document.addEventListener('DOMContentLoaded', () => {
+      // Register PWA Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Fail:', err));
+      }
+
+      // Setup Listeners Input Konversi Bon
+      document.getElementById('inputNoBonKonversi')?.addEventListener('input', handleBonConversion);
+
+      // Cek Sesi Tersimpan
+      if (APP_STATE.token && APP_STATE.user) {
+        showAppInterface();
+        triggerManualSync(true);
+      } else {
+        hideLoading();
+        document.getElementById('loginScreen').classList.remove('hidden');
+      }
+
+      setupCalendar();
+    });
+
+    // Network Status Listeners
+    window.addEventListener('online', () => updateNetworkStatus(true));
+    window.addEventListener('offline', () => updateNetworkStatus(false));
+
+    function updateNetworkStatus(online) {
+      APP_STATE.isOnline = online;
+      const badge = document.getElementById('onlineStatusBadge');
+      if (badge) {
+        badge.className = online ? 'bg-green-500 w-2.5 h-2.5 rounded-full animate-ping' : 'bg-red-500 w-2.5 h-2.5 rounded-full';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Komunikasi API Lintas Origin (Apps Script Bridge)
+    // -------------------------------------------------------------
+    async function callBackend(action, payload = {}) {
+      const body = {
+        action: action,
+        token: APP_STATE.token,
+        ...payload
+      };
+
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body)
         });
+        return await response.json();
+      } catch (error) {
+        console.warn("Offline/Fallback Mode Activated:", error);
+        return { success: false, message: "Koneksi offline atau server belum merespons." };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Autentikasi & Login Handler
+    // -------------------------------------------------------------
+    async function handleLoginAction() {
+      const nik = document.getElementById('loginNikInput').value.trim();
+      if (!nik) return;
+
+      showLoading(30, "Memeriksa kredensial NIK...");
+
+      const res = await callBackend('LOGIN', { nik: nik });
+      hideLoading();
+
+      if (res && res.success) {
+        APP_STATE.token = res.token;
+        APP_STATE.user = res.user;
+        localStorage.setItem('kb_token', res.token);
+        localStorage.setItem('kb_user', JSON.stringify(res.user));
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Berhasil',
+          text: `Selamat datang, ${res.user.nama}`,
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        showAppInterface();
+        triggerManualSync();
+      } else {
+        Swal.fire('Login Gagal', res ? res.message : 'NIK tidak ditemukan.', 'error');
+      }
+    }
+
+    function confirmLogout() {
+      Swal.fire({
+        title: 'Konfirmasi Keluar',
+        text: 'Apakah Anda yakin ingin keluar dari akun ini?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d5c3a',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Logout',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          callBackend('LOGOUT', {});
+          localStorage.removeItem('kb_token');
+          localStorage.removeItem('kb_user');
+          location.reload();
+        }
       });
+    }
+
+    // -------------------------------------------------------------
+    // Sinkronisasi Manual Data Toko
+    // -------------------------------------------------------------
+    async function triggerManualSync(isSilent = false) {
+      const icon = document.getElementById('syncSpinIcon');
+      if (icon) icon.classList.add('fa-spin');
+      if (!isSilent) showLoading(50, "Sinkronisasi performa toko...");
+
+      const res = await callBackend('GET_INITIAL_DATA');
+      if (icon) icon.classList.remove('fa-spin');
+      if (!isSilent) hideLoading();
+
+      if (res && res.success) {
+        APP_STATE.storeData = res;
+        populateDashboardData(res);
+      }
+    }
+
+    function populateDashboardData(data) {
+      if (!data) return;
+      const u = APP_STATE.user;
+
+      // Header & Hero
+      document.getElementById('headerStoreBadge').innerText = `${u.kodeToko || 'TOKO'} - ${u.namaToko || 'RETAIL'}`;
+      document.getElementById('headerUserName').innerText = u.nama;
+      document.getElementById('headerUserRole').innerText = u.jabatan;
+      document.getElementById('heroGreetingText').innerText = `Selamat Bertugas, ${u.nama.split(' ')[0]}!`;
+      document.getElementById('heroStoreDetails').innerText = `${u.namaToko} • ${u.jabatan}`;
+
+      if (u.fotoUrl) {
+        document.getElementById('headerUserAvatar').src = u.fotoUrl;
+        document.getElementById('profileModalAvatar').src = u.fotoUrl;
+      }
+
+      // Badges
+      if (data.badges && data.badges.pendingApprovals > 0) {
+        const bBelanja = document.getElementById('badgeBelanjaPending');
+        if (bBelanja) {
+          bBelanja.innerText = data.badges.pendingApprovals;
+          bBelanja.classList.remove('hidden');
+        }
+      }
+
+      // Render Dynamic Menus from Sheet
+      if (data.menus && data.menus.length > 0) {
+        const dynGrid = document.getElementById('dynamicMenuGrid');
+        dynGrid.innerHTML = '';
+        data.menus.forEach(m => {
+          dynGrid.innerHTML += `
+            <a href="${m.link}" target="_blank" class="p-3 bg-white border border-gray-200 rounded-xl flex items-center space-x-2 text-xs font-bold text-gray-700 hover:border-green-600 shadow-sm">
+              <i class="fa-solid fa-arrow-up-right-from-square text-green-700"></i>
+              <span class="truncate">${m.nama}</span>
+            </a>
+          `;
+        });
+        document.getElementById('dynamicMenuSection').classList.remove('hidden');
+      }
+
+      // Render Chart
+      renderDashboardChart();
+    }
+
+    function renderDashboardChart() {
+      const ctx = document.getElementById('dashboardSalesChart');
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['01/10', '02/10', '03/10', '04/10', '05/10', '06/10', '07/10', '08/10', '09/10', '10/10'],
+          datasets: [
+            {
+              label: 'Actual Sales',
+              data: [9.8, 7.9, 14.2, 14.1, 10.1, 8.7, 7.0, 9.6, 12.3, 15.0],
+              backgroundColor: '#15803d',
+              borderRadius: 6
+            },
+            {
+              label: 'Target Sales',
+              data: [9.8, 9.8, 10.4, 10.7, 9.5, 9.2, 9.2, 9.2, 9.8, 10.1],
+              type: 'line',
+              borderColor: '#f59e0b',
+              borderWidth: 2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Menu 9: Konversi No Bon Logic
+    // -------------------------------------------------------------
+    function handleBonConversion(e) {
+      let val = e.target.value.replace(/[^0-9]/g, '');
+      if (!val) {
+        document.getElementById('outputKodeBon').innerText = '----';
+        return;
+      }
+      val = val.padStart(4, '0').slice(-4);
+      let res = '';
+      for (let ch of val) {
+        res += (BON_MAP[ch] || '');
+      }
+      document.getElementById('outputKodeBon').innerText = res;
+    }
+
+    function copyBonCode() {
+      const txt = document.getElementById('outputKodeBon').innerText;
+      if (txt === '----') return;
+      navigator.clipboard.writeText(txt);
+      Swal.fire({ icon: 'success', title: 'Tersalin', text: `Kode ${txt} berhasil disalin`, timer: 1000, showConfirmButton: false });
+    }
+
+    function resetBonCode() {
+      document.getElementById('inputNoBonKonversi').value = '';
+      document.getElementById('outputKodeBon').innerText = '----';
+    }
+
+    // -------------------------------------------------------------
+    // Menu 5: Simulasi GM RP Retail Calculator
+    // -------------------------------------------------------------
+    function calculateSimulasiGmAction() {
+      const hk = Number(document.getElementById('simHk').value) || 1;
+      const jhk = Number(document.getElementById('simJhk').value) || 0;
+      const targetSales = Number(document.getElementById('simTargetSales').value) || 0;
+      const actSales = Number(document.getElementById('simActualSales').value) || 0;
+      const targetGmPct = Number(document.getElementById('simTargetGm').value) || 0;
+      const actGmPct = Number(document.getElementById('simActualGm').value) || 0;
+
+      const gapSales = actSales - targetSales;
+      const targetGmRp = targetSales * (targetGmPct / 100);
+      const actGmRp = actSales * (actGmPct / 100);
+      const gapGmRp = actGmRp - targetGmRp;
+      const tf = (jhk / hk) * 100;
+
+      document.getElementById('simResGapSales').innerText = formatRupiah(gapSales);
+      document.getElementById('simResTargetGmRp').innerText = formatRupiah(targetGmRp);
+      document.getElementById('simResActualGmRp').innerText = formatRupiah(actGmRp);
+      document.getElementById('simResGapGmRp').innerText = formatRupiah(gapGmRp);
+      document.getElementById('simResTf').innerText = tf.toFixed(1) + '%';
+    }
+
+    // -------------------------------------------------------------
+    // Menu 15: Scan Barcode Kamera & Barcode Generator
+    // -------------------------------------------------------------
+    function generateVisualBarcode() {
+      const code = document.getElementById('manualBarcodeInput').value.trim();
+      if (!code) return;
+      JsBarcode("#barcodeCanvas", code, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 60,
+        displayValue: true
+      });
+    }
+
+    function startBarcodeCamera() {
+      if (!APP_STATE.html5QrCode) {
+        APP_STATE.html5QrCode = new Html5Qrcode("qr-reader");
+      }
+      APP_STATE.html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          document.getElementById('manualBarcodeInput').value = decodedText;
+          generateVisualBarcode();
+          stopBarcodeCamera();
+          Swal.fire({ icon: 'success', title: 'Barcode Terdeteksi', text: decodedText, timer: 1500, showConfirmButton: false });
+        },
+        (error) => {}
+      ).catch(err => Swal.fire('Izin Kamera Ditolak', 'Aktifkan izin kamera untuk memindai.', 'warning'));
+    }
+
+    function stopBarcodeCamera() {
+      if (APP_STATE.html5QrCode && APP_STATE.html5QrCode.isScanning) {
+        APP_STATE.html5QrCode.stop().catch(e => {});
+      }
+    }
+
+    function stopCameraAndClose(modalId) {
+      stopBarcodeCamera();
+      closeModal(modalId);
+    }
+
+    // -------------------------------------------------------------
+    // Chat AI (Groq Llama 3)
+    // -------------------------------------------------------------
+    async function sendChatMessageAction() {
+      const input = document.getElementById('chatInputMessage');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('chatMessagesContainer');
+      container.innerHTML += `
+        <div class="flex items-start justify-end space-x-2">
+          <div class="bg-green-700 text-white p-3 rounded-2xl max-w-[80%]">${text}</div>
+        </div>
+      `;
+      input.value = '';
+      container.scrollTop = container.scrollHeight;
+
+      // Loading bubble
+      const loadingBubbleId = 'aiLoadingBubble';
+      container.innerHTML += `
+        <div id="${loadingBubbleId}" class="flex items-start space-x-2">
+          <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-xs">AI</div>
+          <div class="bg-gray-100 p-3 rounded-2xl text-gray-500 italic">Sedang mengetik balasan...</div>
+        </div>
+      `;
+      container.scrollTop = container.scrollHeight;
+
+      const res = await callBackend('CHAT_AI', { messages: [{ role: 'user', content: text }] });
+      document.getElementById(loadingBubbleId)?.remove();
+
+      if (res && res.success) {
+        container.innerHTML += `
+          <div class="flex items-start space-x-2">
+            <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center font-bold text-xs">AI</div>
+            <div class="bg-gray-100 p-3 rounded-2xl max-w-[80%] text-gray-800 leading-relaxed">${res.reply}</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML += `
+          <div class="flex items-start space-x-2">
+            <div class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xs">!</div>
+            <div class="bg-red-50 text-red-700 p-3 rounded-2xl text-xs">${res ? res.message : 'Gagal menghubungi server AI.'}</div>
+          </div>
+        `;
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // -------------------------------------------------------------
+    // Ekspor Data ke Excel & PDF
+    // -------------------------------------------------------------
+    function exportTableToExcel(tableId, filename) {
+      const tbl = document.getElementById(tableId);
+      if (!tbl) return;
+      const wb = XLSX.utils.table_to_book(tbl, { sheet: "Report" });
+      XLSX.writeFile(wb, `${filename}_${Date.now()}.xlsx`);
+    }
+
+    function exportTableToPdf(tableId, title) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'pt', 'a4');
+      doc.setFontSize(14);
+      doc.text(title, 40, 40);
+      doc.setFontSize(9);
+      doc.text(`Toko: ${APP_STATE.user.namaToko} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 40, 56);
+      doc.autoTable({ html: `#${tableId}`, startY: 70, styles: { fontSize: 8 } });
+      doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    // -------------------------------------------------------------
+    // UI Modal & Layout Helpers
+    // -------------------------------------------------------------
+    function openModal(id) {
+      document.getElementById(id)?.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    function showAppInterface() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+    }
+
+    function showLoading(percent, text) {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('loadingProgressBar').style.width = percent + '%';
+      document.getElementById('loadingStatusText').innerText = `${text} ${percent}%`;
+    }
+
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    function formatRupiah(num) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    }
+
+    function setupCalendar() {
+      const grid = document.getElementById('retailCalendarGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+      days.forEach(d => grid.innerHTML += `<div class="font-bold text-gray-500">${d}</div>`);
+      for (let i = 1; i <= 31; i++) {
+        const isPeak = (i % 7 === 0 || (i + 1) % 7 === 0 || (i + 2) % 7 === 0);
+        grid.innerHTML += `
+          <div class="p-2 border rounded-lg ${isPeak ? 'bg-green-100 font-bold text-green-900 border-green-300' : 'bg-gray-50'}">
+            ${i}
+          </div>
+        `;
+      }
     }
   </script>
 </body>

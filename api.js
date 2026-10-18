@@ -5,7 +5,7 @@
 
 const CONFIG_PUBLIC = {
   // Masukkan URL Google Apps Script Web App Deployment Anda
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxYOUR_DEPLOYED_SCRIPT_ID/exec"
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyzV0gXFdu0NF2itiGtSeuofRXgLNaNMgyA19afL_8b0APJz4HIGNvQXFumQYwxIumWZQ/exec"
 };
 
 class ApiService {

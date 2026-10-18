@@ -4,372 +4,971 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
+  
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#046c38">
+  <meta name="theme-color" content="#1E5631">
+  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
+  
+  <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Font & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- External Libraries -->
+  <!-- SweetAlert2 & FontAwesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Chart.js & SheetJS & jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body data-theme="default">
 
-  <!-- ================= LAYAR 1: LOGIN ================= -->
-  <section id="loginScreen" class="screen-view active">
-    <div class="login-bg-overlay"></div>
+  <!-- ================= WATERMARK GLOBAL ================= -->
+  <div class="watermark-bg"></div>
+
+  <!-- ================= 1. HALAMAN LOGIN ================= -->
+  <section id="loginScreen" class="view-screen active">
     <div class="login-container">
-      <div class="login-brand-header">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida Bersatu" class="brand-logo-img">
+      <div class="login-brand">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida Bersatu" class="brand-logo">
         <h1 class="brand-title">Kacida Bersatu</h1>
-        <p class="brand-subtitle">Portal Performa & Operasional Retail</p>
+        <p class="brand-sub">Portal Performa & Operasional Retail</p>
         <span class="brand-slogan">Bersama Kita Kuat</span>
       </div>
 
       <div class="login-card">
-        <h2 class="card-title">Masuk ke Aplikasi</h2>
-        <p class="card-desc">Silakan masukkan NIK Anda</p>
+        <h2>Masuk ke Aplikasi</h2>
+        <p class="login-hint">Silakan masukkan NIK Anda yang terdaftar</p>
         
-        <form id="loginForm" onsubmit="event.preventDefault(); App.handleLogin();">
-          <div class="form-group-nik">
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
             <label for="inputNik">NIK</label>
-            <div class="input-icon-wrapper">
-              <i class="fa-solid fa-user-circle"></i>
-              <input type="text" id="inputNik" placeholder="Contoh: 14125034" autocomplete="off" required>
+            <div class="input-with-icon">
+              <span class="icon">👤</span>
+              <input type="text" id="inputNik" inputmode="numeric" placeholder="Contoh: 14125034" required autocomplete="off">
             </div>
           </div>
-          
-          <button type="submit" class="btn-primary-action btn-login">
-            <span>Masuk</span>
-            <i class="fa-solid fa-arrow-right"></i>
+
+          <button type="submit" id="btnLoginSubmit" class="btn-primary-block">
+            <span>Masuk</span> ➔
           </button>
         </form>
 
-        <button type="button" class="btn-secondary-demo" onclick="App.handleDemoLogin()">
-          <i class="fa-solid fa-bolt"></i> Login Demo
+        <button type="button" class="btn-demo" onclick="fillDemoNik()">
+          🔑 Demo Login (COS Wildan)
         </button>
 
-        <div class="login-footer-links">
-          <span>Belum punya akun?</span>
-          <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20mohon%20bantuan%20pendaftaran%20NIK%20aplikasi." target="_blank" class="admin-wa-link">
-            <i class="fa-brands fa-whatsapp"></i> Hubungi Admin
+        <div class="login-footer">
+          <p>Belum punya akun atau kendala login?</p>
+          <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20NIK" 
+             target="_blank" class="admin-link">
+            Hubungi Admin di WhatsApp (085862719780)
           </a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ================= LAYAR 2: LOADING & SYNC SCREEN ================= -->
-  <div id="syncLoadingScreen" class="sync-screen-overlay hidden">
-    <div class="sync-modal-box">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Sync Logo" class="sync-logo-pulse">
-      <h3 class="sync-brand-name">Kacida Bersatu</h3>
-      <span class="sync-slogan-text">Bersama Kita Kuat</span>
-      <div class="circular-spinner-container">
-        <div class="spinner-ring"></div>
-        <span id="syncProgressText" class="progress-percent">0%</span>
+  <!-- ================= 2. LOADING & SYNC SCREEN ================= -->
+  <div id="syncLoadingOverlay" class="loading-overlay hidden">
+    <div class="loading-box">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Loading..." class="loading-logo pulse">
+      <h3 id="loadingText">Menghubungkan ke Database...</h3>
+      <div class="progress-bar-wrap">
+        <div id="progressBar" class="progress-bar-fill"></div>
       </div>
-      <p id="syncStatusLabel" class="sync-status-msg">Sedang memproses data...</p>
+      <p id="loadingSubtext">Menyelaraskan data operasional toko Anda...</p>
     </div>
   </div>
 
-  <!-- ================= LAYAR 3 & 4: DASHBOARD UTAMA ================= -->
-  <div id="mainAppLayout" class="app-layout hidden">
+  <!-- ================= 3. LAYOUT UTAMA (DESKTOP & HP) ================= -->
+  <div id="appLayout" class="app-layout hidden">
     
-    <!-- SIDEBAR NAVIGASI (Desktop/Tablet) -->
-    <aside class="app-sidebar">
-      <div class="sidebar-brand">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="sidebar-logo">
-        <div class="brand-text">
-          <span class="brand-name">Kacida Bersatu</span>
-          <span class="brand-tag">Retail Portal</span>
+    <!-- SIDEBAR NAVIGASI DESKTOP -->
+    <aside class="sidebar-desktop">
+      <div class="sidebar-header">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="side-logo" alt="Logo">
+        <div>
+          <h4>Kacida Bersatu</h4>
+          <small>Bersama Kita Kuat</small>
         </div>
       </div>
-
-      <nav class="sidebar-nav-list">
-        <a href="javascript:void(0)" class="nav-item active" onclick="App.switchMainTab('beranda')">
-          <i class="fa-solid fa-house"></i> <span>Beranda</span>
-        </a>
-        <a href="javascript:void(0)" class="nav-item" onclick="App.openChatAiModal()">
-          <i class="fa-solid fa-comments"></i> <span>Chat AI</span>
-        </a>
-        <a href="javascript:void(0)" class="nav-item" onclick="App.openCalendarModal()">
-          <i class="fa-solid fa-calendar-days"></i> <span>Kalender</span>
-        </a>
-        <a href="javascript:void(0)" class="nav-item" onclick="App.openProfileModal()">
-          <i class="fa-solid fa-user-gear"></i> <span>Profil</span>
-        </a>
-        <a href="javascript:void(0)" id="sidebarSuperAdminNav" class="nav-item hidden" onclick="App.openAuditLogModal()">
-          <i class="fa-solid fa-shield-halved"></i> <span>Tracking Log</span>
-        </a>
-
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-title">Menu Utama</div>
-
-        <div class="sidebar-scrollable-menus" id="sidebarCoreMenuContainer">
-          <!-- 15 Menu Core Terinject Otomatis -->
-        </div>
-
-        <div class="sidebar-divider"></div>
-        <a href="javascript:void(0)" class="nav-item" onclick="App.openHelpModal()">
-          <i class="fa-solid fa-circle-question"></i> <span>Bantuan</span>
-        </a>
+      
+      <nav class="sidebar-menu">
+        <button class="nav-item active" onclick="switchNavTab('beranda')">🏠 Beranda</button>
+        <button class="nav-item" onclick="openModal('modalAiChat')">🤖 Chat AI</button>
+        <button class="nav-item" onclick="openModal('modalKalender')">📅 Kalender</button>
+        <button class="nav-item" onclick="openModal('modalProfil')">👤 Profil Saya</button>
+        <button id="btnSideAudit" class="nav-item hidden" onclick="openModal('modalAuditSuperAdmin')">🛡️ Tracking Log</button>
       </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout-side" onclick="handleLogout()">🚪 Logout</button>
+      </div>
     </aside>
 
-    <!-- WRAPPER KONTEN KANAN -->
-    <div class="app-main-wrapper">
+    <!-- KONTEN UTAMA -->
+    <main class="main-content">
       
-      <!-- TOPBAR HEADER -->
+      <!-- HEADER ATAS -->
       <header class="app-topbar">
         <div class="topbar-left">
-          <div class="store-badge-pill" id="headerStoreBadge">
-            <i class="fa-solid fa-store"></i> <span id="lblHeaderStoreName">Memuat Toko...</span>
+          <div class="store-badge">
+            <span class="store-icon">🏪</span>
+            <span id="txtTopStoreName">Toko Sedang Dimuat...</span>
           </div>
-          <div class="online-indicator-badge online" id="lblConnectionStatus">
-            <span class="status-dot"></span> <span class="status-text">Online</span>
-          </div>
+          <span id="badgeOnlineStatus" class="status-pill online">● Online</span>
         </div>
 
         <div class="topbar-right">
-          <button class="btn-sync-action" onclick="App.triggerManualSync()" title="Sinkronisasi Data">
-            <i class="fa-solid fa-rotate"></i> <span>Sync Manual</span>
+          <button class="btn-sync-top" onclick="triggerManualSync()" title="Sinkronisasi Data Real-Time">
+            🔄 <span class="hide-mobile">Sync Manual</span>
           </button>
-          
-          <!-- Theme Switcher -->
-          <div class="theme-switcher-box">
-            <button class="theme-btn active" data-theme="default" onclick="App.setTheme('default')" title="Default (Fresh Green)"><i class="fa-solid fa-leaf"></i></button>
-            <button class="theme-btn" data-theme="siang" onclick="App.setTheme('siang')" title="Siang (Bright)"><i class="fa-solid fa-sun"></i></button>
-            <button class="theme-btn" data-theme="malam" onclick="App.setTheme('malam')" title="Malam (Dark Slate)"><i class="fa-solid fa-moon"></i></button>
+
+          <!-- PILIHAN TEMA -->
+          <div class="theme-selector">
+            <button class="btn-theme active" onclick="setAppTheme('default')">Default</button>
+            <button class="btn-theme" onclick="setAppTheme('siang')">Siang</button>
+            <button class="btn-theme" onclick="setAppTheme('malam')">Malam</button>
           </div>
 
-          <!-- User Profile Chip -->
-          <div class="user-chip-header" onclick="App.openProfileModal()">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="headerUserAvatar" alt="Avatar" class="user-avatar-circle">
-            <div class="user-details-mini">
-              <span class="user-name-txt" id="lblHeaderUserName">Memuat...</span>
-              <span class="user-role-txt" id="lblHeaderUserRole">-</span>
+          <div class="user-chip" onclick="openModal('modalProfil')">
+            <img id="topUserAvatar" src="https://via.placeholder.com/40" class="user-avatar" alt="Avatar">
+            <div class="user-details hide-mobile">
+              <span id="txtTopUserName" class="user-name">User</span>
+              <span id="txtTopUserRole" class="user-role">Role</span>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- KONTEN AREA UTAMA BERANDA -->
-      <main class="dashboard-viewport">
-        
-        <!-- HERO GREETING CARD -->
-        <div class="hero-greeting-card">
-          <div class="hero-watermark-overlay"></div>
-          <div class="hero-content">
-            <div class="hero-user-profile">
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="heroUserAvatar" alt="Profile" class="hero-avatar">
-              <div class="hero-text-block">
-                <span class="greeting-time" id="lblHeroGreeting">Selamat Pagi,</span>
-                <h2 class="hero-name" id="lblHeroUserName">Budi Santoso</h2>
-                <div class="hero-tags-row">
-                  <span class="badge-role" id="lblHeroUserRole">Chief Of Store</span>
-                  <span class="badge-store-detail" id="lblHeroStoreFull">Toko 2J16 - CARINGIN KULON</span>
-                </div>
-              </div>
-            </div>
+      <!-- ISI HALAMAN BERANDA -->
+      <div class="content-scrollable">
 
-            <!-- Approval Floating Pill (Khusus CoS) -->
-            <div id="cosApprovalAlertPill" class="cos-approval-pill hidden" onclick="App.openModal('belanja_karyawan')">
-              <i class="fa-solid fa-bell fa-shake"></i>
-              <span><b id="lblPendingApprovalBadge">0</b> Approval Tertunda</span>
-            </div>
+        <!-- HERO CARD -->
+        <div class="hero-card">
+          <div class="hero-info">
+            <span id="txtHeroGreeting" class="hero-greet">Selamat Datang,</span>
+            <h2 id="txtHeroUserName">Nama Karyawan</h2>
+            <p id="txtHeroRoleStore">Chief Of Store • Toko 2J16 - CARINGIN KULON</p>
+          </div>
+          <div class="hero-kpi-highlight">
+            <span class="kpi-label">Sales H-1 Real</span>
+            <h3 id="txtHeroSalesH1">Rp 0</h3>
+            <span id="txtHeroGapH1" class="kpi-badge neutral">Sync Sekarang</span>
           </div>
         </div>
 
-        <!-- 4 KPI CAROUSEL / SUMMARY CARDS -->
-        <section class="kpi-carousel-grid">
-          <div class="kpi-card" onclick="App.openModal('monitoring_ikt')">
-            <div class="kpi-header">
-              <span class="kpi-title">IKT</span>
-              <div class="kpi-icon-badge ikt"><i class="fa-solid fa-chart-pie"></i></div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-value" id="kpiValIkt">0%</span>
-              <span class="kpi-status-badge ok" id="kpiBadgeIkt">Target 95%</span>
-            </div>
+        <!-- CAROUSEL KPI -->
+        <section class="kpi-carousel-wrapper">
+          <div class="section-title-wrap">
+            <h3>Ringkasan Kinerja Toko</h3>
+            <span class="subtitle-text">Geser atau klik kartu untuk rincian</span>
           </div>
-
-          <div class="kpi-card" onclick="App.openModal('sales_mtd')">
-            <div class="kpi-header">
-              <span class="kpi-title">MTD Sales</span>
-              <div class="kpi-icon-badge mtd"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="kpi-carousel" id="kpiCarousel">
+            <div class="kpi-card" onclick="openModal('modalIkt')">
+              <div class="card-head"><span>IKT Net Sales</span><span class="card-icon">🎯</span></div>
+              <h2 id="cardIktAcv">0%</h2>
+              <span id="cardIktStatus" class="pill pill-green">Memuat</span>
             </div>
-            <div class="kpi-body">
-              <span class="kpi-value" id="kpiValMtd">Rp 0 jt</span>
-              <span class="kpi-sub-text" id="kpiSubMtd">YTD Performance</span>
+            <div class="kpi-card" onclick="openModal('modalSalesMtd')">
+              <div class="card-head"><span>MTD Sales 2026</span><span class="card-icon">💰</span></div>
+              <h2 id="cardMtdSales">Rp 0</h2>
+              <span class="pill pill-blue" id="cardMtdStd">STD: 0</span>
             </div>
-          </div>
-
-          <div class="kpi-card" onclick="App.openModal('penawaran_langsung')">
-            <div class="kpi-header">
-              <span class="kpi-title">Penawaran Langsung</span>
-              <div class="kpi-icon-badge penawaran"><i class="fa-solid fa-bullhorn"></i></div>
+            <div class="kpi-card" onclick="openModal('modalPenawaranLangsung')">
+              <div class="card-head"><span>Penawaran Langsung</span><span class="card-icon">🎁</span></div>
+              <h2 id="cardPlAcv">0%</h2>
+              <span class="pill pill-gold" id="cardPlPoint">0 Point</span>
             </div>
-            <div class="kpi-body">
-              <span class="kpi-value" id="kpiValPenawaran">0%</span>
-              <span class="kpi-sub-text" id="kpiSubPenawaran">Point: - | Rank: -</span>
-            </div>
-          </div>
-
-          <div class="kpi-card" onclick="App.openModal('sales_harian')">
-            <div class="kpi-header">
-              <span class="kpi-title">Sales Harian</span>
-              <div class="kpi-icon-badge harian"><i class="fa-solid fa-receipt"></i></div>
-            </div>
-            <div class="kpi-body">
-              <span class="kpi-value" id="kpiValHarian">Rp 0 jt</span>
-              <span class="kpi-growth-badge positive" id="kpiGrowthHarian">▲ 0%</span>
+            <div class="kpi-card" onclick="openModal('modalSalesHarian')">
+              <div class="card-head"><span>Sales Harian</span><span class="card-icon">📈</span></div>
+              <h2 id="cardHarianSales">Rp 0</h2>
+              <span class="pill pill-purple">Real-Time</span>
             </div>
           </div>
         </section>
 
-        <!-- GRID MENU UTAMA (15 Menu Inti + Dynamic Menu Navigasi) -->
-        <section class="section-menu-grid">
-          <div class="section-header-row">
-            <h3 class="section-title"><i class="fa-solid fa-grid-2"></i> Menu Utama</h3>
-            <button class="btn-toggle-all-menus" onclick="App.toggleAllMenus()">
-              <span id="lblToggleMenus">View All</span> <i class="fa-solid fa-chevron-right"></i>
-            </button>
+        <!-- 15 MENU UTAMA GRID -->
+        <section class="menu-grid-wrapper">
+          <div class="section-title-wrap">
+            <h3>Menu Operasional Toko</h3>
+            <span class="badge-count">15 Menu Inti</span>
           </div>
+          <div class="menu-grid">
+            
+            <div class="menu-tile" onclick="openModal('modalCeklisRak')">
+              <div class="tile-icon-box">
+                <span class="tile-icon">📋</span>
+                <span id="badgeRak" class="tile-badge hidden">0</span>
+              </div>
+              <span class="tile-label">Ceklis EXP</span>
+            </div>
 
-          <div class="main-menu-grid" id="mainMenuGridContainer">
-            <!-- 15 Card Menu Utama + Menu Dinamis Spreadsheet -->
+            <div class="menu-tile" onclick="openModal('modalSerahTerima')">
+              <div class="tile-icon-box"><span class="tile-icon">🤝</span></div>
+              <span class="tile-label">Serah Terima</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalPlanMastershift')">
+              <div class="tile-icon-box"><span class="tile-icon">📅</span></div>
+              <span class="tile-label">Plan Mastershift</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalBelanjaKaryawan')">
+              <div class="tile-icon-box">
+                <span class="tile-icon">🛒</span>
+                <span id="badgeBelanja" class="tile-badge hidden">0</span>
+              </div>
+              <span class="tile-label">Belanja Karyawan</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalSimulasiGm')">
+              <div class="tile-icon-box"><span class="tile-icon">🧮</span></div>
+              <span class="tile-label">Simulasi GM RP</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalSalesMtd')">
+              <div class="tile-icon-box"><span class="tile-icon">📊</span></div>
+              <span class="tile-label">Sales MTD</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalSalesHarian')">
+              <div class="tile-icon-box"><span class="tile-icon">💹</span></div>
+              <span class="tile-label">Sales Harian</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalIkt')">
+              <div class="tile-icon-box"><span class="tile-icon">🎯</span></div>
+              <span class="tile-label">Monitoring IKT</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalKonversiBon')">
+              <div class="tile-icon-box"><span class="tile-icon">🔢</span></div>
+              <span class="tile-label">Konversi No Bon</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalPenawaranLangsung')">
+              <div class="tile-icon-box"><span class="tile-icon">🎁</span></div>
+              <span class="tile-label">Penawaran Langsung</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalRekapPsmKasir')">
+              <div class="tile-icon-box"><span class="tile-icon">🏆</span></div>
+              <span class="tile-label">Rekap PSM Kasir</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalSalesOpr')">
+              <div class="tile-icon-box"><span class="tile-icon">⏱️</span></div>
+              <span class="tile-label">Sales OPR</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalMonitoringKwh')">
+              <div class="tile-icon-box"><span class="tile-icon">⚡</span></div>
+              <span class="tile-label">Monitoring KWH</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalCatatanReturn')">
+              <div class="tile-icon-box"><span class="tile-icon">📦</span></div>
+              <span class="tile-label">Catatan Return</span>
+            </div>
+
+            <div class="menu-tile" onclick="openModal('modalScanBarang')">
+              <div class="tile-icon-box"><span class="tile-icon">📷</span></div>
+              <span class="tile-label">Scan Barang</span>
+            </div>
+
           </div>
         </section>
 
-        <!-- RINGKASAN PERFORMA & PROFIL TOKO (Bottom Row) -->
-        <section class="bottom-analytics-grid">
-          <div class="panel-card performance-summary-card">
-            <div class="panel-header">
-              <h4 class="panel-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Performa</h4>
-            </div>
-            <div class="charts-row">
-              <div class="gauge-metric-item">
-                <div class="metric-circle-box">
-                  <span class="gauge-val" id="lblGaugeGm">68%</span>
-                  <span class="gauge-label">GM%</span>
-                </div>
-                <span class="metric-note">Target 70%</span>
-              </div>
-
-              <div class="mini-chart-item">
-                <span class="mini-chart-title">Sales Harian</span>
-                <span class="mini-chart-val" id="lblMiniSalesHarian">Rp 0 jt</span>
-                <div class="chart-canvas-wrapper">
-                  <canvas id="miniSalesChart" height="60"></canvas>
-                </div>
-              </div>
-
-              <div class="mini-chart-item">
-                <span class="mini-chart-title">IKT Net Sales</span>
-                <span class="mini-chart-val" id="lblMiniIktVal">0%</span>
-                <div class="chart-canvas-wrapper">
-                  <canvas id="miniIktChart" height="60"></canvas>
-                </div>
-              </div>
-            </div>
+        <!-- MENU DINAMIS SPREADSHEET (Menu_Navigasi) -->
+        <section class="dynamic-menu-wrapper">
+          <div class="section-title-wrap">
+            <h3>Tautan Eksternal & Laporan</h3>
+            <span class="subtitle-text">Sinkron dari Spreadsheet 'Menu_Navigasi'</span>
           </div>
+          <div class="dynamic-menu-grid" id="dynamicMenuContainer">
+            <!-- Diisi otomatis dari backend -->
+          </div>
+        </section>
 
-          <div class="panel-card store-profile-card">
-            <div class="panel-header">
-              <h4 class="panel-title"><i class="fa-solid fa-shop"></i> Profil Toko</h4>
-              <a href="javascript:void(0)" class="link-detail-store" onclick="App.openStoreDetailModal()">Lihat Detail</a>
+        <!-- RINGKASAN GRAFIK TOKO & PROFIL -->
+        <section class="summary-section">
+          <div class="chart-box">
+            <div class="chart-header">
+              <h4>Perbandingan Sales Harian vs Target</h4>
             </div>
-            <div class="store-details-list">
-              <div class="store-info-row">
-                <span class="info-label">Nama Toko:</span>
-                <span class="info-val bold" id="profStoreName">-</span>
-              </div>
-              <div class="store-info-row">
-                <span class="info-label">Area / Rayon:</span>
-                <span class="info-val" id="profStoreArea">Area KAB. BOGOR</span>
-              </div>
-              <div class="store-info-row">
-                <span class="info-label">Jumlah Personel:</span>
-                <span class="info-val bold" id="profStoreStaffCount">12 Orang</span>
-              </div>
-              <div class="store-info-row">
-                <span class="info-label">Pimpinan Toko:</span>
-                <span class="info-val" id="profStoreCosName">-</span>
-              </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="chartSalesHarianPreview"></canvas>
             </div>
           </div>
         </section>
 
-      </main>
-    </div>
+      </div>
+    </main>
 
-    <!-- BOTTOM NAVBAR MOBILE (Layout HP Sesuai Mockup) -->
-    <nav class="mobile-bottom-nav">
-      <button class="m-nav-item active" onclick="App.switchMainTab('beranda')">
-        <i class="fa-solid fa-house"></i>
+    <!-- NAVBAR BAWAH (KHUSUS TAMPILAN HP) -->
+    <nav class="mobile-navbar">
+      <button class="m-nav-item active" onclick="switchNavTab('beranda')">
+        <span class="m-icon">🏠</span>
         <span>Beranda</span>
       </button>
-      <button class="m-nav-item" onclick="App.openChatAiModal()">
-        <i class="fa-solid fa-comments"></i>
+      <button class="m-nav-item" onclick="openModal('modalAiChat')">
+        <span class="m-icon">🤖</span>
         <span>Chat AI</span>
       </button>
-      <div class="m-nav-action-wrapper">
-        <button class="m-nav-btn-floating" onclick="App.openQuickActionSheet()" title="Aksi Cepat">
-          <i class="fa-solid fa-plus"></i>
-        </button>
-      </div>
-      <button class="m-nav-item" onclick="App.openCalendarModal()">
-        <i class="fa-solid fa-calendar-days"></i>
+      <button class="m-nav-item" onclick="openModal('modalKalender')">
+        <span class="m-icon">📅</span>
         <span>Kalender</span>
       </button>
-      <button class="m-nav-item" onclick="App.openProfileModal()">
-        <i class="fa-solid fa-user"></i>
+      <button class="m-nav-item" onclick="openModal('modalProfil')">
+        <span class="m-icon">👤</span>
         <span>Profil</span>
       </button>
     </nav>
   </div>
 
-  <!-- ================= CONTAINER SELURUH MODAL FITUR 1 - 15 ================= -->
-  <div id="fullModalContainer" class="modal-layer-fullscreen hidden">
-    
-    <!-- HEADER MODAL UNIFORM -->
-    <div class="modal-master-header">
-      <div class="header-left-part">
-        <button class="btn-modal-back" onclick="App.closeActiveModal()">
-          <i class="fa-solid fa-arrow-left"></i>
-        </button>
-        <div class="title-meta-part">
-          <h2 id="modalActiveTitle" class="modal-title-text">Nama Fitur</h2>
-          <span id="modalActiveSubtitle" class="modal-subtitle-text">Toko 2J16 - CARINGIN KULON</span>
+  <!-- ================= 4. WIDGET MODAL LAYAR PENUH (SEMUA FITUR) ================= -->
+
+  <!-- MODAL 1: CEKLIS EXP -->
+  <div id="modalCeklisRak" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalCeklisRak')">⬅ Kembali</button>
+      <h3>Ceklis EXP & Data Rak</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-subnav">
+      <button class="sub-tab active" onclick="switchSubTab(this, 'tabDataRak')">Data Rak</button>
+      <button class="sub-tab" onclick="switchSubTab(this, 'tabInputExp')">Input EXP</button>
+      <button class="sub-tab" onclick="switchSubTab(this, 'tabAlertExp')">Alert EXP</button>
+      <button class="sub-tab" onclick="switchSubTab(this, 'tabRiwayatExp')">Riwayat EXP</button>
+    </div>
+    <div class="modal-body-scroll">
+      
+      <!-- SUBTAB 1: Data Rak -->
+      <div id="tabDataRak" class="tab-content active">
+        <div class="card-summary-row">
+          <div class="stat-card"><span>Total Rak</span><b id="statTotalRak">0</b></div>
+          <div class="stat-card green"><span>Selesai</span><b id="statRakSelesai">0</b></div>
+          <div class="stat-card orange"><span>Butuh Validasi</span><b id="statRakValidasi">0</b></div>
+          <div class="stat-card red"><span>Belum</span><b id="statRakBelum">0</b></div>
+        </div>
+        <form class="action-form" onsubmit="handleSubmitRak(event)">
+          <h4>Penyelesaian Rak Saya</h4>
+          <div class="form-row">
+            <input type="text" id="rakNo" placeholder="No. Rak (Contoh: A01)" required>
+            <input type="text" id="rakKategori" placeholder="Kategori (Makanan/Minuman/Non-Food)" required>
+            <input type="file" id="rakFoto" accept="image/*" capture="environment" required>
+          </div>
+          <button type="submit" class="btn-primary">Kirim Foto & Selesaikan Rak</button>
+        </form>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>No Rak</th><th>Kategori</th><th>PIC</th><th>Status</th><th>Foto</th><th>Aksi COS</th></tr>
+            </thead>
+            <tbody id="tblBodyRak"></tbody>
+          </table>
         </div>
       </div>
-      <div class="header-right-actions" id="modalTopRightActionContainer">
-        <!-- Tombol Tambah / Export / Ekstra diinject di sini -->
-      </div>
-    </div>
 
-    <!-- BODY CONTAINER SCROLLABLE -->
-    <div class="modal-scrollable-body" id="modalActiveContentBody">
-      <!-- Konten masing-masing 15 menu dimuat secara instan di sini -->
+      <!-- SUBTAB 2: Input EXP -->
+      <div id="tabInputExp" class="tab-content">
+        <form class="action-form" onsubmit="handleSubmitInputExp(event)">
+          <h4>Form Input Tanggal EXP Item</h4>
+          <div class="form-row">
+            <input type="text" id="expNamaItem" placeholder="Nama Item / Produk" required>
+            <input type="text" id="expPosisiRak" placeholder="Posisi Rak" required>
+            <input type="number" id="expQty" placeholder="Qty" min="1" required>
+            <input type="date" id="expTanggal" required>
+            <input type="number" id="expRh" placeholder="Return Hari (RH) contoh: 30" required>
+          </div>
+          <button type="submit" class="btn-primary">Simpan Item EXP</button>
+        </form>
+      </div>
+
+      <!-- SUBTAB 3: Alert EXP -->
+      <div id="tabAlertExp" class="tab-content">
+        <div class="alert-info-box">
+          ℹ️ <b>Rumus Eksekusi:</b> Tanggal EXP - RH - 10 Hari spare. Item wajib ditarik saat tanggal eksekusi tiba!
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Item</th><th>Rak</th><th>Qty</th><th>Tgl EXP</th><th>Estimasi Eksekusi</th><th>Status</th><th>Tindakan</th></tr>
+            </thead>
+            <tbody id="tblBodyAlertExp"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBTAB 4: Riwayat -->
+      <div id="tabRiwayatExp" class="tab-content">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Item</th><th>Rak</th><th>Qty</th><th>Tgl Input</th><th>Eksekusi Oleh</th><th>Status</th></tr>
+            </thead>
+            <tbody id="tblBodyRiwayatExp"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
+  <!-- MODAL 2: SERAH TERIMA -->
+  <div id="modalSerahTerima" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalSerahTerima')">⬅ Kembali</button>
+      <h3>Serah Terima Shift Kasir</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <form class="action-form" onsubmit="handleSubmitSerahTerima(event)">
+        <div class="form-grid-2">
+          <div>
+            <label>Shift</label>
+            <select id="stShift" required>
+              <option value="Shift 1">Shift 1 (Pagi)</option>
+              <option value="Shift 2">Shift 2 (Siang/Sore)</option>
+            </select>
+          </div>
+          <div>
+            <label>Sales Shift (Rp)</label>
+            <input type="number" id="stSales" placeholder="Contoh: 8500000" required>
+          </div>
+          <div>
+            <label>Qty PSM</label>
+            <input type="number" id="stPsm" placeholder="Contoh: 45" required>
+          </div>
+          <div>
+            <label>Redeem Serba Gratis</label>
+            <input type="number" id="stRedeemSg" placeholder="Contoh: 12" required>
+          </div>
+          <div>
+            <label>Redeem PWP</label>
+            <input type="number" id="stRedeemPwp" placeholder="Contoh: 6" required>
+          </div>
+          <div>
+            <label>New Member</label>
+            <input type="number" id="stNewMember" placeholder="Contoh: 7" required>
+          </div>
+          <div>
+            <label>% Contribution Struk</label>
+            <input type="text" id="stPctStruk" placeholder="Contoh: 12.5%" required>
+          </div>
+          <div>
+            <label>Catatan / Kendala Shift</label>
+            <input type="text" id="stCatatan" placeholder="Contoh: EDC BCA kendala sinyal jam 14.00">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary-block" style="margin-top:15px;">Simpan Laporan Serah Terima</button>
+      </form>
+      
+      <h4>Riwayat Serah Terima</h4>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tanggal</th><th>Shift</th><th>Kasir</th><th>Sales</th><th>PSM</th><th>New Member</th><th>Catatan</th></tr>
+          </thead>
+          <tbody id="tblBodySerahTerima"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PLAN MASTERSHIFT -->
+  <div id="modalPlanMastershift" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalPlanMastershift')">⬅ Kembali</button>
+      <h3>Plan Mastershift Karyawan</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="filter-bar">
+        <label>Pilih Periode: </label>
+        <input type="month" id="filterMsMonth" onchange="loadPlanMastershift()">
+        <button class="btn-secondary" onclick="loadPlanMastershift()">Refresh Jadwal</button>
+      </div>
+      <div class="schedule-legend">
+        <span class="tag-p">P = Pagi</span>
+        <span class="tag-s">S = Siang</span>
+        <span class="tag-m">M = Malam</span>
+        <span class="tag-off">OFF = Libur</span>
+        <span class="tag-cuti">CT = Cuti</span>
+        <span class="tag-sakit">SK = Sakit</span>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table schedule-table" id="tblSchedule">
+          <!-- Di-generate lewat JS (Kolom 1 - 31) -->
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: BELANJA KARYAWAN -->
+  <div id="modalBelanjaKaryawan" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalBelanjaKaryawan')">⬅ Kembali</button>
+      <h3>Belanja Karyawan</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-subnav">
+      <button class="sub-tab active" onclick="switchSubTab(this, 'tabInputBelanja')">Input Belanja</button>
+      <button class="sub-tab" onclick="switchSubTab(this, 'tabApprovalBelanja')">Approval COS</button>
+      <button class="sub-tab" onclick="switchSubTab(this, 'tabRiwayatBelanja')">Riwayat</button>
+    </div>
+    <div class="modal-body-scroll">
+      
+      <div id="tabInputBelanja" class="tab-content active">
+        <form class="action-form" onsubmit="handleSubmitBelanjaKaryawan(event)">
+          <div class="form-grid-2">
+            <div>
+              <label>Nomor Member</label>
+              <input type="text" id="bkNoMember" placeholder="0812xxxx / ID Member" required>
+            </div>
+            <div>
+              <label>Nomor Bon / Struk</label>
+              <input type="text" id="bkNoBon" placeholder="Nomor Bon Kasir" required>
+            </div>
+            <div>
+              <label>Nominal Belanja (Rp)</label>
+              <input type="number" id="bkNominal" placeholder="Contoh: 150000" required>
+            </div>
+            <div>
+              <label>Foto Struk Asli</label>
+              <input type="file" id="bkFoto" accept="image/*" capture="environment" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary-block" style="margin-top:15px;">Kirim Pengajuan Belanja</button>
+        </form>
+      </div>
+
+      <div id="tabApprovalBelanja" class="tab-content">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Karyawan</th><th>No Bon</th><th>Nominal</th><th>Struk</th><th>Tindakan COS</th></tr>
+            </thead>
+            <tbody id="tblBodyApprovalBelanja"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tabRiwayatBelanja" class="tab-content">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Tanggal</th><th>Karyawan</th><th>Nomor Bon</th><th>Nominal</th><th>Status</th></tr>
+            </thead>
+            <tbody id="tblBodyRiwayatBelanja"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL 5: SIMULASI GM RP IKT -->
+  <div id="modalSimulasiGm" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalSimulasiGm')">⬅ Kembali</button>
+      <h3>Kalkulator Simulasi GM RP & IKT</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="action-form">
+        <h4>Parameter Simulasi</h4>
+        <div class="form-grid-3">
+          <div><label>HK (Total Hari Kerja)</label><input type="number" id="simHk" value="31" oninput="calculateSimulasiGm()"></div>
+          <div><label>JHK (Hari Berjalan)</label><input type="number" id="simJhk" value="15" oninput="calculateSimulasiGm()"></div>
+          <div><label>Target Net Sales (Rp)</label><input type="number" id="simTargetSales" value="450000000" oninput="calculateSimulasiGm()"></div>
+          <div><label>Actual Net Sales (Rp)</label><input type="number" id="simActualSales" value="230000000" oninput="calculateSimulasiGm()"></div>
+          <div><label>Target GM %</label><input type="number" step="0.01" id="simTargetGm" value="19.5" oninput="calculateSimulasiGm()"></div>
+          <div><label>Actual GM %</label><input type="number" step="0.01" id="simActualGm" value="19.1" oninput="calculateSimulasiGm()"></div>
+        </div>
+
+        <div class="simulasi-result-card">
+          <h4>Hasil Perhitungan Real-Time:</h4>
+          <div class="res-grid">
+            <div><span>ACV Net Sales:</span><b id="resSimAcvSales">0%</b></div>
+            <div><span>Gap Net Sales:</span><b id="resSimGapSales">Rp 0</b></div>
+            <div><span>Target GM (Rp):</span><b id="resSimTargetGmRp">Rp 0</b></div>
+            <div><span>Actual GM (Rp):</span><b id="resSimActualGmRp">Rp 0</b></div>
+            <div><span>Gap GM (Rp):</span><b id="resSimGapGmRp">Rp 0</b></div>
+            <div><span>Time Factor:</span><b id="resSimTf">0%</b></div>
+          </div>
+          <div id="resSimStatusBox" class="status-summary-box ok">Status: Memenuhi Target</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: SALES MTD -->
+  <div id="modalSalesMtd" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalSalesMtd')">⬅ Kembali</button>
+      <h3>Sales MTD (YTD_Sales)</h3>
+      <div class="topbar-actions">
+        <button class="btn-action-sm" onclick="exportTableToExcel('tblSalesMtd', 'Sales_MTD_2026')">📥 Excel</button>
+        <button class="btn-action-sm" onclick="exportTableToPdf('tblSalesMtd', 'Laporan Sales MTD 2026')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="filter-bar">
+        <button class="btn-filter-tag active" onclick="filterSalesMtd('All')">Semua</button>
+        <button class="btn-filter-tag" onclick="filterSalesMtd('Growth')">Growth</button>
+        <button class="btn-filter-tag" onclick="filterSalesMtd('Disgrowth')">Disgrowth</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table" id="tblSalesMtd">
+          <thead>
+            <tr><th>Tanggal</th><th>Sales 2024</th><th>Sales 2025</th><th>Sales 2026</th><th>STD 2026</th><th>APC 2026</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tblBodySalesMtd"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: SALES HARIAN -->
+  <div id="modalSalesHarian" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalSalesHarian')">⬅ Kembali</button>
+      <h3>Sales Harian</h3>
+      <div class="topbar-actions">
+        <button class="btn-action-sm" onclick="exportTableToExcel('tblSalesHarian', 'Sales_Harian')">📥 Excel</button>
+        <button class="btn-action-sm" onclick="exportTableToPdf('tblSalesHarian', 'Laporan Sales Harian')">📄 PDF</button>
+      </div>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="table-responsive">
+        <table class="data-table" id="tblSalesHarian">
+          <thead>
+            <tr><th>Tanggal</th><th>Target</th><th>Actual</th><th>Gap</th><th>ACV%</th><th>STD</th><th>APC</th><th>OOS%</th><th>GM%</th></tr>
+          </thead>
+          <tbody id="tblBodySalesHarian"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: MONITORING IKT -->
+  <div id="modalIkt" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalIkt')">⬅ Kembali</button>
+      <h3>Monitoring IKT Toko</h3>
+      <div class="topbar-actions">
+        <button class="btn-action-sm" onclick="openModal('modalSimulasiGm')">🧮 Buka Simulasi</button>
+      </div>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="table-responsive">
+        <table class="data-table" id="tblIkt">
+          <thead>
+            <tr><th>Indikator</th><th>Target</th><th>Aktual</th><th>% ACV</th><th>Keterangan</th></tr>
+          </thead>
+          <tbody id="tblBodyIkt"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: KONVERSI NO BON -->
+  <div id="modalKonversiBon" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalKonversiBon')">⬅ Kembali</button>
+      <h3>Konversi Nomor Bon / Struk</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll flex-center">
+      <div class="converter-card">
+        <h4>Masukkan 4 Digit Angka Struk:</h4>
+        <input type="text" id="inputBonRaw" maxlength="4" placeholder="Contoh: 123 atau 1123" oninput="handleConvertBon(this.value)">
+        
+        <div class="convert-result-box">
+          <span class="res-label">Hasil Kode Konversi:</span>
+          <h1 id="txtConvertedCode">----</h1>
+        </div>
+
+        <div class="btn-group-row">
+          <button class="btn-primary" onclick="copyConvertedCode()">📋 Salin Kode</button>
+          <button class="btn-secondary" onclick="resetBonConverter()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 10: PENAWARAN LANGSUNG -->
+  <div id="modalPenawaranLangsung" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalPenawaranLangsung')">⬅ Kembali</button>
+      <h3>Penawaran Langsung</h3>
+      <div class="topbar-actions">
+        <button class="btn-action-sm" onclick="exportTableToExcel('tblPenawaranLangsung', 'Penawaran_Langsung')">📥 Excel</button>
+      </div>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="table-responsive">
+        <table class="data-table" id="tblPenawaranLangsung">
+          <thead>
+            <tr><th>Program</th><th>Target</th><th>Aktual</th><th>ACV%</th></tr>
+          </thead>
+          <tbody id="tblBodyPl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 11: REKAP PSM KASIR -->
+  <div id="modalRekapPsmKasir" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalRekapPsmKasir')">⬅ Kembali</button>
+      <h3>Rekap PSM Kasir Harian</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <form class="action-form" onsubmit="handleSaveRekapPsm(event)">
+        <h4>Input Item PSM Kasir</h4>
+        <div class="form-row">
+          <input type="text" id="psmNamaItem" placeholder="Nama Produk PSM (Contoh: Minyak 2L)" required>
+          <input type="number" id="psmTargetHari" placeholder="Target Hari Ini" required>
+          <input type="number" id="psmAktualHari" placeholder="Aktual Terjual" required>
+        </div>
+        <button type="submit" class="btn-primary">Simpan Pencapaian Kasir</button>
+      </form>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Kasir</th><th>Item</th><th>Target</th><th>Aktual</th><th>ACV%</th><th>Gap</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tblBodyRekapPsm"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 12: SALES OPR -->
+  <div id="modalSalesOpr" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalSalesOpr')">⬅ Kembali</button>
+      <h3>Monitoring Sales OPR</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <form class="action-form" onsubmit="handleSubmitSalesOpr(event)">
+        <div class="form-grid-3">
+          <div>
+            <label>Shift Jam</label>
+            <select id="oprTipeShift">
+              <option value="06:07">Rekap Jam 06:07</option>
+              <option value="22:23">Rekap Jam 22:23</option>
+            </select>
+          </div>
+          <div><label>Sales (Rp)</label><input type="number" id="oprSales" required></div>
+          <div><label>STD</label><input type="number" id="oprStd" required></div>
+          <div><label>APC (Rp)</label><input type="number" id="oprApc" required></div>
+          <div><label>Qty Transaksi</label><input type="number" id="oprQty" required></div>
+          <div><label>ETRANS (Rp)</label><input type="number" id="oprEtrans" required></div>
+        </div>
+        <button type="submit" class="btn-primary-block" style="margin-top:10px;">Catat Sales OPR</button>
+      </form>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tanggal</th><th>Jam</th><th>Sales</th><th>STD</th><th>APC</th><th>ETRANS</th><th>Petugas</th></tr>
+          </thead>
+          <tbody id="tblBodySalesOpr"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 13: MONITORING KWH -->
+  <div id="modalMonitoringKwh" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalMonitoringKwh')">⬅ Kembali</button>
+      <h3>Monitoring KWH Listrik</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <form class="action-form" onsubmit="handleSubmitKwh(event)">
+        <div class="form-grid-3">
+          <div><label>Tarif per KWH (Rp)</label><input type="number" id="kwhTarif" value="1500" required></div>
+          <div><label>KWH Meter Awal</label><input type="number" step="0.1" id="kwhAwal" required></div>
+          <div><label>KWH Meter Akhir</label><input type="number" step="0.1" id="kwhAkhir" required></div>
+        </div>
+        <input type="text" id="kwhKet" placeholder="Keterangan opsional (misal: AC rusak/pemakaian genset)">
+        <button type="submit" class="btn-primary-block" style="margin-top:10px;">Simpan Catatan Listrik</button>
+      </form>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tanggal</th><th>Awal</th><th>Akhir</th><th>Pemakaian</th><th>Estimasi Biaya</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tblBodyKwh"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 14: CATATAN RETURN -->
+  <div id="modalCatatanReturn" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalCatatanReturn')">⬅ Kembali</button>
+      <h3>Catatan Return Barang</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <form class="action-form" onsubmit="handleSubmitReturn(event)">
+        <div class="form-grid-3">
+          <div>
+            <label>Kategori Return</label>
+            <select id="retKategori">
+              <option value="DC REG">DC REG</option>
+              <option value="DC FRESH">DC FRESH</option>
+              <option value="BKL">BKL (Supplier)</option>
+            </select>
+          </div>
+          <div><label>Nomor Faktur</label><input type="text" id="retNoFaktur" required></div>
+          <div><label>Nama Driver / Pengirim</label><input type="text" id="retDriver" required></div>
+          <div><label>Nomor Polisi Mobil</label><input type="text" id="retNopol" required></div>
+          <div><label>Foto Bukti Faktur</label><input type="file" id="retFoto" accept="image/*" capture="environment"></div>
+        </div>
+        <textarea id="retCatatan" placeholder="Catatan fisik barang yang diretur..." style="width:100%; margin-top:10px;"></textarea>
+        <button type="submit" class="btn-primary-block" style="margin-top:10px;">Simpan Catatan Return</button>
+      </form>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tanggal</th><th>Tipe</th><th>No Faktur</th><th>Driver</th><th>No Polisi</th><th>Foto</th></tr>
+          </thead>
+          <tbody id="tblBodyReturn"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 15: SCAN BARANG -->
+  <div id="modalScanBarang" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="stopScanner(); closeModal('modalScanBarang')">⬅ Kembali</button>
+      <h3>Scan Barcode Produk</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="scanner-section">
+        <div id="cameraPreviewBox" class="camera-preview-box">
+          <video id="scannerVideo" playsinline></video>
+          <div class="scan-laser"></div>
+        </div>
+        <div class="btn-group-row">
+          <button class="btn-primary" onclick="startCameraScanner()">📷 Buka Kamera</button>
+          <button class="btn-secondary" onclick="stopScanner()">⏹️ Hentikan Kamera</button>
+        </div>
+        
+        <div class="manual-input-box">
+          <input type="text" id="scanManualBarcode" placeholder="Atau ketik manual barcode produk...">
+          <button class="btn-primary" onclick="handleManualBarcode()">Tambahkan</button>
+        </div>
+
+        <h4>Daftar Scan Sesi Ini:</h4>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Barcode</th><th>Qty</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="tblBodyScanList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAHAN: CHAT AI GROQ -->
+  <div id="modalAiChat" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalAiChat')">⬅ Kembali</button>
+      <h3>Chat AI Retail — Kacida Bersatu</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessageList">
+        <div class="chat-bubble ai">
+          <p>Halo! Saya Asisten Pintar Kacida Bersatu. Ada yang bisa saya bantu terkait operasional toko atau mau ngobrol santai? 😊</p>
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <textarea id="inputChatMsg" placeholder="Tanyakan performa toko Anda... (Shift + Enter untuk baris baru)" onkeydown="handleChatKeyDown(event)"></textarea>
+        <button id="btnSendChat" class="btn-chat-send" onclick="sendChatMessage()">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAHAN: KALENDER -->
+  <div id="modalKalender" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalKalender')">⬅ Kembali</button>
+      <h3>Kalender Operasional Toko</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <div id="calendarContainer" class="calendar-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAHAN: PROFIL PENGGUNA -->
+  <div id="modalProfil" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalProfil')">⬅ Kembali</button>
+      <h3>Profil Saya</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll flex-center">
+      <div class="profile-card">
+        <img id="profImg" src="https://via.placeholder.com/120" class="profile-large-img" alt="Foto">
+        <h2 id="profNama">Nama Karyawan</h2>
+        <span id="profRole" class="badge-role">Role</span>
+        <div class="profile-detail-list">
+          <p><b>NIK:</b> <span id="profNik">-</span></p>
+          <p><b>Toko:</b> <span id="profToko">-</span></p>
+        </div>
+        <button class="btn-danger-block" onclick="handleLogout()">Keluar / Ganti Akun</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SUPER ADMIN: AUDIT LOG -->
+  <div id="modalAuditSuperAdmin" class="full-modal hidden">
+    <div class="modal-topbar">
+      <button class="btn-modal-back" onclick="closeModal('modalAuditSuperAdmin')">⬅ Kembali</button>
+      <h3>Audit Trail Super Admin (14125034)</h3>
+      <span class="modal-spacer"></span>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Timestamp</th><th>NIK</th><th>Nama</th><th>Toko</th><th>Menu</th><th>Aksi</th><th>Detail</th></tr>
+          </thead>
+          <tbody id="tblBodyAuditLogs"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
   <script src="api.js"></script>
   <script src="app.js"></script>
   <script>
+    // Inisialisasi Service Worker PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW register failed:', err));
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('PWA Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker failed:', err));
       });
     }
   </script>

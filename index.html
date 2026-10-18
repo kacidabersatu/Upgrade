@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
   
-  <!-- Manifest & Favicon PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1b5e20">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,13 +12,13 @@
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
   <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
 
-  <!-- Font Inter & Google Icons -->
+  <!-- Font Inter & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
 
-  <!-- Pustaka Pendukung: Chart.js, SweetAlert2, SheetJS (XLSX), JsBarcode, Html5-QRCode -->
+  <!-- Libraries: Chart.js, SweetAlert2, SheetJS, JsBarcode, Html5-QRCode -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -28,29 +27,29 @@
 
   <style>
     :root {
-      --primary-dark: #0d381e;
-      --primary: #1b5e20;
-      --primary-light: #2e7d32;
-      --primary-soft: #e8f5e9;
+      --primary-dark: #0f3d24;
+      --primary: #1e6b37;
+      --primary-light: #2e8b46;
+      --primary-soft: #eaf5ee;
       --accent-red: #d32f2f;
-      --accent-orange: #ed6c02;
+      --accent-orange: #f57c00;
       --accent-blue: #0288d1;
-      --bg-main: #f4f7f5;
+      --bg-main: #f0f4f1;
       --surface: #ffffff;
-      --border-color: #e0e0e0;
-      --text-main: #212121;
-      --text-muted: #666666;
+      --border-color: #d6e2d9;
+      --text-main: #1c2a22;
+      --text-muted: #5a6e62;
       --radius-sm: 8px;
       --radius-md: 12px;
-      --radius-lg: 18px;
+      --radius-lg: 16px;
       --shadow-sm: 0 2px 6px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+      --shadow-md: 0 4px 14px rgba(15,61,36,0.08);
+      --shadow-lg: 0 10px 25px rgba(15,61,36,0.14);
       --watermark-url: url('https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i');
     }
 
     [data-theme="siang"] {
-      --bg-main: #f0fbf4;
+      --bg-main: #f4faf6;
       --surface: #ffffff;
       --primary-dark: #124d28;
       --primary: #237834;
@@ -58,14 +57,14 @@
     }
 
     [data-theme="malam"] {
-      --bg-main: #121815;
-      --surface: #1b2420;
-      --primary-dark: #09120e;
+      --bg-main: #101713;
+      --surface: #18221c;
+      --primary-dark: #0a0f0c;
       --primary: #2e7d32;
-      --border-color: #2b3933;
-      --text-main: #f5f5f5;
-      --text-muted: #a0aba5;
-      --shadow-md: 0 4px 14px rgba(0,0,0,0.4);
+      --border-color: #26352c;
+      --text-main: #f1f5f2;
+      --text-muted: #95a59c;
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.5);
     }
 
     * {
@@ -85,20 +84,18 @@
       overflow-x: hidden;
     }
 
-    /* Watermark Latar Belakang */
     .watermark-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background-image: var(--watermark-url);
       background-repeat: no-repeat;
       background-position: center;
-      background-size: 400px;
+      background-size: 420px;
       opacity: 0.035;
       pointer-events: none;
       z-index: 0;
     }
 
-    /* Utilitas Umum */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -118,6 +115,7 @@
       padding: 2px 6px;
       border-radius: 10px;
       margin-left: 4px;
+      font-weight: 800;
     }
 
     button {
@@ -132,32 +130,38 @@
     .btn-primary {
       background-color: var(--primary);
       color: #fff;
-      padding: 10px 18px;
-      border-radius: var(--radius-sm);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-secondary {
-      background: var(--surface);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
       padding: 9px 16px;
       border-radius: var(--radius-sm);
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      font-size: 13px;
     }
+    .btn-primary:hover { background-color: var(--primary-light); }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
     .btn-danger {
       background-color: var(--accent-red);
       color: #fff;
       padding: 8px 14px;
       border-radius: var(--radius-sm);
+      font-size: 12px;
     }
 
     input, select, textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 9px 12px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       background-color: var(--surface);
@@ -167,7 +171,7 @@
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(27,94,32,0.15);
+      box-shadow: 0 0 0 2px rgba(30,107,55,0.18);
     }
 
     /* -------------------------------------------------------------
@@ -185,30 +189,32 @@
     }
     .login-card {
       width: 100%;
-      max-width: 380px;
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(8px);
+      max-width: 390px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
       border-radius: var(--radius-lg);
-      padding: 32px 24px;
+      padding: 34px 26px;
       box-shadow: var(--shadow-lg);
       text-align: center;
       position: relative;
       animation: fadeInUp 0.4s ease;
     }
     .login-card img.logo {
-      width: 110px;
+      width: 120px;
       height: auto;
       margin-bottom: 8px;
     }
     .login-card h2 {
       color: var(--primary-dark);
-      font-size: 20px;
-      font-weight: 800;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
     }
     .login-card p.subtitle {
       font-size: 12px;
       color: var(--text-muted);
       margin-bottom: 22px;
+      font-weight: 500;
     }
     .login-form {
       display: flex;
@@ -228,42 +234,67 @@
       color: var(--text-muted);
     }
     .login-support a {
-      color: var(--primary-light);
+      color: var(--primary);
       font-weight: 700;
       text-decoration: none;
     }
 
     /* -------------------------------------------------------------
-       2. SCREEN: FULL LOADING / SYNC
+       2. SCREEN: LOADER & SINKRONISASI
        ------------------------------------------------------------- */
     #screen-loader {
       position: fixed;
       inset: 0;
       z-index: 10000;
-      background: #ffffff;
+      background: url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9') no-repeat center center / cover;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
       text-align: center;
     }
-    #screen-loader img {
-      width: 120px;
-      animation: pulse 1.8s infinite ease-in-out;
+    .loader-box-modal {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      padding: 30px 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      min-width: 290px;
+    }
+    .loader-box-modal img {
+      width: 80px;
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    .spinner-ring {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #e0e0e0;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
     }
     .progress-bar-container {
-      width: 240px;
-      height: 8px;
-      background: #e0e0e0;
+      width: 220px;
+      height: 9px;
+      background: #e5ece7;
       border-radius: 99px;
       overflow: hidden;
+      margin-top: 6px;
     }
     .progress-bar-fill {
       width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #1b5e20, #4caf50);
+      background: linear-gradient(90deg, #1e6b37, #4caf50);
       transition: width 0.3s ease;
+    }
+    #loader-pct-text {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary-dark);
     }
 
     /* -------------------------------------------------------------
@@ -282,9 +313,8 @@
       min-height: 100vh;
     }
 
-    /* Desktop Sidebar Nav */
     .sidebar {
-      width: 260px;
+      width: 250px;
       background-color: var(--primary-dark);
       color: #fff;
       display: flex;
@@ -293,15 +323,15 @@
       transition: all 0.3s ease;
     }
     .sidebar-header {
-      padding: 24px 20px;
+      padding: 22px 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .sidebar-header img {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
     }
     .sidebar-header .title-box h1 {
       font-size: 15px;
@@ -310,26 +340,25 @@
     }
     .sidebar-header .title-box p {
       font-size: 10px;
-      color: #81c784;
+      color: #a5d6a7;
     }
     .sidebar-menu {
       flex: 1;
       overflow-y: auto;
-      padding: 14px 10px;
+      padding: 12px 8px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
+      gap: 11px;
+      padding: 10px 14px;
       border-radius: var(--radius-sm);
-      color: #d7e7db;
+      color: #d1e3d7;
       font-size: 13px;
       font-weight: 600;
-      text-decoration: none;
       cursor: pointer;
     }
     .nav-item:hover, .nav-item.active {
@@ -337,24 +366,22 @@
       color: #ffffff;
     }
 
-    /* Main Content Area */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-width: 0;
-      padding-bottom: 70px; /* Jarak untuk baris navigasi mobile */
+      padding-bottom: 74px;
     }
 
-    /* Top App Bar */
     .topbar {
-      height: 64px;
+      height: 60px;
       background: var(--surface);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 22px;
       position: sticky;
       top: 0;
       z-index: 10;
@@ -362,12 +389,12 @@
     .topbar-left {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
     .topbar-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .online-indicator {
       display: inline-flex;
@@ -385,48 +412,47 @@
     .user-pill {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 4px 10px 4px 4px;
+      gap: 8px;
+      padding: 3px 10px 3px 4px;
       border-radius: 99px;
       background: var(--bg-main);
       cursor: pointer;
     }
     .user-pill img {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       object-fit: cover;
     }
     .user-pill .user-info {
-      line-height: 1.2;
+      line-height: 1.15;
       text-align: left;
     }
     .user-pill .user-info .name {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
     }
     .user-pill .user-info .role {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-muted);
     }
 
-    /* Main Scrollable View */
     .content-body {
-      padding: 24px;
+      padding: 20px;
       max-width: 1400px;
       margin: 0 auto;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }
 
-    /* Hero Sapaan */
+    /* Hero Banner Mockup */
     .hero-banner {
-      background: linear-gradient(135deg, #1b5e20, #0a3319);
+      background: linear-gradient(135deg, #104222, #082613);
       color: white;
       border-radius: var(--radius-md);
-      padding: 22px 26px;
+      padding: 20px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -435,7 +461,7 @@
       overflow: hidden;
     }
     .hero-banner .hero-text h2 {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 800;
       margin-bottom: 4px;
     }
@@ -447,15 +473,15 @@
       text-align: right;
     }
     .hero-stats-box .val {
-      font-size: 24px;
-      font-weight: 800;
+      font-size: 23px;
+      font-weight: 900;
     }
     .hero-stats-box .lbl {
       font-size: 11px;
       color: #c8e6c9;
     }
 
-    /* Auto Carousel Summary Cards */
+    /* KPI Carousel Cards */
     .carousel-section {
       position: relative;
       overflow: hidden;
@@ -463,7 +489,7 @@
     }
     .carousel-track {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       scrollbar-width: none;
@@ -471,31 +497,31 @@
     }
     .carousel-track::-webkit-scrollbar { display: none; }
     .kpi-card {
-      flex: 0 0 calc(25% - 12px);
-      min-width: 240px;
+      flex: 0 0 calc(25% - 11px);
+      min-width: 220px;
       scroll-snap-align: start;
       background: var(--surface);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 16px;
+      padding: 14px 16px;
       box-shadow: var(--shadow-sm);
       cursor: pointer;
       transition: transform 0.2s ease;
     }
-    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-card:hover { transform: translateY(-2px); }
     .kpi-card .kpi-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     .kpi-card .kpi-header .title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-muted);
     }
     .kpi-card .kpi-value {
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 800;
       margin-bottom: 4px;
     }
@@ -503,30 +529,31 @@
       display: flex;
       justify-content: space-between;
       font-size: 11px;
+      font-weight: 600;
     }
 
-    /* Grid 15 Menu Utama */
+    /* Menu Grid 15 Modul */
     .menu-grid-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 6px;
     }
     .menu-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 16px;
+      gap: 14px;
     }
     .menu-tile {
       background: var(--surface);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 18px 10px;
+      padding: 16px 8px;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
       cursor: pointer;
       box-shadow: var(--shadow-sm);
       position: relative;
@@ -538,39 +565,39 @@
       box-shadow: var(--shadow-md);
     }
     .menu-tile img.icon-3d {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       object-fit: contain;
     }
     .menu-tile span.label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      line-height: 1.3;
+      line-height: 1.25;
       color: var(--text-main);
     }
 
-    /* Dashboard Charts & Insights */
+    /* Chart Section */
     .charts-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 20px;
+      gap: 16px;
     }
     .chart-card {
       background: var(--surface);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 20px;
+      padding: 18px;
       box-shadow: var(--shadow-sm);
     }
 
-    /* Bottom Navigation Bar (Mobile Native View) */
+    /* Mobile Bottom Navbar */
     .mobile-navbar {
       display: none;
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 60px;
+      height: 58px;
       background: var(--surface);
       border-top: 1px solid var(--border-color);
       z-index: 99;
@@ -588,12 +615,10 @@
       gap: 2px;
       background: none;
     }
-    .mob-nav-btn.active {
-      color: var(--primary);
-    }
+    .mob-nav-btn.active { color: var(--primary); }
 
     /* -------------------------------------------------------------
-       4. MODAL LAYAR PENUH (FULL SCREEN MODALS)
+       4. MODAL LAYAR PENUH
        ------------------------------------------------------------- */
     .modal-fullscreen {
       position: fixed;
@@ -603,38 +628,38 @@
       display: none;
       flex-direction: column;
       overflow: hidden;
-      animation: slideInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slideInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .modal-header-bar {
-      height: 60px;
+      height: 56px;
       background: var(--surface);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      padding: 0 18px;
       flex-shrink: 0;
     }
     .modal-header-bar .left-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .modal-header-bar h3 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
     }
     .modal-subnav {
       background: var(--surface);
       border-bottom: 1px solid var(--border-color);
       display: flex;
-      gap: 10px;
-      padding: 8px 20px;
+      gap: 8px;
+      padding: 8px 18px;
       overflow-x: auto;
       flex-shrink: 0;
     }
     .subnav-pill {
-      padding: 7px 16px;
+      padding: 6px 14px;
       border-radius: 99px;
       font-size: 12px;
       font-weight: 700;
@@ -650,14 +675,14 @@
     .modal-body-content {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       position: relative;
     }
 
-    /* Tabel Operasional */
+    /* Tabel Styling */
     .table-container {
       background: var(--surface);
       border: 1px solid var(--border-color);
@@ -669,10 +694,10 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 13px;
+      font-size: 12px;
     }
     table.data-table th, table.data-table td {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border-color);
       white-space: nowrap;
     }
@@ -683,23 +708,21 @@
       font-size: 11px;
       text-transform: uppercase;
     }
-    table.data-table tr:last-child td { border-bottom: none; }
 
-    /* Filter Bar */
     .filter-action-bar {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       background: var(--surface);
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
     }
 
     /* -------------------------------------------------------------
-       5. CHAT AI INTERFACE ALA WHATSAPP
+       5. CHAT AI (WHATSAPP LOOKALIKE)
        ------------------------------------------------------------- */
     .chat-container {
       display: flex;
@@ -715,19 +738,17 @@
     }
     .chat-messages {
       flex: 1;
-      padding: 20px;
+      padding: 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       background: #efeae2;
     }
-    [data-theme="malam"] .chat-messages {
-      background: #0d1418;
-    }
+    [data-theme="malam"] .chat-messages { background: #0d1418; }
     .chat-bubble {
-      max-width: 80%;
-      padding: 10px 14px;
+      max-width: 82%;
+      padding: 9px 13px;
       border-radius: 12px;
       font-size: 13px;
       line-height: 1.45;
@@ -742,10 +763,7 @@
       border-top-left-radius: 0;
       box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
-    [data-theme="malam"] .chat-bubble.bot {
-      background: #202c33;
-      color: #e9edef;
-    }
+    [data-theme="malam"] .chat-bubble.bot { background: #202c33; color: #e9edef; }
     .chat-bubble.user {
       align-self: flex-end;
       background: #d9fdd3;
@@ -753,34 +771,31 @@
       border-top-right-radius: 0;
       box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
-    [data-theme="malam"] .chat-bubble.user {
-      background: #005c4b;
-      color: #e9edef;
-    }
+    [data-theme="malam"] .chat-bubble.user { background: #005c4b; color: #e9edef; }
     .chat-input-bar {
       padding: 10px 14px;
       background: var(--surface);
       border-top: 1px solid var(--border-color);
       display: flex;
       align-items: flex-end;
-      gap: 10px;
+      gap: 8px;
     }
     .chat-input-bar textarea {
       flex: 1;
       resize: none;
-      height: 42px;
-      max-height: 120px;
-      padding: 10px 14px;
+      height: 40px;
+      max-height: 110px;
+      padding: 9px 13px;
       border-radius: 20px;
       line-height: 1.3;
     }
 
     /* -------------------------------------------------------------
-       6. SCANNER BARCODE CONTAINER & VISUAL CAROUSEL
+       6. SCANNER BARCODE CONTAINER & CAROUSEL
        ------------------------------------------------------------- */
     #interactive-scanner {
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       margin: 0 auto;
       border-radius: var(--radius-md);
       overflow: hidden;
@@ -788,32 +803,32 @@
     }
     .barcode-scroll-shelf {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       overflow-x: auto;
-      padding: 12px 4px;
+      padding: 10px 2px;
     }
     .barcode-badge-card {
       background: #fff;
-      padding: 12px;
+      padding: 10px;
       border-radius: var(--radius-sm);
       border: 1px solid #ccc;
       text-align: center;
-      min-width: 170px;
+      min-width: 160px;
     }
 
     /* -------------------------------------------------------------
-       7. KALENDER PENANDA JUMAT, SABTU, MINGGU
+       7. KALENDER OPERASIONAL
        ------------------------------------------------------------- */
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
+      gap: 6px;
       text-align: center;
     }
     .cal-header-cell {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 8px 0;
+      padding: 6px 0;
       color: var(--text-muted);
     }
     .cal-header-cell.weekend { color: var(--accent-red); }
@@ -826,7 +841,7 @@
       background: var(--surface);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
@@ -845,29 +860,18 @@
       font-weight: 800;
     }
 
-    /* Animasi Keyframes */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideInUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
-    /* RESPONSIVE BREAKPOINT KHUSUS HP */
     @media (max-width: 900px) {
       .sidebar { display: none; }
-      .main-content { padding-bottom: 74px; }
       .mobile-navbar { display: flex; }
       .charts-grid { grid-template-columns: 1fr; }
       .kpi-card { flex: 0 0 78%; }
-      .topbar { padding: 0 16px; }
-      .content-body { padding: 16px; }
+      .topbar { padding: 0 14px; }
+      .content-body { padding: 14px; }
       .menu-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
       .menu-tile { padding: 12px 4px; }
       .menu-tile img.icon-3d { width: 36px; height: 36px; }
@@ -877,12 +881,9 @@
 </head>
 <body data-theme="default">
 
-  <!-- Watermark Transparan Seluruh Halaman -->
   <div class="watermark-overlay"></div>
 
-  <!-- =========================================================================
-       1. SCREEN: LOGIN
-       ========================================================================= -->
+  <!-- 1. SCREEN: LOGIN -->
   <div id="screen-login">
     <div class="login-card">
       <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="logo">
@@ -894,36 +895,33 @@
           <label for="input-login-nik">Nomor Induk Karyawan (NIK)</label>
           <input type="number" id="input-login-nik" placeholder="Masukkan 8 Digit NIK Anda" autocomplete="off">
         </div>
-        <button class="btn-primary" style="justify-content: center; width: 100%; padding: 12px;" onclick="App.login()">
-          Masuk ke Portal
+        <button class="btn-primary" style="justify-content: center; width: 100%; padding: 11px;" onclick="App.login()">
+          Masuk ke Aplikasi
           <span class="material-symbols-rounded">arrow_forward</span>
         </button>
       </div>
 
       <div class="login-support">
-        Kendala akses atau akun baru?<br>
-        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida,%20saya%20butuh%20bantuan%20login%20ke%20aplikasi." target="_blank">
-          Hubungi Admin (WhatsApp)
-        </a>
+        Tidak bisa Login? <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida,%20saya%20butuh%20bantuan%20login." target="_blank">Hubungi Admin</a>
       </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       2. SCREEN: LOADER & SINKRONISASI
-       ========================================================================= -->
+  <!-- 2. SCREEN: LOADER & SINKRONISASI -->
   <div id="screen-loader">
-    <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Loading">
-    <h4 id="loader-status-text" style="font-weight: 700; color: var(--primary-dark);">Menghubungkan ke Database...</h4>
-    <div class="progress-bar-container">
-      <div class="progress-bar-fill" id="loader-progress"></div>
+    <div class="loader-box-modal">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Kacida Bersatu">
+      <div class="spinner-ring"></div>
+      <h4 id="loader-status-text" style="font-weight: 800; color: var(--primary-dark); font-size: 14px;">Memuat Aplikasi...</h4>
+      <div id="loader-pct-text">0%</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="loader-progress"></div>
+      </div>
+      <small style="color: var(--text-muted); font-size: 11px;">Bersama Kita Kuat</small>
     </div>
-    <p style="font-size: 11px; color: var(--text-muted);">Bersama Kita Kuat</p>
   </div>
 
-  <!-- =========================================================================
-       3. APP MAIN SHELL
-       ========================================================================= -->
+  <!-- 3. MAIN APP SHELL -->
   <div id="app-container">
     <div class="layout-wrapper">
       
@@ -933,7 +931,7 @@
           <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo">
           <div class="title-box">
             <h1>Kacida Bersatu</h1>
-            <p>Operasional & Performa</p>
+            <p>Portal Performa & Operasional</p>
           </div>
         </div>
         <nav class="sidebar-menu">
@@ -941,19 +939,19 @@
             <span class="material-symbols-rounded">dashboard</span> Beranda
           </div>
           <div class="nav-item" onclick="App.openChatModal()">
-            <span class="material-symbols-rounded">forum</span> Kacida AI Chat
+            <span class="material-symbols-rounded">forum</span> Chat AI
           </div>
           <div class="nav-item" onclick="App.openCalendarModal()">
-            <span class="material-symbols-rounded">calendar_month</span> Kalender Toko
+            <span class="material-symbols-rounded">calendar_month</span> Kalender
           </div>
           <div class="nav-item" onclick="App.openModal('modal-help')">
-            <span class="material-symbols-rounded">help</span> Panduan Bantuan
+            <span class="material-symbols-rounded">help</span> Bantuan
           </div>
           <div class="nav-item" id="sidebar-admin-btn" style="display:none;" onclick="App.openSuperAdminModal()">
             <span class="material-symbols-rounded">admin_panel_settings</span> Audit Admin
           </div>
           <div class="nav-item" onclick="App.openProfileModal()">
-            <span class="material-symbols-rounded">person</span> Profil Personel
+            <span class="material-symbols-rounded">person</span> Profil Toko
           </div>
         </nav>
       </aside>
@@ -963,29 +961,27 @@
         <!-- TOP APPBAR -->
         <header class="topbar">
           <div class="topbar-left">
-            <span class="badge badge-ok" id="badge-store-code">2J16</span>
+            <span class="badge badge-ok" id="badge-store-code">TOKO -</span>
+            <!-- Selektor Toko Khusus AC / Super Admin -->
+            <select id="select-area-store" style="display:none; width: auto; font-weight:700; height:32px; padding: 4px 8px;" onchange="App.onStoreFilterChange(this.value)"></select>
             <div class="online-indicator">
               <div class="online-dot" id="online-dot"></div>
               <span id="online-status-lbl">Online</span>
             </div>
-            <!-- Selektor Toko untuk AC / Super Admin -->
-            <select id="select-area-store" style="display:none; width: auto; font-weight:700;" onchange="App.onStoreFilterChange(this.value)"></select>
           </div>
 
           <div class="topbar-right">
-            <button class="btn-secondary" onclick="App.manualSync()" title="Sinkronisasi Data Real-time">
-              <span class="material-symbols-rounded" style="font-size: 18px;">sync</span>
+            <button class="btn-secondary" onclick="App.manualSync()" title="Sinkronisasi Manual">
+              <span class="material-symbols-rounded" style="font-size: 17px;">sync</span>
               <span class="hide-mobile">Sync Manual</span>
             </button>
             
-            <!-- Pengaturan Tema -->
-            <select id="select-theme" style="width: auto; padding: 6px 10px;" onchange="App.setTheme(this.value)">
-              <option value="default">Tema Default</option>
-              <option value="siang">Tema Siang</option>
-              <option value="malam">Tema Malam</option>
+            <select id="select-theme" style="width: auto; padding: 5px 8px; font-size:12px;" onchange="App.setTheme(this.value)">
+              <option value="default">Default</option>
+              <option value="siang">Siang</option>
+              <option value="malam">Malam</option>
             </select>
 
-            <!-- Profil Pil -->
             <div class="user-pill" onclick="App.openProfileModal()">
               <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" id="topbar-user-photo" alt="User">
               <div class="user-info hide-mobile">
@@ -999,26 +995,50 @@
         <!-- BERANDA (CONTENT BODY) -->
         <section class="content-body" id="view-dashboard">
           
-          <!-- Hero Card -->
+          <!-- Hero Card Mockup -->
           <div class="hero-banner">
             <div class="hero-text">
-              <h2 id="hero-greeting">Selamat Bekerja!</h2>
-              <p id="hero-store-info">Toko: Memuat data performa...</p>
+              <h2 id="hero-greeting">Selamat Pagi!</h2>
+              <p id="hero-store-info">Toko: Memuat data...</p>
               <small style="color:#c8e6c9; margin-top:4px; display:block;" id="hero-sync-time">Terakhir disinkronkan: -</small>
             </div>
             <div class="hero-stats-box">
               <div class="val" id="hero-h1-sales">Rp 0</div>
-              <div class="lbl">Sales SPD Kemarin (H-1)</div>
+              <div class="lbl">Sales Harian H-1</div>
             </div>
           </div>
 
-          <!-- Carousel Ringkasan KPI -->
+          <!-- Carousel KPI Sesuai Mockup -->
           <div class="carousel-section">
             <div class="carousel-track" id="kpi-carousel">
+              <div class="kpi-card" onclick="App.openModal('modal-sales-mtd')">
+                <div class="kpi-header">
+                  <span class="title">SALES MTD</span>
+                  <span class="material-symbols-rounded" style="color:var(--accent-orange); font-size:20px;">trending_up</span>
+                </div>
+                <div class="kpi-value" id="kpi-mtd-total">Rp 0</div>
+                <div class="kpi-footer">
+                  <span id="kpi-mtd-growth">Growth: 0%</span>
+                  <span class="badge badge-ok">MTD</span>
+                </div>
+              </div>
+
+              <div class="kpi-card" onclick="App.openModal('modal-penawaran-langsung')">
+                <div class="kpi-header">
+                  <span class="title">PENAWARAN LANGSUNG</span>
+                  <span class="material-symbols-rounded" style="color:#6a1b9a; font-size:20px;">local_offer</span>
+                </div>
+                <div class="kpi-value" id="kpi-pl-acv">0%</div>
+                <div class="kpi-footer">
+                  <span id="kpi-pl-point">Point: 0</span>
+                  <span id="kpi-pl-rank">Rank: -</span>
+                </div>
+              </div>
+
               <div class="kpi-card" onclick="App.openModal('modal-sales-harian')">
                 <div class="kpi-header">
-                  <span class="title">SALES HARIAN (H-1)</span>
-                  <span class="material-symbols-rounded" style="color:var(--primary);">storefront</span>
+                  <span class="title">SALES HARIAN</span>
+                  <span class="material-symbols-rounded" style="color:var(--primary); font-size:20px;">storefront</span>
                 </div>
                 <div class="kpi-value" id="kpi-harian-acv">0%</div>
                 <div class="kpi-footer">
@@ -1027,22 +1047,10 @@
                 </div>
               </div>
 
-              <div class="kpi-card" onclick="App.openModal('modal-sales-mtd')">
-                <div class="kpi-header">
-                  <span class="title">SALES MTD (2026)</span>
-                  <span class="material-symbols-rounded" style="color:var(--accent-orange);">trending_up</span>
-                </div>
-                <div class="kpi-value" id="kpi-mtd-total">Rp 0</div>
-                <div class="kpi-footer">
-                  <span id="kpi-mtd-std">STD: 0</span>
-                  <span id="kpi-mtd-apc">APC: 0</span>
-                </div>
-              </div>
-
               <div class="kpi-card" onclick="App.openModal('modal-monitoring-ikt')">
                 <div class="kpi-header">
                   <span class="title">IKT (GM%)</span>
-                  <span class="material-symbols-rounded" style="color:var(--accent-blue);">pie_chart</span>
+                  <span class="material-symbols-rounded" style="color:var(--accent-blue); font-size:20px;">pie_chart</span>
                 </div>
                 <div class="kpi-value" id="kpi-ikt-gm">0%</div>
                 <div class="kpi-footer">
@@ -1050,118 +1058,91 @@
                   <span class="badge" id="kpi-ikt-badge">NOK</span>
                 </div>
               </div>
-
-              <div class="kpi-card" onclick="App.openModal('modal-penawaran-langsung')">
-                <div class="kpi-header">
-                  <span class="title">PENAWARAN LANGSUNG</span>
-                  <span class="material-symbols-rounded" style="color:#6a1b9a;">local_offer</span>
-                </div>
-                <div class="kpi-value" id="kpi-pl-acv">0%</div>
-                <div class="kpi-footer">
-                  <span id="kpi-pl-point">Point: 0</span>
-                  <span id="kpi-pl-rank">Rank: -</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- Grid 15 Menu Inti & Menu Dinamis Spreadsheet -->
+          <!-- Menu Utama Mockup -->
           <div class="menu-grid-header">
-            <h3 style="font-size: 15px; font-weight:800;">Menu Utama Operasional</h3>
-            <span style="font-size: 12px; color:var(--text-muted);">Lengkap 15 Modul Inti</span>
+            <h3 style="font-size: 14px; font-weight:800;">Menu Utama</h3>
+            <span style="font-size: 12px; color:var(--text-muted);">15 Modul Operasional</span>
           </div>
 
           <div class="menu-grid" id="main-menu-grid">
-            <!-- 1. Ceklis EXP -->
             <div class="menu-tile" onclick="App.openModal('modal-ceklis-exp')">
               <img src="https://cdn-icons-png.flaticon.com/512/2965/2965300.png" class="icon-3d" alt="Menu 1">
               <span class="label">Ceklis EXP</span>
               <span class="badge-count" id="badge-ceklis-exp" style="display:none;">0</span>
             </div>
-            <!-- 2. Serah Terima -->
             <div class="menu-tile" onclick="App.openModal('modal-serah-terima')">
               <img src="https://cdn-icons-png.flaticon.com/512/10473/10473571.png" class="icon-3d" alt="Menu 2">
               <span class="label">Serah Terima</span>
             </div>
-            <!-- 3. Plan Mastershift -->
             <div class="menu-tile" onclick="App.openModal('modal-plan-mastershift')">
               <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="icon-3d" alt="Menu 3">
-              <span class="label">Mastershift</span>
+              <span class="label">Plan Mastershift</span>
             </div>
-            <!-- 4. Belanja Karyawan -->
             <div class="menu-tile" onclick="App.openModal('modal-belanja-karyawan')">
               <img src="https://img.icons8.com/3d-fluency/48/money-bag.png" class="icon-3d" alt="Menu 4">
               <span class="label">Belanja Karyawan</span>
               <span class="badge-count" id="badge-belanja" style="display:none;">0</span>
             </div>
-            <!-- 5. Simulasi GM RP IKT -->
             <div class="menu-tile" onclick="App.openModal('modal-simulasi-ikt')">
               <img src="https://img.icons8.com/3d-fluency/48/combo-chart--v2.png" class="icon-3d" alt="Menu 5">
-              <span class="label">Simulasi GM RP</span>
+              <span class="label">Simulasi GM RP IKT</span>
             </div>
-            <!-- 6. Sales MTD -->
             <div class="menu-tile" onclick="App.openModal('modal-sales-mtd')">
               <img src="https://img.icons8.com/3d-fluency/48/total-sales.png" class="icon-3d" alt="Menu 6">
               <span class="label">Sales MTD</span>
             </div>
-            <!-- 7. Sales Harian -->
             <div class="menu-tile" onclick="App.openModal('modal-sales-harian')">
               <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" class="icon-3d" alt="Menu 7">
               <span class="label">Sales Harian</span>
             </div>
-            <!-- 8. Monitoring IKT -->
             <div class="menu-tile" onclick="App.openModal('modal-monitoring-ikt')">
               <img src="https://cdn-icons-png.flaticon.com/512/1055/1055666.png" class="icon-3d" alt="Menu 8">
               <span class="label">Monitoring IKT</span>
             </div>
-            <!-- 9. Konversi No Bon -->
             <div class="menu-tile" onclick="App.openModal('modal-konversi-bon')">
               <img src="https://cdn-icons-png.flaticon.com/512/2583/2583437.png" class="icon-3d" alt="Menu 9">
-              <span class="label">Konversi No Bon</span>
+              <span class="label">Konversi No Bon/Struk</span>
             </div>
-            <!-- 10. Penawaran Langsung -->
             <div class="menu-tile" onclick="App.openModal('modal-penawaran-langsung')">
               <img src="https://img.icons8.com/3d-fluency/144/shopping-basket.png" class="icon-3d" alt="Menu 10">
               <span class="label">Penawaran Langsung</span>
             </div>
-            <!-- 11. Rekap PSM Kasir -->
             <div class="menu-tile" onclick="App.openModal('modal-rekap-psm')">
               <img src="https://cdn-icons-png.flaticon.com/512/4762/4762311.png" class="icon-3d" alt="Menu 11">
               <span class="label">Rekap PSM Kasir</span>
             </div>
-            <!-- 12. Monitoring Sales OPR -->
             <div class="menu-tile" onclick="App.openModal('modal-sales-opr')">
               <img src="https://cdn-icons-png.flaticon.com/512/2721/2721626.png" class="icon-3d" alt="Menu 12">
-              <span class="label">Sales OPR</span>
+              <span class="label">Monitoring Sales OPR</span>
             </div>
-            <!-- 13. Monitoring KWH -->
             <div class="menu-tile" onclick="App.openModal('modal-monitoring-kwh')">
               <img src="https://img.icons8.com/3d-fluency/48/group.png" class="icon-3d" alt="Menu 13">
               <span class="label">Monitoring KWH</span>
             </div>
-            <!-- 14. Catatan Return -->
             <div class="menu-tile" onclick="App.openModal('modal-catatan-return')">
               <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" class="icon-3d" alt="Menu 14">
               <span class="label">Catatan Return</span>
             </div>
-            <!-- 15. Scan Barang -->
             <div class="menu-tile" onclick="App.openModal('modal-scan-barang')">
               <img src="https://cdn-icons-png.flaticon.com/512/48/qr-code.png" class="icon-3d" alt="Menu 15">
               <span class="label">Scan Barang</span>
             </div>
           </div>
 
-          <!-- Charts Trend Section -->
+          <!-- Ringkasan Performa & Grafik Mockup -->
           <div class="charts-grid">
             <div class="chart-card">
-              <h4 style="font-size: 13px; font-weight:700; margin-bottom: 12px;">Tren Performa Penjualan Harian</h4>
-              <div style="height: 240px; position:relative;">
+              <h4 style="font-size: 13px; font-weight:700; margin-bottom: 12px;">Sales Harian vs Target (H-6 s/d H-1)</h4>
+              <div style="height: 230px; position:relative;">
                 <canvas id="canvas-trend-sales"></canvas>
               </div>
             </div>
             <div class="chart-card">
-              <h4 style="font-size: 13px; font-weight:700; margin-bottom: 12px;">Komposisi ACV Penawaran Langsung</h4>
-              <div style="height: 240px; position:relative;">
+              <h4 style="font-size: 13px; font-weight:700; margin-bottom: 12px;">ACV Penawaran Langsung</h4>
+              <div style="height: 230px; position:relative;">
                 <canvas id="canvas-pie-penawaran"></canvas>
               </div>
             </div>
@@ -1170,7 +1151,7 @@
       </main>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION -->
+    <!-- MOBILE NAVBAR -->
     <nav class="mobile-navbar">
       <button class="mob-nav-btn active" onclick="App.switchView('dashboard')">
         <span class="material-symbols-rounded">home</span> Beranda
@@ -1188,410 +1169,75 @@
   </div>
 
   <!-- =========================================================================
-       4. MODAL FULLSCREEN: 15 MODUL & FITUR PELENGKAP
+       MODAL 6: SALES MTD (REVISI LENGKAP & GRAFIK TREN)
        ========================================================================= -->
-
-  <!-- MENU 1: CEKLIS EXP -->
-  <div class="modal-fullscreen" id="modal-ceklis-exp">
-    <div class="modal-header-bar">
-      <div class="left-group">
-        <button class="btn-secondary" onclick="App.closeModal('modal-ceklis-exp')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h3>Ceklis EXP & Rak</h3>
-      </div>
-    </div>
-    <div class="modal-subnav">
-      <div class="subnav-pill active" onclick="App.switchCeklisTab('rak', this)">Data Rak</div>
-      <div class="subnav-pill" onclick="App.switchCeklisTab('input-exp', this)">Input EXP</div>
-      <div class="subnav-pill" onclick="App.switchCeklisTab('alert-exp', this)">Alert EXP</div>
-      <div class="subnav-pill" onclick="App.switchCeklisTab('history-exp', this)">Riwayat Input</div>
-    </div>
-    <div class="modal-body-content">
-      <!-- Subtab A: Data Rak -->
-      <div id="subtab-rak-view">
-        <div class="filter-action-bar">
-          <div style="display:flex; gap:10px;">
-            <span class="badge badge-ok" id="rak-count-selesai">Selesai: 0</span>
-            <span class="badge badge-nok" id="rak-count-belum">Belum: 0</span>
-            <span class="badge badge-pending" id="rak-count-validasi">Butuh Validasi: 0</span>
-          </div>
-          <button class="btn-primary" onclick="App.showAddRakDialog()">+ Tambah Rak</button>
-        </div>
-        <div class="table-container" style="margin-top:12px;">
-          <table class="data-table" id="table-data-rak">
-            <thead>
-              <tr>
-                <th>No Rak</th>
-                <th>Kategori</th>
-                <th>PIC Rak</th>
-                <th>Status</th>
-                <th>Bukti Foto</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <!-- Subtab B: Input EXP -->
-      <div id="subtab-input-exp-view" style="display:none; max-width:600px; margin:0 auto; width:100%;">
-        <div class="chart-card">
-          <h4 style="margin-bottom:14px;">Form Input Alert Kadaluarsa (EXP)</h4>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div>
-              <label>Nama Item Produk</label>
-              <input type="text" id="exp-in-nama" placeholder="Contoh: Susu UHT Cokelat 200ml">
-            </div>
-            <div>
-              <label>Posisi Rak</label>
-              <input type="text" id="exp-in-rak" placeholder="Contoh: Rak Susu Baris 2">
-            </div>
-            <div>
-              <label>Kuantitas (Qty)</label>
-              <input type="number" id="exp-in-qty" placeholder="10">
-            </div>
-            <div>
-              <label>Tanggal Kadaluarsa (EXP)</label>
-              <input type="date" id="exp-in-tgl">
-            </div>
-            <div>
-              <label>Return Hari (RH)</label>
-              <input type="number" id="exp-in-rh" placeholder="Contoh: 14">
-            </div>
-            <button class="btn-primary" style="margin-top:10px; justify-content:center;" onclick="App.submitAlertEXP()">
-              Simpan Data Alert EXP
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- Subtab C: Alert EXP List -->
-      <div id="subtab-alert-exp-view" style="display:none;">
-        <div class="table-container">
-          <table class="data-table" id="table-alert-exp">
-            <thead>
-              <tr>
-                <th>Nama Item</th>
-                <th>Posisi Rak</th>
-                <th>Qty</th>
-                <th>Tanggal EXP</th>
-                <th>RH</th>
-                <th>Estimasi Eksekusi</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <!-- Subtab D: History Input EXP -->
-      <div id="subtab-history-exp-view" style="display:none;">
-        <div class="table-container">
-          <table class="data-table" id="table-history-exp">
-            <thead>
-              <tr>
-                <th>Tanggal Input</th>
-                <th>Penginput</th>
-                <th>Item Produk</th>
-                <th>Posisi</th>
-                <th>Tanggal EXP</th>
-                <th>Status Eksekusi</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 2: SERAH TERIMA SHIFT -->
-  <div class="modal-fullscreen" id="modal-serah-terima">
-    <div class="modal-header-bar">
-      <div class="left-group">
-        <button class="btn-secondary" onclick="App.closeModal('modal-serah-terima')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h3>Serah Terima Shift Kasir</h3>
-      </div>
-    </div>
-    <div class="modal-body-content">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-        <div class="chart-card">
-          <h4 style="margin-bottom:14px;">Input Serah Terima</h4>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div>
-              <label>Shift Operasional</label>
-              <select id="st-shift">
-                <option value="1">Shift 1 (Pagi - Sore)</option>
-                <option value="2">Shift 2 (Siang - Tutup)</option>
-              </select>
-            </div>
-            <div>
-              <label>Realisasi Sales (Rp)</label>
-              <input type="number" id="st-sales" placeholder="8500000">
-            </div>
-            <div>
-              <label>Qty Penjualan PSM</label>
-              <input type="number" id="st-qty-psm" placeholder="45">
-            </div>
-            <div>
-              <label>Redeem Serba Gratis</label>
-              <input type="number" id="st-redeem-sg" placeholder="12">
-            </div>
-            <div>
-              <label>Redeem PWP</label>
-              <input type="number" id="st-redeem-pwp" placeholder="6">
-            </div>
-            <div>
-              <label>Pendaftaran Member Baru</label>
-              <input type="number" id="st-new-member" placeholder="7">
-            </div>
-            <div>
-              <label>% Contribution Struk</label>
-              <input type="number" id="st-cont-struk" placeholder="12">
-            </div>
-            <div>
-              <label>Catatan Operasional / Kendala</label>
-              <textarea id="st-catatan" rows="3" placeholder="Semua mesin POS normal, stok fisik aman..."></textarea>
-            </div>
-            <button class="btn-primary" style="justify-content:center;" onclick="App.submitSerahTerima()">
-              Simpan Serah Terima
-            </button>
-          </div>
-        </div>
-
-        <div class="chart-card">
-          <h4 style="margin-bottom:14px;">Riwayat Serah Terima Terakhir</h4>
-          <div class="table-container">
-            <table class="data-table" id="table-history-st">
-              <thead>
-                <tr>
-                  <th>Tanggal</th>
-                  <th>Shift</th>
-                  <th>Penginput</th>
-                  <th>Sales</th>
-                  <th>Catatan</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 3: PLAN MASTERSHIFT -->
-  <div class="modal-fullscreen" id="modal-plan-mastershift">
-    <div class="modal-header-bar">
-      <div class="left-group">
-        <button class="btn-secondary" onclick="App.closeModal('modal-plan-mastershift')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h3>Plan Mastershift Personel</h3>
-      </div>
-      <div>
-        <button class="btn-primary" onclick="App.saveMastershift()">Simpan Jadwal</button>
-      </div>
-    </div>
-    <div class="modal-body-content">
-      <div class="filter-action-bar">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <label style="font-weight:700;">Periode:</label>
-          <input type="text" id="ms-month-year" value="06/2026" style="width:100px;">
-          <button class="btn-secondary" onclick="App.loadMastershift()">Muat Data</button>
-        </div>
-        <small style="color:var(--text-muted);">P=Pagi, S=Siang, M=Malam, OFF=Libur, AO=Add Off, CT=Cuti, Sakit=Sakit</small>
-      </div>
-      <div class="table-container" style="margin-top:10px;">
-        <table class="data-table" id="table-mastershift">
-          <thead>
-            <tr id="tr-ms-header">
-              <th>Nama Personel</th>
-              <th>Jabatan</th>
-              <!-- D1 sampai D31 digenerate otomatis -->
-            </tr>
-          </thead>
-          <tbody id="tbody-mastershift"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 4: BELANJA KARYAWAN -->
-  <div class="modal-fullscreen" id="modal-belanja-karyawan">
-    <div class="modal-header-bar">
-      <div class="left-group">
-        <button class="btn-secondary" onclick="App.closeModal('modal-belanja-karyawan')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h3>Belanja Karyawan</h3>
-      </div>
-    </div>
-    <div class="modal-subnav">
-      <div class="subnav-pill active" onclick="App.switchBelanjaTab('input', this)">Input Belanja</div>
-      <div class="subnav-pill" id="tab-approval-belanja" onclick="App.switchBelanjaTab('approval', this)">Approval COS</div>
-      <div class="subnav-pill" onclick="App.switchBelanjaTab('riwayat', this)">Riwayat & Total</div>
-    </div>
-    <div class="modal-body-content">
-      <!-- Input -->
-      <div id="subtab-bk-input" style="max-width:550px; margin:0 auto; width:100%;">
-        <div class="chart-card">
-          <h4 style="margin-bottom:14px;">Catat Belanja Personel</h4>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div>
-              <label>Nomor Member</label>
-              <input type="text" id="bk-no-member" placeholder="0812-3456-7890">
-            </div>
-            <div>
-              <label>Nomor Bon Transaksi</label>
-              <input type="text" id="bk-no-bon" placeholder="Contoh: 666-1018HKZZ">
-            </div>
-            <div>
-              <label>Nominal Pembelian (Rp)</label>
-              <input type="number" id="bk-nominal" placeholder="250000">
-            </div>
-            <div>
-              <label>Upload Foto Struk Kasir</label>
-              <input type="file" id="bk-file-struk" accept="image/*">
-            </div>
-            <button class="btn-primary" style="justify-content:center;" onclick="App.submitBelanjaKaryawan()">
-              Kirim untuk Approval
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Approval -->
-      <div id="subtab-bk-approval" style="display:none;">
-        <div class="table-container">
-          <table class="data-table" id="table-approval-bk">
-            <thead>
-              <tr>
-                <th>Personel</th>
-                <th>No Bon</th>
-                <th>Nominal</th>
-                <th>Foto Struk</th>
-                <th>Waktu Pengajuan</th>
-                <th>Aksi Verifikasi</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Riwayat -->
-      <div id="subtab-bk-riwayat" style="display:none;">
-        <div class="filter-action-bar">
-          <div class="badge badge-ok" id="bk-total-approved" style="font-size:13px;">Total Sales Approved: Rp 0</div>
-        </div>
-        <div class="table-container" style="margin-top:12px;">
-          <table class="data-table" id="table-history-bk">
-            <thead>
-              <tr>
-                <th>Personel</th>
-                <th>No Bon</th>
-                <th>Nominal</th>
-                <th>Status</th>
-                <th>Validator</th>
-                <th>Tanggal</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 5: SIMULASI GM RP IKT -->
-  <div class="modal-fullscreen" id="modal-simulasi-ikt">
-    <div class="modal-header-bar">
-      <div class="left-group">
-        <button class="btn-secondary" onclick="App.closeModal('modal-simulasi-ikt')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h3>Simulasi GM Rupiah & IKT</h3>
-      </div>
-    </div>
-    <div class="modal-body-content" style="max-width:800px; margin:0 auto; width:100%;">
-      <div class="chart-card">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-          <div>
-            <label>Hari Kerja Bulan (HK)</label>
-            <input type="number" id="sim-hk" value="30" oninput="App.calcSimulasi()">
-          </div>
-          <div>
-            <label>Jumlah Hari Berjalan (JHK)</label>
-            <input type="number" id="sim-jhk" value="22" oninput="App.calcSimulasi()">
-          </div>
-          <div>
-            <label>Target Net Sales (Rp)</label>
-            <input type="number" id="sim-target-sales" value="500000000" oninput="App.calcSimulasi()">
-          </div>
-          <div>
-            <label>Actual Net Sales (Rp)</label>
-            <input type="number" id="sim-act-sales" value="482000000" oninput="App.calcSimulasi()">
-          </div>
-          <div>
-            <label>Target Margin (%)</label>
-            <input type="number" id="sim-target-gm" value="18" oninput="App.calcSimulasi()">
-          </div>
-          <div>
-            <label>Actual Margin (%)</label>
-            <input type="number" id="sim-act-gm" value="19" oninput="App.calcSimulasi()">
-          </div>
-        </div>
-
-        <hr style="margin:20px 0; border:none; border-top:1px solid var(--border-color);">
-
-        <h4 style="margin-bottom:12px;">Hasil Analisa Perhitungan</h4>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
-          <div class="kpi-card">
-            <div class="kpi-header"><span class="title">ACV NET SALES</span></div>
-            <div class="kpi-value" id="sim-res-acv-sales">0%</div>
-            <span class="badge" id="sim-res-status-sales">NOK</span>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header"><span class="title">GAP MARGIN RP</span></div>
-            <div class="kpi-value" id="sim-res-gap-gm">Rp 0</div>
-            <span class="badge" id="sim-res-status-gm">NOK</span>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header"><span class="title">TIME FACTOR</span></div>
-            <div class="kpi-value" id="sim-res-tf">0%</div>
-            <span style="font-size:11px; color:var(--text-muted);">JHK / HK</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 6: SALES MTD -->
   <div class="modal-fullscreen" id="modal-sales-mtd">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-sales-mtd')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Sales MTD (Tahun 2026)</h3>
+        <h3>Sales MTD (Bulan Berjalan)</h3>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-secondary" onclick="App.exportTableToExcel('table-sales-mtd', 'Sales_MTD_2026')">Ekspor Excel</button>
-        <button class="btn-primary" onclick="window.print()">Cetak PDF</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-secondary" onclick="App.exportTableToExcel('table-sales-mtd', 'Sales_MTD')">Ekspor Excel</button>
       </div>
     </div>
     <div class="modal-body-content">
+      <!-- Filter Bar MTD: Bulan & Rentang Tanggal -->
       <div class="filter-action-bar">
-        <div style="display:flex; gap:10px;">
-          <button class="subnav-pill active" onclick="App.filterMTD('all', this)">Semua</button>
-          <button class="subnav-pill" onclick="App.filterMTD('growth', this)">Hanya Growth</button>
-          <button class="subnav-pill" onclick="App.filterMTD('disgrowth', this)">Hanya Disgrowth</button>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="font-size:11px; font-weight:700;">Filter Bulan:</label>
+          <select id="mtd-filter-bulan" style="width:130px;" onchange="App.applyMTDFilter()">
+            <option value="JANUARI">Januari</option>
+            <option value="FEBRUARI">Februari</option>
+            <option value="MARET">Maret</option>
+            <option value="APRIL">April</option>
+            <option value="MEI">Mei</option>
+            <option value="JUNI" selected>Juni</option>
+            <option value="JULI">Juli</option>
+            <option value="AGUSTUS">Agustus</option>
+            <option value="SEPTEMBER">September</option>
+            <option value="OKTOBER">Oktober</option>
+            <option value="NOVEMBER">November</option>
+            <option value="DESEMBER">Desember</option>
+          </select>
+
+          <label style="font-size:11px; font-weight:700; margin-left:8px;">Rentang Tanggal:</label>
+          <input type="date" id="mtd-filter-start" style="width:135px;" onchange="App.applyMTDFilter()">
+          <span>s/d</span>
+          <input type="date" id="mtd-filter-end" style="width:135px;" onchange="App.applyMTDFilter()">
         </div>
       </div>
+
+      <!-- Kolom Resume KPI MTD Sesuai Revisi -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+        <div class="kpi-card">
+          <span class="title">TOTAL SALES TAHUN LALU (2025)</span>
+          <div class="kpi-value" id="mtd-res-sales-lastyear">Rp 0</div>
+          <span style="font-size:11px; color:var(--text-muted);">Bulan Berjalan</span>
+        </div>
+        <div class="kpi-card">
+          <span class="title">TOTAL SALES TAHUN INI (2026)</span>
+          <div class="kpi-value" id="mtd-res-sales-thisyear">Rp 0</div>
+          <span style="font-size:11px; color:var(--text-muted);">Bulan Berjalan</span>
+        </div>
+        <div class="kpi-card">
+          <span class="title">GROWTH SALES %</span>
+          <div class="kpi-value" id="mtd-res-growth">0%</div>
+          <span class="badge" id="mtd-res-badge">NOK</span>
+        </div>
+      </div>
+
+      <!-- Grafik Tren Sales MTD -->
+      <div class="chart-card">
+        <h4 style="font-size: 13px; font-weight:700; margin-bottom: 10px;">Grafik Tren Penjualan Harian (MTD)</h4>
+        <div style="height: 220px; position:relative;">
+          <canvas id="canvas-mtd-trend"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabel MTD -->
       <div class="table-container">
         <table class="data-table" id="table-sales-mtd">
           <thead>
@@ -1600,8 +1246,8 @@
               <th>SPD Sales 2026</th>
               <th>STD 2026</th>
               <th>APC 2026</th>
-              <th>SPD 2025</th>
-              <th>Growth vs 2025</th>
+              <th>SPD Sales 2025</th>
+              <th>Growth %</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -1611,20 +1257,58 @@
     </div>
   </div>
 
-  <!-- MENU 7: SALES HARIAN -->
+  <!-- =========================================================================
+       MODAL 7: SALES HARIAN (REVISI LENGKAP & GRAFIK TREN)
+       ========================================================================= -->
   <div class="modal-fullscreen" id="modal-sales-harian">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-sales-harian')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Monitoring Sales Harian</h3>
+        <h3>Sales Harian (Bulan Berjalan)</h3>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-secondary" onclick="App.exportTableToExcel('table-sales-harian', 'Sales_Harian')">Ekspor Excel</button>
-      </div>
+      <button class="btn-secondary" onclick="App.exportTableToExcel('table-sales-harian', 'Sales_Harian')">Ekspor Excel</button>
     </div>
     <div class="modal-body-content">
+      <!-- Filter Rentang Tanggal Harian -->
+      <div class="filter-action-bar">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="font-size:11px; font-weight:700;">Rentang Tanggal:</label>
+          <input type="date" id="harian-filter-start" style="width:135px;" onchange="App.applyHarianFilter()">
+          <span>s/d</span>
+          <input type="date" id="harian-filter-end" style="width:135px;" onchange="App.applyHarianFilter()">
+        </div>
+      </div>
+
+      <!-- Kolom Resume KPI Harian Sesuai Revisi -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+        <div class="kpi-card">
+          <span class="title">TOTAL SALES BULAN LALU</span>
+          <div class="kpi-value" id="harian-res-blnlalu">Rp 0</div>
+          <span style="font-size:11px; color:var(--text-muted);">Realisasi Sebelumnya</span>
+        </div>
+        <div class="kpi-card">
+          <span class="title">TOTAL SALES BULAN BERJALAN</span>
+          <div class="kpi-value" id="harian-res-actual">Rp 0</div>
+          <span style="font-size:11px; color:var(--text-muted);">Akumulasi Harian</span>
+        </div>
+        <div class="kpi-card">
+          <span class="title">GROWTH SALES %</span>
+          <div class="kpi-value" id="harian-res-growth">0%</div>
+          <span class="badge" id="harian-res-badge">NOK</span>
+        </div>
+      </div>
+
+      <!-- Grafik Tren Sales Harian -->
+      <div class="chart-card">
+        <h4 style="font-size: 13px; font-weight:700; margin-bottom: 10px;">Grafik Tren Sales Aktual vs Bulan Lalu</h4>
+        <div style="height: 220px; position:relative;">
+          <canvas id="canvas-harian-trend"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabel Sales Harian -->
       <div class="table-container">
         <table class="data-table" id="table-sales-harian">
           <thead>
@@ -1649,116 +1333,309 @@
     </div>
   </div>
 
-  <!-- MENU 8: MONITORING IKT -->
+  <!-- SISA MODAL (1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, AI, Kalender, Profil, Admin) TETAP LENGKAP -->
+  <!-- MODAL 1: CEKLIS EXP -->
+  <div class="modal-fullscreen" id="modal-ceklis-exp">
+    <div class="modal-header-bar">
+      <div class="left-group">
+        <button class="btn-secondary" onclick="App.closeModal('modal-ceklis-exp')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h3>Ceklis EXP & Rak</h3>
+      </div>
+    </div>
+    <div class="modal-subnav">
+      <div class="subnav-pill active" onclick="App.switchCeklisTab('rak', this)">Data Rak</div>
+      <div class="subnav-pill" onclick="App.switchCeklisTab('input-exp', this)">Input EXP</div>
+      <div class="subnav-pill" onclick="App.switchCeklisTab('alert-exp', this)">Alert EXP</div>
+      <div class="subnav-pill" onclick="App.switchCeklisTab('history-exp', this)">Riwayat Input</div>
+    </div>
+    <div class="modal-body-content">
+      <div id="subtab-rak-view">
+        <div class="filter-action-bar">
+          <div style="display:flex; gap:10px;">
+            <span class="badge badge-ok" id="rak-count-selesai">Selesai: 0</span>
+            <span class="badge badge-nok" id="rak-count-belum">Belum: 0</span>
+            <span class="badge badge-pending" id="rak-count-validasi">Butuh Validasi: 0</span>
+          </div>
+          <button class="btn-primary" onclick="App.showAddRakDialog()">+ Tambah Rak</button>
+        </div>
+        <div class="table-container" style="margin-top:10px;">
+          <table class="data-table" id="table-data-rak">
+            <thead>
+              <tr><th>No Rak</th><th>Kategori</th><th>PIC</th><th>Status</th><th>Foto</th><th>Aksi</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="subtab-input-exp-view" style="display:none; max-width:550px; margin:0 auto; width:100%;">
+        <div class="chart-card">
+          <h4 style="margin-bottom:12px;">Input Alert EXP</h4>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div><label>Nama Item</label><input type="text" id="exp-in-nama" placeholder="Susu UHT 200ml"></div>
+            <div><label>Posisi Rak</label><input type="text" id="exp-in-rak" placeholder="Rak A-02"></div>
+            <div><label>Qty</label><input type="number" id="exp-in-qty" placeholder="10"></div>
+            <div><label>Tanggal EXP</label><input type="date" id="exp-in-tgl"></div>
+            <div><label>Return Hari (RH)</label><input type="number" id="exp-in-rh" placeholder="14"></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitAlertEXP()">Simpan Alert EXP</button>
+          </div>
+        </div>
+      </div>
+      <div id="subtab-alert-exp-view" style="display:none;">
+        <div class="table-container">
+          <table class="data-table" id="table-alert-exp">
+            <thead>
+              <tr><th>Item</th><th>Rak</th><th>Qty</th><th>EXP</th><th>RH</th><th>Estimasi Eksekusi</th><th>Status</th><th>Aksi</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="subtab-history-exp-view" style="display:none;">
+        <div class="table-container">
+          <table class="data-table" id="table-history-exp">
+            <thead>
+              <tr><th>Tanggal</th><th>Penginput</th><th>Item</th><th>Posisi</th><th>Tanggal EXP</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SERAH TERIMA -->
+  <div class="modal-fullscreen" id="modal-serah-terima">
+    <div class="modal-header-bar">
+      <div class="left-group">
+        <button class="btn-secondary" onclick="App.closeModal('modal-serah-terima')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h3>Serah Terima Shift Kasir</h3>
+      </div>
+    </div>
+    <div class="modal-body-content">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div class="chart-card">
+          <h4 style="margin-bottom:12px;">Input Serah Terima</h4>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div><label>Shift</label><select id="st-shift"><option value="1">Shift 1</option><option value="2">Shift 2</option></select></div>
+            <div><label>Sales (Rp)</label><input type="number" id="st-sales" placeholder="8500000"></div>
+            <div><label>Qty PSM</label><input type="number" id="st-qty-psm" placeholder="45"></div>
+            <div><label>Redeem Serba Gratis</label><input type="number" id="st-redeem-sg" placeholder="12"></div>
+            <div><label>Redeem PWP</label><input type="number" id="st-redeem-pwp" placeholder="6"></div>
+            <div><label>Member Baru</label><input type="number" id="st-new-member" placeholder="7"></div>
+            <div><label>% Contribution Struk</label><input type="number" id="st-cont-struk" placeholder="12"></div>
+            <div><label>Catatan Kendala</label><textarea id="st-catatan" rows="2" placeholder="Aman terkendali..."></textarea></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitSerahTerima()">Simpan Serah Terima</button>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4 style="margin-bottom:12px;">Riwayat Serah Terima</h4>
+          <div class="table-container">
+            <table class="data-table" id="table-history-st">
+              <thead><tr><th>Tanggal</th><th>Shift</th><th>Penginput</th><th>Sales</th><th>Catatan</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PLAN MASTERSHIFT -->
+  <div class="modal-fullscreen" id="modal-plan-mastershift">
+    <div class="modal-header-bar">
+      <div class="left-group">
+        <button class="btn-secondary" onclick="App.closeModal('modal-plan-mastershift')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h3>Plan Mastershift</h3>
+      </div>
+      <button class="btn-primary" onclick="App.saveMastershift()">Simpan Jadwal</button>
+    </div>
+    <div class="modal-body-content">
+      <div class="filter-action-bar">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-weight:700;">Periode:</label>
+          <input type="text" id="ms-month-year" value="06/2026" style="width:90px;">
+          <button class="btn-secondary" onclick="App.loadMastershift()">Muat</button>
+        </div>
+        <small style="color:var(--text-muted);">P, S, M, OFF, AO, CT, Sakit</small>
+      </div>
+      <div class="table-container">
+        <table class="data-table" id="table-mastershift">
+          <thead><tr id="tr-ms-header"><th>Personel</th><th>Jabatan</th></tr></thead>
+          <tbody id="tbody-mastershift"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: BELANJA KARYAWAN -->
+  <div class="modal-fullscreen" id="modal-belanja-karyawan">
+    <div class="modal-header-bar">
+      <div class="left-group">
+        <button class="btn-secondary" onclick="App.closeModal('modal-belanja-karyawan')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h3>Belanja Karyawan</h3>
+      </div>
+    </div>
+    <div class="modal-subnav">
+      <div class="subnav-pill active" onclick="App.switchBelanjaTab('input', this)">Input</div>
+      <div class="subnav-pill" id="tab-approval-belanja" onclick="App.switchBelanjaTab('approval', this)">Approval COS</div>
+      <div class="subnav-pill" onclick="App.switchBelanjaTab('riwayat', this)">Riwayat</div>
+    </div>
+    <div class="modal-body-content">
+      <div id="subtab-bk-input" style="max-width:500px; margin:0 auto; width:100%;">
+        <div class="chart-card">
+          <h4 style="margin-bottom:12px;">Input Belanja</h4>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div><label>No Member</label><input type="text" id="bk-no-member" placeholder="08123456789"></div>
+            <div><label>No Bon</label><input type="text" id="bk-no-bon" placeholder="666-1018HKZZ"></div>
+            <div><label>Nominal (Rp)</label><input type="number" id="bk-nominal" placeholder="250000"></div>
+            <div><label>Foto Struk</label><input type="file" id="bk-file-struk" accept="image/*"></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitBelanjaKaryawan()">Ajukan Belanja</button>
+          </div>
+        </div>
+      </div>
+      <div id="subtab-bk-approval" style="display:none;">
+        <div class="table-container">
+          <table class="data-table" id="table-approval-bk">
+            <thead><tr><th>Nama</th><th>No Bon</th><th>Nominal</th><th>Struk</th><th>Waktu</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="subtab-bk-riwayat" style="display:none;">
+        <div class="badge badge-ok" id="bk-total-approved" style="margin-bottom:10px; font-size:12px;">Total: Rp 0</div>
+        <div class="table-container">
+          <table class="data-table" id="table-history-bk">
+            <thead><tr><th>Nama</th><th>No Bon</th><th>Nominal</th><th>Status</th><th>Validator</th><th>Tanggal</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: SIMULASI GM RP IKT -->
+  <div class="modal-fullscreen" id="modal-simulasi-ikt">
+    <div class="modal-header-bar">
+      <div class="left-group">
+        <button class="btn-secondary" onclick="App.closeModal('modal-simulasi-ikt')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h3>Simulasi GM RP IKT</h3>
+      </div>
+    </div>
+    <div class="modal-body-content" style="max-width:750px; margin:0 auto; width:100%;">
+      <div class="chart-card">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+          <div><label>HK</label><input type="number" id="sim-hk" value="30" oninput="App.calcSimulasi()"></div>
+          <div><label>JHK</label><input type="number" id="sim-jhk" value="22" oninput="App.calcSimulasi()"></div>
+          <div><label>Target Net Sales</label><input type="number" id="sim-target-sales" value="500000000" oninput="App.calcSimulasi()"></div>
+          <div><label>Actual Net Sales</label><input type="number" id="sim-act-sales" value="482000000" oninput="App.calcSimulasi()"></div>
+          <div><label>Target GM %</label><input type="number" id="sim-target-gm" value="18" oninput="App.calcSimulasi()"></div>
+          <div><label>Actual GM %</label><input type="number" id="sim-act-gm" value="19" oninput="App.calcSimulasi()"></div>
+        </div>
+        <hr style="margin:16px 0; border:none; border-top:1px solid var(--border-color);">
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+          <div class="kpi-card"><span class="title">ACV SALES</span><div class="kpi-value" id="sim-res-acv-sales">0%</div><span class="badge" id="sim-res-status-sales">NOK</span></div>
+          <div class="kpi-card"><span class="title">GAP MARGIN RP</span><div class="kpi-value" id="sim-res-gap-gm">Rp 0</div><span class="badge" id="sim-res-status-gm">NOK</span></div>
+          <div class="kpi-card"><span class="title">TIME FACTOR</span><div class="kpi-value" id="sim-res-tf">0%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: MONITORING IKT -->
   <div class="modal-fullscreen" id="modal-monitoring-ikt">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-monitoring-ikt')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Monitoring IKT Toko</h3>
+        <h3>Monitoring IKT</h3>
       </div>
-      <button class="btn-primary" onclick="App.openModal('modal-simulasi-ikt')">Buka Simulasi IKT</button>
+      <button class="btn-primary" onclick="App.openModal('modal-simulasi-ikt')">Simulasi IKT</button>
     </div>
     <div class="modal-body-content">
       <div class="table-container">
         <table class="data-table" id="table-ikt-view">
-          <thead>
-            <tr>
-              <th>Indikator Utama</th>
-              <th>Target</th>
-              <th>Aktual</th>
-              <th>ACV %</th>
-              <th>Status Kelayakan</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Indikator</th><th>Target</th><th>Aktual</th><th>ACV %</th><th>Status</th></tr></thead>
           <tbody id="tbody-ikt"></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- MENU 9: KONVERSI NOMOR BON -->
+  <!-- MODAL 9: KONVERSI NO BON -->
   <div class="modal-fullscreen" id="modal-konversi-bon">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-konversi-bon')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Konversi No Bon / Struk Kasir</h3>
+        <h3>Konversi No Bon/Struk</h3>
       </div>
     </div>
-    <div class="modal-body-content" style="max-width:500px; margin:0 auto; width:100%;">
+    <div class="modal-body-content" style="max-width:450px; margin:0 auto; width:100%;">
       <div class="chart-card" style="text-align:center;">
-        <h4 style="margin-bottom:12px;">Masukkan 4 Digit Terakhir No Bon</h4>
-        <input type="text" id="bon-input" maxlength="4" placeholder="Contoh: 1123" style="font-size:24px; text-align:center; letter-spacing:4px;" oninput="App.execBonConversion()">
-        <div style="margin:24px 0;">
-          <small style="color:var(--text-muted); display:block; margin-bottom:6px;">HASIL KONVERSI KODE:</small>
-          <div id="bon-result" style="font-size:40px; font-weight:800; color:var(--primary); letter-spacing:8px;">----</div>
+        <h4 style="margin-bottom:10px;">4 Digit Terakhir No Bon</h4>
+        <input type="text" id="bon-input" maxlength="4" placeholder="1123" style="font-size:22px; text-align:center; letter-spacing:4px;" oninput="App.execBonConversion()">
+        <div style="margin:20px 0;">
+          <small style="color:var(--text-muted);">HASIL KONVERSI:</small>
+          <div id="bon-result" style="font-size:36px; font-weight:800; color:var(--primary); letter-spacing:6px;">----</div>
         </div>
-        <div style="display:flex; justify-content:center; gap:10px;">
-          <button class="btn-secondary" onclick="App.copyBonCode()">Salin Kode</button>
-          <button class="btn-secondary" onclick="App.resetBon()">Reset</button>
-        </div>
+        <button class="btn-secondary" onclick="App.copyBonCode()">Salin Kode</button>
       </div>
     </div>
   </div>
 
-  <!-- MENU 10: PENAWARAN LANGSUNG -->
+  <!-- MODAL 10: PENAWARAN LANGSUNG -->
   <div class="modal-fullscreen" id="modal-penawaran-langsung">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-penawaran-langsung')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Performa Penawaran Langsung</h3>
+        <h3>Penawaran Langsung</h3>
       </div>
-      <button class="btn-secondary" onclick="App.exportTableToExcel('table-penawaran-detail', 'Penawaran_Langsung')">Ekspor Excel</button>
+      <button class="btn-secondary" onclick="App.exportTableToExcel('table-penawaran-detail', 'Penawaran')">Ekspor Excel</button>
     </div>
     <div class="modal-body-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h4>Detail Indikator Toko</h4>
+          <h4>Detail Indikator</h4>
           <div class="table-container" style="margin-top:10px;">
             <table class="data-table" id="table-penawaran-detail">
-              <thead>
-                <tr>
-                  <th>Indikator</th>
-                  <th>Target</th>
-                  <th>Aktual</th>
-                  <th>ACV %</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Indikator</th><th>Target</th><th>Aktual</th><th>ACV %</th><th>Status</th></tr></thead>
               <tbody id="tbody-penawaran-detail"></tbody>
             </table>
           </div>
         </div>
         <div class="chart-card">
-          <h4>Analisa & Rank Toko</h4>
-          <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
-            <div class="kpi-card">
-              <span class="title">POINT DASHBOARD</span>
-              <div class="kpi-value" id="pl-detail-point">0</div>
-            </div>
-            <div class="kpi-card">
-              <span class="title">PERINGKAT (RANK)</span>
-              <div class="kpi-value" id="pl-detail-rank">-</div>
-            </div>
+          <h4>Peringkat & Point</h4>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+            <div class="kpi-card"><span class="title">POINT DASHBOARD</span><div class="kpi-value" id="pl-detail-point">0</div></div>
+            <div class="kpi-card"><span class="title">RANK TOKO</span><div class="kpi-value" id="pl-detail-rank">-</div></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MENU 11: REKAP PSM KASIR -->
+  <!-- MODAL 11: REKAP PSM KASIR -->
   <div class="modal-fullscreen" id="modal-rekap-psm">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-rekap-psm')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Rekap PSM Kasir (Monitoring Individu)</h3>
+        <h3>Rekap PSM Kasir</h3>
       </div>
       <button class="btn-primary" onclick="App.saveRekapPSM()">Simpan Rekap</button>
     </div>
@@ -1766,22 +1643,14 @@
       <div class="filter-action-bar">
         <div style="display:flex; gap:10px;">
           <span class="badge badge-ok" id="psm-badge-achieved">Tercapai: 0</span>
-          <span class="badge badge-nok" id="psm-badge-unachieved">Belum Tercapai: 0</span>
+          <span class="badge badge-nok" id="psm-badge-unachieved">Belum: 0</span>
         </div>
         <button class="btn-secondary" onclick="App.addPSMItemRow()">+ Tambah Item</button>
       </div>
       <div class="table-container">
         <table class="data-table" id="table-rekap-psm">
           <thead>
-            <tr>
-              <th>Nama Item</th>
-              <th>Target</th>
-              <th>H1</th><th>H2</th><th>H3</th><th>H4</th><th>H5</th><th>H6</th><th>H7</th><th>H8</th>
-              <th>Total Aktual</th>
-              <th>ACV %</th>
-              <th>Gap</th>
-              <th>Aksi</th>
-            </tr>
+            <tr><th>Item</th><th>Target</th><th>H1</th><th>H2</th><th>H3</th><th>H4</th><th>H5</th><th>H6</th><th>H7</th><th>H8</th><th>Aktual</th><th>ACV %</th><th>Gap</th><th>Aksi</th></tr>
           </thead>
           <tbody id="tbody-rekap-psm"></tbody>
         </table>
@@ -1789,63 +1658,36 @@
     </div>
   </div>
 
-  <!-- MENU 12: SALES OPR -->
+  <!-- MODAL 12: SALES OPR -->
   <div class="modal-fullscreen" id="modal-sales-opr">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-sales-opr')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Monitoring Sales OPR Toko</h3>
+        <h3>Monitoring Sales OPR</h3>
       </div>
     </div>
     <div class="modal-subnav">
-      <div class="subnav-pill active" onclick="App.switchSalesOPRShift('06:07', this)">Rekap Jam 06:07</div>
-      <div class="subnav-pill" onclick="App.switchSalesOPRShift('22:23', this)">Rekap Jam 22:23</div>
+      <div class="subnav-pill active" onclick="App.switchSalesOPRShift('06:07', this)">06:07</div>
+      <div class="subnav-pill" onclick="App.switchSalesOPRShift('22:23', this)">22:23</div>
     </div>
     <div class="modal-body-content">
-      <div style="display:grid; grid-template-columns: 340px 1fr; gap:16px;">
+      <div style="display:grid; grid-template-columns: 320px 1fr; gap:14px;">
         <div class="chart-card">
-          <h4 style="margin-bottom:12px;">Input Rekap Jam</h4>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div>
-              <label>Jam Transaksi</label>
-              <input type="text" id="opr-in-jam" placeholder="Contoh: 07:12">
-            </div>
-            <div>
-              <label>Total Sales (Rp)</label>
-              <input type="number" id="opr-in-sales" placeholder="8500000">
-            </div>
-            <div>
-              <label>Kunjungan Struk (STD)</label>
-              <input type="number" id="opr-in-std" placeholder="78">
-            </div>
-            <div>
-              <label>APC (Rp)</label>
-              <input type="number" id="opr-in-apc" placeholder="12100">
-            </div>
-            <div>
-              <label>Qty E-Trans</label>
-              <input type="number" id="opr-in-etrans" placeholder="48">
-            </div>
-            <button class="btn-primary" style="justify-content:center;" onclick="App.submitSalesOPR()">
-              Simpan Data OPR
-            </button>
+          <h4 style="margin-bottom:10px;">Input OPR</h4>
+          <div style="display:flex; flex-direction:column; gap:9px;">
+            <div><label>Jam</label><input type="text" id="opr-in-jam" placeholder="07:12"></div>
+            <div><label>Sales</label><input type="number" id="opr-in-sales" placeholder="8500000"></div>
+            <div><label>STD</label><input type="number" id="opr-in-std" placeholder="78"></div>
+            <div><label>APC</label><input type="number" id="opr-in-apc" placeholder="12100"></div>
+            <div><label>E-Trans</label><input type="number" id="opr-in-etrans" placeholder="48"></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitSalesOPR()">Simpan OPR</button>
           </div>
         </div>
         <div class="table-container">
           <table class="data-table" id="table-sales-opr">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>Jam</th>
-                <th>Sales</th>
-                <th>STD</th>
-                <th>APC</th>
-                <th>Qty E-Trans</th>
-                <th>Penginput</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Tanggal</th><th>Jam</th><th>Sales</th><th>STD</th><th>APC</th><th>E-Trans</th><th>Penginput</th></tr></thead>
             <tbody id="tbody-sales-opr"></tbody>
           </table>
         </div>
@@ -1853,54 +1695,31 @@
     </div>
   </div>
 
-  <!-- MENU 13: MONITORING KWH -->
+  <!-- MODAL 13: MONITORING KWH -->
   <div class="modal-fullscreen" id="modal-monitoring-kwh">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-monitoring-kwh')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Monitoring KWH Listrik Toko</h3>
+        <h3>Monitoring KWH</h3>
       </div>
     </div>
     <div class="modal-body-content">
-      <div style="display:grid; grid-template-columns: 340px 1fr; gap:16px;">
+      <div style="display:grid; grid-template-columns: 320px 1fr; gap:14px;">
         <div class="chart-card">
-          <h4 style="margin-bottom:12px;">Input Meteran Harian</h4>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div>
-              <label>Tarif per kWh (Rp)</label>
-              <input type="number" id="kwh-in-tarif" value="1500">
-            </div>
-            <div>
-              <label>KWH Awal</label>
-              <input type="number" id="kwh-in-awal" placeholder="1250">
-            </div>
-            <div>
-              <label>KWH Akhir</label>
-              <input type="number" id="kwh-in-akhir" placeholder="1320">
-            </div>
-            <div>
-              <label>Keterangan Tambahan</label>
-              <input type="text" id="kwh-in-ket" placeholder="Normal / Genset aktif">
-            </div>
-            <button class="btn-primary" style="justify-content:center;" onclick="App.submitKWH()">
-              Simpan Pemakaian
-            </button>
+          <h4 style="margin-bottom:10px;">Input KWH</h4>
+          <div style="display:flex; flex-direction:column; gap:9px;">
+            <div><label>Tarif / kWh</label><input type="number" id="kwh-in-tarif" value="1500"></div>
+            <div><label>KWH Awal</label><input type="number" id="kwh-in-awal" placeholder="1250"></div>
+            <div><label>KWH Akhir</label><input type="number" id="kwh-in-akhir" placeholder="1320"></div>
+            <div><label>Keterangan</label><input type="text" id="kwh-in-ket" placeholder="Normal"></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitKWH()">Simpan KWH</button>
           </div>
         </div>
         <div class="table-container">
           <table class="data-table" id="table-monitoring-kwh">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>KWH Awal</th>
-                <th>KWH Akhir</th>
-                <th>Pemakaian</th>
-                <th>Estimasi Biaya</th>
-                <th>Keterangan</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Tanggal</th><th>Awal</th><th>Akhir</th><th>Pemakaian</th><th>Estimasi Biaya</th><th>Ket</th></tr></thead>
             <tbody id="tbody-monitoring-kwh"></tbody>
           </table>
         </div>
@@ -1908,14 +1727,14 @@
     </div>
   </div>
 
-  <!-- MENU 14: CATATAN RETURN -->
+  <!-- MODAL 14: CATATAN RETURN -->
   <div class="modal-fullscreen" id="modal-catatan-return">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-catatan-return')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Catatan Pengembalian Barang (Return)</h3>
+        <h3>Catatan Return</h3>
       </div>
     </div>
     <div class="modal-subnav">
@@ -1924,47 +1743,21 @@
       <div class="subnav-pill" onclick="App.switchReturnSubtab('BKL', this)">BKL</div>
     </div>
     <div class="modal-body-content">
-      <div style="display:grid; grid-template-columns: 340px 1fr; gap:16px;">
+      <div style="display:grid; grid-template-columns: 320px 1fr; gap:14px;">
         <div class="chart-card">
-          <h4 style="margin-bottom:12px;">Form Input Return</h4>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div>
-              <label>Nomor Faktur</label>
-              <input type="text" id="ret-in-faktur" placeholder="03345">
-            </div>
-            <div>
-              <label>Nama Driver Pengambil</label>
-              <input type="text" id="ret-in-driver" placeholder="Budi Santoso">
-            </div>
-            <div>
-              <label>Nomor Polisi Armada (Nopol)</label>
-              <input type="text" id="ret-in-nopol" placeholder="B 1234 CD">
-            </div>
-            <div>
-              <label>Foto Dokumen / Fisik (Opsional)</label>
-              <input type="file" id="ret-in-foto" accept="image/*">
-            </div>
-            <div>
-              <label>Catatan</label>
-              <textarea id="ret-in-catatan" rows="2" placeholder="Barang rusak kardus..."></textarea>
-            </div>
-            <button class="btn-primary" style="justify-content:center;" onclick="App.submitReturn()">
-              Simpan Data Return
-            </button>
+          <h4 style="margin-bottom:10px;">Input Return</h4>
+          <div style="display:flex; flex-direction:column; gap:9px;">
+            <div><label>No Faktur</label><input type="text" id="ret-in-faktur" placeholder="03345"></div>
+            <div><label>Driver</label><input type="text" id="ret-in-driver" placeholder="Budi"></div>
+            <div><label>Nopol</label><input type="text" id="ret-in-nopol" placeholder="B 1234 CD"></div>
+            <div><label>Foto Dokumen</label><input type="file" id="ret-in-foto" accept="image/*"></div>
+            <div><label>Catatan</label><textarea id="ret-in-catatan" rows="2"></textarea></div>
+            <button class="btn-primary" style="justify-content:center;" onclick="App.submitReturn()">Simpan Return</button>
           </div>
         </div>
         <div class="table-container">
           <table class="data-table" id="table-catatan-return">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>No Faktur</th>
-                <th>Driver</th>
-                <th>Nopol</th>
-                <th>Foto</th>
-                <th>Catatan</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Tanggal</th><th>No Faktur</th><th>Driver</th><th>Nopol</th><th>Foto</th><th>Catatan</th></tr></thead>
             <tbody id="tbody-catatan-return"></tbody>
           </table>
         </div>
@@ -1972,49 +1765,39 @@
     </div>
   </div>
 
-  <!-- MENU 15: SCAN BARANG & CAROUSEL BARCODE KASIR -->
+  <!-- MODAL 15: SCAN BARANG -->
   <div class="modal-fullscreen" id="modal-scan-barang">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-scan-barang')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Scan Barcode Produk Kasir</h3>
+        <h3>Scan Barang Kasir</h3>
       </div>
     </div>
     <div class="modal-body-content">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
         <div>
-          <!-- Kamera Scanner Langsung -->
           <div id="interactive-scanner"></div>
-          <div style="display:flex; gap:10px; margin-top:10px;">
+          <div style="display:flex; gap:8px; margin-top:10px;">
             <button class="btn-primary" style="flex:1; justify-content:center;" onclick="App.startBarcodeCamera()">Nyalakan Kamera</button>
             <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="App.stopBarcodeCamera()">Matikan Kamera</button>
           </div>
-          
-          <div class="chart-card" style="margin-top:14px;">
+          <div class="chart-card" style="margin-top:12px;">
             <h4>Input Barcode Manual</h4>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-              <input type="text" id="scan-manual-code" placeholder="Scan / ketik barcode angka...">
-              <input type="number" id="scan-manual-qty" value="1" style="width:70px;">
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <input type="text" id="scan-manual-code" placeholder="Barcode angka...">
+              <input type="number" id="scan-manual-qty" value="1" style="width:65px;">
               <button class="btn-primary" onclick="App.saveScannedItem()">Simpan</button>
             </div>
           </div>
         </div>
-
         <div>
-          <h4 style="margin-bottom:8px;">Rak Hasil Scan Visual (Dapat Di-scan Scanner Kasir)</h4>
+          <h4>Barcode Kasir Visual (Dapat Di-scan Scanner Kasir)</h4>
           <div class="barcode-scroll-shelf" id="barcode-shelf"></div>
-
-          <div class="table-container" style="margin-top:16px;">
+          <div class="table-container" style="margin-top:12px;">
             <table class="data-table" id="table-scanned-items">
-              <thead>
-                <tr>
-                  <th>Barcode</th>
-                  <th>Kuantitas</th>
-                  <th>Waktu Scan</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Barcode</th><th>Qty</th><th>Waktu</th></tr></thead>
               <tbody id="tbody-scanned-items"></tbody>
             </table>
           </div>
@@ -2023,7 +1806,7 @@
     </div>
   </div>
 
-  <!-- CHAT AI MODAL (WHATSAPP LOOKALIKE) -->
+  <!-- CHAT AI (WHATSAPP LOOKALIKE) -->
   <div class="modal-fullscreen" id="modal-chat-ai">
     <div class="modal-header-bar">
       <div class="left-group">
@@ -2031,10 +1814,10 @@
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
         <div style="display:flex; align-items:center; gap:8px;">
-          <img src="https://img.icons8.com/3d-fluency/48/chat.png" style="width:28px;" alt="AI">
+          <img src="https://img.icons8.com/3d-fluency/48/chat.png" style="width:26px;" alt="AI">
           <div>
             <h3>Kacida AI Assistant</h3>
-            <small style="color:#2e7d32;">Online • Bersama Kita Kuat</small>
+            <small style="color:#2e7d32;" id="chat-typing-status">Online</small>
           </div>
         </div>
       </div>
@@ -2043,12 +1826,12 @@
       <div class="chat-container">
         <div class="chat-messages" id="chat-messages-box">
           <div class="chat-bubble bot">
-            Halo! Saya asisten pintar Kacida Bersatu. Saya siap menjawab performa tokomu, berdiskusi santai, maupun tebak-tebakan. Ada yang bisa saya bantu hari ini?
+            Halo! Saya asisten ritel Kacida Bersatu. Tanya apa saja mengenai toko atau sekadar ngobrol dan tebak-tebakan!
           </div>
         </div>
         <div class="chat-input-bar">
-          <textarea id="chat-user-input" placeholder="Ketik pertanyaan... (Enter untuk baris baru)" onkeydown="App.handleChatKeyDown(event)"></textarea>
-          <button class="btn-primary" style="padding:10px 14px; border-radius:50%;" onclick="App.sendChatMessage()">
+          <textarea id="chat-user-input" placeholder="Ketik pesan... (Enter baris baru)"></textarea>
+          <button class="btn-primary" style="padding:9px 13px; border-radius:50%;" onclick="App.sendChatMessage()">
             <span class="material-symbols-rounded">send</span>
           </button>
         </div>
@@ -2056,33 +1839,31 @@
     </div>
   </div>
 
-  <!-- KALENDER TOKO (PENANDA JUMAT, SABTU, MINGGU) -->
+  <!-- KALENDER OPERASIONAL -->
   <div class="modal-fullscreen" id="modal-calendar">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-calendar')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Kalender Operasional Toko</h3>
+        <h3>Kalender Toko</h3>
       </div>
     </div>
-    <div class="modal-body-content" style="max-width:700px; margin:0 auto; width:100%;">
+    <div class="modal-body-content" style="max-width:650px; margin:0 auto; width:100%;">
       <div class="chart-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h3 id="calendar-month-year">Bulan Tahun</h3>
           <div style="display:flex; gap:6px;">
             <button class="btn-secondary" onclick="App.changeCalendarMonth(-1)">&lt;</button>
             <button class="btn-secondary" onclick="App.changeCalendarMonth(1)">&gt;</button>
           </div>
         </div>
-        <div class="cal-grid" id="calendar-grid">
-          <!-- Header hari Senin s/d Minggu diisi otomatis oleh JS -->
-        </div>
+        <div class="cal-grid" id="calendar-grid"></div>
       </div>
     </div>
   </div>
 
-  <!-- PROFIL & STRUKTUR PERSONEL -->
+  <!-- PROFIL PERSONEL & TOKO -->
   <div class="modal-fullscreen" id="modal-profile">
     <div class="modal-header-bar">
       <div class="left-group">
@@ -2093,63 +1874,40 @@
       </div>
       <button class="btn-danger" onclick="App.logout()">Keluar Akun</button>
     </div>
-    <div class="modal-body-content" style="max-width:600px; margin:0 auto; width:100%;">
+    <div class="modal-body-content" style="max-width:550px; margin:0 auto; width:100%;">
       <div class="chart-card" style="text-align:center;">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" id="profile-detail-pic" style="width:90px; height:90px; border-radius:50%; object-fit:cover; margin-bottom:10px;" alt="User">
-        <h3 id="profile-detail-name">Nama Karyawan</h3>
-        <p style="color:var(--text-muted); font-size:13px;" id="profile-detail-nik">NIK: -</p>
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" id="profile-detail-pic" style="width:84px; height:84px; border-radius:50%; object-fit:cover; margin-bottom:8px;" alt="User">
+        <h3 id="profile-detail-name">Nama Personel</h3>
+        <p style="color:var(--text-muted); font-size:12px;" id="profile-detail-nik">NIK: -</p>
         <span class="badge badge-ok" id="profile-detail-role" style="margin-top:6px;">Jabatan</span>
 
-        <hr style="margin:20px 0; border:none; border-top:1px solid var(--border-color);">
+        <hr style="margin:16px 0; border:none; border-top:1px solid var(--border-color);">
 
-        <div style="text-align:left; display:flex; flex-direction:column; gap:10px;">
-          <div>
-            <label>Ubah Foto Profil</label>
-            <input type="file" id="profile-new-photo" accept="image/*">
-          </div>
-          <div>
-            <label>Nomor Telepon / WhatsApp</label>
-            <input type="text" id="profile-phone" placeholder="08xxxxxxxx">
-          </div>
-          <div>
-            <label>Email Karyawan</label>
-            <input type="email" id="profile-email" placeholder="karyawan@alfa.co.id">
-          </div>
-          <div>
-            <label>Akun Sosial Media</label>
-            <input type="text" id="profile-sosmed" placeholder="@instagram_anda">
-          </div>
-          <button class="btn-primary" style="margin-top:10px; justify-content:center;" onclick="App.saveProfileDetails()">Simpan Pembaruan Profil</button>
+        <div style="text-align:left; display:flex; flex-direction:column; gap:9px;">
+          <div><label>Ubah Foto Profil</label><input type="file" id="profile-new-photo" accept="image/*"></div>
+          <div><label>No WhatsApp</label><input type="text" id="profile-phone" placeholder="08xxxxxxxx"></div>
+          <div><label>Email</label><input type="email" id="profile-email" placeholder="karyawan@alfa.co.id"></div>
+          <div><label>Akun Sosmed</label><input type="text" id="profile-sosmed" placeholder="@instagram"></div>
+          <button class="btn-primary" style="margin-top:8px; justify-content:center;" onclick="App.saveProfileDetails()">Simpan Pembaruan</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SUPER ADMIN DASHBOARD (AUDIT LOG NIK 14125034) -->
+  <!-- SUPER ADMIN DASHBOARD -->
   <div class="modal-fullscreen" id="modal-super-admin">
     <div class="modal-header-bar">
       <div class="left-group">
         <button class="btn-secondary" onclick="App.closeModal('modal-super-admin')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Audit Log & Pengawasan Super Admin</h3>
+        <h3>Audit Log Super Admin</h3>
       </div>
     </div>
     <div class="modal-body-content">
       <div class="table-container">
         <table class="data-table" id="table-admin-logs">
-          <thead>
-            <tr>
-              <th>ID Log</th>
-              <th>Waktu</th>
-              <th>NIK</th>
-              <th>Nama</th>
-              <th>Toko</th>
-              <th>Aksi</th>
-              <th>Modul</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
+          <thead><tr><th>ID</th><th>Waktu</th><th>NIK</th><th>Nama</th><th>Toko</th><th>Aksi</th><th>Modul</th><th>Detail</th></tr></thead>
           <tbody id="tbody-admin-logs"></tbody>
         </table>
       </div>
@@ -2163,34 +1921,22 @@
         <button class="btn-secondary" onclick="App.closeModal('modal-help')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h3>Panduan Penggunaan Sistem</h3>
+        <h3>Panduan Bantuan</h3>
       </div>
     </div>
-    <div class="modal-body-content" style="max-width:800px; margin:0 auto; width:100%;">
+    <div class="modal-body-content" style="max-width:750px; margin:0 auto; width:100%;">
       <div class="chart-card" style="line-height:1.6; font-size:13px;">
-        <h3 style="color:var(--primary); margin-bottom:8px;">Selamat Datang di Kacida Bersatu</h3>
-        <p>Aplikasi ini dirancang khusus untuk memonitor seluruh operasional toko ritel secara real-time dan terintegrasi langsung dengan database Google Spreadsheet.</p>
-        <h4 style="margin-top:16px;">1. Hak Akses Jabatan (Role)</h4>
-        <ul style="padding-left:20px;">
-          <li><b>Area Coordinator:</b> Berwenang melihat akumulasi performa dan memilih semua toko binaan pada selektor atas.</li>
-          <li><b>Chief of Store (COS):</b> Berwenang melakukan validasi ceklis rak, approval belanja karyawan, serta penyusunan jadwal mastershift.</li>
-          <li><b>ACOS:</b> Mengelola operasional harian dan menyusun draf jadwal mastershift.</li>
-          <li><b>Crew:</b> Menginput data harian, ceklis rak fisik, return barang, serta pemindaian barcode kasir.</li>
-        </ul>
-        <h4 style="margin-top:16px;">2. Hubungi Bantuan Teknis</h4>
-        <p>Apabila terjadi kegagalan sinkronisasi atau perubahan data master karyawan, hubungi IT/Admin WhatsApp di nomor <b>085862719780</b>.</p>
+        <h3 style="color:var(--primary); margin-bottom:8px;">Kacida Bersatu — Portal Retail</h3>
+        <p>Aplikasi ini membaca dan mencatat data real-time langsung ke Google Spreadsheet UPGRADE DATABASE.</p>
+        <p style="margin-top:10px;"><b>Admin WhatsApp:</b> 085862719780</p>
       </div>
     </div>
   </div>
 
   <!-- =========================================================================
-       5. APLIKASI UTAMA (LOGIKA JAVASCRIPT & KOMUNIKASI API)
+       LOGIKA JAVASCRIPT & STATE MANAGEMENT REVISI
        ========================================================================= -->
   <script>
-    /**
-     * Konfigurasi URL Google Apps Script Web App
-     * Masukkan URL deployment Web App hasil rilis dari Code.gs
-     */
     const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvvRKmIupJRhrGyYrSdLwukzQX37IkGvbKNK5Vivwski4dWmnmoKbjwfcJ5bYJQg-_NA/exec'; 
 
     const App = {
@@ -2200,17 +1946,19 @@
         selectedStoreCode: '',
         dashboardData: null,
         currentCalendarDate: new Date(),
-        html5QrScanner: null
+        html5QrScanner: null,
+        mtdRawList: [],
+        harianRawList: [],
+        mtdChartInstance: null,
+        harianChartInstance: null
       },
 
-      // INTI INISIALISASI
       init: function() {
         this.bindEvents();
         this.checkSavedSession();
       },
 
       bindEvents: function() {
-        // Monitor status koneksi online / offline
         window.addEventListener('online', () => this.updateOnlineIndicator(true));
         window.addEventListener('offline', () => this.updateOnlineIndicator(false));
       },
@@ -2227,14 +1975,13 @@
         }
       },
 
-      // PENGELOLA TEMA
       setTheme: function(theme) {
         document.body.setAttribute('data-theme', theme);
       },
 
-      // KOMUNIKASI BACKEND (TRANSPORT API LAYER)
-      callApi: async function(action, payload = {}) {
-        this.showLoader(true, 'Memproses ke Server...');
+      // KOMUNIKASI API BEBAS LOADING PADA PERPINDAHAN TAB
+      callApi: async function(action, payload = {}, showLoading = false) {
+        if (showLoading) this.showLoader(true, 'Menghubungkan Server...');
         try {
           const bodyPayload = {
             action: action,
@@ -2252,35 +1999,31 @@
           });
 
           const result = await response.json();
-          this.showLoader(false);
+          if (showLoading) this.showLoader(false);
           return result;
         } catch (err) {
-          this.showLoader(false);
-          Swal.fire({
-            icon: 'error',
-            title: 'Koneksi Terkendala',
-            text: 'Gagal terhubung ke backend spreadsheet: ' + err.message
-          });
+          if (showLoading) this.showLoader(false);
           return { success: false, message: err.message };
         }
       },
 
-      // LOADER
-      showLoader: function(show, text = 'Memuat Data...') {
+      showLoader: function(show, text = 'Memuat Aplikasi...', pct = 45) {
         const loader = document.getElementById('screen-loader');
         const statusText = document.getElementById('loader-status-text');
+        const pctText = document.getElementById('loader-pct-text');
         const bar = document.getElementById('loader-progress');
         if (show) {
           statusText.innerText = text;
-          bar.style.width = '70%';
+          pctText.innerText = Math.round(pct) + '%';
+          bar.style.width = Math.round(pct) + '%';
           loader.style.display = 'flex';
         } else {
+          pctText.innerText = '100%';
           bar.style.width = '100%';
           setTimeout(() => { loader.style.display = 'none'; bar.style.width = '0%'; }, 200);
         }
       },
 
-      // AUTENTIKASI PENGGUNA
       login: async function() {
         const nik = document.getElementById('input-login-nik').value.trim();
         if (!nik) {
@@ -2288,14 +2031,17 @@
           return;
         }
 
-        const res = await this.callApi('login', { nik: nik });
+        this.showLoader(true, 'Mengotentikasi NIK...', 35);
+        const res = await this.callApi('login', { nik: nik }, false);
+        this.showLoader(true, 'Memuat Data Sesi...', 80);
+
         if (res.success) {
           this.state.user = res.user;
           this.state.assignedStores = res.assignedStores || [];
           this.state.selectedStoreCode = res.user.storeCode;
-
           sessionStorage.setItem('kacida_nik', res.user.nik);
 
+          this.showLoader(false);
           document.getElementById('screen-login').style.display = 'none';
           document.getElementById('app-container').style.display = 'block';
 
@@ -2303,6 +2049,7 @@
           this.renderDynamicNav(res.navMenu || []);
           this.loadDashboard();
         } else {
+          this.showLoader(false);
           Swal.fire({
             icon: 'error',
             title: 'Gagal Masuk',
@@ -2325,17 +2072,19 @@
         window.location.reload();
       },
 
+      // SETUP HEADER & ROLE PENGGUNA
       setupUserUI: function() {
         const u = this.state.user;
         document.getElementById('topbar-user-name').innerText = u.name;
         document.getElementById('topbar-user-role').innerText = u.role;
-        document.getElementById('badge-store-code').innerText = u.storeCode;
+        document.getElementById('badge-store-code').innerText = u.storeCode + ' - ' + (u.storeName.split('-')[1] || u.storeName);
+
         if (u.photoUrl) {
           document.getElementById('topbar-user-photo').src = u.photoUrl;
           document.getElementById('profile-detail-pic').src = u.photoUrl;
         }
 
-        // Tampilkan selektor toko khusus AC & Super Admin
+        // HANYA Area Coordinator & Super Admin yang dapat memilih toko
         const selStore = document.getElementById('select-area-store');
         if (u.isAreaCoordinator || u.isSuperAdmin) {
           selStore.style.display = 'inline-block';
@@ -2347,14 +2096,13 @@
             if (s.storeCode === this.state.selectedStoreCode) opt.selected = true;
             selStore.appendChild(opt);
           });
+        } else {
+          selStore.style.display = 'none';
         }
 
-        // Tampilkan tombol Audit Super Admin khusus NIK 14125034
         if (u.isSuperAdmin) {
           document.getElementById('sidebar-admin-btn').style.display = 'flex';
         }
-
-        // Tombol tab approval belanja khusus Chief of Store
         if (!u.isChiefOfStore && !u.isSuperAdmin) {
           document.getElementById('tab-approval-belanja').style.display = 'none';
         }
@@ -2379,7 +2127,6 @@
         this.loadDashboard();
       },
 
-      // DASHBOARD & KPI DATA
       loadDashboard: async function() {
         const res = await this.callApi('getDashboardData', { selectedStoreCode: this.state.selectedStoreCode });
         if (res.success) {
@@ -2391,33 +2138,32 @@
       renderDashboardCards: function(d) {
         document.getElementById('hero-store-info').innerText = 'Toko: ' + (d.storeName || d.storeCode);
         document.getElementById('hero-sync-time').innerText = 'Terakhir disinkronkan: ' + d.lastSync;
-        document.getElementById('hero-h1-sales').innerText = 'Rp ' + Number(d.harianSummary.salesHMin1 || 0).toLocaleString('id-ID');
+        document.getElementById('hero-h1-sales').innerText = 'Rp ' + Math.round(d.harianSummary.salesHMin1 || 0).toLocaleString('id-ID');
 
-        // Card 1: Harian
-        document.getElementById('kpi-harian-acv').innerText = (d.harianSummary.acvSales || 0) + '%';
-        document.getElementById('kpi-harian-growth').innerText = 'Growth: ' + (d.harianSummary.growthVsBulanLalu || 0) + '%';
+        // MTD Card
+        document.getElementById('kpi-mtd-total').innerText = 'Rp ' + Math.round(d.mtdSummary.totalSales || 0).toLocaleString('id-ID');
+        document.getElementById('kpi-mtd-growth').innerText = 'Growth: ' + Math.round(d.mtdSummary.growthPct || 0) + '%';
+
+        // Penawaran Langsung
+        document.getElementById('kpi-pl-acv').innerText = Math.round(d.penawaranSummary.totalAcv || 0) + '%';
+        document.getElementById('kpi-pl-point').innerText = 'Point: ' + Math.round(d.penawaranSummary.pointDashboard || 0);
+        document.getElementById('kpi-pl-rank').innerText = 'Rank: ' + (d.penawaranSummary.rank || '-');
+
+        // Sales Harian
+        document.getElementById('kpi-harian-acv').innerText = Math.round(d.harianSummary.acvSales || 0) + '%';
+        document.getElementById('kpi-harian-growth').innerText = 'Growth: ' + Math.round(d.harianSummary.growthVsBulanLalu || 0) + '%';
         const hBadge = document.getElementById('kpi-harian-badge');
         hBadge.className = 'badge ' + (d.harianSummary.status === 'OK' ? 'badge-ok' : 'badge-nok');
         hBadge.innerText = d.harianSummary.status || 'NOK';
 
-        // Card 2: MTD
-        document.getElementById('kpi-mtd-total').innerText = 'Rp ' + Number(d.mtdSummary.totalSales || 0).toLocaleString('id-ID');
-        document.getElementById('kpi-mtd-std').innerText = 'STD: ' + Number(d.mtdSummary.avgStd || 0).toLocaleString('id-ID');
-        document.getElementById('kpi-mtd-apc').innerText = 'APC: ' + Number(d.mtdSummary.avgApc || 0).toLocaleString('id-ID');
-
-        // Card 3: IKT
-        document.getElementById('kpi-ikt-gm').innerText = (d.gmPctCard.acv || 0) + '%';
-        document.getElementById('kpi-ikt-act').innerText = 'Aktual: ' + (d.gmPctCard.actual || 0) + '%';
+        // IKT GM%
+        document.getElementById('kpi-ikt-gm').innerText = Math.round(d.gmPctCard.acv || 0) + '%';
+        document.getElementById('kpi-ikt-act').innerText = 'Aktual: ' + Math.round(d.gmPctCard.actual || 0) + '%';
         const iBadge = document.getElementById('kpi-ikt-badge');
         iBadge.className = 'badge ' + (d.gmPctCard.status === 'OK' ? 'badge-ok' : 'badge-nok');
         iBadge.innerText = d.gmPctCard.status || 'NOK';
 
-        // Card 4: Penawaran Langsung
-        document.getElementById('kpi-pl-acv').innerText = (d.penawaranSummary.totalAcv || 0) + '%';
-        document.getElementById('kpi-pl-point').innerText = 'Point: ' + (d.penawaranSummary.pointDashboard || 0);
-        document.getElementById('kpi-pl-rank').innerText = 'Rank: ' + (d.penawaranSummary.rank || '-');
-
-        // Update Approval Badges
+        // Badges
         if (d.pendingBadges) {
           const bRak = document.getElementById('badge-ceklis-exp');
           const bBel = document.getElementById('badge-belanja');
@@ -2436,21 +2182,22 @@
       },
 
       manualSync: async function() {
-        const res = await this.callApi('manualSync', { storeCode: this.state.selectedStoreCode });
+        this.showLoader(true, 'Menyinkronkan Basis Data Toko...', 50);
+        const res = await this.callApi('manualSync', { storeCode: this.state.selectedStoreCode }, false);
+        this.showLoader(false);
         if (res.success) {
           this.renderDashboardCards(res.dashboard);
           Swal.fire({
             icon: 'success',
-            title: 'Sinkronisasi Berhasil',
-            text: 'Data performa telah diperbarui sesuai spreadsheet terkini.',
-            timer: 1600,
+            title: 'Sinkronisasi Selesai',
+            text: 'Data performa toko telah sinkron dengan spreadsheet.',
+            timer: 1500,
             showConfirmButton: false
           });
         }
       },
 
       renderCharts: function() {
-        // Line Chart Sales
         const ctxLine = document.getElementById('canvas-trend-sales');
         if (ctxLine) {
           new Chart(ctxLine, {
@@ -2460,8 +2207,8 @@
               datasets: [{
                 label: 'Realisasi SPD',
                 data: [12000000, 11400000, 14200000, 10800000, 13100000, 15800000],
-                borderColor: '#1b5e20',
-                backgroundColor: 'rgba(27,94,32,0.08)',
+                borderColor: '#1e6b37',
+                backgroundColor: 'rgba(30,107,55,0.08)',
                 fill: true,
                 tension: 0.3
               }]
@@ -2470,7 +2217,6 @@
           });
         }
 
-        // Pie Chart Penawaran
         const ctxPie = document.getElementById('canvas-pie-penawaran');
         if (ctxPie) {
           new Chart(ctxPie, {
@@ -2479,7 +2225,7 @@
               labels: ['PSM', 'PWP', 'Serba Gratis', 'APC'],
               datasets: [{
                 data: [85, 76, 69, 82],
-                backgroundColor: ['#1b5e20', '#388e3c', '#81c784', '#c8e6c9']
+                backgroundColor: ['#1e6b37', '#2e8b46', '#81c784', '#c8e6c9']
               }]
             },
             options: { responsive: true, maintainAspectRatio: false }
@@ -2487,10 +2233,9 @@
         }
       },
 
-      // NAVIGASI MODAL
+      // MODAL BUKA INSTAN BEBAS LOADING
       openModal: function(modalId) {
         document.getElementById(modalId).style.display = 'flex';
-        // Panggil muat data modul terkait
         if (modalId === 'modal-ceklis-exp') this.loadDataRak();
         if (modalId === 'modal-serah-terima') this.loadSerahTerima();
         if (modalId === 'modal-plan-mastershift') this.loadMastershift();
@@ -2511,7 +2256,216 @@
         if (modalId === 'modal-scan-barang') this.stopBarcodeCamera();
       },
 
-      // MODUL 1: CEKLIS EXP
+      // MODUL 6: SALES MTD (REVISI LENGKAP)
+      loadSalesMTD: async function() {
+        const res = await this.callApi('getSalesMTD');
+        if (res.success) {
+          this.state.mtdRawList = res.list;
+          this.applyMTDFilter();
+        }
+      },
+
+      applyMTDFilter: function() {
+        const selBulan = document.getElementById('mtd-filter-bulan').value.toUpperCase();
+        const startVal = document.getElementById('mtd-filter-start').value;
+        const endVal = document.getElementById('mtd-filter-end').value;
+
+        let filtered = this.state.mtdRawList.filter(item => {
+          let pass = true;
+          if (selBulan && item.bulan.toUpperCase() !== selBulan) pass = false;
+          if (startVal || endVal) {
+            const parts = item.tanggal.split('/');
+            const itemDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            if (startVal && itemDate < new Date(startVal)) pass = false;
+            if (endVal && itemDate > new Date(endVal)) pass = false;
+          }
+          return pass;
+        });
+
+        // Hitung Resume Sesuai Revisi
+        let totalSales2025 = 0;
+        let totalSales2026 = 0;
+
+        filtered.forEach(r => {
+          totalSales2025 += r.sales2025;
+          totalSales2026 += r.sales2026;
+        });
+
+        const growthPct = totalSales2025 > 0 ? Math.round(((totalSales2026 - totalSales2025) / totalSales2025) * 100) : 0;
+
+        document.getElementById('mtd-res-sales-lastyear').innerText = 'Rp ' + Math.round(totalSales2025).toLocaleString('id-ID');
+        document.getElementById('mtd-res-sales-thisyear').innerText = 'Rp ' + Math.round(totalSales2026).toLocaleString('id-ID');
+        document.getElementById('mtd-res-growth').innerText = growthPct + '%';
+        const badgeG = document.getElementById('mtd-res-badge');
+        badgeG.className = 'badge ' + (growthPct >= 0 ? 'badge-ok' : 'badge-nok');
+        badgeG.innerText = growthPct >= 0 ? 'Growth' : 'Disgrowth';
+
+        // Render Tabel
+        const tbody = document.getElementById('tbody-sales-mtd');
+        tbody.innerHTML = '';
+        filtered.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.tanggal}</td>
+            <td><b>Rp ${Math.round(r.sales2026).toLocaleString('id-ID')}</b></td>
+            <td>${Math.round(r.std2026)}</td>
+            <td>Rp ${Math.round(r.apc2026).toLocaleString('id-ID')}</td>
+            <td>Rp ${Math.round(r.sales2025).toLocaleString('id-ID')}</td>
+            <td>${Math.round(r.growthPct)}%</td>
+            <td><span class="badge ${r.growthPct >= 0 ? 'badge-ok' : 'badge-nok'}">${r.growthPct >= 0 ? 'Growth' : 'Disgrowth'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Render Grafik Tren Sales MTD
+        this.renderMTDChart(filtered);
+      },
+
+      renderMTDChart: function(dataList) {
+        const ctx = document.getElementById('canvas-mtd-trend');
+        if (!ctx) return;
+        if (this.state.mtdChartInstance) this.state.mtdChartInstance.destroy();
+
+        const labels = dataList.map(d => d.tanggal.substr(0, 5));
+        const data26 = dataList.map(d => d.sales2026);
+        const data25 = dataList.map(d => d.sales2025);
+
+        this.state.mtdChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Sales 2026', data: data26, borderColor: '#1e6b37', backgroundColor: 'rgba(30,107,55,0.1)', fill: true, tension: 0.2 },
+              { label: 'Sales 2025', data: data25, borderColor: '#f57c00', borderDash: [5, 5], fill: false, tension: 0.2 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      },
+
+      // MODUL 7: SALES HARIAN (REVISI LENGKAP)
+      loadSalesHarian: async function() {
+        const res = await this.callApi('getSalesHarian');
+        if (res.success) {
+          this.state.harianRawList = res.list;
+          this.applyHarianFilter();
+        }
+      },
+
+      applyHarianFilter: function() {
+        const startVal = document.getElementById('harian-filter-start').value;
+        const endVal = document.getElementById('harian-filter-end').value;
+
+        let filtered = this.state.harianRawList.filter(item => {
+          let pass = true;
+          if (startVal || endVal) {
+            const parts = item.tanggal.split('/');
+            const itemDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            if (startVal && itemDate < new Date(startVal)) pass = false;
+            if (endVal && itemDate > new Date(endVal)) pass = false;
+          }
+          return pass;
+        });
+
+        // Hitung Resume Harian Sesuai Revisi
+        let sumBlnLalu = 0;
+        let sumActual = 0;
+
+        filtered.forEach(r => {
+          sumBlnLalu += r.bulanLalu;
+          sumActual += r.actualSpd;
+        });
+
+        const growthPct = sumBlnLalu > 0 ? Math.round(((sumActual - sumBlnLalu) / sumBlnLalu) * 100) : 0;
+
+        document.getElementById('harian-res-blnlalu').innerText = 'Rp ' + Math.round(sumBlnLalu).toLocaleString('id-ID');
+        document.getElementById('harian-res-actual').innerText = 'Rp ' + Math.round(sumActual).toLocaleString('id-ID');
+        document.getElementById('harian-res-growth').innerText = growthPct + '%';
+        const badgeG = document.getElementById('harian-res-badge');
+        badgeG.className = 'badge ' + (growthPct >= 0 ? 'badge-ok' : 'badge-nok');
+        badgeG.innerText = growthPct >= 0 ? 'OK' : 'NOK';
+
+        // Render Tabel
+        const tbody = document.getElementById('tbody-sales-harian');
+        tbody.innerHTML = '';
+        filtered.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.tanggal}</td>
+            <td>Rp ${Math.round(r.bulanLalu).toLocaleString('id-ID')}</td>
+            <td>Rp ${Math.round(r.target).toLocaleString('id-ID')}</td>
+            <td><b>Rp ${Math.round(r.actualSpd).toLocaleString('id-ID')}</b></td>
+            <td>${Math.round(r.actualStd)}</td>
+            <td>Rp ${Math.round(r.actualApc).toLocaleString('id-ID')}</td>
+            <td>Rp ${Math.round(r.gapTarget).toLocaleString('id-ID')}</td>
+            <td><b>${Math.round(r.acvPct)}%</b></td>
+            <td>${Math.round(r.nsb)}</td>
+            <td>${Math.round(r.nsbPct)}%</td>
+            <td>${Math.round(r.oosPct)}%</td>
+            <td>${Math.round(r.grossMargin)}%</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Render Grafik Tren Harian
+        this.renderHarianChart(filtered);
+      },
+
+      renderHarianChart: function(dataList) {
+        const ctx = document.getElementById('canvas-harian-trend');
+        if (!ctx) return;
+        if (this.state.harianChartInstance) this.state.harianChartInstance.destroy();
+
+        const labels = dataList.map(d => d.tanggal.substr(0, 5));
+        const dataAct = dataList.map(d => d.actualSpd);
+        const dataBlnLalu = dataList.map(d => d.bulanLalu);
+
+        this.state.harianChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Actual SPD', data: dataAct, backgroundColor: '#1e6b37' },
+              { label: 'Bulan Lalu', data: dataBlnLalu, backgroundColor: '#b0bec5' }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      },
+
+      // MODUL CHAT AI (INSTAN, TANPA FULLSCREEN LOADING)
+      openChatModal: function() {
+        document.getElementById('modal-chat-ai').style.display = 'flex';
+      },
+
+      sendChatMessage: async function() {
+        const input = document.getElementById('chat-user-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const box = document.getElementById('chat-messages-box');
+        const status = document.getElementById('chat-typing-status');
+
+        const uBubble = document.createElement('div');
+        uBubble.className = 'chat-bubble user';
+        uBubble.innerText = text;
+        box.appendChild(uBubble);
+
+        input.value = '';
+        box.scrollTop = box.scrollHeight;
+        status.innerText = 'Kacida AI sedang mengetik...';
+
+        const res = await this.callApi('chatAI', { message: text }, false);
+        status.innerText = 'Online';
+
+        const bBubble = document.createElement('div');
+        bBubble.className = 'chat-bubble bot';
+        bBubble.innerText = res.success ? res.reply : 'Maaf, terjadi kendala: ' + res.message;
+        box.appendChild(bBubble);
+        box.scrollTop = box.scrollHeight;
+      },
+
+      // MODUL LAINNYA LENGKAP
       switchCeklisTab: function(tab, el) {
         document.querySelectorAll('#modal-ceklis-exp .subnav-pill').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
@@ -2519,7 +2473,6 @@
         document.getElementById('subtab-input-exp-view').style.display = tab === 'input-exp' ? 'block' : 'none';
         document.getElementById('subtab-alert-exp-view').style.display = tab === 'alert-exp' ? 'block' : 'none';
         document.getElementById('subtab-history-exp-view').style.display = tab === 'history-exp' ? 'block' : 'none';
-
         if (tab === 'alert-exp' || tab === 'history-exp') this.loadAlertEXP();
       },
 
@@ -2529,21 +2482,15 @@
           document.getElementById('rak-count-selesai').innerText = 'Selesai: ' + res.summary.selesai;
           document.getElementById('rak-count-belum').innerText = 'Belum: ' + res.summary.belumSelesai;
           document.getElementById('rak-count-validasi').innerText = 'Butuh Validasi: ' + res.summary.butuhValidasi;
-
           const tbody = document.querySelector('#table-data-rak tbody');
           tbody.innerHTML = '';
           res.list.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td><b>${item.noRak}</b></td>
-              <td>${item.kategoriRak}</td>
-              <td>${item.picNama}</td>
+              <td><b>${item.noRak}</b></td><td>${item.kategoriRak}</td><td>${item.picNama}</td>
               <td><span class="badge ${item.status === 'Selesai' ? 'badge-ok' : (item.status === 'Butuh Validasi' ? 'badge-pending' : 'badge-nok')}">${item.status}</span></td>
-              <td>${item.fotoBuktiUrl ? `<a href="${item.fotoBuktiUrl}" target="_blank">Lihat Bukti</a>` : '-'}</td>
-              <td>
-                ${(this.state.user.isChiefOfStore || this.state.user.isSuperAdmin) && item.status === 'Butuh Validasi' ? 
-                  `<button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="App.validateRak(${item.rowId}, 'APPROVED')">Setujui</button>` : ''}
-              </td>
+              <td>${item.fotoBuktiUrl ? `<a href="${item.fotoBuktiUrl}" target="_blank">Lihat</a>` : '-'}</td>
+              <td>${(this.state.user.isChiefOfStore || this.state.user.isSuperAdmin) && item.status === 'Butuh Validasi' ? `<button class="btn-primary" style="padding:3px 7px; font-size:11px;" onclick="App.validateRak(${item.rowId}, 'APPROVED')">Validasi</button>` : ''}</td>
             `;
             tbody.appendChild(tr);
           });
@@ -2560,21 +2507,13 @@
       },
 
       submitAlertEXP: async function() {
-        const nama = document.getElementById('exp-in-nama').value;
-        const rak = document.getElementById('exp-in-rak').value;
-        const qty = document.getElementById('exp-in-qty').value;
-        const tgl = document.getElementById('exp-in-tgl').value;
-        const rh = document.getElementById('exp-in-rh').value;
-
-        if (!nama || !tgl) {
-          Swal.fire('Peringatan', 'Lengkapi seluruh data item dan tanggal!', 'warning');
-          return;
-        }
-
         const res = await this.callApi('saveAlertEXP', {
-          namaItem: nama, posisiRak: rak, qty: qty, tanggalExp: tgl, returnHari: rh
+          namaItem: document.getElementById('exp-in-nama').value,
+          posisiRak: document.getElementById('exp-in-rak').value,
+          qty: document.getElementById('exp-in-qty').value,
+          tanggalExp: document.getElementById('exp-in-tgl').value,
+          returnHari: document.getElementById('exp-in-rh').value
         });
-
         if (res.success) {
           Swal.fire('Tersimpan', res.message, 'success');
           this.loadAlertEXP();
@@ -2589,17 +2528,9 @@
           res.list.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td>${item.namaItem}</td>
-              <td>${item.posisiRak}</td>
-              <td>${item.qty}</td>
-              <td>${item.tanggalExp}</td>
-              <td>${item.returnHari} Hari</td>
-              <td><b>${item.estimasiEksekusi}</b></td>
+              <td>${item.namaItem}</td><td>${item.posisiRak}</td><td>${item.qty}</td><td>${item.tanggalExp}</td><td>${item.returnHari} Hari</td><td><b>${item.estimasiEksekusi}</b></td>
               <td><span class="badge ${item.statusEksekusi === 'Dieksekusi' ? 'badge-ok' : 'badge-pending'}">${item.statusEksekusi}</span></td>
-              <td>
-                ${item.statusEksekusi !== 'Dieksekusi' ? 
-                  `<button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="App.executeEXP(${item.rowId})">Tandai Eksekusi</button>` : '-'}
-              </td>
+              <td>${item.statusEksekusi !== 'Dieksekusi' ? `<button class="btn-secondary" style="padding:3px 7px; font-size:11px;" onclick="App.executeEXP(${item.rowId})">Eksekusi</button>` : '-'}</td>
             `;
             tbody.appendChild(tr);
           });
@@ -2614,7 +2545,6 @@
         }
       },
 
-      // MODUL 2: SERAH TERIMA
       loadSerahTerima: async function() {
         const res = await this.callApi('getSerahTerima');
         if (res.success) {
@@ -2622,20 +2552,14 @@
           tbody.innerHTML = '';
           res.list.forEach(item => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${item.tanggal}</td>
-              <td>Shift ${item.shift}</td>
-              <td>${item.namaPenginput}</td>
-              <td>Rp ${item.sales.toLocaleString('id-ID')}</td>
-              <td>${item.catatan}</td>
-            `;
+            tr.innerHTML = `<td>${item.tanggal}</td><td>Shift ${item.shift}</td><td>${item.namaPenginput}</td><td>Rp ${Math.round(item.sales).toLocaleString('id-ID')}</td><td>${item.catatan}</td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
       submitSerahTerima: async function() {
-        const payload = {
+        const res = await this.callApi('saveSerahTerima', {
           shift: document.getElementById('st-shift').value,
           sales: document.getElementById('st-sales').value,
           qtyPsm: document.getElementById('st-qty-psm').value,
@@ -2644,35 +2568,31 @@
           newMember: document.getElementById('st-new-member').value,
           contStruk: document.getElementById('st-cont-struk').value,
           catatan: document.getElementById('st-catatan').value
-        };
-
-        const res = await this.callApi('saveSerahTerima', payload);
+        });
         if (res.success) {
           Swal.fire('Sukses', res.message, 'success');
           this.loadSerahTerima();
         }
       },
 
-      // MODUL 3: PLAN MASTERSHIFT
       loadMastershift: async function() {
         const my = document.getElementById('ms-month-year').value;
         const res = await this.callApi('getMastershift', { monthYear: my });
         if (res.success) {
           const trH = document.getElementById('tr-ms-header');
-          trH.innerHTML = '<th>Nama Personel</th><th>Jabatan</th>';
+          trH.innerHTML = '<th>Personel</th><th>Jabatan</th>';
           for (let d = 1; d <= 31; d++) {
             const th = document.createElement('th');
             th.innerText = d;
             trH.appendChild(th);
           }
-
           const tbody = document.getElementById('tbody-mastershift');
           tbody.innerHTML = '';
           res.roster.forEach((p, idx) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td><b>${p.nama}</b></td><td>${p.jabatan}</td>`;
             p.days.forEach((dayVal, dIdx) => {
-              tr.innerHTML += `<td><input type="text" value="${dayVal || 'P'}" style="width:34px; text-align:center; padding:4px;" class="ms-cell" data-row="${idx}" data-day="${dIdx}"></td>`;
+              tr.innerHTML += `<td><input type="text" value="${dayVal || 'P'}" style="width:30px; text-align:center; padding:2px;" class="ms-cell" data-row="${idx}" data-day="${dIdx}"></td>`;
             });
             tbody.appendChild(tr);
           });
@@ -2681,13 +2601,9 @@
       },
 
       saveMastershift: async function() {
-        const cells = document.querySelectorAll('.ms-cell');
-        cells.forEach(c => {
-          const r = parseInt(c.getAttribute('data-row'));
-          const d = parseInt(c.getAttribute('data-day'));
-          this.state.currentRoster[r].days[d] = c.value.trim().toUpperCase();
+        document.querySelectorAll('.ms-cell').forEach(c => {
+          this.state.currentRoster[parseInt(c.getAttribute('data-row'))].days[parseInt(c.getAttribute('data-day'))] = c.value.trim().toUpperCase();
         });
-
         const res = await this.callApi('saveMastershift', {
           monthYear: document.getElementById('ms-month-year').value,
           roster: this.state.currentRoster
@@ -2695,7 +2611,6 @@
         if (res.success) Swal.fire('Tersimpan', res.message, 'success');
       },
 
-      // MODUL 4: BELANJA KARYAWAN
       switchBelanjaTab: function(tab, el) {
         document.querySelectorAll('#modal-belanja-karyawan .subnav-pill').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
@@ -2707,63 +2622,37 @@
       loadBelanjaKaryawan: async function() {
         const res = await this.callApi('getBelanjaKaryawan');
         if (res.success) {
-          document.getElementById('bk-total-approved').innerText = 'Total Sales Approved: Rp ' + res.summary.totalSalesApproved.toLocaleString('id-ID');
-
-          // Render Approval Table
+          document.getElementById('bk-total-approved').innerText = 'Total Sales: Rp ' + Math.round(res.summary.totalSalesApproved).toLocaleString('id-ID');
           const tbodyApp = document.querySelector('#table-approval-bk tbody');
           tbodyApp.innerHTML = '';
           res.list.filter(i => i.status.toLowerCase().includes('menunggu') || i.status.toLowerCase().includes('pending')).forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td>${item.nama}</td>
-              <td>${item.noBon}</td>
-              <td>Rp ${item.nominal.toLocaleString('id-ID')}</td>
-              <td>${item.fotoStrukUrl ? `<a href="${item.fotoStrukUrl}" target="_blank">Lihat Struk</a>` : '-'}</td>
-              <td>${item.createdAt}</td>
-              <td>
-                <button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="App.approveBelanja(${item.rowId}, 'APPROVE')">Setujui</button>
-                <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="App.approveBelanja(${item.rowId}, 'REJECT')">Tolak</button>
-              </td>
+              <td>${item.nama}</td><td>${item.noBon}</td><td>Rp ${Math.round(item.nominal).toLocaleString('id-ID')}</td>
+              <td>${item.fotoStrukUrl ? `<a href="${item.fotoStrukUrl}" target="_blank">Lihat</a>` : '-'}</td><td>${item.createdAt}</td>
+              <td><button class="btn-primary" style="padding:3px 7px; font-size:11px;" onclick="App.approveBelanja(${item.rowId}, 'APPROVE')">Setujui</button></td>
             `;
             tbodyApp.appendChild(tr);
-          });
-
-          // Render History Table
-          const tbodyHist = document.querySelector('#table-history-bk tbody');
-          tbodyHist.innerHTML = '';
-          res.list.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${item.nama}</td>
-              <td>${item.noBon}</td>
-              <td>Rp ${item.nominal.toLocaleString('id-ID')}</td>
-              <td><span class="badge ${item.status === 'Approved' ? 'badge-ok' : 'badge-pending'}">${item.status}</span></td>
-              <td>${item.validatedBy || '-'}</td>
-              <td>${item.createdAt}</td>
-            `;
-            tbodyHist.appendChild(tr);
           });
         }
       },
 
       submitBelanjaKaryawan: async function() {
-        const noMem = document.getElementById('bk-no-member').value;
-        const noBon = document.getElementById('bk-no-bon').value;
-        const nominal = document.getElementById('bk-nominal').value;
         const fileInput = document.getElementById('bk-file-struk');
-
-        if (!noBon || !nominal || fileInput.files.length === 0) {
-          Swal.fire('Lengkapi Formulir', 'Seluruh kolom dan foto struk wajib diunggah!', 'warning');
+        if (fileInput.files.length === 0) {
+          Swal.fire('Peringatan', 'Foto struk kasir wajib diunggah!', 'warning');
           return;
         }
-
         const reader = new FileReader();
         reader.onload = async (e) => {
           const res = await App.callApi('submitBelanjaKaryawan', {
-            noMember: noMem, noBon: noBon, nominal: nominal, fotoBase64: e.target.result
+            noMember: document.getElementById('bk-no-member').value,
+            noBon: document.getElementById('bk-no-bon').value,
+            nominal: document.getElementById('bk-nominal').value,
+            fotoBase64: e.target.result
           });
           if (res.success) {
-            Swal.fire('Diajukan', res.message, 'success');
+            Swal.fire('Tersimpan', res.message, 'success');
             App.loadBelanjaKaryawan();
           }
         };
@@ -2779,7 +2668,6 @@
         }
       },
 
-      // MODUL 5: SIMULASI IKT
       calcSimulasi: function() {
         const hk = parseFloat(document.getElementById('sim-hk').value) || 1;
         const jhk = parseFloat(document.getElementById('sim-jhk').value) || 0;
@@ -2789,92 +2677,14 @@
         const actM = parseFloat(document.getElementById('sim-act-gm').value) || 0;
 
         const acvSales = tgtS > 0 ? (actS / tgtS) * 100 : 0;
-        const tgtRp = tgtS * (tgtM / 100);
-        const actRp = actS * (actM / 100);
-        const gapRp = actRp - tgtRp;
+        const gapRp = (actS * (actM / 100)) - (tgtS * (tgtM / 100));
         const tf = (jhk / hk) * 100;
 
         document.getElementById('sim-res-acv-sales').innerText = Math.round(acvSales) + '%';
         document.getElementById('sim-res-gap-gm').innerText = 'Rp ' + Math.round(gapRp).toLocaleString('id-ID');
         document.getElementById('sim-res-tf').innerText = Math.round(tf) + '%';
-
-        const sBadge = document.getElementById('sim-res-status-sales');
-        sBadge.className = 'badge ' + (acvSales >= 100 ? 'badge-ok' : 'badge-nok');
-        sBadge.innerText = acvSales >= 100 ? 'OK' : 'NOK';
-
-        const gBadge = document.getElementById('sim-res-status-gm');
-        gBadge.className = 'badge ' + (gapRp >= 0 ? 'badge-ok' : 'badge-nok');
-        gBadge.innerText = gapRp >= 0 ? 'OK' : 'NOK';
       },
 
-      // MODUL 6: SALES MTD
-      loadSalesMTD: async function() {
-        const res = await this.callApi('getSalesMTD');
-        if (res.success) {
-          this.state.mtdRows = res.list;
-          this.renderMTDTable(res.list);
-        }
-      },
-
-      renderMTDTable: function(rows) {
-        const tbody = document.getElementById('tbody-sales-mtd');
-        tbody.innerHTML = '';
-        rows.forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${r.tanggal}</td>
-            <td><b>Rp ${r.sales2026.toLocaleString('id-ID')}</b></td>
-            <td>${r.std2026}</td>
-            <td>Rp ${r.apc2026.toLocaleString('id-ID')}</td>
-            <td>Rp ${r.sales2025.toLocaleString('id-ID')}</td>
-            <td>${r.growthPct}%</td>
-            <td><span class="badge ${r.statusGrowth === 'Growth' ? 'badge-ok' : 'badge-nok'}">${r.statusGrowth}</span></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      },
-
-      filterMTD: function(type, el) {
-        document.querySelectorAll('#modal-sales-mtd .subnav-pill').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        if (!this.state.mtdRows) return;
-        if (type === 'growth') {
-          this.renderMTDTable(this.state.mtdRows.filter(r => r.statusGrowth === 'Growth'));
-        } else if (type === 'disgrowth') {
-          this.renderMTDTable(this.state.mtdRows.filter(r => r.statusGrowth === 'Disgrowth'));
-        } else {
-          this.renderMTDTable(this.state.mtdRows);
-        }
-      },
-
-      // MODUL 7: SALES HARIAN
-      loadSalesHarian: async function() {
-        const res = await this.callApi('getSalesHarian');
-        if (res.success) {
-          const tbody = document.getElementById('tbody-sales-harian');
-          tbody.innerHTML = '';
-          res.list.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${r.tanggal}</td>
-              <td>Rp ${r.bulanLalu.toLocaleString('id-ID')}</td>
-              <td>Rp ${r.target.toLocaleString('id-ID')}</td>
-              <td><b>Rp ${r.actualSpd.toLocaleString('id-ID')}</b></td>
-              <td>${r.actualStd}</td>
-              <td>Rp ${r.actualApc.toLocaleString('id-ID')}</td>
-              <td>Rp ${r.gapTarget.toLocaleString('id-ID')}</td>
-              <td><b>${r.acvPct}%</b></td>
-              <td>${r.nsb}</td>
-              <td>${r.nsbPct}%</td>
-              <td>${r.oosPct}%</td>
-              <td>${r.grossMargin}%</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }
-      },
-
-      // MODUL 8: MONITORING IKT
       loadMonitoringIKT: async function() {
         const res = await this.callApi('getMonitoringIKT');
         if (res.success) {
@@ -2882,19 +2692,12 @@
           tbody.innerHTML = '';
           res.indicators.forEach(i => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><b>${i.indicator}</b></td>
-              <td>${i.target.toLocaleString('id-ID')}</td>
-              <td>${i.actual.toLocaleString('id-ID')}</td>
-              <td><b>${i.acv}%</b></td>
-              <td><span class="badge ${i.status === 'OK' ? 'badge-ok' : 'badge-nok'}">${i.status}</span></td>
-            `;
+            tr.innerHTML = `<td><b>${i.indicator}</b></td><td>${Math.round(i.target).toLocaleString('id-ID')}</td><td>${Math.round(i.actual).toLocaleString('id-ID')}</td><td><b>${Math.round(i.acv)}%</b></td><td><span class="badge ${i.status === 'OK' ? 'badge-ok' : 'badge-nok'}">${i.status}</span></td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
-      // MODUL 9: KONVERSI NO BON
       execBonConversion: function() {
         const val = document.getElementById('bon-input').value;
         const map = { '0':'M', '1':'O', '2':'Y', '3':'D', '4':'T', '5':'U', '6':'H', '7':'C', '8':'I', '9':'K' };
@@ -2906,71 +2709,39 @@
       },
 
       copyBonCode: function() {
-        const code = document.getElementById('bon-result').innerText;
-        navigator.clipboard.writeText(code);
-        Swal.fire({ icon:'success', title:'Tersalin', text:'Kode berhasil disalin ke clipboard!', timer:1000, showConfirmButton:false });
+        navigator.clipboard.writeText(document.getElementById('bon-result').innerText);
+        Swal.fire({ icon:'success', title:'Tersalin', timer:900, showConfirmButton:false });
       },
 
-      resetBon: function() {
-        document.getElementById('bon-input').value = '';
-        document.getElementById('bon-result').innerText = '----';
-      },
-
-      // MODUL 10: PENAWARAN LANGSUNG
       loadPenawaranLangsung: async function() {
         const res = await this.callApi('getPenawaranLangsung');
         if (res.success && res.selected) {
           const s = res.selected;
-          document.getElementById('pl-detail-point').innerText = s.pointDashboard;
+          document.getElementById('pl-detail-point').innerText = Math.round(s.pointDashboard);
           document.getElementById('pl-detail-rank').innerText = '#' + s.rank;
-
           const tbody = document.getElementById('tbody-penawaran-detail');
           tbody.innerHTML = `
-            <tr><td><b>PSM</b></td><td>${s.psm.target}</td><td>${s.psm.actual}</td><td><b>${s.psm.acv}%</b></td><td><span class="badge ${s.psm.status === 'OK'?'badge-ok':'badge-nok'}">${s.psm.status}</span></td></tr>
-            <tr><td><b>PWP</b></td><td>${s.pwp.target}</td><td>${s.pwp.actual}</td><td><b>${s.pwp.acv}%</b></td><td><span class="badge ${s.pwp.status === 'OK'?'badge-ok':'badge-nok'}">${s.pwp.status}</span></td></tr>
-            <tr><td><b>Serba Gratis</b></td><td>${s.serbaGratis.target}</td><td>${s.serbaGratis.actual}</td><td><b>${s.serbaGratis.acv}%</b></td><td><span class="badge ${s.serbaGratis.status === 'OK'?'badge-ok':'badge-nok'}">${s.serbaGratis.status}</span></td></tr>
-            <tr><td><b>APC</b></td><td>${s.apc.target}</td><td>${s.apc.actual}</td><td><b>${s.apc.acv}%</b></td><td><span class="badge ${s.apc.status === 'OK'?'badge-ok':'badge-nok'}">${s.apc.status}</span></td></tr>
+            <tr><td><b>PSM</b></td><td>${Math.round(s.psm.target)}</td><td>${Math.round(s.psm.actual)}</td><td><b>${Math.round(s.psm.acv)}%</b></td><td><span class="badge ${s.psm.status === 'OK'?'badge-ok':'badge-nok'}">${s.psm.status}</span></td></tr>
+            <tr><td><b>PWP</b></td><td>${Math.round(s.pwp.target)}</td><td>${Math.round(s.pwp.actual)}</td><td><b>${Math.round(s.pwp.acv)}%</b></td><td><span class="badge ${s.pwp.status === 'OK'?'badge-ok':'badge-nok'}">${s.pwp.status}</span></td></tr>
+            <tr><td><b>Serba Gratis</b></td><td>${Math.round(s.serbaGratis.target)}</td><td>${Math.round(s.serbaGratis.actual)}</td><td><b>${Math.round(s.serbaGratis.acv)}%</b></td><td><span class="badge ${s.serbaGratis.status === 'OK'?'badge-ok':'badge-nok'}">${s.serbaGratis.status}</span></td></tr>
+            <tr><td><b>APC</b></td><td>${Math.round(s.apc.target)}</td><td>${Math.round(s.apc.actual)}</td><td><b>${Math.round(s.apc.acv)}%</b></td><td><span class="badge ${s.apc.status === 'OK'?'badge-ok':'badge-nok'}">${s.apc.status}</span></td></tr>
           `;
         }
       },
 
-      // MODUL 11: REKAP PSM KASIR
       loadRekapPSM: async function() {
         const res = await this.callApi('getRekapPSMKasir');
         if (res.success) {
           this.state.psmItems = res.list;
           document.getElementById('psm-badge-achieved').innerText = 'Tercapai: ' + res.summary.itemAchieved;
           document.getElementById('psm-badge-unachieved').innerText = 'Belum: ' + res.summary.itemNotAchieved;
-
-          const tbody = document.getElementById('tbody-rekap-psm');
-          tbody.innerHTML = '';
-          res.list.forEach((item, idx) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><input type="text" value="${item.namaItem}" class="psm-name" data-idx="${idx}"></td>
-              <td><input type="number" value="${item.target}" style="width:60px;" class="psm-tgt" data-idx="${idx}"></td>
-              ${item.days.map((d, dIdx) => `<td><input type="number" value="${d}" style="width:45px;" class="psm-day" data-idx="${idx}" data-day="${dIdx}"></td>`).join('')}
-              <td><b>${item.totalAktual}</b></td>
-              <td><b>${item.acvPct}%</b></td>
-              <td>${item.gap}</td>
-              <td><button class="btn-danger" style="padding:4px 6px;" onclick="App.deletePSMItem(${idx})">Hapus</button></td>
-            `;
-            tbody.appendChild(tr);
-          });
+          this.renderRekapPSMRows();
         }
       },
 
       addPSMItemRow: function() {
         if (!this.state.psmItems) this.state.psmItems = [];
-        this.state.psmItems.push({
-          rowId: 0,
-          namaItem: 'Item Baru',
-          target: 100,
-          days: [0,0,0,0,0,0,0,0],
-          totalAktual: 0,
-          acvPct: 0,
-          gap: -100
-        });
+        this.state.psmItems.push({ rowId: 0, namaItem: 'Item Baru', target: 100, days: [0,0,0,0,0,0,0,0], totalAktual: 0, acvPct: 0, gap: -100 });
         this.renderRekapPSMRows();
       },
 
@@ -2986,31 +2757,21 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td><input type="text" value="${item.namaItem}" class="psm-name" data-idx="${idx}"></td>
-            <td><input type="number" value="${item.target}" style="width:60px;" class="psm-tgt" data-idx="${idx}"></td>
-            ${item.days.map((d, dIdx) => `<td><input type="number" value="${d}" style="width:45px;" class="psm-day" data-idx="${idx}" data-day="${dIdx}"></td>`).join('')}
-            <td><b>${item.totalAktual}</b></td>
-            <td><b>${item.acvPct}%</b></td>
-            <td>${item.gap}</td>
-            <td><button class="btn-danger" style="padding:4px 6px;" onclick="App.deletePSMItem(${idx})">Hapus</button></td>
+            <td><input type="number" value="${Math.round(item.target)}" style="width:55px;" class="psm-tgt" data-idx="${idx}"></td>
+            ${item.days.map((d, dIdx) => `<td><input type="number" value="${Math.round(d)}" style="width:40px;" class="psm-day" data-idx="${idx}" data-day="${dIdx}"></td>`).join('')}
+            <td><b>${Math.round(item.totalAktual)}</b></td><td><b>${Math.round(item.acvPct)}%</b></td><td>${Math.round(item.gap)}</td>
+            <td><button class="btn-danger" style="padding:3px 6px;" onclick="App.deletePSMItem(${idx})">x</button></td>
           `;
           tbody.appendChild(tr);
         });
       },
 
       saveRekapPSM: async function() {
-        // Baca data dari input baris
-        document.querySelectorAll('.psm-name').forEach(el => {
-          this.state.psmItems[parseInt(el.getAttribute('data-idx'))].namaItem = el.value;
-        });
-        document.querySelectorAll('.psm-tgt').forEach(el => {
-          this.state.psmItems[parseInt(el.getAttribute('data-idx'))].target = parseFloat(el.value) || 0;
-        });
+        document.querySelectorAll('.psm-name').forEach(el => this.state.psmItems[parseInt(el.getAttribute('data-idx'))].namaItem = el.value);
+        document.querySelectorAll('.psm-tgt').forEach(el => this.state.psmItems[parseInt(el.getAttribute('data-idx'))].target = parseFloat(el.value) || 0);
         document.querySelectorAll('.psm-day').forEach(el => {
-          const idx = parseInt(el.getAttribute('data-idx'));
-          const day = parseInt(el.getAttribute('data-day'));
-          this.state.psmItems[idx].days[day] = parseFloat(el.value) || 0;
+          this.state.psmItems[parseInt(el.getAttribute('data-idx'))].days[parseInt(el.getAttribute('data-day'))] = parseFloat(el.value) || 0;
         });
-
         const res = await this.callApi('saveRekapPSMKasir', { items: this.state.psmItems });
         if (res.success) {
           Swal.fire('Tersimpan', res.message, 'success');
@@ -3018,7 +2779,6 @@
         }
       },
 
-      // MODUL 12: SALES OPR
       switchSalesOPRShift: function(shift, el) {
         document.querySelectorAll('#modal-sales-opr .subnav-pill').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
@@ -3034,38 +2794,27 @@
           tbody.innerHTML = '';
           res.list.forEach(r => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${r.tanggal}</td>
-              <td>${r.jamTransaksi}</td>
-              <td>Rp ${r.sales.toLocaleString('id-ID')}</td>
-              <td>${r.std}</td>
-              <td>Rp ${r.apc.toLocaleString('id-ID')}</td>
-              <td>${r.qtyEtrans}</td>
-              <td>${r.namaPenginput}</td>
-            `;
+            tr.innerHTML = `<td>${r.tanggal}</td><td>${r.jamTransaksi}</td><td>Rp ${Math.round(r.sales).toLocaleString('id-ID')}</td><td>${Math.round(r.std)}</td><td>Rp ${Math.round(r.apc).toLocaleString('id-ID')}</td><td>${Math.round(r.qtyEtrans)}</td><td>${r.namaPenginput}</td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
       submitSalesOPR: async function() {
-        const payload = {
+        const res = await this.callApi('saveSalesOPR', {
           shiftRekap: this.state.currentOPRShift || '06:07',
           jamTransaksi: document.getElementById('opr-in-jam').value,
           sales: document.getElementById('opr-in-sales').value,
           std: document.getElementById('opr-in-std').value,
           apc: document.getElementById('opr-in-apc').value,
           qtyEtrans: document.getElementById('opr-in-etrans').value
-        };
-
-        const res = await this.callApi('saveSalesOPR', payload);
+        });
         if (res.success) {
           Swal.fire('Tersimpan', res.message, 'success');
           this.loadSalesOPR();
         }
       },
 
-      // MODUL 13: MONITORING KWH
       loadMonitoringKWH: async function() {
         const res = await this.callApi('getMonitoringKWH');
         if (res.success) {
@@ -3073,35 +2822,25 @@
           tbody.innerHTML = '';
           res.list.forEach(r => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${r.tanggal}</td>
-              <td>${r.kwhAwal}</td>
-              <td>${r.kwhAkhir}</td>
-              <td><b>${r.pemakaian} kWh</b></td>
-              <td>Rp ${r.estimasiBiaya.toLocaleString('id-ID')}</td>
-              <td>${r.keterangan || '-'}</td>
-            `;
+            tr.innerHTML = `<td>${r.tanggal}</td><td>${Math.round(r.kwhAwal)}</td><td>${Math.round(r.kwhAkhir)}</td><td><b>${Math.round(r.pemakaian)} kWh</b></td><td>Rp ${Math.round(r.estimasiBiaya).toLocaleString('id-ID')}</td><td>${r.keterangan || '-'}</td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
       submitKWH: async function() {
-        const payload = {
+        const res = await this.callApi('saveMonitoringKWH', {
           tarifPerKwh: document.getElementById('kwh-in-tarif').value,
           kwhAwal: document.getElementById('kwh-in-awal').value,
           kwhAkhir: document.getElementById('kwh-in-akhir').value,
           keterangan: document.getElementById('kwh-in-ket').value
-        };
-
-        const res = await this.callApi('saveMonitoringKWH', payload);
+        });
         if (res.success) {
           Swal.fire('Tersimpan', res.message, 'success');
           this.loadMonitoringKWH();
         }
       },
 
-      // MODUL 14: CATATAN RETURN
       switchReturnSubtab: function(sub, el) {
         document.querySelectorAll('#modal-catatan-return .subnav-pill').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
@@ -3117,37 +2856,28 @@
           tbody.innerHTML = '';
           res.list.forEach(r => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${r.tanggal}</td>
-              <td><b>${r.noFaktur}</b></td>
-              <td>${r.namaDriver}</td>
-              <td>${r.nopol}</td>
-              <td>${r.fotoUrl ? `<a href="${r.fotoUrl}" target="_blank">Lihat</a>` : '-'}</td>
-              <td>${r.catatan}</td>
-            `;
+            tr.innerHTML = `<td>${r.tanggal}</td><td><b>${r.noFaktur}</b></td><td>${r.namaDriver}</td><td>${r.nopol}</td><td>${r.fotoUrl ? `<a href="${r.fotoUrl}" target="_blank">Lihat</a>` : '-'}</td><td>${r.catatan}</td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
       submitReturn: async function() {
-        const faktur = document.getElementById('ret-in-faktur').value;
-        const driver = document.getElementById('ret-in-driver').value;
-        const nopol = document.getElementById('ret-in-nopol').value;
-        const catatan = document.getElementById('ret-in-catatan').value;
         const fileInput = document.getElementById('ret-in-foto');
-
         const doSave = async (fotoB64 = '') => {
           const res = await App.callApi('saveCatatanReturn', {
             subtab: App.state.currentReturnSubtab || 'DC REG',
-            noFaktur: faktur, namaDriver: driver, nopol: nopol, catatan: catatan, fotoBase64: fotoB64
+            noFaktur: document.getElementById('ret-in-faktur').value,
+            namaDriver: document.getElementById('ret-in-driver').value,
+            nopol: document.getElementById('ret-in-nopol').value,
+            catatan: document.getElementById('ret-in-catatan').value,
+            fotoBase64: fotoB64
           });
           if (res.success) {
             Swal.fire('Tersimpan', res.message, 'success');
             App.loadCatatanReturn();
           }
         };
-
         if (fileInput.files.length > 0) {
           const reader = new FileReader();
           reader.onload = (e) => doSave(e.target.result);
@@ -3157,7 +2887,6 @@
         }
       },
 
-      // MODUL 15: SCAN BARANG DENGAN CAROUSEL BARCODE KASIR
       loadScanBarang: async function() {
         const res = await this.callApi('getScanBarang');
         if (res.success) {
@@ -3165,27 +2894,18 @@
           tbody.innerHTML = '';
           const shelf = document.getElementById('barcode-shelf');
           shelf.innerHTML = '';
-
           res.list.forEach((item, idx) => {
-            // Isi tabel
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><b>${item.barcode}</b></td><td>${item.qty}</td><td>${item.createdAt}</td>`;
+            tr.innerHTML = `<td><b>${item.barcode}</b></td><td>${Math.round(item.qty)}</td><td>${item.createdAt}</td>`;
             tbody.appendChild(tr);
 
-            // Render Barcode Visual Shelf
             const card = document.createElement('div');
             card.className = 'barcode-badge-card';
-            card.innerHTML = `
-              <svg id="barcode-svg-${idx}"></svg>
-              <div style="font-size:12px; font-weight:700; margin-top:4px;">Qty: ${item.qty}</div>
-            `;
+            card.innerHTML = `<svg id="barcode-svg-${idx}"></svg><div style="font-size:11px; font-weight:700; margin-top:3px;">Qty: ${Math.round(item.qty)}</div>`;
             shelf.appendChild(card);
-
             try {
-              JsBarcode(`#barcode-svg-${idx}`, item.barcode, {
-                format: "CODE128", width: 1.5, height: 40, displayValue: true
-              });
-            } catch (bErr) {}
+              JsBarcode(`#barcode-svg-${idx}`, item.barcode, { format: "CODE128", width: 1.4, height: 36, displayValue: true });
+            } catch (e) {}
           });
         }
       },
@@ -3195,23 +2915,19 @@
         this.state.html5QrScanner = new Html5Qrcode("interactive-scanner");
         this.state.html5QrScanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 150 } },
+          { fps: 10, qrbox: { width: 240, height: 140 } },
           (decodedText) => {
             this.stopBarcodeCamera();
             Swal.fire({
-              title: 'Barcode Terdeteksi!',
-              text: 'Kode: ' + decodedText + '. Simpan ke daftar transaksi?',
-              icon: 'question',
+              title: 'Barcode Ditemukan',
+              text: `Kode: ${decodedText}. Simpan?`,
               showCancelButton: true,
-              confirmButtonText: 'Ya, Simpan',
-              cancelButtonText: 'Batal'
-            }).then(result => {
-              if (result.isConfirmed) {
-                App.saveScannedItemDirect(decodedText, 1);
-              }
+              confirmButtonText: 'Ya, Simpan'
+            }).then(r => {
+              if (r.isConfirmed) this.saveScannedItemDirect(decodedText, 1);
             });
           },
-          (errorMessage) => {}
+          () => {}
         );
       },
 
@@ -3226,9 +2942,7 @@
 
       saveScannedItemDirect: async function(code, qty) {
         const res = await this.callApi('saveScanBarang', { barcode: code, qty: qty });
-        if (res.success) {
-          this.loadScanBarang();
-        }
+        if (res.success) this.loadScanBarang();
       },
 
       saveScannedItem: async function() {
@@ -3239,50 +2953,6 @@
         document.getElementById('scan-manual-code').value = '';
       },
 
-      // MODUL CHAT AI (GROQ INTEGRATION)
-      openChatModal: function() {
-        document.getElementById('modal-chat-ai').style.display = 'flex';
-      },
-
-      handleChatKeyDown: function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          // Tetap tambah baris baru sesuai spesifikasi
-        }
-      },
-
-      sendChatMessage: async function() {
-        const input = document.getElementById('chat-user-input');
-        const text = input.value.trim();
-        if (!text) return;
-
-        const box = document.getElementById('chat-messages-box');
-
-        // Balon pesan user
-        const uBubble = document.createElement('div');
-        uBubble.className = 'chat-bubble user';
-        uBubble.innerText = text;
-        box.appendChild(uBubble);
-
-        input.value = '';
-        box.scrollTop = box.scrollHeight;
-
-        // Indikator bot mengetik
-        const botLoading = document.createElement('div');
-        botLoading.className = 'chat-bubble bot';
-        botLoading.innerText = 'Kacida AI sedang mengetik...';
-        box.appendChild(botLoading);
-        box.scrollTop = box.scrollHeight;
-
-        const res = await this.callApi('chatAI', { message: text });
-        if (res.success) {
-          botLoading.innerText = res.reply;
-        } else {
-          botLoading.innerText = 'Maaf, terjadi kendala: ' + res.message;
-        }
-        box.scrollTop = box.scrollHeight;
-      },
-
-      // MODUL KALENDER (PENANDA JUMAT, SABTU, MINGGU)
       openCalendarModal: function() {
         document.getElementById('modal-calendar').style.display = 'flex';
         this.renderCalendar();
@@ -3296,7 +2966,6 @@
       renderCalendar: function() {
         const grid = document.getElementById('calendar-grid');
         grid.innerHTML = '';
-
         const date = this.state.currentCalendarDate;
         const year = date.getFullYear();
         const month = date.getMonth();
@@ -3316,30 +2985,20 @@
         const startIndex = (firstDay === 0 ? 7 : firstDay) - 1;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        for (let i = 0; i < startIndex; i++) {
-          const blank = document.createElement('div');
-          grid.appendChild(blank);
-        }
+        for (let i = 0; i < startIndex; i++) grid.appendChild(document.createElement('div'));
 
         const today = new Date();
         for (let day = 1; day <= daysInMonth; day++) {
           const cDate = new Date(year, month, day);
-          const dayOfWeek = cDate.getDay();
-          const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0); // Jum, Sab, Min
-
+          const isWeekend = (cDate.getDay() === 5 || cDate.getDay() === 6 || cDate.getDay() === 0);
           const cell = document.createElement('div');
           cell.className = 'cal-day-cell' + (isWeekend ? ' weekend' : '');
-
-          if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-            cell.classList.add('active-today');
-          }
-
+          if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) cell.classList.add('active-today');
           cell.innerHTML = `<span>${day}</span>`;
           grid.appendChild(cell);
         }
       },
 
-      // MODUL PROFIL
       openProfileModal: function() {
         const u = this.state.user;
         document.getElementById('profile-detail-name').innerText = u.name;
@@ -3349,14 +3008,13 @@
       },
 
       saveProfileDetails: async function() {
-        const phone = document.getElementById('profile-phone').value;
-        const email = document.getElementById('profile-email').value;
-        const sosmed = document.getElementById('profile-sosmed').value;
         const fileInput = document.getElementById('profile-new-photo');
-
         const doUpdate = async (b64 = '') => {
           const res = await App.callApi('updateProfile', {
-            phone: phone, email: email, sosmed: sosmed, fotoBase64: b64
+            phone: document.getElementById('profile-phone').value,
+            email: document.getElementById('profile-email').value,
+            sosmed: document.getElementById('profile-sosmed').value,
+            fotoBase64: b64
           });
           if (res.success) {
             Swal.fire('Sukses', res.message, 'success');
@@ -3366,7 +3024,6 @@
             }
           }
         };
-
         if (fileInput.files.length > 0) {
           const reader = new FileReader();
           reader.onload = (e) => doUpdate(e.target.result);
@@ -3376,7 +3033,6 @@
         }
       },
 
-      // SUPER ADMIN MODAL (NIK 14125034)
       openSuperAdminModal: async function() {
         document.getElementById('modal-super-admin').style.display = 'flex';
         const res = await this.callApi('getSuperAdminAuditLogs');
@@ -3385,22 +3041,12 @@
           tbody.innerHTML = '';
           res.logs.forEach(l => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${l.id}</td>
-              <td>${l.timestamp}</td>
-              <td>${l.nik}</td>
-              <td>${l.nama}</td>
-              <td>${l.storeCode}</td>
-              <td><b>${l.action}</b></td>
-              <td>${l.menu}</td>
-              <td>${l.details}</td>
-            `;
+            tr.innerHTML = `<td>${l.id}</td><td>${l.timestamp}</td><td>${l.nik}</td><td>${l.nama}</td><td>${l.storeCode}</td><td><b>${l.action}</b></td><td>${l.menu}</td><td>${l.details}</td>`;
             tbody.appendChild(tr);
           });
         }
       },
 
-      // EKSPOR EXCEL NATIVE VIA SHEETJS (XLSX)
       exportTableToExcel: function(tableId, filename) {
         const table = document.getElementById(tableId);
         const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan" });
@@ -3408,16 +3054,7 @@
       }
     };
 
-    // Jalankan aplikasi saat seluruh DOM siap
     document.addEventListener('DOMContentLoaded', () => App.init());
-  
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then((reg) => console.log('ServiceWorker Kacida Bersatu aktif dengan scope:', reg.scope))
-        .catch((err) => console.error('Pendaftaran ServiceWorker gagal:', err));
-    });
-  }
-</script>
+  </script>
 </body>
 </html>

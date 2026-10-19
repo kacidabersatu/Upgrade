@@ -3388,6 +3388,14 @@
     document.addEventListener('DOMContentLoaded', () => {
       App.init();
     });
+    
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('Kacida Bersatu PWA ServiceWorker aktif:', reg.scope))
+      .catch((err) => console.error('PWA SW Gagal didaftarkan:', err));
+  });
+}
   </script>
 </body>
 </html>

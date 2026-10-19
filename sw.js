@@ -1,80 +1,107 @@
-/**
- * Service Worker: Kacida Bersatu
- * Strategi: Stale-While-Revalidate untuk aset statis UI, Network-First untuk API calls.
- */
-const CACHE_NAME = 'kacida-bersatu-v1.0.0';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'kacida-bersatu-cache-v1.0.0';
+
+// Daftar Aset Kritis yang disimpan di Cache lokal
+const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/sweetalert2@11',
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
-  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js',
-  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
+  // Gambar & Aset Visual Utama
+  'https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR', // Logo
+  'https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i', // Watermark
+  'https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa', // Hero BG
+  'https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J', // Identitas Toko
+  'https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9'  // BG Login
 ];
 
+// 1. Event: Install
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Aset offline pra-cache gagal dimuat:', err);
-      });
-    })
+      console.log('[Service Worker] Menyiapkan cache aset Kacida Bersatu...');
+      return cache.addAll(STATIC_ASSETS);
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
+// 2. Event: Activate (Bersihkan cache versi lawas)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((keyList) => {
       return Promise.all(
-        keys.map((key) => {
+        keyList.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[Service Worker] Menghapus cache usang:', key);
             return caches.delete(key);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
+// 3. Event: Fetch
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  // Jangan cache request ke Google Script API backend
-  if (url.hostname.includes('script.google.com') || url.hostname.includes('script.googleusercontent.com') || url.hostname.includes('api.groq.com')) {
-    event.respondWith(fetch(event.request));
+  // Jangan pernah cache permintaan POST (misal ke Google Apps Script)
+  if (request.method !== 'GET') {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Ambil pembaruan di latar belakang
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+  // Permintaan ke Google Apps Script / Groq API: Network Only
+  if (url.hostname.includes('script.google.com') || url.hostname.includes('api.groq.com')) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return new Response(
+          JSON.stringify({
+            status: 'offline',
+            message: 'Perangkat Anda sedang offline. Mohon periksa kembali sambungan internet.'
+          }),
+          {
+            headers: { 'Content-Type': 'application/json' }
           }
-        }).catch(() => {});
+        );
+      })
+    );
+    return;
+  }
+
+  // Aset Statis & Font: Cache First, fallback ke Network
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
         return cachedResponse;
       }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+      return fetch(request).then((networkResponse) => {
+        // Simpan salinan ke cache jika respons valid
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         return networkResponse;
       }).catch(() => {
-        if (event.request.mode === 'navigate') {
+        // Fallback jika file HTML diminta saat offline
+        if (request.headers.get('accept') && request.headers.get('accept').includes('text/html')) {
           return caches.match('./index.html');
         }
       });
     })
   );
+});
+
+// 4. Sinkronisasi Background & Push Notif Fallback
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });

@@ -1,12 +1,13 @@
 {
   "name": "Kacida Bersatu — Portal Performa & Operasional Retail",
   "short_name": "Kacida Bersatu",
-  "description": "Portal Performa & Operasional Retail Alfamart - Bersama Kita Kuat",
+  "description": "Portal Performa & Operasional Retail Modern, Cepat, dan Terintegrasi",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#064e3b",
-  "theme_color": "#064e3b",
   "orientation": "portrait-primary",
+  "background_color": "#0B3B24",
+  "theme_color": "#0F5132",
+  "lang": "id-ID",
   "icons": [
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",

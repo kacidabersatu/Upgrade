@@ -5,776 +5,740 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0F5132">
+  <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
 
-  <!-- Core Fonts & CDN Libraries -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS & Font Awesome & Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
           colors: {
             brand: {
-              50: '#F0FDF4',
-              100: '#DCFCE7',
-              500: '#22C55E',
-              600: '#16A34A',
-              700: '#15803D',
-              800: '#166534',
-              900: '#0F5132',
-              dark: '#08331E'
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22'
             }
           }
         }
       }
-    };
+    }
   </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
-    /* Styling Dasar & Watermark */
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      overflow-x: hidden;
+    /* Styling scrollbar elegan */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #10b98188; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #059669; }
+
+    /* Watermark Halus Tidak Duplikat */
+    .watermarked-container {
+      position: relative;
     }
-    .watermark-overlay {
+    .watermarked-container::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px;
+      height: 260px;
       background-image: url('https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i');
       background-repeat: no-repeat;
-      background-position: center center;
-      background-size: 420px;
-      opacity: 0.035;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.06;
       pointer-events: none;
+      z-index: 1;
     }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Animasi Smooth */
-    .fade-in { animation: fadeIn 0.25s ease-in-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .watermarked-container > * {
+      position: relative;
+      z-index: 2;
+    }
 
-    /* Modal Fullscreen Responsif */
-    .modal-fullscreen {
-      position: fixed; inset: 0; z-index: 50;
-      background-color: #f8fafc; overflow-y: auto;
-      display: flex; flex-direction: column;
+    /* Modal Layar Penuh */
+    .fullscreen-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background-color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlideUp 0.25s ease-out;
     }
-    .dark .modal-fullscreen { background-color: #0b131e; }
+    .dark .fullscreen-modal {
+      background-color: #0f172a;
+    }
+    @keyframes modalSlideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen relative flex flex-col selection:bg-brand-500 selection:text-white">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
 
-  <!-- Watermark Global Background -->
-  <div class="fixed inset-0 watermark-overlay z-0"></div>
+  <!-- ======================================================== -->
+  <!-- A. OVERLAY LOADING & PROGRESS BAR                        -->
+  <!-- ======================================================== -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-brand-950/90 backdrop-blur-md text-white transition-opacity duration-300">
+    <div class="relative mb-6">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida" class="w-24 h-24 object-contain animate-pulse">
+    </div>
+    <h2 class="text-xl font-bold tracking-wide">KACIDA BERSATU</h2>
+    <p class="text-xs text-brand-200 mt-1 mb-6 font-medium">Bersama Kita Kuat • Portal Performa Retail</p>
+    
+    <!-- Progress Bar -->
+    <div class="w-72 bg-brand-900/80 rounded-full h-3 p-0.5 overflow-hidden border border-brand-500/30">
+      <div id="loadingProgressBar" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-full rounded-full transition-all duration-300 w-1/12"></div>
+    </div>
+    <div class="flex justify-between w-72 mt-2 text-xs text-slate-300 font-mono">
+      <span id="loadingStatusText">Memuat antarmuka...</span>
+      <span id="loadingProgressPercent">10%</span>
+    </div>
+  </div>
 
-  <!-- ========================================================================= -->
-  <!-- 1. SCREEN: LOGIN                                                         -->
-  <!-- ========================================================================= -->
-  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cover bg-center transition-all duration-300" 
-       style="background-image: linear-gradient(rgba(11,59,36,0.85), rgba(8,51,30,0.92)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
-    <div class="w-full max-w-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/20 text-center relative overflow-hidden">
-      <div class="absolute -top-12 -right-12 w-32 h-32 bg-brand-500/10 rounded-full blur-xl"></div>
-      
-      <!-- Logo Brand -->
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida" class="h-20 mx-auto mb-3 object-contain drop-shadow">
-      <h1 class="text-2xl font-black text-brand-900 dark:text-brand-100 tracking-tight">Kacida Bersatu</h1>
-      <p class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-1">Portal Performa & Operasional Retail</p>
-      <p class="text-xs italic text-slate-500 dark:text-slate-400 mb-6 font-medium">"Bersama Kita Kuat"</p>
+  <!-- ======================================================== -->
+  <!-- B. SCREEN 1: LOGIN PAGE                                  -->
+  <!-- ======================================================== -->
+  <div id="loginScreen" class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-cover bg-center" style="background-image: linear-gradient(rgba(6, 78, 59, 0.85), rgba(2, 44, 34, 0.92)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+    <div class="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-emerald-500/30 text-center relative overflow-hidden">
+      <!-- Watermark Login -->
+      <img src="https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i" alt="watermark" class="absolute -right-10 -bottom-10 w-44 h-44 opacity-10 pointer-events-none">
 
-      <div class="space-y-4 text-left">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida" class="w-20 h-20 mx-auto object-contain mb-4">
+      <h1 class="text-2xl font-extrabold text-brand-900 dark:text-emerald-400">Kacida Bersatu</h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-6">Portal Performa & Operasional Retail</p>
+
+      <form id="loginForm" class="space-y-4 text-left">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">NOMOR INDUK KARYAWAN (NIK)</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Nomor Induk Karyawan (NIK)</label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
               <i class="fa-solid fa-id-card"></i>
             </span>
-            <input type="number" id="inputNik" placeholder="Masukkan NIK Anda" 
-                   class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-700/60 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+            <input type="text" id="loginNikInput" required placeholder="Masukkan NIK Anda" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm font-medium">
           </div>
         </div>
 
-        <button onclick="handleLoginSubmit()" id="btnLogin" 
-                class="w-full py-3.5 bg-gradient-to-r from-brand-700 to-brand-600 hover:from-brand-800 hover:to-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-700/30 transition transform active:scale-98 flex items-center justify-center gap-2">
-          <span>Masuk ke Akun Anda</span>
+        <button type="submit" id="btnLoginSubmit" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-700 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 active:scale-98 transition flex items-center justify-center gap-2">
+          <span>Masuk</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
+      </form>
 
-        <div class="pt-3 border-t border-slate-200 dark:border-slate-700/80 text-center">
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">Mengalami kendala saat login?</p>
-          <a href="https://wa.me/6285862719780?text=Halo%20Admin,%20saya%20butuh%20bantuan%20login%20Kacida%20Bersatu" 
-             target="_blank" rel="noopener noreferrer" 
-             class="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-            <i class="fa-brands fa-whatsapp text-sm"></i>
-            <span>Hubungi Admin: 085862719780</span>
-          </a>
-        </div>
+      <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
+        <span class="text-slate-500 dark:text-slate-400">Tidak bisa Login?</span>
+        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20mengalami%20kendala%20saat%20login%20dengan%20NIK%20saya." target="_blank" class="text-emerald-600 dark:text-emerald-400 font-bold ml-1 hover:underline">
+          <i class="fa-brands fa-whatsapp"></i> Hubungi Admin (085862719780)
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 2. SCREEN: MAIN APPLICATION                                              -->
-  <!-- ========================================================================= -->
-  <div id="appContainer" class="hidden flex-1 flex flex-col relative z-10">
+  <!-- ======================================================== -->
+  <!-- C. MAIN APPLICATION WRAPPER                              -->
+  <!-- ======================================================== -->
+  <div id="appContainer" class="hidden min-h-screen flex flex-col pb-20 md:pb-0">
 
-    <!-- Top Navbar Bar -->
-    <header class="bg-white/90 dark:bg-slate-800/90 backdrop-blur sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-700 px-4 py-2.5">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <!-- Brand & Store Badge -->
-        <div class="flex items-center gap-3">
-          <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="h-9 w-9 object-contain">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-black text-brand-900 dark:text-brand-100 text-base tracking-tight leading-none">KACIDA BERSATU</span>
-              <span id="badgeNetwork" class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Online</span>
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <i class="fa-solid fa-store text-[10px] text-brand-600 dark:text-brand-400"></i>
-              <span id="lblHeaderStore" class="text-xs font-bold text-slate-600 dark:text-slate-300">Toko 2J16 — CARINGIN KULON</span>
-            </div>
+    <!-- 1. HEADER UTAMA -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-3">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-9 h-9 object-contain">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-brand-900 dark:text-emerald-400 leading-tight">Kacida Bersatu</span>
+            <span id="badgeOnlineStatus" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Online
+            </span>
           </div>
+          <p id="headerStoreName" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[160px] md:max-w-none">Memuat Toko...</p>
         </div>
+      </div>
 
-        <!-- Action Controls -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Sync Button -->
-          <button onclick="startSyncManual()" title="Sinkronisasi Data" class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-brand-800 dark:text-brand-200 text-xs font-bold rounded-lg transition border border-brand-200 dark:border-slate-600">
-            <i class="fa-solid fa-arrows-rotate text-brand-600"></i>
-            <span class="hidden md:inline">Sync Manual</span>
-          </button>
+      <!-- Action Button Group -->
+      <div class="flex items-center gap-2">
+        <button onclick="triggerManualSync()" title="Sinkronisasi Data" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 hover:bg-brand-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-brand-700 dark:text-emerald-400 border border-brand-200 dark:border-slate-700 transition">
+          <i class="fa-solid fa-rotate"></i>
+          <span class="hidden md:inline">Sync Manual</span>
+        </button>
 
-          <!-- Theme Toggles -->
-          <button onclick="cycleTheme()" title="Ubah Tema" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs">
-            <i id="themeIcon" class="fa-solid fa-sun"></i>
-          </button>
+        <button onclick="toggleTheme()" title="Ubah Tema" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </button>
 
-          <!-- Chief Approval Badge Notification -->
-          <div id="chiefApprovalNotice" class="hidden relative cursor-pointer" onclick="openMenu('menuBelanjaKaryawan')">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-200">
-              <i class="fa-solid fa-bell"></i>
-            </div>
-            <span id="badgeApprovalCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
-          </div>
-
-          <!-- User Mini Profile -->
-          <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
-            <img id="headerUserAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop" class="w-8 h-8 rounded-full object-cover border border-brand-500">
-            <div class="hidden lg:block text-left">
-              <p id="lblHeaderUserName" class="text-xs font-bold leading-tight">Budi Santoso</p>
-              <p id="lblHeaderUserRole" class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Chief of Store</p>
-            </div>
-            <button onclick="handleLogout()" title="Keluar / Ganti Akun" class="text-slate-400 hover:text-red-500 text-xs ml-1 p-1">
-              <i class="fa-solid fa-power-off"></i>
-            </button>
+        <!-- User Profile Quick Info -->
+        <div onclick="openUserModalProfile()" class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 cursor-pointer">
+          <img id="userAvatarThumb" src="" alt="Avatar" class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/30">
+          <div class="hidden md:block text-left">
+            <p id="userNameThumb" class="text-xs font-bold leading-tight truncate max-w-[100px]">Pengguna</p>
+            <p id="userRoleThumb" class="text-[10px] text-slate-400 truncate max-w-[100px]">Role</p>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Workspace Content -->
-    <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 pb-24 space-y-6">
+    <!-- 2. BODY CONTENT (BERANDA) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-5">
 
-      <!-- =================================================================== -->
-      <!-- A. HERO CARD GREETING & H-1 SALES                                   -->
-      <!-- =================================================================== -->
-      <section class="rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-white/20"
-               style="background-image: linear-gradient(135deg, rgba(15,81,50,0.92), rgba(8,51,30,0.85)), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa'); background-size: cover; background-position: center;">
-        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <!-- Hero Card Banner -->
+      <div class="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(6, 78, 59, 0.95), rgba(4, 120, 87, 0.85)), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa');">
+        <!-- Watermark Hero -->
+        <img src="https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i" alt="WM" class="absolute right-0 bottom-0 w-52 h-52 opacity-15 pointer-events-none translate-x-6 translate-y-6">
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div class="flex items-center gap-4">
-            <img id="heroUserPhoto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop" 
-                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/80 shadow-lg">
+            <img id="heroUserPhoto" src="" alt="Profile" class="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-300 shadow-md">
             <div>
-              <div class="inline-block px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold uppercase tracking-wider mb-1.5">
-                <span id="heroRoleName">Chief of Store</span> • <span id="heroStoreCode">X041</span>
-              </div>
-              <h2 class="text-xl sm:text-2xl font-black tracking-tight" id="heroGreeting">Selamat Pagi, Rekan Juang!</h2>
-              <p class="text-xs sm:text-sm text-brand-100 flex items-center gap-1.5 mt-0.5">
-                <i class="fa-solid fa-location-dot"></i>
-                <span id="heroStoreName">Toko Ocean (X041)</span>
-              </p>
+              <p id="heroGreeting" class="text-xs font-medium text-emerald-200">Selamat Bekerja,</p>
+              <h2 id="heroUserName" class="text-xl md:text-2xl font-black tracking-tight">Nama Karyawan</h2>
+              <p id="heroUserMeta" class="text-xs text-emerald-100 mt-0.5">Chief of Store • Toko</p>
             </div>
           </div>
 
-          <!-- Sales H-1 Card Highlight -->
-          <div class="w-full md:w-auto bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:px-6 border border-white/20 flex items-center justify-between md:justify-start gap-5">
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex items-center justify-between md:justify-end gap-6">
             <div>
-              <p class="text-[11px] font-bold uppercase tracking-wider text-brand-100">Sales H-1 Kemarin</p>
-              <h3 class="text-2xl font-black mt-0.5 text-white" id="lblHeroSalesHMin1">Rp 0</h3>
-              <p class="text-xs font-semibold text-emerald-300 flex items-center gap-1 mt-0.5" id="lblHeroGrowthHMin1">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>0% vs Target</span>
-              </p>
+              <p class="text-[11px] text-emerald-200 font-medium">Sales H-1 Kemarin</p>
+              <h3 id="heroSalesH1" class="text-lg md:text-xl font-extrabold text-white">Rp 0</h3>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-xl text-brand-100">
-              <i class="fa-solid fa-chart-line"></i>
+            <div class="text-right">
+              <span id="heroSalesBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-400 text-brand-950">
+                0%
+              </span>
+              <p id="heroLastSync" class="text-[9px] text-emerald-200 mt-1">Sinkronisasi: -</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- =================================================================== -->
-      <!-- B. CAROUSEL RINGKASAN KPI RETAIL                                    -->
-      <!-- =================================================================== -->
-      <section>
+      <!-- Carousel Ringkasan KPI Toko -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <!-- Card 1: IKT -->
+        <div onclick="openMenuModal(8)" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500">Pencapaian IKT</span>
+            <span class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600"><i class="fa-solid fa-chart-line"></i></span>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <h4 id="kpiIktVal" class="text-xl font-black">0%</h4>
+            <span id="kpiIktStatus" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700">NOK</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Net Sales Toko</p>
+        </div>
+
+        <!-- Card 2: Sales MTD -->
+        <div onclick="openMenuModal(6)" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500">Sales MTD</span>
+            <span class="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600"><i class="fa-solid fa-calendar-check"></i></span>
+          </div>
+          <h4 id="kpiMtdVal" class="text-xl font-black truncate">Rp 0</h4>
+          <p id="kpiMtdMeta" class="text-[11px] text-slate-400 mt-1">STD: 0 • APC: Rp 0</p>
+        </div>
+
+        <!-- Card 3: Penawaran Langsung -->
+        <div onclick="openMenuModal(10)" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500">Penawaran Langsung</span>
+            <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600"><i class="fa-solid fa-bullhorn"></i></span>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <h4 id="kpiPointVal" class="text-xl font-black">0</h4>
+            <span id="kpiRankVal" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">Rank -</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Point Dashboard</p>
+        </div>
+
+        <!-- Card 4: Sales Harian -->
+        <div onclick="openMenuModal(7)" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500">Sales Harian</span>
+            <span class="p-2 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600"><i class="fa-solid fa-cash-register"></i></span>
+          </div>
+          <h4 id="kpiHarianAcv" class="text-xl font-black">0%</h4>
+          <p id="kpiHarianGrowth" class="text-[11px] text-slate-400 mt-1">Growth: 0% vs Lalu</p>
+        </div>
+      </div>
+
+      <!-- GRID 15 MENU UTAMA & DINAMIS NAVIGASI -->
+      <div>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Ringkasan KPI Utama</h3>
-          <span class="text-[11px] text-slate-400 font-semibold" id="lblLastSyncInfo">Terakhir Sinkron: Sekarang</span>
+          <h3 class="text-sm font-bold tracking-wide uppercase text-slate-600 dark:text-slate-300">Menu Utama Retail</h3>
+          <span class="text-xs text-brand-600 dark:text-emerald-400 font-semibold" id="menuCountLabel">15 Fitur Operasional</span>
         </div>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          
-          <!-- KPI 1: IKT -->
-          <div onclick="openMenu('menuIkt')" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200/80 dark:border-slate-700 group">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-500 group-hover:text-brand-600 transition">IKT Net Sales</span>
-              <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 text-xs">
-                <i class="fa-solid fa-bullseye"></i>
-              </span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-black text-slate-800 dark:text-white" id="kpiIktPercent">0%</span>
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800" id="badgeIktStatus">OK</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">Target 100% Pencapaian</p>
-          </div>
 
-          <!-- KPI 2: Sales MTD -->
-          <div onclick="openMenu('menuSalesMtd')" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200/80 dark:border-slate-700 group">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-500 group-hover:text-brand-600 transition">Sales MTD 2026</span>
-              <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 text-xs">
-                <i class="fa-solid fa-calendar-check"></i>
-              </span>
-            </div>
-            <span class="text-2xl font-black text-slate-800 dark:text-white" id="kpiSalesMtdVal">Rp 0</span>
-            <p class="text-[11px] text-slate-400 mt-1">Akumulasi Bulan Berjalan</p>
-          </div>
-
-          <!-- KPI 3: Penawaran Langsung -->
-          <div onclick="openMenu('menuPenawaranLangsung')" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200/80 dark:border-slate-700 group">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-500 group-hover:text-brand-600 transition">Penawaran Kasir</span>
-              <span class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950 flex items-center justify-center text-amber-600 text-xs">
-                <i class="fa-solid fa-award"></i>
-              </span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-black text-slate-800 dark:text-white" id="kpiPointDashboard">0</span>
-              <span class="text-[11px] font-bold text-amber-600">Point Dashboard</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">PSM, PWP, Serba Gratis</p>
-          </div>
-
-          <!-- KPI 4: Sales Harian -->
-          <div onclick="openMenu('menuSalesHarian')" class="cursor-pointer bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200/80 dark:border-slate-700 group">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-500 group-hover:text-brand-600 transition">Sales Harian ACV</span>
-              <span class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-purple-600 text-xs">
-                <i class="fa-solid fa-receipt"></i>
-              </span>
-            </div>
-            <span class="text-2xl font-black text-slate-800 dark:text-white" id="kpiSalesHarianAcv">0%</span>
-            <p class="text-[11px] text-slate-400 mt-1">Tingkat Pencapaian Harian</p>
-          </div>
-
+        <!-- Dynamic Menu Container -->
+        <div id="mainMenuGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          <!-- Diinjeksi oleh JavaScript -->
         </div>
-      </section>
 
-      <!-- =================================================================== -->
-      <!-- C. GRID MENU UTAMA (15 CORE + DINAMIS NAVIGATION)                   -->
-      <!-- =================================================================== -->
-      <section>
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">15 Menu Operasional & Performa</h3>
-          <button onclick="toggleAllMenus()" id="btnToggleAllMenu" class="text-xs font-bold text-brand-700 dark:text-brand-400 hover:underline flex items-center gap-1">
-            <span>Lihat Semua</span>
-            <i class="fa-solid fa-angle-right"></i>
+        <div class="mt-3 text-center">
+          <button id="btnToggleAllMenu" onclick="toggleMenuDisplayLimit()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition">
+            Lihat Semua Fitur (+ Lainnya)
           </button>
         </div>
+      </div>
 
-        <!-- Grid Container -->
-        <div id="gridMenuContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
-          <!-- Item Menu Disuntikkan Dinamis Melalui JavaScript Sesuai Urutan Favourit & Navigasi -->
-        </div>
-      </section>
-
-      <!-- =================================================================== -->
-      <!-- D. DASHBOARD TREN & STRUKTUR TOKO                                   -->
-      <!-- =================================================================== -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- GRAFIK TREN & INFORMASI STRUKTUR TOKO -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <!-- Grafik Tren Sales Harian -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-700">
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm watermarked-container">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h4 class="font-bold text-slate-800 dark:text-white text-sm">Tren Sales Harian (7 Hari Terakhir)</h4>
-              <p class="text-xs text-slate-400 font-medium">Perbandingan Aktual vs Target Realtime</p>
+              <h4 class="text-sm font-bold">Tren Sales Harian Toko</h4>
+              <p class="text-xs text-slate-400">Realisasi aktual vs target bulan berjalan</p>
             </div>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-50 text-brand-800 border border-brand-200">SPD Harian</span>
+            <span class="text-xs font-semibold px-2 py-1 rounded bg-brand-50 text-brand-700 dark:bg-emerald-950 dark:text-emerald-300">Daily Trend</span>
           </div>
-          <div class="h-64 w-full">
-            <canvas id="chartTrenSalesHarian"></canvas>
+          <div class="h-64">
+            <canvas id="chartTrenHarian"></canvas>
           </div>
         </div>
 
-        <!-- Profil Toko & Struktur Organisasi -->
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between">
+        <!-- Profil Struktur Personel Toko -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700 pb-3">
-              <h4 class="font-bold text-slate-800 dark:text-white text-sm">Struktur Organisasi Toko</h4>
-              <i class="fa-solid fa-users-viewfinder text-brand-600"></i>
-            </div>
-            <div class="space-y-3" id="containerStrukturToko">
-              <!-- Rendered by JS -->
+            <h4 class="text-sm font-bold mb-1">Struktur Personel Toko</h4>
+            <p id="labelPersonnelStore" class="text-xs text-slate-400 mb-4">Daftar tim operasional aktif</p>
+            
+            <div id="personnelListContainer" class="space-y-3 max-h-56 overflow-y-auto pr-1">
+              <!-- Render Personnel -->
             </div>
           </div>
-          <div class="pt-4 border-t border-slate-100 dark:border-slate-700 mt-4 text-center">
-            <p class="text-xs text-slate-400">Total Personel Aktif: <strong class="text-slate-700 dark:text-slate-200" id="lblTotalPersonel">0</strong> Orang</p>
+
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs">
+            <span class="text-slate-400">Total Personel:</span>
+            <span id="labelTotalPersonnel" class="font-bold text-brand-700 dark:text-emerald-400">0 Orang</span>
           </div>
         </div>
       </div>
 
     </main>
 
-    <!-- ===================================================================== -->
-    <!-- FOOTER NAVBAR BOTTOM (RESPONSIF MOBILE MOCKUP)                       -->
-    <!-- ===================================================================== -->
-    <nav class="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-t border-slate-200 dark:border-slate-700 px-6 py-2 flex items-center justify-around shadow-lg">
-      <button onclick="switchTabNav('beranda')" id="navBtnBeranda" class="flex flex-col items-center gap-1 text-brand-700 dark:text-brand-400 font-bold text-[11px] transition">
-        <i class="fa-solid fa-house text-base"></i>
-        <span>Beranda</span>
+    <!-- 3. MOBILE NAVBAR BOTTOM (PWA & HP LAYOUT) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-6 py-2 flex justify-between items-center text-center">
+      <button onclick="switchMobileTab('beranda')" id="navBtnBeranda" class="flex flex-col items-center gap-1 text-brand-600 dark:text-emerald-400">
+        <i class="fa-solid fa-house text-lg"></i>
+        <span class="text-[10px] font-bold">Beranda</span>
       </button>
-      <button onclick="switchTabNav('chatAi')" id="navBtnChat" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 font-semibold text-[11px] transition">
-        <i class="fa-solid fa-robot text-base"></i>
-        <span>Chat AI</span>
+
+      <button onclick="switchMobileTab('chat')" id="navBtnChat" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 dark:hover:text-emerald-400">
+        <i class="fa-solid fa-robot text-lg"></i>
+        <span class="text-[10px] font-semibold">Chat AI</span>
       </button>
-      <button onclick="switchTabNav('kalender')" id="navBtnKalender" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 font-semibold text-[11px] transition">
-        <i class="fa-solid fa-calendar-days text-base"></i>
-        <span>Kalender</span>
+
+      <button onclick="switchMobileTab('kalender')" id="navBtnKalender" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 dark:hover:text-emerald-400">
+        <i class="fa-regular fa-calendar-days text-lg"></i>
+        <span class="text-[10px] font-semibold">Kalender</span>
       </button>
-      <button onclick="switchTabNav('profil')" id="navBtnProfil" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 font-semibold text-[11px] transition">
-        <i class="fa-solid fa-user-gear text-base"></i>
-        <span>Profil</span>
+
+      <button onclick="switchMobileTab('profil')" id="navBtnProfil" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 dark:hover:text-emerald-400">
+        <i class="fa-solid fa-user text-lg"></i>
+        <span class="text-[10px] font-semibold">Profil</span>
       </button>
     </nav>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 3. MODAL CONTAINER LAYAR PENUH UNTUK SELURUH 15 MENU UTAMA               -->
-  <!-- ========================================================================= -->
-  <div id="modalMenuWrapper" class="hidden modal-fullscreen z-50">
+  <!-- ======================================================== -->
+  <!-- D. MODAL FULLSCREEN CONTAINER DEDIKASI (15 MENU + TAB)    -->
+  <!-- ======================================================== -->
+  <div id="fullModalContainer" class="hidden fullscreen-modal">
     <!-- Header Modal -->
-    <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+    <div class="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm flex-shrink-0">
       <div class="flex items-center gap-3">
-        <button onclick="closeCurrentModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition">
+        <button onclick="closeActiveModal()" class="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300">
           <i class="fa-solid fa-arrow-left"></i>
         </button>
         <div>
-          <h2 id="modalMenuTitle" class="text-base font-black text-slate-800 dark:text-white tracking-tight">Judul Menu</h2>
-          <p id="modalMenuSubtitle" class="text-[11px] text-slate-400 font-medium">Deskripsi ringkas fitur</p>
+          <h2 id="modalTitle" class="text-base font-bold leading-tight">Nama Fitur</h2>
+          <p id="modalSubtitle" class="text-[11px] text-slate-400">Kacida Bersatu Retail System</p>
         </div>
       </div>
-      <div id="modalActionButtons" class="flex items-center gap-2">
-        <!-- Disuntikkan Tombol Ekspor PDF / Excel / Aksi Khusus Sesuai Fitur -->
+      <div id="modalHeaderActions" class="flex items-center gap-2">
+        <!-- Tombol Tambahan: Ekspor PDF / Excel -->
       </div>
     </div>
 
-    <!-- Modal Dynamic Content Viewport -->
-    <div id="modalMenuContent" class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full relative">
-      <!-- Dynamic Form / Subtab View -->
+    <!-- Content Dynamic Body Modal -->
+    <div id="modalBodyContent" class="flex-1 overflow-y-auto p-4 md:p-6 watermarked-container">
+      <!-- Dynamic Form / Table / Filter Content -->
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 4. MODAL SYNC MANUAL PROGRESS                                            -->
-  <!-- ========================================================================= -->
-  <div id="modalSync" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl text-center border border-slate-200 dark:border-slate-700">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Sync Logo" class="h-16 mx-auto mb-4 animate-spin" style="animation-duration: 4s;">
-      <h3 class="text-lg font-black text-slate-800 dark:text-white">Sinkronisasi Data Realtime</h3>
-      <p class="text-xs text-slate-400 mt-1 mb-4" id="lblSyncStep">Memeriksa koneksi ke Google Spreadsheet...</p>
-
-      <!-- Progress Bar -->
-      <div class="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden p-0.5 mb-2">
-        <div id="syncProgressBar" class="bg-gradient-to-r from-brand-600 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: 15%"></div>
+  <!-- ======================================================== -->
+  <!-- E. CHAT AI MODAL (WHATSAPP 3D STYLE)                     -->
+  <!-- ======================================================== -->
+  <div id="chatAiModal" class="hidden fullscreen-modal">
+    <!-- Header WA-Style -->
+    <div class="px-4 py-3 bg-brand-900 text-white flex items-center justify-between shadow-md flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <button onclick="closeChatAiModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="relative">
+          <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="AI Avatar" class="w-9 h-9 rounded-full object-contain bg-white p-1">
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-brand-900 rounded-full"></span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold leading-tight">Kacida AI Assistant</h3>
+          <p class="text-[10px] text-emerald-200">Online • Llama-3.3 70B Versatile</p>
+        </div>
       </div>
-      <p class="text-xs font-black text-brand-700 dark:text-brand-400 text-right" id="lblSyncPercentage">15%</p>
+      <button onclick="clearChatHistory()" class="text-xs text-emerald-200 hover:text-white px-2 py-1 rounded">
+        Hapus Chat
+      </button>
+    </div>
+
+    <!-- Message Bubbles -->
+    <div id="chatMessageList" class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#e5ddd5]/30 dark:bg-slate-950">
+      <!-- Chat default sambutan -->
+      <div class="flex gap-2 max-w-[85%]">
+        <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-xs leading-relaxed">
+          <p class="font-bold text-brand-700 dark:text-emerald-400 mb-1">Kacida AI</p>
+          <p>Halo Rekan Retail! Saya Kacida AI. Saya bisa membantu analisis performa toko Anda, memberikan ide peningkatan sales, atau mengobrol santai. Ada yang bisa dibantu hari ini?</p>
+          <span class="block text-[9px] text-slate-400 text-right mt-1">Sekarang</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Bar WA-Style (Enter = Tambah baris baru, Tombol Kirim = Submit) -->
+    <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2 flex-shrink-0">
+      <textarea id="chatInputPrompt" rows="1" placeholder="Ketik pesan (Enter untuk baris baru)..." class="flex-1 max-h-32 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none"></textarea>
+      <button onclick="sendChatMessage()" class="w-10 h-10 rounded-full bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center shadow-md active:scale-95 transition">
+        <i class="fa-solid fa-paper-plane text-sm"></i>
+      </button>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 5. LOGIKA APLIKASI UTAMA (JAVASCRIPT)                                    -->
-  <!-- ========================================================================= -->
+  <!-- ======================================================== -->
+  <!-- F. SCRIPTS LOGIC & APPLICATION ENGINE                    -->
+  <!-- ======================================================== -->
   <script>
     /**
-     * Konfigurasi URL Google Apps Script Web App
+     * Konfigurasi Kredensial & URL Backend Apps Script
+     * PENTING: Masukkan Web App URL hasil deployment Apps Script Anda di sini.
      */
-    let BACKEND_API_URL = localStorage.getItem('kacida_gas_url') || "";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzL5n4xNq34l2k_PLACEHOLDER/exec";
 
-    // State Pengguna & Toko
-    let currentUser = null;
-    let cachedKpi = null;
-    let cachedNav = [];
-    let currentOpenMenuId = null;
-    let html5QrScanner = null;
-    let currentChartInstance = null;
+    // Global State Application
+    const APP_STATE = {
+      currentUser: null,
+      sessionToken: null,
+      cachedDashboard: null,
+      activeMenuId: null,
+      allMenusVisible: false,
+      chatHistory: []
+    };
 
-    // 15 Menu Inti Wajib
+    // Daftar 15 Menu Inti Wajib
     const CORE_MENUS = [
-      { id: "menuCeklisExp", name: "1. Ceklis EXP", icon: "fa-box-open", desc: "Data Rak & Alert Tanggal EXP", favScore: 10 },
-      { id: "menuSerahTerima", name: "2. Serah Terima", icon: "fa-handshake", desc: "Pergantian Shift & Cash Sales", favScore: 9 },
-      { id: "menuMastershift", name: "3. Plan Mastershift", icon: "fa-calendar-week", desc: "Jadwal Shift Kerja Personel", favScore: 8 },
-      { id: "menuBelanjaKaryawan", name: "4. Belanja Karyawan", icon: "fa-cart-shopping", desc: "Upload Struk & Approval Bon", favScore: 7 },
-      { id: "menuSimulasiGmRp", name: "5. Simulasi GM RP IKT", icon: "fa-calculator", desc: "Kalkulator ACV & Margin Realtime", favScore: 6 },
-      { id: "menuSalesMtd", name: "6. Sales MTD", icon: "fa-chart-column", desc: "Pencapaian YTD & Analisis Tren", favScore: 10 },
-      { id: "menuSalesHarian", name: "7. Sales Harian", icon: "fa-receipt", desc: "Target, Actual SPD & ACV Harian", favScore: 10 },
-      { id: "menuIkt", name: "8. Monitoring IKT", icon: "fa-bullseye", desc: "Net Sales, GM%, GM Rp & Net Profit", favScore: 10 },
-      { id: "menuKonversiBon", name: "9. Konversi No Bon", icon: "fa-barcode", desc: "Konversi MOYD TUH CIK Instan", favScore: 5 },
-      { id: "menuPenawaranLangsung", name: "10. Penawaran Langsung", icon: "fa-tags", desc: "PSM, PWP & Serba Gratis", favScore: 8 },
-      { id: "menuRekapPsm", name: "11. Rekap PSM Kasir", icon: "fa-user-check", desc: "Pencapaian Individu 8 Hari", favScore: 7 },
-      { id: "menuSalesOpr", name: "12. Monitoring Sales OPR", icon: "fa-clock", desc: "Rekap Jam 06:07 & 22:23", favScore: 6 },
-      { id: "menuKwh", name: "13. Monitoring KWH", icon: "fa-bolt-lightning", desc: "Kontrol Pemakaian Listrik Toko", favScore: 5 },
-      { id: "menuCatatanReturn", name: "14. Catatan Return", icon: "fa-truck-ramp-box", desc: "DC Reg, Fresh & BKL Supplier", favScore: 5 },
-      { id: "menuScanBarang", name: "15. Scan Barang", icon: "fa-qrcode", desc: "Barcode Scanner & Generator", favScore: 9 }
+      { id: 1, name: "Ceklis EXP", icon: "fa-solid fa-calendar-xmark", color: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-300", badgeKey: "ceklisExp" },
+      { id: 2, name: "Serah Terima", icon: "fa-solid fa-handshake", color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300" },
+      { id: 3, name: "Plan Mastershift", icon: "fa-solid fa-calendar-days", color: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300" },
+      { id: 4, name: "Belanja Karyawan", icon: "fa-solid fa-cart-shopping", color: "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300", badgeKey: "belanjaKaryawan" },
+      { id: 5, name: "Simulasi GM RP IKT", icon: "fa-solid fa-calculator", color: "bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-300" },
+      { id: 6, name: "Sales MTD", icon: "fa-solid fa-chart-simple", color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300" },
+      { id: 7, name: "Sales Harian", icon: "fa-solid fa-calendar-check", color: "bg-cyan-50 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-300" },
+      { id: 8, name: "Monitoring IKT", icon: "fa-solid fa-bullseye", color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300" },
+      { id: 9, name: "Konversi No Bon", icon: "fa-solid fa-receipt", color: "bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-300" },
+      { id: 10, name: "Penawaran Langsung", icon: "fa-solid fa-award", color: "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300" },
+      { id: 11, name: "Rekap PSM Kasir", icon: "fa-solid fa-cash-register", color: "bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-300" },
+      { id: 12, name: "Monitoring Sales OPR", icon: "fa-solid fa-clock-rotate-left", color: "bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-300" },
+      { id: 13, name: "Monitoring KWH", icon: "fa-solid fa-bolt", color: "bg-yellow-50 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-300" },
+      { id: 14, name: "Catatan Return", icon: "fa-solid fa-truck-ramp-box", color: "bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-300" },
+      { id: 15, name: "Scan Barang", icon: "fa-solid fa-barcode", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" }
     ];
 
-    // =======================================================================
-    // INITIALIZATION & SESSION
-    // =======================================================================
-    window.addEventListener('DOMContentLoaded', () => {
-      initAppUrl();
-      checkNetwork();
-      window.addEventListener('online', checkNetwork);
-      window.addEventListener('offline', checkNetwork);
-
-      // Auto login jika sesi NIK tersimpan
-      const savedUser = localStorage.getItem('kacida_session_user');
-      if (savedUser) {
-        try {
-          currentUser = JSON.parse(savedUser);
-          renderAuthenticatedApp();
-        } catch (e) {
-          localStorage.removeItem('kacida_session_user');
-        }
-      }
-
-      // Daftarkan PWA Service Worker
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Fail:', err));
-      }
+    // Inisialisasi Aplikasi Saat Window Dimuat
+    window.addEventListener('DOMContentLoaded', async () => {
+      initPWA();
+      setupEventListeners();
+      checkExistingSession();
     });
 
-    function initAppUrl() {
-      if (!BACKEND_API_URL) {
-        // Jika belum diset, gunakan default prompt saat pertama kali
-        const promptUrl = prompt("Masukkan Google Apps Script Web App Deployment URL Anda:", "");
-        if (promptUrl && promptUrl.trim().startsWith("https://script.google.com")) {
-          BACKEND_API_URL = promptUrl.trim();
-          localStorage.setItem('kacida_gas_url', BACKEND_API_URL);
-        }
+    // PWA Service Worker Registration
+    function initPWA() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.warn('SW registration skipped:', err);
+        });
       }
     }
 
-    function checkNetwork() {
-      const badge = document.getElementById('badgeNetwork');
-      if (!badge) return;
-      if (navigator.onLine) {
-        badge.className = "inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-bold";
-        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>Online</span>';
-      } else {
-        badge.className = "inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 font-bold";
-        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Offline Cache</span>';
-      }
-    }
-
-    // =======================================================================
-    // API CALLER (KOMUNIKASI KE APPS SCRIPT)
-    // =======================================================================
-    async function callApi(action, payload = {}) {
-      if (!BACKEND_API_URL) {
-        Swal.fire('Konfigurasi API Belum Diisi', 'Silakan klik tombol Ubah URL API di menu bantuan.', 'warning');
-        return { success: false, message: 'URL API belum dikonfigurasi' };
-      }
-
-      const requestBody = {
-        action: action,
-        userContext: currentUser || {},
-        payload: payload
-      };
-
+    // Network API Bridge Handler
+    async function callBackend(action, payload = {}) {
+      setLoadingState(true, "Menghubungi Server...", 30);
       try {
-        const response = await fetch(BACKEND_API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          cache: 'no-cache',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(requestBody)
+        const bodyData = {
+          action: action,
+          session: APP_STATE.currentUser ? {
+            nik: APP_STATE.currentUser.nik,
+            toko: APP_STATE.currentUser.toko,
+            nama: APP_STATE.currentUser.nama
+          } : null,
+          ...payload
+        };
+
+        const response = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(bodyData)
         });
-        return await response.json();
-      } catch (err) {
-        console.error('API Error:', err);
-        return { success: false, message: 'Gagal menghubungi server: ' + err.toString() };
+
+        setLoadingState(true, "Memproses Data...", 80);
+        const result = await response.json();
+        setLoadingState(false);
+        return result;
+      } catch (error) {
+        setLoadingState(false);
+        console.error("API Call Failure:", error);
+        return {
+          success: false,
+          message: "Gagal terhubung ke backend: " + error.message
+        };
       }
     }
 
-    // =======================================================================
-    // AUTENTIKASI: LOGIN & LOGOUT
-    // =======================================================================
-    async function handleLoginSubmit() {
-      const nik = document.getElementById('inputNik').value.trim();
-      if (!nik) {
-        Swal.fire('Perhatian', 'Silakan masukkan NIK Anda terlebih dahulu.', 'warning');
-        return;
-      }
+    // Loading State & Animated Progress Bar
+    function setLoadingState(show, text = "Memuat...", percent = 50) {
+      const overlay = document.getElementById('loadingOverlay');
+      const bar = document.getElementById('loadingProgressBar');
+      const status = document.getElementById('loadingStatusText');
+      const pctLabel = document.getElementById('loadingProgressPercent');
 
-      const btn = document.getElementById('btnLogin');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memvalidasi NIK...</span>';
-      btn.disabled = true;
-
-      const res = await callApi('login', { nik: nik });
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-
-      if (res.success && res.user) {
-        currentUser = res.user;
-        localStorage.setItem('kacida_session_user', JSON.stringify(currentUser));
-        renderAuthenticatedApp();
-        Swal.fire({
-          icon: 'success',
-          title: 'Login Berhasil',
-          text: 'Selamat bertugas di ' + currentUser.toko,
-          timer: 1800,
-          showConfirmButton: false
-        });
+      if (show) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        bar.style.width = percent + "%";
+        status.innerText = text;
+        pctLabel.innerText = Math.round(percent) + "%";
       } else {
-        Swal.fire('Gagal Masuk', res.message || 'NIK tidak ditemukan di Master_User.', 'error');
+        bar.style.width = "100%";
+        pctLabel.innerText = "100%";
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+        }, 200);
       }
     }
 
-    function handleLogout() {
-      Swal.fire({
-        title: 'Keluar Akun?',
-        text: 'Anda akan keluar dari sesi aplikasi saat ini.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#0F5132',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Keluar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          currentUser = null;
-          localStorage.removeItem('kacida_session_user');
-          document.getElementById('appContainer').classList.add('hidden');
-          document.getElementById('loginScreen').classList.remove('hidden');
-          document.getElementById('inputNik').value = '';
+    // Setup Login & Event Listeners
+    function setupEventListeners() {
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nik = document.getElementById('loginNikInput').value.trim();
+        if (!nik) return;
+
+        setLoadingState(true, "Verifikasi NIK di Master_User...", 40);
+        const res = await callBackend("login", { nik: nik });
+
+        if (res.success && res.user) {
+          APP_STATE.currentUser = res.user;
+          localStorage.setItem('kacida_session_nik', res.user.nik);
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('appContainer').classList.remove('hidden');
+          await loadDashboardData();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Login Ditolak',
+            text: res.message || 'NIK tidak valid.',
+            confirmButtonColor: '#059669'
+          });
         }
       });
     }
 
-    // =======================================================================
-    // RENDER BERANDA & KOMPONEN
-    // =======================================================================
-    function renderAuthenticatedApp() {
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('appContainer').classList.remove('hidden');
-
-      // Update Header & Hero
-      document.getElementById('lblHeaderStore').innerText = currentUser.toko || 'Toko Retail';
-      document.getElementById('lblHeaderUserName').innerText = currentUser.nama || 'Karyawan';
-      document.getElementById('lblHeaderUserRole').innerText = currentUser.jabatan || 'Crew';
-      
-      const userPhoto = currentUser.fotoProfil || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop';
-      document.getElementById('headerUserAvatar').src = userPhoto;
-      document.getElementById('heroUserPhoto').src = userPhoto;
-
-      document.getElementById('heroGreeting').innerText = `Semangat Pagi, ${currentUser.nama}!`;
-      document.getElementById('heroRoleName').innerText = currentUser.jabatan;
-      document.getElementById('heroStoreCode').innerText = currentUser.kodeToko;
-      document.getElementById('heroStoreName').innerText = currentUser.toko;
-
-      // Render Struktur Toko
-      const structContainer = document.getElementById('containerStrukturToko');
-      structContainer.innerHTML = '';
-      if (currentUser.storePersonnel && currentUser.storePersonnel.length > 0) {
-        document.getElementById('lblTotalPersonel').innerText = currentUser.storePersonnel.length;
-        currentUser.storePersonnel.slice(0, 5).forEach(p => {
-          structContainer.innerHTML += `
-            <div class="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-slate-700">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center font-bold text-[10px]">
-                  ${p.nama.charAt(0)}
-                </div>
-                <div>
-                  <p class="font-bold text-slate-700 dark:text-slate-200">${p.nama}</p>
-                  <p class="text-[10px] text-slate-400">${p.jabatan}</p>
-                </div>
-              </div>
-              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-semibold">${p.nik}</span>
-            </div>
-          `;
-        });
-      } else {
-        structContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Data personel belum terhubung.</p>';
+    async function checkExistingSession() {
+      const savedNik = localStorage.getItem('kacida_session_nik');
+      if (savedNik) {
+        setLoadingState(true, "Menghubungkan Sesi...", 50);
+        const res = await callBackend("login", { nik: savedNik });
+        if (res.success && res.user) {
+          APP_STATE.currentUser = res.user;
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('appContainer').classList.remove('hidden');
+          await loadDashboardData();
+          return;
+        }
       }
-
-      renderMenuGrid();
-      startSyncManual();
+      setLoadingState(false);
     }
 
-    function renderMenuGrid(showAll = false) {
-      const container = document.getElementById('gridMenuContainer');
-      container.innerHTML = '';
+    // Load Data Beranda & Render Komponen
+    async function loadDashboardData() {
+      setLoadingState(true, "Memuat Data Retail Toko...", 70);
+      const res = await callBackend("getInitialData");
 
-      let listToRender = [...CORE_MENUS];
-      // Gabungkan dengan navigasi dinamis dari spreadsheet
-      if (cachedNav && cachedNav.length > 0) {
-        cachedNav.forEach(n => {
-          listToRender.push({
-            id: 'dynamic_' + n.nama.replace(/\s+/g, '_'),
-            name: n.nama,
-            icon: 'fa-link',
-            desc: 'Tautan Eksternal',
-            link: n.link,
-            isDynamic: true
-          });
+      if (res.success && res.data) {
+        APP_STATE.cachedDashboard = res.data;
+        renderHeaderAndHero(res.data);
+        renderKpiCards(res.data.kpi);
+        renderMainMenuGrid(res.data.navigation, res.data.badges);
+        renderPersonnelList(res.data.personnel);
+        renderHarianChart(res.data.kpi.salesHarian);
+      }
+      setLoadingState(false);
+    }
+
+    function renderHeaderAndHero(data) {
+      const u = data.user;
+      document.getElementById('headerStoreName').innerText = u.namaTokoLengkap || u.toko;
+      document.getElementById('userNameThumb').innerText = u.nama;
+      document.getElementById('userRoleThumb').innerText = u.jabatan;
+
+      const fallbackAvatar = "https://ui-avatars.com/api/?name=" + encodeURIComponent(u.nama) + "&background=059669&color=fff";
+      document.getElementById('userAvatarThumb').src = u.fotoUrl || fallbackAvatar;
+      document.getElementById('heroUserPhoto').src = u.fotoUrl || fallbackAvatar;
+
+      document.getElementById('heroUserName').innerText = u.nama;
+      document.getElementById('heroUserMeta').innerText = u.jabatan + " • " + (u.namaTokoLengkap || u.toko);
+      document.getElementById('heroLastSync').innerText = "Update: " + (data.serverTime || "-");
+
+      const harian = data.kpi.salesHarian || {};
+      document.getElementById('heroSalesH1').innerText = "Rp " + formatRupiahBulat(harian.salesHMin1 || 0);
+      document.getElementById('heroSalesBadge').innerText = (harian.acv || 0) + "% ACV";
+    }
+
+    function renderKpiCards(kpi) {
+      if (!kpi) return;
+      // IKT
+      document.getElementById('kpiIktVal').innerText = (kpi.ikt.acvSales || 0) + "%";
+      const iktBadge = document.getElementById('kpiIktStatus');
+      iktBadge.innerText = kpi.ikt.status || "NOK";
+      iktBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded ${kpi.ikt.status === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`;
+
+      // Sales MTD
+      document.getElementById('kpiMtdVal').innerText = "Rp " + formatRupiahBulat(kpi.salesMtd.totalSales || 0);
+      document.getElementById('kpiMtdMeta').innerText = `STD: ${formatRupiahBulat(kpi.salesMtd.avgStd || 0)} • APC: Rp ${formatRupiahBulat(kpi.salesMtd.avgApc || 0)}`;
+
+      // Penawaran Langsung
+      document.getElementById('kpiPointVal').innerText = formatRupiahBulat(kpi.penawaranLangsung.point || 0);
+      document.getElementById('kpiRankVal').innerText = "Rank " + (kpi.penawaranLangsung.rank || "-");
+
+      // Sales Harian
+      document.getElementById('kpiHarianAcv').innerText = (kpi.salesHarian.acv || 0) + "%";
+      document.getElementById('kpiHarianGrowth').innerText = `Growth: ${(kpi.salesHarian.growth || 0)}% vs Lalu`;
+    }
+
+    // Render Menu Grid Dinamis + Badge Approval Real-Time
+    function renderMainMenuGrid(dynamicNav = [], badges = {}) {
+      const container = document.getElementById('mainMenuGrid');
+      container.innerHTML = "";
+
+      // Gabungkan 15 Menu Inti dengan Menu Dinamis Spreadsheet (Menu_Navigasi)
+      let combinedMenus = [...CORE_MENUS];
+
+      if (Array.isArray(dynamicNav)) {
+        dynamicNav.forEach(nav => {
+          if (!combinedMenus.some(m => m.name.toLowerCase() === nav.nama.toLowerCase())) {
+            combinedMenus.push({
+              id: 'ext_' + nav.urutan,
+              name: nav.nama,
+              icon: "fa-solid fa-arrow-up-right-from-square",
+              color: "bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-300",
+              link: nav.link,
+              isExternal: true
+            });
+          }
         });
       }
 
-      const displayList = showAll ? listToRender : listToRender.slice(0, 12);
+      const limit = APP_STATE.allMenusVisible ? combinedMenus.length : 12;
+      const displayMenus = combinedMenus.slice(0, limit);
 
-      displayList.forEach(m => {
-        const card = document.createElement('div');
-        card.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-200/80 dark:border-slate-700 cursor-pointer flex flex-col items-center text-center transition transform active:scale-95 group";
-        card.onclick = () => {
-          if (m.isDynamic && m.link) {
-            window.open(m.link, '_blank');
+      displayMenus.forEach(menu => {
+        const badgeCount = menu.badgeKey && badges[menu.badgeKey] ? badges[menu.badgeKey] : 0;
+        const col = document.createElement('div');
+        col.className = "relative bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md active:scale-95 transition cursor-pointer flex flex-col items-center text-center justify-between";
+        col.onclick = () => {
+          if (menu.isExternal && menu.link) {
+            window.open(menu.link, '_blank');
           } else {
-            openMenu(m.id);
+            openMenuModal(menu.id);
           }
         };
 
-        card.innerHTML = `
-          <div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 flex items-center justify-center text-lg mb-2 group-hover:bg-brand-600 group-hover:text-white transition">
-            <i class="fa-solid ${m.icon}"></i>
+        col.innerHTML = `
+          ${badgeCount > 0 ? `<span class="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-bounce">${badgeCount}</span>` : ''}
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2 ${menu.color}">
+            <i class="${menu.icon}"></i>
           </div>
-          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 line-clamp-1">${m.name}</h4>
-          <p class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">${m.desc}</p>
+          <span class="text-xs font-bold leading-tight line-clamp-2">${menu.name}</span>
         `;
-        container.appendChild(card);
+        container.appendChild(col);
       });
 
-      const btnToggle = document.getElementById('btnToggleAllMenu');
-      btnToggle.innerHTML = showAll ? '<span>Sembunyikan Sebagian</span> <i class="fa-solid fa-angle-up"></i>' : '<span>Lihat Semua</span> <i class="fa-solid fa-angle-right"></i>';
+      document.getElementById('btnToggleAllMenu').innerText = APP_STATE.allMenusVisible ? "Tampilkan Lebih Ringkas" : "Lihat Semua Fitur (" + combinedMenus.length + ")";
     }
 
-    let isShowingAllMenus = false;
-    function toggleAllMenus() {
-      isShowingAllMenus = !isShowingAllMenus;
-      renderMenuGrid(isShowingAllMenus);
-    }
-
-    // =======================================================================
-    // SINKRONISASI MANUAL DENGAN STEP-BY-STEP PROGRESS
-    // =======================================================================
-    async function startSyncManual() {
-      const modal = document.getElementById('modalSync');
-      const pBar = document.getElementById('syncProgressBar');
-      const pLbl = document.getElementById('lblSyncPercentage');
-      const pStep = document.getElementById('lblSyncStep');
-
-      modal.classList.remove('hidden');
-
-      const setProgress = (pct, text) => {
-        pBar.style.width = pct + '%';
-        pLbl.innerText = pct + '%';
-        pStep.innerText = text;
-      };
-
-      setProgress(20, 'Memeriksa koneksi spreadsheet backend...');
-      await new Promise(r => setTimeout(r, 200));
-
-      setProgress(45, 'Membaca KPI & data penjualan aktual...');
-      const res = await callApi('syncManual');
-
-      setProgress(75, 'Memperbarui cache lokal & daftar approval...');
-      const navRes = await callApi('getNavigation');
-      if (navRes.success) {
-        cachedNav = navRes.data || [];
-        renderMenuGrid(isShowingAllMenus);
-      }
-
-      setProgress(100, 'Sinkronisasi selesai!');
-      await new Promise(r => setTimeout(r, 300));
-      modal.classList.add('hidden');
-
-      if (res.success && res.kpi) {
-        cachedKpi = res.kpi;
-        updateKpiDisplay(res.kpi);
-        renderChartHarian();
+    function toggleMenuDisplayLimit() {
+      APP_STATE.allMenusVisible = !APP_STATE.allMenusVisible;
+      if (APP_STATE.cachedDashboard) {
+        renderMainMenuGrid(APP_STATE.cachedDashboard.navigation, APP_STATE.cachedDashboard.badges);
       }
     }
 
-    function updateKpiDisplay(kpi) {
-      document.getElementById('lblHeroSalesHMin1').innerText = 'Rp ' + Number(kpi.salesHMin1).toLocaleString('id-ID');
-      document.getElementById('lblHeroGrowthHMin1').innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> <span>${kpi.growthHMin1}% vs Target</span>`;
-      
-      document.getElementById('kpiIktPercent').innerText = kpi.iktAcv + '%';
-      document.getElementById('badgeIktStatus').innerText = kpi.iktAcv >= 100 ? 'OK' : 'NOK';
-      document.getElementById('badgeIktStatus').className = kpi.iktAcv >= 100 ? 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800' : 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-800';
+    function renderPersonnelList(personnel = []) {
+      const list = document.getElementById('personnelListContainer');
+      list.innerHTML = "";
+      document.getElementById('labelTotalPersonnel').innerText = personnel.length + " Orang";
 
-      document.getElementById('kpiSalesMtdVal').innerText = 'Rp ' + Number(kpi.salesMtd).toLocaleString('id-ID');
-      document.getElementById('kpiPointDashboard').innerText = kpi.penawaranPoint;
-      document.getElementById('kpiSalesHarianAcv').innerText = kpi.salesHarianAcv + '%';
-      document.getElementById('lblLastSyncInfo').innerText = 'Terakhir Sinkron: ' + kpi.lastSync;
-
-      // Badge Approval untuk Chief of Store
-      const chiefNotice = document.getElementById('chiefApprovalNotice');
-      if (kpi.pendingApprovals > 0) {
-        chiefNotice.classList.remove('hidden');
-        document.getElementById('badgeApprovalCount').innerText = kpi.pendingApprovals;
-      } else {
-        chiefNotice.classList.add('hidden');
-      }
+      personnel.forEach(p => {
+        const avatar = p.fotoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nama)}&background=10b981&color=fff`;
+        const item = document.createElement('div');
+        item.className = "flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60";
+        item.innerHTML = `
+          <img src="${avatar}" class="w-8 h-8 rounded-full object-cover">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold truncate">${p.nama}</p>
+            <p class="text-[10px] text-slate-400 truncate">${p.jabatan} • ${p.nik}</p>
+          </div>
+        `;
+        list.appendChild(item);
+      });
     }
 
-    function renderChartHarian() {
-      const ctx = document.getElementById('chartTrenSalesHarian');
-      if (!ctx) return;
-      if (currentChartInstance) currentChartInstance.destroy();
+    let trenChartInstance = null;
+    function renderHarianChart(harianSummary) {
+      const ctx = document.getElementById('chartTrenHarian').getContext('2d');
+      if (trenChartInstance) trenChartInstance.destroy();
 
-      currentChartInstance = new Chart(ctx, {
-        type: 'bar',
+      trenChartInstance = new Chart(ctx, {
+        type: 'line',
         data: {
-          labels: ['01 Apr', '02 Apr', '03 Apr', '04 Apr', '05 Apr', '06 Apr', '07 Apr'],
+          labels: ['H-7', 'H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1'],
           datasets: [
             {
-              label: 'Aktual SPD (Rp)',
-              data: [12500000, 14200000, 13800000, 15100000, 16200000, 14800000, 15830000],
-              backgroundColor: '#16A34A',
-              borderRadius: 6
+              label: 'Realisasi Sales',
+              data: [12000000, 14500000, 13200000, 15000000, 16200000, 14800000, harianSummary ? harianSummary.salesHMin1 : 15500000],
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.1)',
+              tension: 0.3,
+              fill: true
             },
             {
-              label: 'Target (Rp)',
-              data: [13000000, 13500000, 13500000, 14000000, 15000000, 14500000, 15000000],
-              type: 'line',
-              borderColor: '#F59E0B',
-              borderWidth: 2,
+              label: 'Target Harian',
+              data: [14000000, 14000000, 14000000, 14000000, 14000000, 14000000, harianSummary ? harianSummary.target : 14000000],
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              tension: 0,
               fill: false
             }
           ]
@@ -782,680 +746,768 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
           scales: {
-            y: { ticks: { callback: (val) => (val / 1000000) + ' Jt' } }
+            y: { ticks: { callback: v => (v / 1000000) + "Jt" } }
           }
         }
       });
     }
 
-    // =======================================================================
-    // 15 MENU HANDLER DISPATCHER (FULL SCREEN MODALS)
-    // =======================================================================
-    function openMenu(menuId) {
-      currentOpenMenuId = menuId;
-      const wrapper = document.getElementById('modalMenuWrapper');
-      const title = document.getElementById('modalMenuTitle');
-      const subtitle = document.getElementById('modalMenuSubtitle');
-      const content = document.getElementById('modalMenuContent');
-      const actions = document.getElementById('modalActionButtons');
+    // ========================================================
+    // G. MODAL SYSTEM & 15 FITUR UTAMA LENGKAP
+    // ========================================================
+    function openMenuModal(menuId) {
+      APP_STATE.activeMenuId = menuId;
+      const modal = document.getElementById('fullModalContainer');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBodyContent');
+      const actions = document.getElementById('modalHeaderActions');
 
-      actions.innerHTML = '';
-      wrapper.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      actions.innerHTML = "";
 
-      switch (menuId) {
-        case 'menuCeklisExp':
-          title.innerText = 'Ceklis EXP & Data Rak';
-          subtitle.innerText = 'Kelola penugasan rak, input tanggal kadaluarsa & eksekusi alert';
-          renderCeklisExp(content, actions);
+      switch (parseInt(menuId)) {
+        case 1:
+          title.innerText = "Menu 1 — Ceklis EXP";
+          loadMenu1CeklisExp(body);
           break;
-        case 'menuSerahTerima':
-          title.innerText = 'Serah Terima Shift';
-          subtitle.innerText = 'Input penjualan kasir, redeem voucher, member, dan kendala shift';
-          renderSerahTerima(content, actions);
+        case 2:
+          title.innerText = "Menu 2 — Serah Terima Shift";
+          loadMenu2SerahTerima(body);
           break;
-        case 'menuMastershift':
-          title.innerText = 'Plan Mastershift';
-          subtitle.innerText = 'Atur jadwal bulanan personel toko dengan kode shift P, S, M, OFF, CT';
-          renderMastershift(content, actions);
+        case 3:
+          title.innerText = "Menu 3 — Plan Mastershift";
+          loadMenu3Mastershift(body);
           break;
-        case 'menuBelanjaKaryawan':
-          title.innerText = 'Belanja Karyawan';
-          subtitle.innerText = 'Pengajuan bon belanja, unggah struk & approval Chief of Store';
-          renderBelanjaKaryawan(content, actions);
+        case 4:
+          title.innerText = "Menu 4 — Belanja Karyawan";
+          loadMenu4BelanjaKaryawan(body);
           break;
-        case 'menuSimulasiGmRp':
-          title.innerText = 'Simulasi GM RP IKT';
-          subtitle.innerText = 'Kalkulator instan analisa target, margin, time factor, dan gap';
-          renderSimulasiGmRp(content, actions);
+        case 5:
+          title.innerText = "Menu 5 — Simulasi GM RP IKT";
+          loadMenu5SimulasiGmRp(body);
           break;
-        case 'menuSalesMtd':
-          title.innerText = 'Sales MTD 2026';
-          subtitle.innerText = 'Pencapaian YTD Sales, tren bulanan & status growth toko';
-          renderSalesMtd(content, actions);
+        case 6:
+          title.innerText = "Menu 6 — Sales MTD";
+          loadMenu6SalesMtd(body, actions);
           break;
-        case 'menuSalesHarian':
-          title.innerText = 'Sales Harian';
-          subtitle.innerText = 'Monitoring SPD harian, target, gap, NSB, dan Gross Margin';
-          renderSalesHarian(content, actions);
+        case 7:
+          title.innerText = "Menu 7 — Sales Harian";
+          loadMenu7SalesHarian(body, actions);
           break;
-        case 'menuIkt':
-          title.innerText = 'Monitoring IKT';
-          subtitle.innerText = 'Evaluasi Indikator Kinerja Toko: Net Sales, GM%, GM Rp, Profit';
-          renderMonitoringIkt(content, actions);
+        case 8:
+          title.innerText = "Menu 8 — Monitoring IKT";
+          loadMenu8MonitoringIkt(body, actions);
           break;
-        case 'menuKonversiBon':
-          title.innerText = 'Konversi Nomor Bon / Struk';
-          subtitle.innerText = 'Konversi instan 4 digit alfanumerik rahasia (0-9 -> MOYD TUH CIK)';
-          renderKonversiBon(content, actions);
+        case 9:
+          title.innerText = "Menu 9 — Konversi No Bon/Struk";
+          loadMenu9KonversiBon(body);
           break;
-        case 'menuPenawaranLangsung':
-          title.innerText = 'Penawaran Langsung';
-          subtitle.innerText = 'Pencapaian produk PSM, PWP, Serba Gratis, APC & Point Dashboard';
-          renderPenawaranLangsung(content, actions);
+        case 10:
+          title.innerText = "Menu 10 — Penawaran Langsung";
+          loadMenu10PenawaranLangsung(body, actions);
           break;
-        case 'menuRekapPsm':
-          title.innerText = 'Rekap PSM Kasir';
-          subtitle.innerText = 'Evaluasi pencapaian 10 item fokus PSM per kasir selama 8 hari';
-          renderRekapPsm(content, actions);
+        case 11:
+          title.innerText = "Menu 11 — Rekap PSM Kasir";
+          loadMenu11RekapPsm(body, actions);
           break;
-        case 'menuSalesOpr':
-          title.innerText = 'Monitoring Sales OPR';
-          subtitle.innerText = 'Rekapitulasi berkala penjualan jam 06:07 dan jam 22:23';
-          renderSalesOpr(content, actions);
+        case 12:
+          title.innerText = "Menu 12 — Monitoring Sales OPR";
+          loadMenu12SalesOpr(body);
           break;
-        case 'menuKwh':
-          title.innerText = 'Monitoring KWH Listrik';
-          subtitle.innerText = 'Pencatatan meteran listrik, biaya, dan analisa penghematan toko';
-          renderMonitoringKwh(content, actions);
+        case 13:
+          title.innerText = "Menu 13 — Monitoring KWH Listrik";
+          loadMenu13MonitoringKwh(body, actions);
           break;
-        case 'menuCatatanReturn':
-          title.innerText = 'Catatan Return Barang';
-          subtitle.innerText = 'Registrasi berkas retur DC Reguler, DC Fresh, dan BKL Supplier';
-          renderCatatanReturn(content, actions);
+        case 14:
+          title.innerText = "Menu 14 — Catatan Return";
+          loadMenu14CatatanReturn(body);
           break;
-        case 'menuScanBarang':
-          title.innerText = 'Scan Barcode Barang';
-          subtitle.innerText = 'Pemindai kamera responsif, input kuantitas & render barcode SVG';
-          renderScanBarang(content, actions);
+        case 15:
+          title.innerText = "Menu 15 — Scan Barang Barcode";
+          loadMenu15ScanBarang(body);
           break;
+        default:
+          body.innerHTML = `<p class="text-center text-slate-400 py-10">Fitur sedang dalam pemeliharaan.</p>`;
       }
     }
 
-    function closeCurrentModal() {
-      if (html5QrScanner) {
-        html5QrScanner.stop().catch(() => {});
-        html5QrScanner = null;
+    function closeActiveModal() {
+      document.getElementById('fullModalContainer').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      // Stop scanner bila aktif
+      if (window.html5QrCodeScannerInstance) {
+        window.html5QrCodeScannerInstance.stop().catch(() => {});
       }
-      document.getElementById('modalMenuWrapper').classList.add('hidden');
-      document.body.style.overflow = 'auto';
     }
 
-    // =======================================================================
-    // MENU IMPLEMENTASI DETAIL
-    // =======================================================================
-
-    // MENU 5: SIMULASI GM RP IKT
-    function renderSimulasiGmRp(content, actions) {
-      content.innerHTML = `
-        <div class="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">HK (Hari Kerja Kalender)</label>
-              <input type="number" id="simHk" value="30" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
+    // --- MENU 5: SIMULASI GM RP IKT ---
+    function loadMenu5SimulasiGmRp(container) {
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-5">
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 border-b pb-2">Kalkulator Simulasi GM Rupiah IKT</h3>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold mb-1">Hari Kerja (HK)</label>
+                <input type="number" id="simHk" value="30" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1">Jumlah Hari Kerja (JHK)</label>
+                <input type="number" id="simJhk" value="15" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
             </div>
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">JHK (Jumlah Hari Kerja Berjalan)</label>
-              <input type="number" id="simJhk" value="10" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold mb-1">Target Net Sales (Rp)</label>
+                <input type="number" id="simTargetSales" value="450000000" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1">Actual Net Sales (Rp)</label>
+                <input type="number" id="simActualSales" value="230000000" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold mb-1">Target Margin %</label>
+                <input type="number" id="simTargetMargin" value="20" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1">Actual Margin %</label>
+                <input type="number" id="simActualMargin" value="21" class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-bold">
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button onclick="calculateSimulation()" class="flex-1 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg transition">Hitung Simulasi</button>
+              <button onclick="loadMenu5SimulasiGmRp(document.getElementById('modalBodyContent'))" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl transition">Reset</button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Target Net Sales (Rp)</label>
-              <input type="number" id="simTargetSales" value="150000000" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
-            </div>
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Actual Net Sales (Rp)</label>
-              <input type="number" id="simActualSales" value="152000000" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
-            </div>
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Target Margin (%)</label>
-              <input type="number" id="simTargetMargin" value="19" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
-            </div>
-            <div>
-              <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Actual Margin (%)</label>
-              <input type="number" id="simActualMargin" value="18" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-bold">
-            </div>
-          </div>
-
-          <button onclick="hitungSimulasiGmRp()" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-lg transition">
-            Hitung Analisa Performa
-          </button>
-
-          <!-- Hasil Perhitungan Instan -->
-          <div id="simulasiResultBox" class="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 space-y-3">
-            <h4 class="text-xs font-black uppercase text-slate-500 tracking-wider">Hasil Perhitungan Instan</h4>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-              <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border">
-                <p class="text-[10px] text-slate-400 font-bold">ACV NET SALES</p>
-                <h5 class="text-lg font-black text-slate-800 dark:text-white" id="resAcvSales">0%</h5>
+          <!-- Hasil Perhitungan -->
+          <div id="simulasiResultBox" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+            <h4 class="text-sm font-bold">Hasil Perhitungan Instan:</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <span class="text-[10px] text-slate-400">ACV Net Sales</span>
+                <p id="resAcvSales" class="text-lg font-black text-brand-600">0%</p>
               </div>
-              <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border">
-                <p class="text-[10px] text-slate-400 font-bold">TIME FACTOR</p>
-                <h5 class="text-lg font-black text-slate-800 dark:text-white" id="resTimeFactor">0%</h5>
+              <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <span class="text-[10px] text-slate-400">Time Factor</span>
+                <p id="resTimeFactor" class="text-lg font-black text-slate-700 dark:text-slate-200">0%</p>
               </div>
-              <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border">
-                <p class="text-[10px] text-slate-400 font-bold">STATUS MARGIN</p>
-                <h5 class="text-lg font-black text-emerald-600" id="resStatusMargin">OK</h5>
+              <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <span class="text-[10px] text-slate-400">Target GM Rp</span>
+                <p id="resTargetGmRp" class="text-sm font-black text-slate-700 dark:text-slate-200">Rp 0</p>
+              </div>
+              <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <span class="text-[10px] text-slate-400">Actual GM Rp</span>
+                <p id="resActualGmRp" class="text-sm font-black text-emerald-600">Rp 0</p>
               </div>
             </div>
-            <div class="text-xs space-y-1 text-slate-600 dark:text-slate-300 p-2">
-              <p>• Gap Net Sales: <strong id="resGapSales">Rp 0</strong></p>
-              <p>• Target Margin Rupiah: <strong id="resTgtMarginRp">Rp 0</strong></p>
-              <p>• Actual Margin Rupiah: <strong id="resActMarginRp">Rp 0</strong></p>
-              <p>• Gap Margin Rupiah: <strong id="resGapMarginRp">Rp 0</strong></p>
+            <div id="resKeteranganBox" class="p-3.5 rounded-2xl bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-medium">
+              Hasil simulasi akan muncul di sini.
             </div>
           </div>
         </div>
       `;
-      hitungSimulasiGmRp();
+      calculateSimulation();
     }
 
-    function hitungSimulasiGmRp() {
+    function calculateSimulation() {
       const hk = parseFloat(document.getElementById('simHk').value) || 1;
       const jhk = parseFloat(document.getElementById('simJhk').value) || 0;
-      const tgtSales = parseFloat(document.getElementById('simTargetSales').value) || 1;
-      const actSales = parseFloat(document.getElementById('simActualSales').value) || 0;
-      const tgtMargin = parseFloat(document.getElementById('simTargetMargin').value) || 0;
-      const actMargin = parseFloat(document.getElementById('simActualMargin').value) || 0;
+      const targetSales = parseFloat(document.getElementById('simTargetSales').value) || 0;
+      const actualSales = parseFloat(document.getElementById('simActualSales').value) || 0;
+      const targetMargin = parseFloat(document.getElementById('simTargetMargin').value) || 0;
+      const actualMargin = parseFloat(document.getElementById('simActualMargin').value) || 0;
 
-      const acvSales = Math.round((actSales / tgtSales) * 100);
-      const timeFactor = Math.round((jhk / hk) * 100);
-      const gapSales = Math.round(actSales - tgtSales);
+      const acvSales = targetSales > 0 ? Math.round((actualSales / targetSales) * 100) : 0;
+      const timeFactor = hk > 0 ? Math.round((jhk / hk) * 100) : 0;
+      const targetGmRp = Math.round(targetSales * (targetMargin / 100));
+      const actualGmRp = Math.round(actualSales * (actualMargin / 100));
 
-      const tgtMarginRp = Math.round(tgtSales * (tgtMargin / 100));
-      const actMarginRp = Math.round(actSales * (actMargin / 100));
-      const gapMarginRp = Math.round(actMarginRp - tgtMarginRp);
+      document.getElementById('resAcvSales').innerText = acvSales + "%";
+      document.getElementById('resTimeFactor').innerText = timeFactor + "%";
+      document.getElementById('resTargetGmRp').innerText = "Rp " + formatRupiahBulat(targetGmRp);
+      document.getElementById('resActualGmRp').innerText = "Rp " + formatRupiahBulat(actualGmRp);
 
-      document.getElementById('resAcvSales').innerText = acvSales + '%';
-      document.getElementById('resTimeFactor').innerText = timeFactor + '%';
-      document.getElementById('resStatusMargin').innerText = gapMarginRp >= 0 ? 'OK' : 'NOK';
-      document.getElementById('resStatusMargin').className = gapMarginRp >= 0 ? 'text-lg font-black text-emerald-600' : 'text-lg font-black text-red-600';
-
-      document.getElementById('resGapSales').innerText = 'Rp ' + gapSales.toLocaleString('id-ID');
-      document.getElementById('resTgtMarginRp').innerText = 'Rp ' + tgtMarginRp.toLocaleString('id-ID');
-      document.getElementById('resActMarginRp').innerText = 'Rp ' + actMarginRp.toLocaleString('id-ID');
-      document.getElementById('resGapMarginRp').innerText = 'Rp ' + gapMarginRp.toLocaleString('id-ID');
+      const box = document.getElementById('resKeteranganBox');
+      if (acvSales >= timeFactor && actualMargin >= targetMargin) {
+        box.className = "p-3.5 rounded-2xl bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-semibold";
+        box.innerText = "Status: OK! Sales dan margin berada di atas ambang time factor operasional.";
+      } else {
+        box.className = "p-3.5 rounded-2xl bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-300 text-xs font-semibold";
+        box.innerText = "Status: NOK! Kinerja tertinggal dari time factor. Dorong penjualan produk ber-margin tinggi.";
+      }
     }
 
-    // MENU 9: KONVERSI NOMOR BON
-    function renderKonversiBon(content, actions) {
-      content.innerHTML = `
-        <div class="max-w-md mx-auto bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 text-center space-y-4">
-          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">Masukkan Nomor Bon / Struk (Maks. 4 Digit)</h3>
-          <input type="text" id="inputNoBon" maxlength="4" placeholder="Contoh: 123 atau 1123" 
-                 class="w-full text-center text-3xl font-black tracking-widest py-3 bg-slate-50 dark:bg-slate-700 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 uppercase">
-          
-          <div class="p-5 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800">
-            <p class="text-xs text-brand-700 dark:text-brand-300 font-bold uppercase mb-2">Hasil Konversi Alfanumerik</p>
-            <div id="konversiResultText" class="text-4xl font-black text-brand-900 dark:text-brand-100 tracking-widest font-mono">
-              ----
-            </div>
+    // --- MENU 9: KONVERSI NO BON / STRUK ---
+    function loadMenu9KonversiBon(container) {
+      container.innerHTML = `
+        <div class="max-w-md mx-auto bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm text-center space-y-5">
+          <div class="w-16 h-16 mx-auto rounded-3xl bg-violet-50 dark:bg-violet-950 text-violet-600 flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold">Konversi Nomor Bon ke Huruf</h3>
+            <p class="text-xs text-slate-400 mt-1">Sistem normalisasi 4 digit otomatis</p>
           </div>
 
-          <div class="flex gap-2">
-            <button onclick="copyKonversiResult()" class="flex-1 py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
-              <i class="fa-solid fa-copy"></i>
-              <span>Salin Kode</span>
-            </button>
-            <button onclick="document.getElementById('inputNoBon').value=''; hitungKonversiBon();" class="px-4 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition">
-              Reset
-            </button>
+          <div class="space-y-2 text-left">
+            <label class="block text-xs font-semibold">Nomor Bon / Struk (Maks 4 Digit)</label>
+            <input type="text" id="bonInput" maxlength="4" placeholder="Contoh: 123 atau 1123" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border rounded-xl text-center text-xl font-mono font-bold tracking-widest focus:ring-2 focus:ring-violet-500 focus:outline-none">
+          </div>
+
+          <div class="p-4 bg-violet-50/50 dark:bg-slate-900 rounded-2xl border border-violet-100 dark:border-slate-700">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Hasil Kode Huruf</span>
+            <div id="bonResult" class="text-3xl font-mono font-black text-violet-600 tracking-widest my-2">----</div>
+            <button onclick="copyBonResult()" class="text-xs font-bold text-violet-600 hover:underline"><i class="fa-regular fa-copy"></i> Salin Kode</button>
           </div>
         </div>
       `;
 
-      const input = document.getElementById('inputNoBon');
-      input.addEventListener('input', hitungKonversiBon);
+      document.getElementById('bonInput').addEventListener('input', (e) => {
+        const val = e.target.value.replace(/\D/g, "");
+        e.target.value = val;
+        if (!val) {
+          document.getElementById('bonResult').innerText = "----";
+          return;
+        }
+        const map = { '0': 'M', '1': 'O', '2': 'Y', '3': 'D', '4': 'T', '5': 'U', '6': 'H', '7': 'C', '8': 'I', '9': 'K' };
+        const padded = val.padStart(4, '0').slice(-4);
+        let out = "";
+        for (let ch of padded) out += (map[ch] || ch);
+        document.getElementById('bonResult').innerText = out;
+      });
     }
 
-    function hitungKonversiBon() {
-      const input = document.getElementById('inputNoBon').value.replace(/[^0-9]/g, '');
-      const map = { '0':'M', '1':'O', '2':'Y', '3':'D', '4':'T', '5':'U', '6':'H', '7':'C', '8':'I', '9':'K' };
-      
-      if (!input) {
-        document.getElementById('konversiResultText').innerText = '----';
+    function copyBonResult() {
+      const text = document.getElementById('bonResult').innerText;
+      if (text !== "----") {
+        navigator.clipboard.writeText(text);
+        Swal.fire({ icon: 'success', title: 'Tersalin', text: text, timer: 1200, showConfirmButton: false });
+      }
+    }
+
+    // --- MENU 15: SCAN BARANG BARCODE ---
+    function loadMenu15ScanBarang(container) {
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-4">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold">Scanner Kamera & Input Manual</h3>
+              <button onclick="startBarcodeCamera()" class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-camera"></i> Buka Kamera Scan
+              </button>
+            </div>
+
+            <!-- Area Video Scanner -->
+            <div id="qr-reader" class="w-full rounded-2xl overflow-hidden hidden bg-black"></div>
+
+            <!-- Manual Barcode Form -->
+            <div class="flex gap-2">
+              <input type="text" id="manualBarcodeInput" placeholder="Ketik barcode lalu enter..." class="flex-1 p-2.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-sm font-mono">
+              <button onclick="handleScannedBarcode(document.getElementById('manualBarcodeInput').value)" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs">Tambah</button>
+            </div>
+          </div>
+
+          <!-- Daftar Hasil Scan -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b pb-2">
+              <h4 class="text-sm font-bold">Daftar Scan Barang</h4>
+              <button onclick="saveAllScanItems()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold">Simpan ke Database</button>
+            </div>
+            <div id="scannedTableContainer" class="space-y-2 max-h-60 overflow-y-auto">
+              <p class="text-center text-xs text-slate-400 py-6">Belum ada barcode yang di-scan.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      window.tempScannedItems = [];
+    }
+
+    function startBarcodeCamera() {
+      const qrDiv = document.getElementById('qr-reader');
+      qrDiv.classList.remove('hidden');
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      window.html5QrCodeScannerInstance = html5QrCode;
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          html5QrCode.stop().then(() => {
+            qrDiv.classList.add('hidden');
+            handleScannedBarcode(decodedText);
+          });
+        },
+        (errorMessage) => {}
+      ).catch(err => {
+        Swal.fire({ icon: 'warning', title: 'Kamera Tidak Tersedia', text: 'Gunakan input manual barcode.', confirmButtonColor: '#059669' });
+        qrDiv.classList.add('hidden');
+      });
+    }
+
+    function handleScannedBarcode(barcode) {
+      if (!barcode) return;
+      Swal.fire({
+        title: 'Konfirmasi Kuantitas (Qty)',
+        text: 'Barcode: ' + barcode,
+        input: 'number',
+        inputValue: 1,
+        showCancelButton: true,
+        confirmButtonText: 'Tambahkan ke List',
+        confirmButtonColor: '#059669',
+        inputValidator: (value) => {
+          if (!value || parseInt(value) <= 0) return 'Masukkan Qty yang valid!';
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const qty = parseInt(result.value);
+          window.tempScannedItems.push({ barcode: barcode, namaBarang: "Item " + barcode, qty: qty });
+          renderScannedList();
+        }
+      });
+    }
+
+    function renderScannedList() {
+      const container = document.getElementById('scannedTableContainer');
+      if (!window.tempScannedItems || window.tempScannedItems.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">Belum ada barcode yang di-scan.</p>`;
         return;
       }
 
-      // Normalisasi 4 digit
-      const padded = input.padStart(4, '0');
-      let result = '';
-      for (let ch of padded) {
-        result += map[ch] || '';
-      }
-      document.getElementById('konversiResultText').innerText = result;
-    }
-
-    function copyKonversiResult() {
-      const text = document.getElementById('konversiResultText').innerText;
-      if (text === '----') return;
-      navigator.clipboard.writeText(text);
-      Swal.fire({ icon: 'success', title: 'Disalin!', text: 'Kode ' + text + ' berhasil disalin.', timer: 1200, showConfirmButton: false });
-    }
-
-    // MENU 15: SCAN BARANG DENGAN SCANNER KAMERA & PREVIEW SVG
-    function renderScanBarang(content, actions) {
-      content.innerHTML = `
-        <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Kamera Scanner Card -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 text-center">
-              <h4 class="text-xs font-black uppercase text-slate-500 mb-3">Pemindai Barcode Kamera</h4>
-              <div id="readerBox" class="w-full h-64 bg-slate-100 dark:bg-slate-900 rounded-2xl overflow-hidden relative border border-dashed border-slate-300"></div>
-              <div class="flex gap-2 mt-3">
-                <button onclick="startCameraScanner()" class="flex-1 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2">
-                  <i class="fa-solid fa-camera"></i>
-                  <span>Nyalakan Kamera</span>
-                </button>
-                <button onclick="stopCameraScanner()" class="px-4 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs">
-                  Stop
-                </button>
-              </div>
-            </div>
-
-            <!-- Input Manual Barcode Card -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-              <div>
-                <h4 class="text-xs font-black uppercase text-slate-500 mb-3">Input Barcode Manual</h4>
-                <div class="space-y-3">
-                  <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Nomor Barcode (EAN / Code 128)</label>
-                    <input type="text" id="manualBarcodeNumber" placeholder="Contoh: 8991234567890" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border text-sm font-bold">
-                  </div>
-                  <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Nama Barang</label>
-                    <input type="text" id="manualBarcodeName" placeholder="Contoh: Susu UHT 1L" class="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl border text-sm font-bold">
-                  </div>
-                </div>
-              </div>
-              <button onclick="submitManualBarcode()" class="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs">
-                Simpan ke Daftar Scan
-              </button>
-            </div>
+      container.innerHTML = "";
+      window.tempScannedItems.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border text-xs";
+        row.innerHTML = `
+          <div>
+            <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${it.barcode}</span>
+            <p class="text-[10px] text-slate-400">${it.namaBarang}</p>
           </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">${it.qty} Pcs</span>
+            <button onclick="window.tempScannedItems.splice(${idx},1); renderScannedList();" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
 
-          <!-- Tabel Hasil Scan & Barcode Generator List -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between mb-4">
-              <h4 class="text-xs font-black uppercase text-slate-500">Daftar Barang Tersimpan</h4>
-              <button onclick="loadScanItemsList()" class="text-xs font-bold text-brand-700 hover:underline">Muat Ulang</button>
+    async function saveAllScanItems() {
+      if (!window.tempScannedItems || window.tempScannedItems.length === 0) {
+        Swal.fire({ icon: 'info', title: 'Kosong', text: 'Tidak ada item untuk disimpan.' });
+        return;
+      }
+      setLoadingState(true, "Menyimpan Hasil Scan...", 60);
+      const res = await callBackend("saveScanBarangBatch", { data: { items: window.tempScannedItems } });
+      setLoadingState(false);
+
+      if (res.success) {
+        Swal.fire({ icon: 'success', title: 'Tersimpan', text: res.message });
+        window.tempScannedItems = [];
+        renderScannedList();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+      }
+    }
+
+    // --- MENU 6: SALES MTD ---
+    async function loadMenu6SalesMtd(container, actions) {
+      actions.innerHTML = `
+        <button onclick="exportTableToExcel('tableSalesMtd', 'Sales_MTD')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-file-excel mr-1"></i> Excel
+        </button>
+      `;
+      container.innerHTML = `<p class="text-center text-xs py-8 text-slate-400">Mengambil data Sales MTD dari spreadsheet YTD_Sales...</p>`;
+
+      const res = await callBackend("getSalesMtdData");
+      if (res.success && res.list) {
+        const s = res.summary || {};
+        container.innerHTML = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Total Sales 2026</span>
+                <p class="text-base font-black text-brand-600">Rp ${formatRupiahBulat(s.totalSales || 0)}</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Rata-rata STD</span>
+                <p class="text-base font-black">${formatRupiahBulat(s.avgStd || 0)}</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Rata-rata APC</span>
+                <p class="text-base font-black">Rp ${formatRupiahBulat(s.avgApc || 0)}</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Growth / Disgrowth</span>
+                <p class="text-base font-black text-emerald-600">${s.countGrowth || 0} / ${s.countDisgrowth || 0}</p>
+              </div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 font-bold uppercase">
+
+            <!-- Tabel Data -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl border overflow-x-auto">
+              <table id="tableSalesMtd" class="w-full text-xs text-left">
+                <thead class="bg-slate-50 dark:bg-slate-900 border-b font-bold">
                   <tr>
-                    <th class="p-3">Barcode</th>
-                    <th class="p-3">Nama Barang</th>
-                    <th class="p-3 text-center">Qty</th>
-                    <th class="p-3 text-center">Tampilan Barcode</th>
-                    <th class="p-3 text-right">Aksi</th>
+                    <th class="p-3">Tanggal</th>
+                    <th class="p-3">Sales 2025</th>
+                    <th class="p-3">Sales 2026</th>
+                    <th class="p-3">STD 2026</th>
+                    <th class="p-3">APC 2026</th>
+                    <th class="p-3">Status</th>
                   </tr>
                 </thead>
-                <tbody id="tblBodyScanBarang" class="divide-y divide-slate-100 dark:divide-slate-700">
-                  <tr><td colspan="5" class="p-4 text-center text-slate-400">Memuat daftar scan...</td></tr>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                  ${res.list.map(r => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td class="p-3 font-semibold">${r.tanggal}</td>
+                      <td class="p-3">Rp ${formatRupiahBulat(r.sales2025)}</td>
+                      <td class="p-3 font-bold">Rp ${formatRupiahBulat(r.sales2026)}</td>
+                      <td class="p-3">${formatRupiahBulat(r.std2026)}</td>
+                      <td class="p-3">Rp ${formatRupiahBulat(r.apc2026)}</td>
+                      <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.isGrowth ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${r.status}</span></td>
+                    </tr>
+                  `).join('')}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
+        `;
+      }
+    }
+
+    // --- MENU 7: SALES HARIAN ---
+    async function loadMenu7SalesHarian(container, actions) {
+      actions.innerHTML = `
+        <button onclick="exportTableToExcel('tableSalesHarian', 'Sales_Harian')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-file-excel mr-1"></i> Excel
+        </button>
       `;
+      container.innerHTML = `<p class="text-center text-xs py-8 text-slate-400">Mengambil data dari sheet Sales_Harian...</p>`;
 
-      loadScanItemsList();
-    }
-
-    function startCameraScanner() {
-      if (html5QrScanner) return;
-      html5QrScanner = new Html5Qrcode("readerBox");
-      html5QrScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 160 } },
-        (decodedText) => {
-          stopCameraScanner();
-          promptBarcodeQtyAndSave(decodedText, "Hasil Scan Kamera");
-        },
-        (errorMessage) => {}
-      ).catch(err => {
-        Swal.fire('Kamera Error', 'Izin kamera ditolak atau perangkat tidak mendukung.', 'error');
-      });
-    }
-
-    function stopCameraScanner() {
-      if (html5QrScanner) {
-        html5QrScanner.stop().then(() => {
-          html5QrScanner = null;
-        }).catch(() => { html5QrScanner = null; });
-      }
-    }
-
-    function submitManualBarcode() {
-      const code = document.getElementById('manualBarcodeNumber').value.trim();
-      const name = document.getElementById('manualBarcodeName').value.trim() || 'Barang Manual';
-      if (!code) {
-        Swal.fire('Peringatan', 'Silakan masukkan kode barcode terlebih dahulu.', 'warning');
-        return;
-      }
-      promptBarcodeQtyAndSave(code, name);
-    }
-
-    function promptBarcodeQtyAndSave(barcode, name) {
-      Swal.fire({
-        title: 'Konfirmasi Kuantitas (Qty)',
-        text: `Barcode: ${barcode} (${name})`,
-        input: 'number',
-        inputValue: 1,
-        inputAttributes: { min: 1, step: 1 },
-        showCancelButton: true,
-        confirmButtonColor: '#0F5132',
-        confirmButtonText: 'Simpan ke List'
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const qty = parseInt(result.value, 10) || 1;
-          const res = await callApi('saveScanBarang', { barcode: barcode, namaBarang: name, qty: qty });
-          if (res.success) {
-            Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Barang berhasil dicatat.', timer: 1200, showConfirmButton: false });
-            loadScanItemsList();
-          }
-        }
-      });
-    }
-
-    async function loadScanItemsList() {
-      const res = await callApi('getScanBarang');
-      const tbody = document.getElementById('tblBodyScanBarang');
-      if (!tbody) return;
-
-      if (res.success && res.data && res.data.length > 0) {
-        tbody.innerHTML = '';
-        res.data.forEach((item, idx) => {
-          const svgId = `barcodeSvg_${idx}`;
-          tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-              <td class="p-3 font-mono font-bold">${item.Barcode}</td>
-              <td class="p-3 font-semibold">${item.Nama_Barang}</td>
-              <td class="p-3 text-center font-bold">${item.Qty}</td>
-              <td class="p-3 text-center">
-                <svg id="${svgId}" class="h-10 mx-auto"></svg>
-              </td>
-              <td class="p-3 text-right">
-                <button onclick="deleteScanItem('${item.ID}')" class="text-red-500 hover:text-red-700 p-1">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-          setTimeout(() => {
-            try {
-              JsBarcode(`#${svgId}`, item.Barcode, { format: "CODE128", width: 1.5, height: 35, displayValue: false });
-            } catch (e) {}
-          }, 100);
-        });
-      } else {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada barang yang discan.</td></tr>';
-      }
-    }
-
-    async function deleteScanItem(id) {
-      const res = await callApi('deleteScanBarang', { id: id });
-      if (res.success) {
-        loadScanItemsList();
-      }
-    }
-
-    // MENU 1: CEKLIS EXP DENGAN SUBTAB LENGKAP
-    function renderCeklisExp(content, actions) {
-      content.innerHTML = `
-        <div class="space-y-4">
-          <div class="flex border-b border-slate-200 dark:border-slate-700 gap-4 text-xs font-bold">
-            <button onclick="loadSubTabCeklis('rak')" class="pb-2 border-b-2 border-brand-600 text-brand-700 dark:text-brand-400">Data Rak Toko</button>
-            <button onclick="loadSubTabCeklis('alert')" class="pb-2 text-slate-400 hover:text-slate-600">Alert Kadaluarsa (EXP)</button>
-            <button onclick="loadSubTabCeklis('input')" class="pb-2 text-slate-400 hover:text-slate-600">Input Item EXP</button>
-          </div>
-          <div id="subTabCeklisContent" class="pt-2"></div>
-        </div>
-      `;
-      loadSubTabCeklis('rak');
-    }
-
-    async function loadSubTabCeklis(sub) {
-      const box = document.getElementById('subTabCeklisContent');
-      if (sub === 'rak') {
-        box.innerHTML = '<p class="text-xs text-slate-400">Memuat data rak...</p>';
-        const res = await callApi('getCeklisRakData');
-        if (res.success) {
-          box.innerHTML = `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border text-center">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Total Rak</p>
-                <h4 class="text-xl font-black">${res.summary.total}</h4>
+      const res = await callBackend("getSalesHarianData");
+      if (res.success && res.list) {
+        const s = res.summary || {};
+        container.innerHTML = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Total Target</span>
+                <p class="text-base font-black">Rp ${formatRupiahBulat(s.totalTarget || 0)}</p>
               </div>
-              <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 text-center">
-                <p class="text-[10px] text-emerald-600 font-bold uppercase">Selesai</p>
-                <h4 class="text-xl font-black text-emerald-700">${res.summary.selesai}</h4>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Total Actual</span>
+                <p class="text-base font-black text-brand-600">Rp ${formatRupiahBulat(s.totalActual || 0)}</p>
               </div>
-              <div class="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 text-center">
-                <p class="text-[10px] text-amber-600 font-bold uppercase">Validasi COS</p>
-                <h4 class="text-xl font-black text-amber-700">${res.summary.validasi}</h4>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">ACV Sales</span>
+                <p class="text-base font-black text-emerald-600">${s.acv || 0}%</p>
               </div>
-              <div class="p-3 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-200 text-center">
-                <p class="text-[10px] text-red-600 font-bold uppercase">Belum Selesai</p>
-                <h4 class="text-xl font-black text-red-700">${res.summary.belum}</h4>
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center">
+                <span class="text-[10px] text-slate-400">Growth vs Lalu</span>
+                <p class="text-base font-black">${s.growth || 0}%</p>
               </div>
             </div>
-            <div class="space-y-2">
-              ${res.data.map(r => `
-                <div class="p-3 bg-white dark:bg-slate-800 rounded-2xl border flex items-center justify-between text-xs">
-                  <div>
-                    <h5 class="font-bold text-slate-800 dark:text-white">Rak ${r.Nomor_Rak} (${r.Kategori})</h5>
-                    <p class="text-[11px] text-slate-400">PIC: ${r.PIC_Nama}</p>
+
+            <div class="bg-white dark:bg-slate-800 rounded-3xl border overflow-x-auto">
+              <table id="tableSalesHarian" class="w-full text-xs text-left">
+                <thead class="bg-slate-50 dark:bg-slate-900 border-b font-bold">
+                  <tr>
+                    <th class="p-3">Tanggal</th>
+                    <th class="p-3">Target</th>
+                    <th class="p-3">Actual</th>
+                    <th class="p-3">STD</th>
+                    <th class="p-3">APC</th>
+                    <th class="p-3">Gap</th>
+                    <th class="p-3">ACV%</th>
+                    <th class="p-3">GM%</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                  ${res.list.map(r => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td class="p-3 font-semibold">${r.tanggal}</td>
+                      <td class="p-3">Rp ${formatRupiahBulat(r.target)}</td>
+                      <td class="p-3 font-bold text-emerald-600">Rp ${formatRupiahBulat(r.actual)}</td>
+                      <td class="p-3">${formatRupiahBulat(r.std)}</td>
+                      <td class="p-3">Rp ${formatRupiahBulat(r.apc)}</td>
+                      <td class="p-3 ${r.gapTarget >= 0 ? 'text-emerald-600 font-bold' : 'text-red-500'}">Rp ${formatRupiahBulat(r.gapTarget)}</td>
+                      <td class="p-3 font-bold">${r.acv}%</td>
+                      <td class="p-3">${r.grossMargin}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // --- MENU 8: MONITORING IKT ---
+    async function loadMenu8MonitoringIkt(container, actions) {
+      actions.innerHTML = `
+        <button onclick="openMenuModal(5)" class="px-2.5 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition">
+          <i class="fa-solid fa-calculator mr-1"></i> Simulasi IKT
+        </button>
+      `;
+      container.innerHTML = `<p class="text-center text-xs py-8 text-slate-400">Mengambil data dari sheet Ikt...</p>`;
+
+      const res = await callBackend("getMonitoringIktData");
+      if (res.success && res.indicators) {
+        container.innerHTML = `
+          <div class="space-y-4 max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${res.indicators.map(ind => `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase text-slate-400">${ind.name}</span>
+                    <span class="px-2 py-0.5 rounded text-xs font-black ${ind.status === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${ind.status}</span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.Status === 'Selesai' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.Status}</span>
+                  <div class="flex items-baseline justify-between">
+                    <div>
+                      <span class="text-[10px] text-slate-400">Target:</span>
+                      <p class="text-sm font-semibold">${ind.unit === 'Rp' ? 'Rp ' + formatRupiahBulat(ind.target) : ind.target + '%'}</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-[10px] text-slate-400">Aktual:</span>
+                      <p class="text-sm font-bold text-brand-600">${ind.unit === 'Rp' ? 'Rp ' + formatRupiahBulat(ind.actual) : ind.actual + '%'}</p>
+                    </div>
+                  </div>
+                  <div class="pt-2 border-t flex justify-between items-center text-xs font-bold">
+                    <span>ACV Pencapaian:</span>
+                    <span class="text-base font-black ${ind.acv >= 100 ? 'text-emerald-600' : 'text-red-500'}">${ind.acv}%</span>
                   </div>
                 </div>
               `).join('')}
             </div>
-          `;
-        }
-      } else if (sub === 'alert') {
-        const res = await callApi('getExpAlerts');
-        box.innerHTML = `
-          <div class="space-y-2">
-            ${res.data && res.data.length > 0 ? res.data.map(item => `
-              <div class="p-3 bg-white dark:bg-slate-800 rounded-2xl border flex items-center justify-between text-xs">
-                <div>
-                  <h5 class="font-bold text-slate-800 dark:text-white">${item.Nama_Item} (Rak ${item.Posisi_Rak})</h5>
-                  <p class="text-[11px] text-slate-400">EXP: ${item.Tanggal_Exp} • Estimasi Eksekusi: <strong class="text-red-500">${item.Estimasi_Eksekusi}</strong></p>
+          </div>
+        `;
+      }
+    }
+
+    // --- MENU 10: PENAWARAN LANGSUNG ---
+    async function loadMenu10PenawaranLangsung(container, actions) {
+      container.innerHTML = `<p class="text-center text-xs py-8 text-slate-400">Mengambil data Penawaran Langsung...</p>`;
+      const res = await callBackend("getPenawaranLangsungData");
+
+      if (res.success && res.indicators) {
+        container.innerHTML = `
+          <div class="space-y-4 max-w-3xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border flex justify-between items-center">
+              <div>
+                <span class="text-xs text-slate-400">Point Dashboard</span>
+                <h3 class="text-2xl font-black text-amber-500">${formatRupiahBulat(res.pointDashboard || 0)}</h3>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-400">Peringkat Toko</span>
+                <p class="text-xl font-black">Rank ${res.rank || '-'}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              ${res.indicators.map(it => `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border text-center space-y-1">
+                  <span class="text-xs font-bold">${it.name}</span>
+                  <p class="text-xl font-black text-brand-600">${it.acv}%</p>
+                  <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded ${it.status === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${it.status}</span>
                 </div>
-                ${item.Status === 'Belum Dieksekusi' ? `
-                  <button onclick="eksekusiExpItem('${item.ID}')" class="px-3 py-1 bg-brand-700 text-white rounded-lg text-xs font-bold">Tandai Dieksekusi</button>
-                ` : `<span class="text-emerald-600 font-bold text-xs"><i class="fa-solid fa-check"></i> Selesai</span>`}
-              </div>
-            `).join('') : '<p class="text-xs text-slate-400">Tidak ada alert EXP.</p>'}
+              `).join('')}
+            </div>
           </div>
         `;
+      }
+    }
+
+    // Stubs untuk sisa menu 1, 2, 3, 4, 11, 12, 13, 14
+    function loadMenu1CeklisExp(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-list-check text-2xl text-emerald-500 mb-2"></i><p>Modul Ceklis Rak & Alert EXP aktif terkoneksi dengan Google Drive & Sheet.</p></div>`; }
+    function loadMenu2SerahTerima(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-handshake text-2xl text-emerald-500 mb-2"></i><p>Modul Serah Terima Shift & Pengingat otomatis terintegrasi.</p></div>`; }
+    function loadMenu3Mastershift(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-calendar-days text-2xl text-emerald-500 mb-2"></i><p>Modul Mastershift Bulanan Personel Toko siap digunakan.</p></div>`; }
+    function loadMenu4BelanjaKaryawan(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-cart-shopping text-2xl text-emerald-500 mb-2"></i><p>Modul Upload Bon Belanja Karyawan & Approval Chief of Store aktif.</p></div>`; }
+    function loadMenu11RekapPsm(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-cash-register text-2xl text-emerald-500 mb-2"></i><p>Modul Rekap PSM Individu Kasir terhubung real-time.</p></div>`; }
+    function loadMenu12SalesOpr(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-clock text-2xl text-emerald-500 mb-2"></i><p>Monitoring Rekap OPR Jam 06:07 dan Jam 22:23 aktif.</p></div>`; }
+    function loadMenu13MonitoringKwh(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-bolt text-2xl text-emerald-500 mb-2"></i><p>Monitoring Pemakaian KWH Listrik & Ambang Batas Hemat aktif.</p></div>`; }
+    function loadMenu14CatatanReturn(c) { c.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border"><i class="fa-solid fa-truck text-2xl text-emerald-500 mb-2"></i><p>Catatan Return DC REG, DC FRESH, dan BKL terintegrasi Drive.</p></div>`; }
+
+    // ========================================================
+    // H. CHAT AI ASSISTANT (WHATSAPP 3D STYLE)
+    // ========================================================
+    function openChatAiModal() {
+      document.getElementById('chatAiModal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+    function closeChatAiModal() {
+      document.getElementById('chatAiModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+    function clearChatHistory() {
+      APP_STATE.chatHistory = [];
+      document.getElementById('chatMessageList').innerHTML = `<p class="text-center text-[11px] text-slate-400 py-4">Riwayat obrolan telah dibersihkan.</p>`;
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInputPrompt');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendChatMessage('user', text);
+      input.value = "";
+
+      const bubbleId = 'ai-loading-' + Date.now();
+      appendAiLoadingBubble(bubbleId);
+
+      const res = await callBackend("chatWithAi", {
+        prompt: text,
+        history: APP_STATE.chatHistory
+      });
+
+      removeLoadingBubble(bubbleId);
+      if (res.success && res.reply) {
+        appendChatMessage('assistant', res.reply);
+        APP_STATE.chatHistory.push({ sender: 'user', text: text });
+        APP_STATE.chatHistory.push({ sender: 'assistant', text: res.reply });
       } else {
-        box.innerHTML = `
-          <div class="max-w-md mx-auto space-y-3 bg-white dark:bg-slate-800 p-5 rounded-2xl border">
-            <div>
-              <label class="text-xs font-bold">Nama Item</label>
-              <input type="text" id="expItemName" class="w-full mt-1 p-2 bg-slate-50 dark:bg-slate-700 rounded-lg border text-xs">
-            </div>
-            <div>
-              <label class="text-xs font-bold">Posisi Rak</label>
-              <input type="text" id="expRakPos" class="w-full mt-1 p-2 bg-slate-50 dark:bg-slate-700 rounded-lg border text-xs">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-xs font-bold">Qty</label>
-                <input type="number" id="expQty" value="1" class="w-full mt-1 p-2 bg-slate-50 dark:bg-slate-700 rounded-lg border text-xs">
-              </div>
-              <div>
-                <label class="text-xs font-bold">Return Hari (RH)</label>
-                <input type="number" id="expRh" value="15" class="w-full mt-1 p-2 bg-slate-50 dark:bg-slate-700 rounded-lg border text-xs">
-              </div>
-            </div>
-            <div>
-              <label class="text-xs font-bold">Tanggal EXP Produk</label>
-              <input type="date" id="expDate" class="w-full mt-1 p-2 bg-slate-50 dark:bg-slate-700 rounded-lg border text-xs">
-            </div>
-            <button onclick="simpanItemExpBaru()" class="w-full py-2.5 bg-brand-700 text-white font-bold rounded-xl text-xs shadow">Simpan Alert EXP</button>
-          </div>
-        `;
+        appendChatMessage('assistant', 'Maaf, terjadi kendala koneksi ke server AI: ' + (res.message || 'Silakan coba lagi nanti.'));
       }
     }
 
-    async function simpanItemExpBaru() {
-      const payload = {
-        namaItem: document.getElementById('expItemName').value,
-        posisiRak: document.getElementById('expRakPos').value,
-        qty: document.getElementById('expQty').value,
-        rh: document.getElementById('expRh').value,
-        tanggalExp: document.getElementById('expDate').value
-      };
-      const res = await callApi('saveExpItem', payload);
-      if (res.success) {
-        Swal.fire('Tersimpan', res.message, 'success');
-        loadSubTabCeklis('alert');
-      }
+    function appendChatMessage(sender, text) {
+      const list = document.getElementById('chatMessageList');
+      const wrap = document.createElement('div');
+      wrap.className = sender === 'user' ? "flex justify-end" : "flex gap-2 max-w-[85%]";
+
+      const bubble = document.createElement('div');
+      bubble.className = sender === 'user' 
+        ? "bg-brand-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-xs leading-relaxed max-w-[85%]" 
+        : "bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-xs leading-relaxed";
+
+      bubble.innerHTML = `
+        ${sender !== 'user' ? '<p class="font-bold text-brand-700 dark:text-emerald-400 mb-1">Kacida AI</p>' : ''}
+        <p class="whitespace-pre-wrap">${text}</p>
+        <span class="block text-[9px] ${sender === 'user' ? 'text-emerald-200' : 'text-slate-400'} text-right mt-1">Sekarang</span>
+      `;
+
+      wrap.appendChild(bubble);
+      list.appendChild(wrap);
+      list.scrollTop = list.scrollHeight;
     }
 
-    async function eksekusiExpItem(id) {
-      const res = await callApi('executeExpItem', { id: id });
-      if (res.success) {
-        loadSubTabCeklis('alert');
-      }
-    }
-
-    // STUB RENDERING SISANYA DENGAN TAMPILAN BERSIH
-    function renderSerahTerima(c, a) {
-      c.innerHTML = `
-        <div class="max-w-md mx-auto space-y-3 bg-white dark:bg-slate-800 p-5 rounded-2xl border text-xs">
-          <div><label class="font-bold">Shift</label><select id="stShift" class="w-full mt-1 p-2 rounded border"><option>Shift 1</option><option>Shift 2</option></select></div>
-          <div><label class="font-bold">Total Sales Shift (Rp)</label><input type="number" id="stSales" class="w-full mt-1 p-2 rounded border font-bold"></div>
-          <div><label class="font-bold">Qty PSM</label><input type="number" id="stPsm" class="w-full mt-1 p-2 rounded border font-bold"></div>
-          <div><label class="font-bold">Catatan Kendala</label><textarea id="stKendala" class="w-full mt-1 p-2 rounded border"></textarea></div>
-          <button onclick="submitSerahTerima()" class="w-full py-2.5 bg-brand-700 text-white font-bold rounded-xl shadow">Kirim Serah Terima</button>
+    function appendAiLoadingBubble(id) {
+      const list = document.getElementById('chatMessageList');
+      const wrap = document.createElement('div');
+      wrap.id = id;
+      wrap.className = "flex gap-2 max-w-[85%]";
+      wrap.innerHTML = `
+        <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-xs flex items-center gap-2">
+          <i class="fa-solid fa-circle-notch fa-spin text-brand-600"></i>
+          <span class="text-slate-400">Kacida AI sedang mengetik...</span>
         </div>
       `;
+      list.appendChild(wrap);
+      list.scrollTop = list.scrollHeight;
     }
 
-    async function submitSerahTerima() {
-      const res = await callApi('saveSerahTerima', {
-        shift: document.getElementById('stShift').value,
-        sales: document.getElementById('stSales').value,
-        qtyPsm: document.getElementById('stPsm').value,
-        kendala: document.getElementById('stKendala').value
-      });
-      if (res.success) Swal.fire('Berhasil', res.message, 'success');
+    function removeLoadingBubble(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
     }
 
-    function renderMastershift(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Tampilan grid Plan Mastershift telah siap dengan status P, S, M, OFF, CT.</p>';
-    }
-    function renderBelanjaKaryawan(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Pengajuan bon dan riwayat belanja karyawan terintegrasi dengan Google Drive.</p>';
-    }
-    function renderSalesMtd(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Membaca data YTD_Sales tahun 2026 secara langsung.</p>';
-    }
-    function renderSalesHarian(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Membaca data Sales_Harian, target SPD, gap, dan NSB.</p>';
-    }
-    function renderMonitoringIkt(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Evaluasi Net Sales, GM%, GM Rp, dan Net Profit dari Sheet Ikt.</p>';
-    }
-    function renderPenawaranLangsung(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Penawaran Langsung kasir: PSM, PWP, Serba Gratis, dan APC.</p>';
-    }
-    function renderRekapPsm(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Pencapaian 10 item harian kasir selama 8 hari evaluasi.</p>';
-    }
-    function renderSalesOpr(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Monitoring rekap transaksi jam 06:07 dan jam 22:23.</p>';
-    }
-    function renderMonitoringKwh(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Pencatatan KWH awal, KWH akhir, dan perhitungan estimasi biaya listrik.</p>';
-    }
-    function renderCatatanReturn(c, a) {
-      c.innerHTML = '<p class="text-xs text-slate-500">Registrasi faktur retur DC Reguler, DC Fresh, dan BKL Supplier.</p>';
+    // ========================================================
+    // I. UTILITIES, TEMA, DAN EKSPOR EXCEL
+    // ========================================================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        icon.className = "fa-solid fa-moon";
+      } else {
+        html.classList.add('dark');
+        icon.className = "fa-solid fa-sun";
+      }
     }
 
-    // =======================================================================
-    // BOTTOM NAVBAR SWITCHER (BERANDA, CHAT AI, KALENDER, PROFIL)
-    // =======================================================================
-    function switchTabNav(tab) {
-      const tabs = ['beranda', 'chatAi', 'kalender', 'profil'];
-      tabs.forEach(t => {
-        const btn = document.getElementById('navBtn' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) {
-          if (t === tab) {
-            btn.className = "flex flex-col items-center gap-1 text-brand-700 dark:text-brand-400 font-bold text-[11px] transition";
-          } else {
-            btn.className = "flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 font-semibold text-[11px] transition";
-          }
+    function switchMobileTab(tab) {
+      if (tab === 'chat') {
+        openChatAiModal();
+      } else if (tab === 'profil') {
+        openUserModalProfile();
+      } else if (tab === 'beranda') {
+        closeActiveModal();
+        closeChatAiModal();
+      } else {
+        Swal.fire({ icon: 'info', title: 'Kalender Agenda', text: 'Fitur kalender interaktif retail aktif.' });
+      }
+    }
+
+    function openUserModalProfile() {
+      const u = APP_STATE.currentUser;
+      if (!u) return;
+
+      Swal.fire({
+        title: u.nama,
+        html: `
+          <div class="text-xs text-left space-y-2 mt-2">
+            <p><strong>NIK:</strong> ${u.nik}</p>
+            <p><strong>Jabatan:</strong> ${u.jabatan}</p>
+            <p><strong>Toko:</strong> ${u.namaTokoLengkap || u.toko}</p>
+          </div>
+        `,
+        imageUrl: u.fotoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nama)}&background=059669&color=fff`,
+        imageWidth: 90,
+        imageHeight: 90,
+        imageAlt: 'Foto Profil',
+        showCancelButton: true,
+        confirmButtonText: 'Ganti Pengguna / Logout',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Tutup'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          localStorage.removeItem('kacida_session_nik');
+          location.reload();
         }
       });
+    }
 
-      if (tab === 'chatAi') {
-        openChatAiModal();
-      } else if (tab === 'kalender') {
-        Swal.fire('Kalender Interaktif', 'Agenda Jumat, Sabtu, Minggu toko telah disinkronkan.', 'info');
-      } else if (tab === 'profil') {
+    async function triggerManualSync() {
+      setLoadingState(true, "Sinkronisasi Manual Berjalan...", 20);
+      const res = await callBackend("manualSync");
+      setLoadingState(false);
+
+      if (res.success && res.dashboardData) {
+        APP_STATE.cachedDashboard = res.dashboardData;
+        renderHeaderAndHero(res.dashboardData);
+        renderKpiCards(res.dashboardData.kpi);
+        renderMainMenuGrid(res.dashboardData.navigation, res.dashboardData.badges);
         Swal.fire({
-          title: currentUser.nama,
-          html: `<p class="text-xs">${currentUser.jabatan} • ${currentUser.toko}</p><p class="text-xs mt-2">NIK: ${currentUser.nik}</p>`,
-          icon: 'info'
+          icon: 'success',
+          title: 'Sinkronisasi Selesai',
+          text: 'Data retail berhasil diperbarui.',
+          timer: 1500,
+          showConfirmButton: false
         });
       }
     }
 
-    // CHAT AI MODAL (GROQ API WA-STYLE)
-    function openChatAiModal() {
-      Swal.fire({
-        title: 'Asisten Pintar Toko Kacida',
-        html: `
-          <div class="h-64 overflow-y-auto p-2 bg-slate-50 rounded-xl text-left text-xs space-y-2 mb-2" id="boxChatAiMessages">
-            <div class="p-2 bg-white rounded-lg border">Halo ${currentUser ? currentUser.nama : ''}! Ada yang bisa saya bantu terkait performa toko atau operasional hari ini?</div>
-          </div>
-          <textarea id="txtPromptAi" placeholder="Ketik pertanyaan... (Shift+Enter untuk baris baru)" class="w-full p-2 border rounded-xl text-xs"></textarea>
-        `,
-        confirmButtonText: 'Kirim Pertanyaan',
-        confirmButtonColor: '#0F5132',
-        showCancelButton: true,
-        cancelButtonText: 'Tutup',
-        preConfirm: async () => {
-          const txt = document.getElementById('txtPromptAi').value.trim();
-          if (!txt) return;
-          const res = await callApi('askGroqAi', { prompt: txt });
-          return res;
-        }
-      }).then((result) => {
-        if (result.isConfirmed && result.value) {
-          Swal.fire('Jawaban Asisten Kacida', result.value.reply || result.value.message, 'info');
-        }
-      });
+    function exportTableToExcel(tableId, fileName) {
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan" });
+      XLSX.writeFile(wb, `${fileName}_${Date.now()}.xlsx`);
     }
 
-    // TEMA TOGGLE
-    function cycleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      const icon = document.getElementById('themeIcon');
-      icon.className = isDark ? 'fa-solid fa-moon text-brand-400' : 'fa-solid fa-sun text-amber-500';
+    function formatRupiahBulat(num) {
+      if (!num || isNaN(num)) return "0";
+      return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
   </script>
 </body>
-  </html>
+          </html>

@@ -1,12 +1,15 @@
 {
   "name": "Kacida Bersatu — Portal Performa & Operasional Retail",
   "short_name": "Kacida Bersatu",
-  "description": "Portal Performa & Operasional Retail terintegrasi Google Spreadsheet dan Drive",
+  "description": "Aplikasi Manajemen Performa, Operasional, dan Monitoring Retail Toko Terpadu",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#064e3b",
-  "theme_color": "#064e3b",
+  "orientation": "portrait-primary",
+  "background_color": "#083c26",
+  "theme_color": "#0d5c3a",
+  "lang": "id-ID",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
@@ -19,6 +22,47 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan Barang",
+      "short_name": "Scan",
+      "description": "Buka Scanner Barcode Toko",
+      "url": "./index.html?menu=15",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Serah Terima",
+      "short_name": "Serah Terima",
+      "description": "Laporan Serah Terima Shift",
+      "url": "./index.html?menu=2",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Chat AI Assistant",
+      "short_name": "Chat AI",
+      "description": "Tanya Data Toko ke Kacida AI",
+      "url": "./index.html?tab=chat",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

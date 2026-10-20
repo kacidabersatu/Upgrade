@@ -1,15 +1,12 @@
 {
-  "name": "Kacida Bersatu — Portal Performa & Operasional Retail",
+  "name": "Kacida Bersatu - Portal Performa & Operasional Retail",
   "short_name": "Kacida Bersatu",
-  "description": "Aplikasi Manajemen Performa, Operasional, dan Monitoring Retail Toko Terpadu",
+  "description": "Portal Performa & Operasional Retail Alfamart Terintegrasi Spreadsheet & Drive",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
+  "background_color": "#F0FDF4",
+  "theme_color": "#022A18",
   "orientation": "portrait-primary",
-  "background_color": "#083c26",
-  "theme_color": "#0d5c3a",
-  "lang": "id-ID",
-  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
@@ -22,47 +19,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Scan Barang",
-      "short_name": "Scan",
-      "description": "Buka Scanner Barcode Toko",
-      "url": "./index.html?menu=15",
-      "icons": [
-        {
-          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Serah Terima",
-      "short_name": "Serah Terima",
-      "description": "Laporan Serah Terima Shift",
-      "url": "./index.html?menu=2",
-      "icons": [
-        {
-          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Chat AI Assistant",
-      "short_name": "Chat AI",
-      "description": "Tanya Data Toko ke Kacida AI",
-      "url": "./index.html?tab=chat",
-      "icons": [
-        {
-          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
     }
   ]
 }

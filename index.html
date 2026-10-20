@@ -4,1889 +4,730 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#005a36">
   
-  <!-- CSS Framework & Libs -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#022A18">
+  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
+  
+  <!-- Font & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- JS Libraries -->
+  <!-- Libraries (SweetAlert, ChartJS, SheetJS, HTML2PDF) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    
-    :root {
-      --primary-dark: #004d2c;
-      --primary: #005a36;
-      --primary-light: #059669;
-      --accent-green: #10b981;
-      --bg-light: #f0fdf4;
-      --card-bg: #ffffff;
-      --text-main: #1f2937;
-    }
-
-    body.theme-malam {
-      --primary-dark: #062b1b;
-      --primary: #0a3d27;
-      --bg-light: #0b1712;
-      --card-bg: #13241b;
-      --text-main: #f3f4f6;
-      background-color: #0b1712 !important;
-      color: #f3f4f6 !important;
-    }
-
-    .watermark-bg {
-      background-image: url('https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i');
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 320px;
-      background-blend-mode: overlay;
-    }
-
-    .modal-fullscreen {
-      position: fixed; inset: 0; z-index: 50; overflow-y: auto;
-      background-color: #f9fafb; display: flex; flex-direction: column;
-    }
-    body.theme-malam .modal-fullscreen { background-color: #0b1712; color: #f3f4f6; }
-
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    .loader-spin {
-      border: 4px solid rgba(16, 185, 129, 0.2);
-      border-top-color: #059669;
-      border-radius: 50%;
-      width: 48px; height: 48px;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .badge-notif {
-      position: absolute; top: -5px; right: -5px;
-      background-color: #ef4444; color: white;
-      font-size: 10px; font-weight: 700;
-      padding: 2px 6px; border-radius: 9999px;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <link rel="stylesheet" href="Styles.css">
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased selection:bg-green-600 selection:text-white">
+<body>
 
-  <!-- ==================== SPLASH SCREEN / LOADING ==================== -->
-  <div id="splashScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500">
-    <div class="relative flex flex-col items-center p-8 rounded-2xl max-w-sm text-center">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-24 h-24 mb-4 object-contain animate-pulse">
-      <h1 class="text-2xl font-bold text-green-900">KACIDA BERSATU</h1>
-      <p class="text-xs text-green-700 tracking-wider mb-6">Portal Performa & Operasional Retail</p>
-      
-      <div class="w-48 bg-gray-200 h-2 rounded-full overflow-hidden mb-2">
-        <div id="splashProgressBar" class="bg-green-600 h-full w-0 transition-all duration-300"></div>
-      </div>
-      <span id="splashProgressText" class="text-xs text-gray-500 font-semibold">Memuat Sistem... 0%</span>
-    </div>
-  </div>
+  <!-- =========================================================================
+       1. SCREEN LOGIN
+       ========================================================================= -->
+  <div id="login-screen">
+    <div class="login-card">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="login-logo">
+      <h1 class="login-title">KACIDA BERSATU</h1>
+      <div class="login-subtitle">Portal Performa & Operasional Retail</div>
+      <div class="login-slogan">"Bersama Kita Kuat"</div>
 
-  <!-- ==================== SCREEN LOGIN ==================== -->
-  <div id="loginScreen" class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-cover bg-center" 
-       style="background-image: linear-gradient(rgba(0,45,25,0.78), rgba(0,75,40,0.85)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center relative overflow-hidden">
-      <div class="w-20 h-20 mx-auto mb-4 p-2 bg-green-50 rounded-2xl flex items-center justify-center shadow-inner">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="w-16 h-16 object-contain">
-      </div>
-      <h2 class="text-2xl font-extrabold text-green-950">Masuk ke Akun Anda</h2>
-      <p class="text-xs text-gray-500 mb-6">Silakan masukkan NIK Anda untuk melanjutkan</p>
-      
-      <div class="space-y-4 text-left">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor Induk Karyawan (NIK)</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <i class="fa-solid fa-id-card"></i>
-            </span>
-            <input type="text" id="inputNik" placeholder="Contoh: 14125034 atau 17060061" 
-                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-600 font-semibold text-gray-800">
-          </div>
+      <div class="login-form-group">
+        <label for="input-nik">Nomor Induk Karyawan (NIK)</label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-id-card"></i>
+          <input type="text" id="input-nik" placeholder="Masukkan NIK Anda" autocomplete="off">
         </div>
-
-        <button onclick="handleLoginSubmit()" id="btnLogin" 
-                class="w-full py-3.5 bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transform active:scale-95 transition">
-          <span>Masuk</span>
-          <i class="fa-solid fa-arrow-right"></i>
-        </button>
       </div>
 
-      <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-1 text-xs text-gray-500">
-        <span>Tidak bisa Login? Hubungi admin</span>
-        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20portal." 
-           target="_blank" class="flex items-center gap-1.5 font-bold text-green-700 hover:text-green-800 transition">
-          <i class="fa-brands fa-whatsapp text-sm text-green-600"></i>
-          <span>085862719780</span>
+      <button id="btn-login-submit" class="btn-primary-block" onclick="doLogin()">
+        <span>Masuk</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+      <div class="login-help-link">
+        Tidak bisa Login? Hubungi admin:<br>
+        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login" target="_blank">
+          <i class="fa-brands fa-whatsapp"></i> WhatsApp 085862719780
         </a>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MAIN APP SHELL ==================== -->
-  <div id="appShell" class="hidden min-h-screen flex flex-col md:flex-row">
-    
-    <!-- DESKTOP SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-green-950 text-white p-4 sticky top-0 h-screen select-none border-r border-green-900">
-      <div class="flex items-center gap-3 pb-4 border-b border-green-900/60 mb-4">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="w-10 h-10 object-contain">
-        <div>
-          <h1 class="font-extrabold text-sm tracking-wide text-white leading-tight">KACIDA BERSATU</h1>
-          <p class="text-[10px] text-green-300">Retail Operational Portal</p>
+  <!-- =========================================================================
+       2. APPLICATION SHELL
+       ========================================================================= -->
+  <div id="app-container" style="display: none;">
+    <!-- SIDEBAR DESKTOP -->
+    <aside class="desktop-sidebar">
+      <div class="sidebar-header">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="sidebar-logo">
+        <div class="sidebar-brand">
+          <h2>KACIDA BERSATU</h2>
+          <span id="sidebar-store-code">TOKO: -</span>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex-1 overflow-y-auto space-y-1 no-scrollbar pr-1">
-        <div class="text-[10px] font-bold text-green-400/80 uppercase px-3 py-1">Navigasi Utama</div>
-        <button onclick="switchNavbarView('beranda')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-green-900/70 text-green-100 transition active" data-nav="beranda">
-          <i class="fa-solid fa-house w-4 text-center"></i> Beranda
-        </button>
-        <button onclick="switchNavbarView('chat-ai')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-green-900/70 text-green-100 transition" data-nav="chat-ai">
-          <span class="flex items-center gap-3"><i class="fa-solid fa-robot w-4 text-center"></i> Chat AI</span>
-          <span class="bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold">Baru</span>
-        </button>
-        <button onclick="switchNavbarView('kalender')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-green-900/70 text-green-100 transition" data-nav="kalender">
-          <i class="fa-solid fa-calendar-days w-4 text-center"></i> Kalender
-        </button>
-        <button onclick="switchNavbarView('profil')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold hover:bg-green-900/70 text-green-100 transition" data-nav="profil">
-          <i class="fa-solid fa-user-gear w-4 text-center"></i> Profil
-        </button>
-
-        <div class="text-[10px] font-bold text-green-400/80 uppercase px-3 pt-4 pb-1">15 Menu Operasional</div>
-        <div id="desktopMenuList" class="space-y-0.5 text-xs">
-          <!-- Diisi via renderSideMenus() -->
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="switchNavTab('beranda')">
+          <i class="fa-solid fa-house"></i>
+          <span>Beranda</span>
+        </div>
+        <div class="nav-item" onclick="switchNavTab('chat')">
+          <i class="fa-solid fa-robot"></i>
+          <span>Chat AI</span>
+        </div>
+        <div class="nav-item" onclick="switchNavTab('kalender')">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Kalender</span>
+        </div>
+        <div class="nav-item" onclick="switchNavTab('profil')">
+          <i class="fa-solid fa-user-tie"></i>
+          <span>Profil Toko</span>
         </div>
 
-        <div id="superAdminMenuNav" class="hidden pt-3">
-          <div class="text-[10px] font-bold text-yellow-400 uppercase px-3 py-1">Super Admin</div>
-          <button onclick="openSuperAdminModal()" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-yellow-300 hover:bg-yellow-950/40 border border-yellow-500/30">
-            <i class="fa-solid fa-database w-4"></i> Kelola Database
-          </button>
-        </div>
+        <div class="nav-section-title">Menu Utama</div>
+        <div id="sidebar-dynamic-menus"></div>
       </nav>
 
-      <!-- Sidebar Footer -->
-      <div class="pt-3 border-t border-green-900/60 text-xs space-y-2">
-        <button onclick="openModal('modalBantuan')" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-green-200 hover:bg-green-900/50">
-          <i class="fa-solid fa-circle-question"></i> Bantuan Panduan
-        </button>
-        <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-300 hover:bg-red-950/40">
-          <i class="fa-solid fa-right-from-bracket"></i> Keluar (Logout)
-        </button>
-        <div class="text-center text-[10px] text-green-400 font-bold italic pt-1">#BersamaKitaKuat</div>
+      <div class="sidebar-footer">
+        <div class="nav-item" onclick="doLogout()">
+          <i class="fa-solid fa-right-from-bracket" style="color: #EF4444;"></i>
+          <span>Keluar Sesi</span>
+        </div>
       </div>
     </aside>
 
-    <!-- CONTENT WRAPPER -->
-    <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-      
-      <!-- TOP HEADER (Desktop & Mobile) -->
-      <header class="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="md:hidden">
-            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="w-8 h-8 object-contain">
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-extrabold text-sm md:text-base text-green-950">Kacida Bersatu</span>
-              <span id="headerStoreBadge" class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">Store</span>
-              <span class="inline-flex items-center gap-1 text-[10px] text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span> Online
-              </span>
-            </div>
-            <p class="text-[10px] text-gray-400 hidden md:block">Portal Performa & Operasional Terpadu</p>
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="main-wrapper">
+      <!-- TOPBAR / APP HEADER -->
+      <header class="app-header">
+        <div class="header-left">
+          <div class="store-badge">
+            <span class="status-dot" id="network-dot"></span>
+            <span id="header-store-label">Memuat Toko...</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4">
-          <!-- Sync Button -->
-          <button onclick="triggerSyncManual()" class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-800 rounded-xl text-xs font-bold border border-green-200 flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-arrows-rotate text-xs"></i>
-            <span class="hidden md:inline">Sync Manual</span>
+        <div class="header-right">
+          <button class="header-btn" onclick="executeSyncManual()">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Sync</span>
           </button>
-
-          <!-- Theme switcher -->
-          <div class="hidden md:flex bg-gray-100 p-1 rounded-xl text-[11px] font-semibold text-gray-600 gap-1">
-            <button onclick="setTheme('default')" class="px-2 py-0.5 rounded-lg active-theme-btn" id="themeDefault">Default</button>
-            <button onclick="setTheme('siang')" class="px-2 py-0.5 rounded-lg" id="themeSiang">Siang</button>
-            <button onclick="setTheme('malam')" class="px-2 py-0.5 rounded-lg" id="themeMalam">Malam</button>
+          
+          <div class="notification-bell" onclick="showNotificationAlert()">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-counter" id="bell-counter" style="display: none;">0</span>
           </div>
 
-          <!-- Approval Badges Bell -->
-          <div class="relative cursor-pointer" onclick="openApprovalListModal()">
-            <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hover:text-green-700">
-              <i class="fa-solid fa-bell"></i>
-            </div>
-            <span id="bellBadge" class="hidden badge-notif">0</span>
-          </div>
-
-          <!-- User avatar -->
-          <div class="flex items-center gap-2 pl-2 border-l border-gray-100">
-            <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=005a36&color=fff" class="w-8 h-8 rounded-full object-cover border border-green-600">
-            <div class="hidden lg:block text-left">
-              <div id="headerUserName" class="text-xs font-bold text-gray-800 leading-tight">Nama User</div>
-              <div id="headerUserRole" class="text-[10px] text-gray-400">Chief Of Store</div>
+          <div class="user-profile-badge">
+            <img src="" alt="Avatar" id="header-user-avatar" class="user-avatar-sm" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0A8A4B&color=fff'">
+            <div class="user-info-text">
+              <div class="user-name-title" id="header-user-name">-</div>
+              <div class="user-role-sub" id="header-user-role">-</div>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- MAIN ROUTER CONTAINER -->
-      <main class="flex-1 p-4 md:p-6 mb-16 md:mb-0 watermark-bg">
-        
-        <!-- ==================== VIEW 1: BERANDA ==================== -->
-        <section id="viewBeranda" class="space-y-6">
-          
-          <!-- HERO CARD -->
-          <div class="rounded-3xl p-6 text-white relative overflow-hidden shadow-lg bg-cover bg-center"
-               style="background-image: linear-gradient(to right, rgba(0,75,40,0.92), rgba(0,45,25,0.75)), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa');">
-            <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div class="flex items-center gap-4">
-                <img id="heroAvatar" src="https://ui-avatars.com/api/?name=User&background=fff&color=005a36" class="w-16 h-16 rounded-full border-2 border-white object-cover shadow">
-                <div>
-                  <h2 id="heroGreeting" class="text-xl md:text-2xl font-extrabold leading-tight">Selamat Pagi, Rekan!</h2>
-                  <p id="heroUserSub" class="text-xs text-green-200 font-medium">Chief Of Store — Toko Ocean (X041)</p>
-                  <div class="mt-2 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs">
-                    <span class="font-bold text-green-300">Sales H-1:</span>
-                    <span id="heroSalesH1" class="font-black text-white">Rp 0</span>
-                    <span id="heroSalesGrowth" class="text-[10px] font-bold text-green-200">0%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="text-right hidden md:block">
-                <span class="text-xs font-semibold text-green-200 block">Sinkronisasi Terakhir</span>
-                <span id="heroSyncTime" class="text-xs font-bold text-white block">-</span>
-                <span class="inline-flex items-center gap-1 text-[11px] text-green-300 mt-1">
-                  <i class="fa-solid fa-check-circle"></i> Sistem Terhubung
-                </span>
-              </div>
+      <!-- BODY CONTENT -->
+      <div class="content-body" id="main-view-container">
+        <!-- HERO CARD -->
+        <div class="hero-banner-card">
+          <div class="hero-profile-info">
+            <img src="" id="hero-user-avatar" class="hero-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0A8A4B&color=fff'">
+            <div class="hero-greeting">
+              <h3 id="hero-greeting-text">Selamat Pagi, Rekan!</h3>
+              <p id="hero-store-info">Chief of Store • Memuat Profil Toko...</p>
             </div>
           </div>
 
-          <!-- CAROUSEL RINGKASAN KPI -->
-          <div class="relative">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500">Ringkasan Utama Indikator KPI</h3>
-              <div class="flex gap-1">
-                <button onclick="scrollKpiCarousel(-1)" class="w-6 h-6 rounded-full bg-white shadow text-gray-600 flex items-center justify-center text-xs"><i class="fa-solid fa-chevron-left"></i></button>
-                <button onclick="scrollKpiCarousel(1)" class="w-6 h-6 rounded-full bg-white shadow text-gray-600 flex items-center justify-center text-xs"><i class="fa-solid fa-chevron-right"></i></button>
-              </div>
+          <div class="hero-sales-box">
+            <span>Sales H-1 Kemarin</span>
+            <div class="hero-sales-nominal" id="hero-sales-val">Rp 0</div>
+            <div class="hero-growth-badge" id="hero-growth-tag">+0% Growth</div>
+          </div>
+        </div>
+
+        <!-- KPI CAROUSEL (4 KARTU UTAMA) -->
+        <div class="kpi-grid">
+          <div class="kpi-card" onclick="openMenuModal(8)">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+              <span class="kpi-status-tag tag-ok" id="kpi-tag-ikt">OK</span>
             </div>
-            
-            <div id="kpiCarousel" class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth py-1">
-              <!-- KPI Card 1: IKT -->
-              <div onclick="openModal('modalIkt')" class="min-w-[220px] bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-green-400 transition">
-                <div class="flex justify-between items-center text-xs text-gray-500 font-semibold mb-1">
-                  <span>IKT Net Sales</span>
-                  <i class="fa-solid fa-chart-line text-green-600"></i>
-                </div>
-                <div class="text-2xl font-black text-gray-800" id="cardIktAcv">0%</div>
-                <div class="flex justify-between items-center mt-2 text-[11px]">
-                  <span class="text-gray-400">Target Time Factor</span>
-                  <span class="font-bold text-green-700" id="cardIktTf">0%</span>
-                </div>
-              </div>
-
-              <!-- KPI Card 2: Sales MTD -->
-              <div onclick="openModal('modalSalesMtd')" class="min-w-[220px] bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-blue-400 transition">
-                <div class="flex justify-between items-center text-xs text-gray-500 font-semibold mb-1">
-                  <span>Sales MTD</span>
-                  <i class="fa-solid fa-bag-shopping text-blue-600"></i>
-                </div>
-                <div class="text-2xl font-black text-gray-800" id="cardMtdTotal">Rp 0</div>
-                <div class="flex justify-between items-center mt-2 text-[11px]">
-                  <span class="text-gray-400">Growth YoY</span>
-                  <span class="font-bold text-blue-700" id="cardMtdGrowth">0%</span>
-                </div>
-              </div>
-
-              <!-- KPI Card 3: Penawaran Langsung -->
-              <div onclick="openModal('modalPenawaran')" class="min-w-[220px] bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-yellow-400 transition">
-                <div class="flex justify-between items-center text-xs text-gray-500 font-semibold mb-1">
-                  <span>Penawaran Langsung</span>
-                  <i class="fa-solid fa-bullhorn text-yellow-500"></i>
-                </div>
-                <div class="text-2xl font-black text-gray-800" id="cardPlPoint">0</div>
-                <div class="flex justify-between items-center mt-2 text-[11px]">
-                  <span class="text-gray-400">Ranking Store</span>
-                  <span class="font-bold text-yellow-600" id="cardPlRank">-</span>
-                </div>
-              </div>
-
-              <!-- KPI Card 4: Sales Harian -->
-              <div onclick="openModal('modalSalesHarian')" class="min-w-[220px] bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-purple-400 transition">
-                <div class="flex justify-between items-center text-xs text-gray-500 font-semibold mb-1">
-                  <span>Sales Harian ACV</span>
-                  <i class="fa-solid fa-calendar-check text-purple-600"></i>
-                </div>
-                <div class="text-2xl font-black text-gray-800" id="cardHarianAcv">0%</div>
-                <div class="flex justify-between items-center mt-2 text-[11px]">
-                  <span class="text-gray-400">Status Pencapaian</span>
-                  <span class="font-bold text-green-600" id="cardHarianStatus">Normal</span>
-                </div>
-              </div>
+            <div class="kpi-value" id="kpi-val-ikt">0%</div>
+            <div class="kpi-title">IKT Net Sales</div>
+            <div class="kpi-footer">
+              <span>Target: <b id="kpi-tgt-ikt">0</b></span>
+              <span>Act: <b id="kpi-act-ikt">0</b></span>
             </div>
           </div>
 
-          <!-- GRID 12 MENU UTAMA (DITAMBAH VIEW ALL) -->
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-4">
-              <div>
-                <h3 class="text-base font-extrabold text-green-950">Menu Operasional</h3>
-                <p class="text-xs text-gray-400">Pilih modul tugas harian toko</p>
-              </div>
-              <button onclick="openModal('modalAllMenus')" class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-200 hover:bg-green-100 transition">
-                <i class="fa-solid fa-grip mr-1"></i> Lihat Semua (15+)
-              </button>
+          <div class="kpi-card" onclick="openMenuModal(6)">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+              <span class="kpi-status-tag tag-ok" id="kpi-tag-mtd">MTD</span>
             </div>
-
-            <div id="homeMenuGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4">
-              <!-- Diisi otomatis oleh renderHomeMenus() -->
+            <div class="kpi-value" id="kpi-val-mtd">Rp 0</div>
+            <div class="kpi-title">Sales MTD Berjalan</div>
+            <div class="kpi-footer">
+              <span>Growth YoY</span>
+              <span id="kpi-growth-mtd">+0%</span>
             </div>
           </div>
 
-          <!-- DASHBOARD GRAFIK & PROFIL TOKO -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Tren Sales Harian Chart -->
-            <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <div class="flex justify-between items-center mb-4">
-                <div>
-                  <h4 class="text-sm font-extrabold text-gray-800">Tren Sales Harian (7 Hari Terakhir)</h4>
-                  <p class="text-[11px] text-gray-400">Aktual vs Target</p>
-                </div>
-                <button onclick="openModal('modalSalesHarian')" class="text-xs font-semibold text-green-700">Detail <i class="fa-solid fa-chevron-right text-[10px]"></i></button>
-              </div>
-              <div class="h-64">
-                <canvas id="chartTrenHarian"></canvas>
-              </div>
+          <div class="kpi-card" onclick="openMenuModal(10)">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fa-solid fa-gift"></i></div>
+              <span class="kpi-status-tag tag-nok" id="kpi-tag-pl">RANK 0</span>
             </div>
-
-            <!-- Profil & Struktur Toko Card -->
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between"
-                 style="background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.95)), url('https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J'); background-size: cover;">
-              <div>
-                <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
-                  <div class="w-12 h-12 rounded-2xl bg-green-100 text-green-800 flex items-center justify-center font-black text-lg">
-                    <i class="fa-solid fa-store"></i>
-                  </div>
-                  <div>
-                    <h4 id="profilStoreName" class="font-extrabold text-sm text-green-950">TOKO OCEAN</h4>
-                    <p id="profilStoreCode" class="text-xs font-semibold text-gray-500">KODE: X041</p>
-                  </div>
-                </div>
-
-                <div class="mt-4 space-y-2 text-xs">
-                  <div class="flex justify-between py-1 border-b border-gray-50">
-                    <span class="text-gray-400">Pencapaian GM%</span>
-                    <span id="dashGmAcv" class="font-bold text-green-700">0%</span>
-                  </div>
-                  <div class="flex justify-between py-1 border-b border-gray-50">
-                    <span class="text-gray-400">Jam Operasional</span>
-                    <span class="font-semibold text-gray-700">08:00 - 22:00</span>
-                  </div>
-                  <div class="flex justify-between py-1 border-b border-gray-50">
-                    <span class="text-gray-400">Jumlah Personel</span>
-                    <span id="dashPersonelCount" class="font-semibold text-gray-700">0 Orang</span>
-                  </div>
-                </div>
-              </div>
-
-              <button onclick="openModal('modalStrukturToko')" class="w-full mt-4 py-2.5 bg-green-800 hover:bg-green-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2">
-                <i class="fa-solid fa-users"></i> Lihat Struktur Personel
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ==================== VIEW 2: CHAT AI (GROQ) ==================== -->
-        <section id="viewChatAi" class="hidden h-[calc(100vh-140px)] flex flex-col bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl text-green-300">
-                <i class="fa-solid fa-robot"></i>
-              </div>
-              <div>
-                <div class="font-extrabold text-sm">Asisten Cerdas Kacida</div>
-                <div class="text-[10px] text-green-300 flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Groq AI Engine Aktif
-                </div>
-              </div>
-            </div>
-            <button onclick="clearChatHistory()" class="text-xs text-green-200 hover:text-white"><i class="fa-solid fa-rotate-left"></i> Bersihkan</button>
-          </div>
-
-          <!-- Chat bubble container -->
-          <div id="chatMessageList" class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#e5ddd5]/30">
-            <div class="flex items-start gap-2.5">
-              <div class="w-7 h-7 rounded-full bg-green-800 text-white flex items-center justify-center text-xs font-bold">AI</div>
-              <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs text-gray-800 max-w-sm">
-                Halo! Saya Asisten AI Kacida Bersatu. Saya dapat membantu analisa data penjualan toko Anda, menjawab SOP ritel, atau sekadar berbincang santai. Ada yang bisa dibantu?
-              </div>
+            <div class="kpi-value" id="kpi-val-pl">0%</div>
+            <div class="kpi-title">Point Penawaran Langsung</div>
+            <div class="kpi-footer">
+              <span>PSM & PWP Fokus</span>
+              <span>Detail <i class="fa-solid fa-chevron-right"></i></span>
             </div>
           </div>
 
-          <!-- Chat Input Bar -->
-          <div class="p-3 bg-gray-50 border-t border-gray-200 flex items-end gap-2">
-            <textarea id="inputChatMessage" rows="1" placeholder="Tanyakan performa toko... (Shift+Enter baris baru)"
-                      onkeydown="handleChatKeyDown(event)"
-                      class="flex-1 resize-none bg-white border border-gray-300 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-green-600"></textarea>
-            <button onclick="sendChatMessage()" class="w-10 h-10 rounded-full bg-green-700 hover:bg-green-800 text-white flex items-center justify-center shadow transition active:scale-95">
-              <i class="fa-solid fa-paper-plane text-xs"></i>
-            </button>
-          </div>
-        </section>
-
-        <!-- ==================== VIEW 3: KALENDER & AGENDA ==================== -->
-        <section id="viewKalender" class="hidden space-y-6">
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <h3 class="text-lg font-extrabold text-green-950">Kalender Kerja & Pengingat</h3>
-                <p class="text-xs text-gray-400">Jumat, Sabtu, dan Minggu ditandai khusus untuk kesiapan toko</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <button onclick="changeCalendarMonth(-1)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold"><i class="fa-solid fa-chevron-left"></i></button>
-                <span id="calendarCurrentMonth" class="text-sm font-extrabold text-gray-800 min-w-[120px] text-center">Bulan 2026</span>
-                <button onclick="changeCalendarMonth(1)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold"><i class="fa-solid fa-chevron-right"></i></button>
-                <button onclick="openAddAgendaModal()" class="ml-2 px-3 py-1.5 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
-                  <i class="fa-solid fa-plus"></i> Tambah Agenda
-                </button>
-              </div>
+          <div class="kpi-card" onclick="openMenuModal(7)">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fa-solid fa-cash-register"></i></div>
+              <span class="kpi-status-tag tag-ok" id="kpi-tag-sh">ACV 0%</span>
             </div>
-
-            <!-- Calendar Grid -->
-            <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs mb-2">
-              <span class="py-2 text-gray-500">Sen</span>
-              <span class="py-2 text-gray-500">Sel</span>
-              <span class="py-2 text-gray-500">Rab</span>
-              <span class="py-2 text-gray-500">Kam</span>
-              <span class="py-2 text-blue-600 bg-blue-50 rounded-lg">Jum</span>
-              <span class="py-2 text-yellow-600 bg-yellow-50 rounded-lg">Sab</span>
-              <span class="py-2 text-red-600 bg-red-50 rounded-lg">Min</span>
-            </div>
-            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-xs"></div>
-          </div>
-
-          <!-- Agenda List Card -->
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <h4 class="text-sm font-extrabold text-gray-800 mb-4">Daftar Agenda & Pengingat</h4>
-            <div id="agendaListContainer" class="space-y-2 text-xs">
-              <!-- Diisi renderAgendaList() -->
+            <div class="kpi-value" id="kpi-val-sh">Rp 0</div>
+            <div class="kpi-title">Sales Harian Aktual</div>
+            <div class="kpi-footer">
+              <span>Time Factor</span>
+              <span id="kpi-tf-sh">0%</span>
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- ==================== VIEW 4: PROFIL PENGGUNA ==================== -->
-        <section id="viewProfil" class="hidden space-y-6">
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden"
-               style="background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.96)), url('https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J'); background-size: cover;">
-            <div class="flex flex-col sm:flex-row items-center gap-6">
-              <div class="relative">
-                <img id="profilViewAvatar" src="https://ui-avatars.com/api/?name=User&background=005a36&color=fff" class="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover">
-                <button onclick="promptChangePhoto()" class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-xs shadow hover:bg-green-800">
-                  <i class="fa-solid fa-camera"></i>
-                </button>
-              </div>
+        <!-- 15 MENU UTAMA & MENU DINAMIS -->
+        <div class="section-title-wrap">
+          <div class="section-title">Menu Utama & Operasional</div>
+          <button class="btn-view-all" onclick="toggleAllMenus()">Lihat Semua</button>
+        </div>
 
-              <div class="text-center sm:text-left flex-1">
-                <h3 id="profilViewName" class="text-xl font-extrabold text-gray-800">Nama Pengguna</h3>
-                <p id="profilViewRole" class="text-xs font-bold text-green-700">Chief Of Store</p>
-                <p id="profilViewStore" class="text-xs text-gray-500 mt-1">Toko: Ocean (X041)</p>
-                
-                <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
-                  <span id="profilViewNik" class="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-xl font-mono font-bold">NIK: -</span>
-                  <button onclick="handleLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs px-3 py-1 rounded-xl font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-right-from-bracket"></i> Ganti NIK
-                  </button>
-                </div>
-              </div>
+        <div class="menu-grid" id="main-menu-grid">
+          <!-- Item 1 - 15 Di-generate secara dinamis via JS -->
+        </div>
+
+        <!-- DASHBOARD RINGKASAN & GRAFIK -->
+        <div class="dashboard-split-grid">
+          <div class="dash-panel">
+            <div class="chart-header">
+              <span class="chart-title">Tren Sales Harian (7 Hari Terakhir)</span>
+              <button class="btn-view-all" onclick="openMenuModal(7)">Buka Rincian</button>
             </div>
+            <canvas id="trendChartHarian" height="150"></canvas>
           </div>
 
-          <!-- Informasi Kontak & Sosial Media -->
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <h4 class="text-sm font-extrabold text-gray-800 mb-4">Informasi Kontak & Sosial Media</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label class="block text-gray-500 font-semibold mb-1">WhatsApp Personel</label>
-                <input type="text" id="profilInputWa" placeholder="08xxxxxxxx" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl">
-              </div>
-              <div>
-                <label class="block text-gray-500 font-semibold mb-1">Email</label>
-                <input type="email" id="profilInputEmail" placeholder="nama@alfamart.co.id" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl">
-              </div>
+          <div class="dash-panel">
+            <div class="chart-header">
+              <span class="chart-title">Struktur Personel Toko</span>
+              <span class="hero-growth-badge" id="badge-total-crew">0 Orang</span>
             </div>
-            <button onclick="saveProfileContact()" class="mt-4 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold">
-              Simpan Informasi Kontak
-            </button>
+            <div id="store-personnel-list" style="max-height: 230px; overflow-y: auto;">
+              <!-- Personel toko terisi via JS -->
+            </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </main>
 
-      </main>
+    <!-- NAVBAR BOTTOM UNTUK HP -->
+    <nav class="bottom-navbar-hp">
+      <div class="bottom-nav-item active" onclick="switchNavTab('beranda')">
+        <i class="fa-solid fa-house"></i>
+        <span>Beranda</span>
+      </div>
+      <div class="bottom-nav-item" onclick="switchNavTab('chat')">
+        <i class="fa-solid fa-robot"></i>
+        <span>Chat AI</span>
+      </div>
+      <div class="bottom-nav-item" onclick="switchNavTab('kalender')">
+        <i class="fa-solid fa-calendar-days"></i>
+        <span>Kalender</span>
+      </div>
+      <div class="bottom-nav-item" onclick="switchNavTab('profil')">
+        <i class="fa-solid fa-user"></i>
+        <span>Profil</span>
+      </div>
+    </nav>
+  </div>
 
-      <!-- MOBILE BOTTOM NAVBAR (FIXED) -->
-      <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around items-center z-40 shadow-lg">
-        <button onclick="switchNavbarView('beranda')" class="mobile-nav-btn flex flex-col items-center text-green-700" data-nav="beranda">
-          <i class="fa-solid fa-house text-base"></i>
-          <span class="text-[9px] font-bold mt-1">Beranda</span>
+  <!-- =========================================================================
+       3. MODAL FULL-SCREEN UNTUK KE-15 MENU (CONTAINER)
+       ========================================================================= -->
+  <div id="kacida-modal" class="kacida-modal-full">
+    <div class="modal-full-header">
+      <div class="modal-header-left">
+        <button class="modal-back-btn" onclick="closeMenuModal()">
+          <i class="fa-solid fa-arrow-left"></i>
         </button>
-        <button onclick="switchNavbarView('chat-ai')" class="mobile-nav-btn flex flex-col items-center text-gray-400" data-nav="chat-ai">
-          <i class="fa-solid fa-robot text-base"></i>
-          <span class="text-[9px] font-bold mt-1">Chat AI</span>
-        </button>
-        <button onclick="switchNavbarView('kalender')" class="mobile-nav-btn flex flex-col items-center text-gray-400" data-nav="kalender">
-          <i class="fa-solid fa-calendar-days text-base"></i>
-          <span class="text-[9px] font-bold mt-1">Kalender</span>
-        </button>
-        <button onclick="switchNavbarView('profil')" class="mobile-nav-btn flex flex-col items-center text-gray-400" data-nav="profil">
-          <i class="fa-solid fa-user-gear text-base"></i>
-          <span class="text-[9px] font-bold mt-1">Profil</span>
-        </button>
-      </nav>
+        <span class="modal-title-text" id="modal-title-label">Judul Fitur</span>
+      </div>
+      <div id="modal-header-actions"></div>
+    </div>
 
+    <div class="modal-tabs-bar" id="modal-tabs-bar">
+      <!-- Tabs dinamis sesuai menu -->
+    </div>
+
+    <div class="modal-full-body" id="modal-body-container">
+      <!-- Konten dinamis sesuai menu -->
     </div>
   </div>
 
-  <!-- ==================== MODAL SYNC MANUAL REAL ==================== -->
-  <div id="modalSync" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-      <div class="w-16 h-16 mx-auto mb-4 relative flex items-center justify-center">
-        <div class="loader-spin absolute"></div>
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" class="w-8 h-8 object-contain">
-      </div>
-      <h3 class="text-base font-extrabold text-green-950">Sinkronisasi Data</h3>
-      <p id="syncStatusStage" class="text-xs text-gray-500 mt-1 mb-4">Menghubungkan ke backend...</p>
-
-      <div class="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
-        <div id="syncModalBar" class="bg-green-600 h-full w-0 transition-all duration-300"></div>
-      </div>
-      <div id="syncModalPercent" class="text-xs font-black text-green-800 mb-4">0%</div>
-
-      <div id="syncStepList" class="text-left text-[11px] space-y-1.5 text-gray-500 border-t border-gray-100 pt-3">
-        <div id="stepConn"><i class="fa-regular fa-circle mr-1"></i> Periksa koneksi backend</div>
-        <div id="stepSheet"><i class="fa-regular fa-circle mr-1"></i> Sinkron data spreadsheet</div>
-        <div id="stepKpi"><i class="fa-regular fa-circle mr-1"></i> Perbarui KPI & Approval</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL POPUP PENGINGAT SERAH TERIMA IN-APP ==================== -->
-  <div id="modalReminderSerahTerima" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border-2 border-green-600">
-      <div class="w-14 h-14 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl animate-bounce">
-        <i class="fa-solid fa-handshake-angle"></i>
-      </div>
-      <h3 class="text-base font-extrabold text-green-950">Pengingat Serah Terima!</h3>
-      <p id="reminderSerahTerimaText" class="text-xs text-gray-600 mt-2 mb-4 leading-relaxed">
-        Shift sebelumnya telah melakukan serah terima. Jangan lupa pelajari catatan operasional dan kendala shift!
-      </p>
-      <div class="flex gap-2">
-        <button onclick="dismissShiftReminder(false)" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Nanti</button>
-        <button onclick="dismissShiftReminder(true)" class="flex-1 py-2.5 bg-green-700 text-white rounded-xl text-xs font-bold shadow">Saya Mengerti</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 1: CEKLIS EXP ==================== -->
-  <div id="modalCeklisExp" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalCeklisExp')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">1. Ceklis EXP Toko</span>
-      </div>
-      <div class="flex gap-1">
-        <button onclick="exportCurrentTableToPdf('Data Ceklis EXP', 'tableExpData')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-        <button onclick="exportCurrentTableToXlsx('Data_EXP', 'tableExpData')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-excel"></i> XLSX</button>
-      </div>
-    </div>
-
-    <!-- Subtabs -->
-    <div class="bg-white border-b border-gray-200 px-4 flex gap-4 overflow-x-auto text-xs font-bold">
-      <button onclick="switchExpSubtab('subtabDataRak')" class="exp-subtab py-3 border-b-2 border-green-700 text-green-700" data-sub="subtabDataRak">Data Rak</button>
-      <button onclick="switchExpSubtab('subtabInputExp')" class="exp-subtab py-3 text-gray-500" data-sub="subtabInputExp">Input EXP</button>
-      <button onclick="switchExpSubtab('subtabAlertExp')" class="exp-subtab py-3 text-gray-500" data-sub="subtabAlertExp">Alert EXP</button>
-      <button onclick="switchExpSubtab('subtabRiwayatExp')" class="exp-subtab py-3 text-gray-500" data-sub="subtabRiwayatExp">Riwayat Input</button>
-    </div>
-
-    <!-- Content Subtabs -->
-    <div class="p-4 md:p-6 flex-1 space-y-4">
-      
-      <!-- SUBTAB A: DATA RAK -->
-      <div id="subtabDataRak" class="space-y-4">
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-          <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-gray-400 font-semibold">Total Rak</div><div id="rakTotal" class="text-xl font-black text-gray-800">0</div></div>
-          <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-green-600 font-semibold">Selesai</div><div id="rakSelesai" class="text-xl font-black text-green-600">0</div></div>
-          <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-yellow-600 font-semibold">Belum Selesai</div><div id="rakBelum" class="text-xl font-black text-yellow-600">0</div></div>
-          <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-red-600 font-semibold">Butuh Validasi</div><div id="rakValidasi" class="text-xl font-black text-red-600">0</div></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-3 border-b border-gray-100 flex justify-between items-center">
-            <input type="text" id="searchRakInput" oninput="filterDataRakTable()" placeholder="Cari nomor rak atau penanggung jawab..." class="text-xs border rounded-xl px-3 py-1.5 w-64">
-            <button id="btnTambahRak" onclick="openFormTambahRak()" class="px-3 py-1.5 bg-green-700 text-white rounded-xl text-xs font-bold">+ Tambah Rak</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table id="tableExpData" class="w-full text-left text-xs">
-              <thead class="bg-gray-50 font-bold text-gray-600">
-                <tr><th class="p-3">No Rak</th><th class="p-3">Kategori</th><th class="p-3">Penanggung Jawab</th><th class="p-3">Status</th><th class="p-3">Foto Bukti</th><th class="p-3">Aksi</th></tr>
-              </thead>
-              <tbody id="bodyDataRak"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBTAB B: INPUT EXP -->
-      <div id="subtabInputExp" class="hidden max-w-lg mx-auto bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <h4 class="font-extrabold text-sm text-gray-800">Input Data Item Kadaluarsa (EXP)</h4>
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nama Item</label><input type="text" id="expNamaItem" placeholder="Contoh: Susu UHT 1L" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Posisi Rak</label><input type="text" id="expPosisiRak" placeholder="Contoh: R01-Minuman" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Quantity</label><input type="number" id="expQty" value="1" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Return Hari (RH)</label><input type="number" id="expRh" value="14" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        </div>
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Tanggal Kadaluarsa (EXP)</label><input type="date" id="expTgl" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        <button onclick="submitExpItem()" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-xs shadow">Simpan Data EXP</button>
-      </div>
-
-      <!-- SUBTAB C: ALERT EXP -->
-      <div id="subtabAlertExp" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-4 bg-red-50 border-b border-red-100 text-xs font-bold text-red-800">
-          <i class="fa-solid fa-triangle-exclamation mr-1"></i> Item Melewati atau Mendekati Estimasi Waktu Tarik (Rumus: Tanggal EXP - RH - 10 Hari)
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-gray-50 font-bold text-gray-600">
-              <tr><th class="p-3">Nama Item</th><th class="p-3">Rak</th><th class="p-3">Qty</th><th class="p-3">Tgl EXP</th><th class="p-3">Est. Eksekusi</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr>
-            </thead>
-            <tbody id="bodyAlertExp"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SUBTAB D: RIWAYAT INPUT EXP -->
-      <div id="subtabRiwayatExp" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-gray-50 font-bold text-gray-600">
-              <tr><th class="p-3">Item</th><th class="p-3">Rak</th><th class="p-3">Qty</th><th class="p-3">Tgl EXP</th><th class="p-3">Est. Eksekusi</th><th class="p-3">Status</th><th class="p-3">Penginput</th><th class="p-3">Aksi</th></tr>
-            </thead>
-            <tbody id="bodyRiwayatExp"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 2: SERAH TERIMA ==================== -->
-  <div id="modalSerahTerima" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSerahTerima')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">2. Serah Terima Shift</span>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-6">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <h4 class="font-extrabold text-sm text-gray-800">Form Laporan Serah Terima Shift</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Sales Shift (Rp)</label><input type="number" id="stSales" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Qty PSM</label><input type="number" id="stPsm" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Redeem Serba Gratis</label><input type="number" id="stRedeemSg" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Redeem PWP</label><input type="number" id="stRedeemPwp" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Member Baru</label><input type="number" id="stMember" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">% Kontribusi Struk</label><input type="number" id="stContrib" placeholder="0" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 mb-1">Catatan Kendala & Informasi</label>
-          <textarea id="stCatatan" rows="3" placeholder="Tuliskan kendala kasir, stok, atau AC..." class="w-full p-2.5 border rounded-xl text-xs"></textarea>
-        </div>
-        <button onclick="submitSerahTerima()" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-xs shadow">Kirim Serah Terima</button>
-      </div>
-
-      <!-- Riwayat Serah Terima -->
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <h4 class="font-extrabold text-sm text-gray-800 mb-3">Riwayat Serah Terima Terakhir</h4>
-        <div id="serahTerimaHistoryList" class="space-y-3 text-xs"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 3: PLAN MASTERSHIFT ==================== -->
-  <div id="modalMastershift" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalMastershift')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">3. Plan Mastershift Personel</span>
-      </div>
-      <button id="btnSaveMastershift" onclick="saveMastershiftTable()" class="px-3 py-1 bg-green-700 hover:bg-green-600 rounded-lg text-xs font-bold">Simpan Jadwal</button>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div class="flex items-center gap-2 text-xs">
-        <span class="font-bold">Kode Shift:</span>
-        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">P = Pagi</span>
-        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">S = Siang</span>
-        <span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded">M = Malam</span>
-        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded">OFF = Libur</span>
-        <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">CT = Cuti</span>
-        <span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded">Sakit</span>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table class="w-full text-center text-[11px] border-collapse">
-          <thead class="bg-gray-50 text-gray-700 font-bold">
-            <tr id="mastershiftHeaderRow">
-              <th class="p-2 border text-left min-w-[120px]">Nama Personel</th>
-              <!-- Kolom tgl 1-31 diisi dinamis -->
-            </tr>
-          </thead>
-          <tbody id="mastershiftBodyRows"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 4: BELANJA KARYAWAN ==================== -->
-  <div id="modalBelanjaKaryawan" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalBelanjaKaryawan')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">4. Belanja Karyawan</span>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="bg-white border-b border-gray-200 px-4 flex gap-4 text-xs font-bold">
-      <button onclick="switchBelanjaTab('tabInputBelanja')" class="belanja-subtab py-3 border-b-2 border-green-700 text-green-700" data-sub="tabInputBelanja">Input Pengajuan</button>
-      <button onclick="switchBelanjaTab('tabApprovalBelanja')" id="btnTabApprovalBelanja" class="belanja-subtab py-3 text-gray-500 relative" data-sub="tabApprovalBelanja">
-        Approval COS <span id="badgeBelanjaCos" class="hidden bg-red-600 text-white text-[9px] px-1.5 py-0.2 rounded-full ml-1">0</span>
-      </button>
-      <button onclick="switchBelanjaTab('tabRiwayatBelanja')" class="belanja-subtab py-3 text-gray-500" data-sub="tabRiwayatBelanja">Riwayat</button>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4">
-      
-      <!-- SUBTAB 1: INPUT BELANJA -->
-      <div id="tabInputBelanja" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nomor Member Alfagift</label><input type="text" id="blkNoMember" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nomor Bon / Transaksi</label><input type="text" id="blkNoBon" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nominal Belanja (Rp)</label><input type="number" id="blkNominal" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 mb-1">Foto Struk Belanja (Wajib)</label>
-          <input type="file" id="blkFotoFile" accept="image/*" class="w-full text-xs" onchange="previewUploadImage(this, 'blkPreviewImg')">
-          <img id="blkPreviewImg" class="hidden mt-2 max-h-40 rounded-xl border mx-auto object-contain">
-        </div>
-
-        <button onclick="submitBelanjaKaryawan()" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-xs shadow">Kirim Pengajuan Belanja</button>
-      </div>
-
-      <!-- SUBTAB 2: APPROVAL CHIEF OF STORE -->
-      <div id="tabApprovalBelanja" class="hidden space-y-3">
-        <div id="approvalBelanjaList" class="space-y-3"></div>
-      </div>
-
-      <!-- SUBTAB 3: RIWAYAT BELANJA -->
-      <div id="tabRiwayatBelanja" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Nama</th><th class="p-3">No Bon</th><th class="p-3">Nominal</th><th class="p-3">Status</th></tr>
-          </thead>
-          <tbody id="bodyRiwayatBelanja"></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 5: SIMULASI GM RP IKT ==================== -->
-  <div id="modalSimulasiGm" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSimulasiGm')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">5. Simulasi GM Rupiah IKT</span>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-lg mx-auto w-full space-y-4">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Hari Kalender (HK)</label><input type="number" id="simHk" value="30" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Jumlah Hari Kerja (JHK)</label><input type="number" id="simJhk" value="20" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Target Net Sales (Rp)</label><input type="number" id="simTargetSales" value="400000000" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Actual Net Sales (Rp)</label><input type="number" id="simActualSales" value="250000000" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Target Margin %</label><input type="number" id="simTargetGm" value="19" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Actual Margin %</label><input type="number" id="simActualGm" value="18" class="w-full p-2.5 border rounded-xl text-xs" oninput="calculateSimulasiGm()"></div>
-        </div>
-      </div>
-
-      <!-- Hasil Perhitungan Instan -->
-      <div class="bg-green-50 p-6 rounded-3xl border border-green-200 space-y-3 text-xs">
-        <h4 class="font-black text-sm text-green-950 uppercase">Hasil Simulasi</h4>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>Time Factor (TF):</span><span id="simResTf" class="font-bold text-green-900">0%</span></div>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>ACV Net Sales:</span><span id="simResAcvSales" class="font-bold text-green-900">0%</span></div>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>Gap Net Sales:</span><span id="simResGapSales" class="font-bold text-gray-800">Rp 0</span></div>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>Target Margin Rupiah:</span><span id="simResTargetGmRp" class="font-bold text-gray-800">Rp 0</span></div>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>Actual Margin Rupiah:</span><span id="simResActGmRp" class="font-bold text-gray-800">Rp 0</span></div>
-        <div class="flex justify-between py-1 border-b border-green-200"><span>Gap Margin Rupiah:</span><span id="simResGapGmRp" class="font-bold text-gray-800">Rp 0</span></div>
-        <div class="flex justify-between items-center pt-2">
-          <span class="font-bold">Status Evaluasi:</span>
-          <span id="simResStatusBadge" class="bg-green-600 text-white font-black px-3 py-1 rounded-full text-xs">OK</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 6: SALES MTD ==================== -->
-  <div id="modalSalesMtd" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSalesMtd')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">6. Sales MTD (YTD Sales)</span>
-      </div>
-      <div class="flex gap-1">
-        <button onclick="exportCurrentTableToPdf('Laporan Sales MTD', 'tableSalesMtd')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-        <button onclick="exportCurrentTableToXlsx('Sales_MTD', 'tableSalesMtd')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-excel"></i> XLSX</button>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div class="grid grid-cols-3 gap-3 text-center">
-        <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-gray-400 font-semibold">Total Sales</div><div id="mtdSumSales" class="text-lg md:text-xl font-black text-gray-800">Rp 0</div></div>
-        <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-gray-400 font-semibold">Avg STD</div><div id="mtdAvgStd" class="text-lg md:text-xl font-black text-gray-800">0</div></div>
-        <div class="bg-white p-3 rounded-2xl shadow-sm border"><div class="text-xs text-gray-400 font-semibold">Avg APC</div><div id="mtdAvgApc" class="text-lg md:text-xl font-black text-gray-800">0</div></div>
-      </div>
-
-      <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex gap-2">
-        <select id="filterMtdGrowth" onchange="renderSalesMtdTable()" class="p-2 border rounded-xl text-xs font-semibold">
-          <option value="ALL">Semua Status</option>
-          <option value="Growth">Growth Sahaja</option>
-          <option value="Disgrowth">Disgrowth</option>
-        </select>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table id="tableSalesMtd" class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Tanggal</th><th class="p-3">Toko</th><th class="p-3">Sales 2026</th><th class="p-3">STD 2026</th><th class="p-3">APC 2026</th><th class="p-3">Growth YoY</th><th class="p-3">Status</th></tr>
-          </thead>
-          <tbody id="bodySalesMtd"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 7: SALES HARIAN ==================== -->
-  <div id="modalSalesHarian" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSalesHarian')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">7. Performa Sales Harian</span>
-      </div>
-      <div class="flex gap-1">
-        <button onclick="exportCurrentTableToPdf('Laporan Sales Harian', 'tableSalesHarian')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-        <button onclick="exportCurrentTableToXlsx('Sales_Harian', 'tableSalesHarian')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-excel"></i> XLSX</button>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table id="tableSalesHarian" class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr>
-              <th class="p-3">Tanggal</th><th class="p-3">Bulan Lalu</th><th class="p-3">Target</th>
-              <th class="p-3">Actual SPD</th><th class="p-3">STD</th><th class="p-3">APC</th>
-              <th class="p-3">Gap Target</th><th class="p-3">ACV%</th><th class="p-3">GM%</th>
-            </tr>
-          </thead>
-          <tbody id="bodySalesHarian"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 8: MONITORING IKT ==================== -->
-  <div id="modalIkt" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalIkt')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">8. Monitoring IKT</span>
-      </div>
-      <button onclick="openModal('modalSimulasiGm')" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-green-950 font-extrabold rounded-lg text-xs">
-        <i class="fa-solid fa-calculator mr-1"></i> Simulasi GM RP
-      </button>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Indikator</th><th class="p-3">Target</th><th class="p-3">Aktual</th><th class="p-3">ACV %</th><th class="p-3">Status</th></tr>
-          </thead>
-          <tbody id="bodyIktTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 9: KONVERSI NO BON/STRUK ==================== -->
-  <div id="modalKonversiBon" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalKonversiBon')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">9. Konversi No Bon / Struk</span>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-sm mx-auto w-full space-y-6 text-center">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <h4 class="font-extrabold text-sm text-gray-800">Masukkan 4 Digit Nomor Bon</h4>
-        <input type="text" id="inputBonDigits" maxlength="4" placeholder="Contoh: 123" oninput="convertBonDigits()"
-               class="w-full text-center text-3xl font-black tracking-widest p-3 bg-gray-50 border rounded-2xl">
-        
-        <div id="bonResultContainer" class="flex justify-center gap-2 pt-2">
-          <span class="w-12 h-14 bg-green-700 text-white text-2xl font-black rounded-xl flex items-center justify-center shadow">-</span>
-          <span class="w-12 h-14 bg-green-700 text-white text-2xl font-black rounded-xl flex items-center justify-center shadow">-</span>
-          <span class="w-12 h-14 bg-green-700 text-white text-2xl font-black rounded-xl flex items-center justify-center shadow">-</span>
-          <span class="w-12 h-14 bg-green-700 text-white text-2xl font-black rounded-xl flex items-center justify-center shadow">-</span>
-        </div>
-
-        <div class="flex gap-2 pt-4">
-          <button onclick="resetBonConversion()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Reset</button>
-          <button onclick="copyBonResult()" class="flex-1 py-2.5 bg-green-700 text-white rounded-xl text-xs font-bold shadow">Salin Kode</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 10: PENAWARAN LANGSUNG ==================== -->
-  <div id="modalPenawaran" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalPenawaran')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">10. Penawaran Langsung</span>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div id="penawaranScoreCard" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-around text-center">
-        <div><div class="text-xs text-gray-400 font-semibold">Poin Dashboard</div><div id="plPoinVal" class="text-2xl font-black text-green-700">0</div></div>
-        <div><div class="text-xs text-gray-400 font-semibold">Rank Toko</div><div id="plRankVal" class="text-2xl font-black text-yellow-600">-</div></div>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Program</th><th class="p-3">Target</th><th class="p-3">Aktual</th><th class="p-3">ACV %</th></tr>
-          </thead>
-          <tbody id="bodyPenawaranTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 11: REKAP PSM KASIR ==================== -->
-  <div id="modalRekapPsm" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalRekapPsm')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">11. Rekap PSM Kasir</span>
-      </div>
-      <button onclick="openFormAddPsm()" class="px-3 py-1 bg-green-700 hover:bg-green-600 rounded-lg text-xs font-bold">+ Item Baru</button>
-    </div>
-
-    <div class="p-4 md:p-6 space-y-4">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table class="w-full text-center text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr>
-              <th class="p-3 text-left">Item PSM</th><th class="p-3">Kasir</th><th class="p-3">Target</th>
-              <th class="p-2">H1</th><th class="p-2">H2</th><th class="p-2">H3</th><th class="p-2">H4</th>
-              <th class="p-2">H5</th><th class="p-2">H6</th><th class="p-2">H7</th><th class="p-2">H8</th>
-              <th class="p-3">Total</th><th class="p-3">ACV</th><th class="p-3">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="bodyRekapPsm"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 12: MONITORING SALES OPR ==================== -->
-  <div id="modalSalesOpr" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSalesOpr')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">12. Monitoring Sales OPR</span>
-      </div>
-    </div>
-
-    <div class="bg-white border-b border-gray-200 px-4 flex gap-4 text-xs font-bold">
-      <button onclick="switchOprSubtab('06:07')" class="opr-tab py-3 border-b-2 border-green-700 text-green-700" data-tab="06:07">Rekap Jam 06:07</button>
-      <button onclick="switchOprSubtab('22:23')" class="opr-tab py-3 text-gray-500" data-tab="22:23">Rekap Jam 22:23</button>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-3">
-        <h4 class="font-extrabold text-sm text-gray-800" id="oprFormTitle">Input Sales OPR Jam 06:07</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Sales (Rp)</label><input type="number" id="oprSales" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">STD</label><input type="number" id="oprStd" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">APC</label><input type="number" id="oprApc" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Qty ETRANS</label><input type="number" id="oprEtrans" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        </div>
-        <button onclick="submitSalesOpr()" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl text-xs shadow">Simpan Data OPR</button>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Tgl</th><th class="p-3">Sales</th><th class="p-3">STD</th><th class="p-3">APC</th><th class="p-3">ETRANS</th></tr>
-          </thead>
-          <tbody id="bodySalesOpr"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 13: MONITORING KWH ==================== -->
-  <div id="modalKwh" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalKwh')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">13. Monitoring KWH Listrik</span>
-      </div>
-      <button onclick="exportCurrentTableToPdf('Laporan Pemakaian KWH', 'tableKwhData')" class="px-2.5 py-1 bg-green-800 rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-3">
-        <div class="grid grid-cols-3 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">KWH Awal</label><input type="number" id="kwhAwal" class="w-full p-2.5 border rounded-xl text-xs" oninput="calcKwhUsage()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">KWH Akhir</label><input type="number" id="kwhAkhir" class="w-full p-2.5 border rounded-xl text-xs" oninput="calcKwhUsage()"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Tarif / KWH</label><input type="number" id="kwhTarif" value="1500" class="w-full p-2.5 border rounded-xl text-xs" oninput="calcKwhUsage()"></div>
-        </div>
-        <div class="p-3 bg-green-50 rounded-xl flex justify-between text-xs font-bold text-green-900">
-          <span>Pemakaian: <span id="kwhTotalPakai">0</span> KWH</span>
-          <span>Estimasi Biaya: Rp <span id="kwhTotalBiaya">0</span></span>
-        </div>
-        <button onclick="submitMonitoringKwh()" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl text-xs shadow">Simpan Catatan KWH</button>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table id="tableKwhData" class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Tanggal</th><th class="p-3">Awal</th><th class="p-3">Akhir</th><th class="p-3">Pemakaian</th><th class="p-3">Biaya</th></tr>
-          </thead>
-          <tbody id="bodyKwhTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 14: CATATAN RETURN ==================== -->
-  <div id="modalReturn" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalReturn')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">14. Catatan Return Barang</span>
-      </div>
-    </div>
-
-    <div class="bg-white border-b border-gray-200 px-4 flex gap-4 text-xs font-bold">
-      <button onclick="switchReturnSubtab('DC REG')" class="return-tab py-3 border-b-2 border-green-700 text-green-700" data-tab="DC REG">DC REG</button>
-      <button onclick="switchReturnSubtab('DC FRESH')" class="return-tab py-3 text-gray-500" data-tab="DC FRESH">DC FRESH</button>
-      <button onclick="switchReturnSubtab('BKL')" class="return-tab py-3 text-gray-500" data-tab="BKL">BKL</button>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4">
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nomor Faktur</label><input type="text" id="retNoFaktur" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nama Driver</label><input type="text" id="retDriver" class="w-full p-2.5 border rounded-xl text-xs"></div>
-          <div class="col-span-2"><label class="block text-xs font-semibold text-gray-500 mb-1">Nomor Polisi Armada</label><input type="text" id="retNoPolisi" class="w-full p-2.5 border rounded-xl text-xs"></div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 mb-1">Foto Bukti Return (Opsional)</label>
-          <input type="file" id="retFotoFile" accept="image/*" class="w-full text-xs">
-        </div>
-        <button onclick="submitCatatanReturn()" class="w-full py-3 bg-green-700 text-white font-bold rounded-xl text-xs shadow">Simpan Data Return</button>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 font-bold text-gray-600">
-            <tr><th class="p-3">Faktur</th><th class="p-3">Driver</th><th class="p-3">No Polisi</th><th class="p-3">Foto</th></tr>
-          </thead>
-          <tbody id="bodyReturnTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL 15: SCAN BARANG ==================== -->
-  <div id="modalScanBarang" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="stopCameraScanner(); closeModal('modalScanBarang')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">15. Scanner Barcode Barang</span>
-      </div>
-    </div>
-
-    <div class="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4">
-      <!-- Camera Viewport Box -->
-      <div class="bg-black rounded-3xl overflow-hidden relative shadow-lg aspect-video flex items-center justify-center">
-        <video id="scannerVideo" class="w-full h-full object-cover"></video>
-        <div id="scannerOverlay" class="absolute inset-0 border-2 border-green-500/60 m-8 rounded-2xl pointer-events-none flex items-center justify-center">
-          <div class="w-full h-0.5 bg-red-500 animate-pulse"></div>
-        </div>
-        <button id="btnStartScan" onclick="startCameraScanner()" class="absolute px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold shadow">
-          <i class="fa-solid fa-camera mr-1"></i> Nyalakan Kamera
-        </button>
-      </div>
-
-      <!-- Manual Barcode Input -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-2">
-        <input type="text" id="manualBarcodeInput" placeholder="Ketik barcode manual lalu tekan Enter..."
-               onkeydown="if(event.key==='Enter') promptBarcodeQty(this.value)" class="flex-1 p-2.5 border rounded-xl text-xs">
-        <button onclick="promptBarcodeQty(document.getElementById('manualBarcodeInput').value)" class="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-bold">Input</button>
-      </div>
-
-      <!-- Scanned List -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-3 border-b flex justify-between items-center text-xs font-bold text-gray-700">
-          <span>Daftar Barang Dipindai</span>
-          <span id="scanCountTotal">Total: 0 Item</span>
-        </div>
-        <div id="scannedItemsList" class="divide-y text-xs"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL BARCODE PREVIEW FULLSCREEN ==================== -->
-  <div id="modalBarcodePreview" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-      <button onclick="closeModal('modalBarcodePreview')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-lg"></i></button>
-      <h3 class="text-sm font-extrabold text-gray-800 mb-4" id="barcodePreviewTitle">Preview Barcode</h3>
-      <svg id="barcodeSvgCanvas" class="mx-auto max-w-full"></svg>
-      <div id="barcodePreviewNumber" class="font-mono font-bold text-lg text-gray-800 tracking-wider mt-2"></div>
-      
-      <div class="flex justify-between items-center mt-6">
-        <button onclick="navigateBarcodePreview(-1)" class="px-3 py-1.5 bg-gray-100 rounded-xl text-xs font-bold"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button>
-        <span id="barcodePreviewIndex" class="text-xs text-gray-500 font-semibold">1 / 1</span>
-        <button onclick="navigateBarcodePreview(1)" class="px-3 py-1.5 bg-gray-100 rounded-xl text-xs font-bold">Berikutnya <i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL LIHAT SEMUA MENU ==================== -->
-  <div id="modalAllMenus" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalAllMenus')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">Semua Fitur Aplikasi</span>
-      </div>
-    </div>
-    <div class="p-6">
-      <div id="allMenuGridContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"></div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL BANTUAN ==================== -->
-  <div id="modalBantuan" class="modal-fullscreen hidden">
-    <div class="bg-green-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalBantuan')" class="w-8 h-8 rounded-full hover:bg-green-800 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">Bantuan & Panduan Sistem</span>
-      </div>
-    </div>
-    <div class="p-6 max-w-2xl mx-auto space-y-4 text-xs leading-relaxed text-gray-700">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border">
-        <h4 class="font-extrabold text-green-900 text-sm mb-2"><i class="fa-solid fa-right-to-bracket mr-1"></i> Cara Login</h4>
-        <p>Gunakan NIK terdaftar di lembar Master_User. Sesi tersimpan aman di browser Anda tanpa perlu mengetik ulang.</p>
-      </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border">
-        <h4 class="font-extrabold text-green-900 text-sm mb-2"><i class="fa-solid fa-arrows-rotate mr-1"></i> Sinkronisasi Data</h4>
-        <p>Gunakan tombol 'Sync Manual' di pojok kanan atas untuk menarik data terkini dari spreadsheet Google secara nyata.</p>
-      </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border">
-        <h4 class="font-extrabold text-green-900 text-sm mb-2"><i class="fa-solid fa-headset mr-1"></i> Kontak Admin Teknis</h4>
-        <p>Jika ada kendala akses atau perbedaan data toko, hubungi WhatsApp Admin di <a href="https://wa.me/6285862719780" class="text-green-700 font-bold underline">085862719780</a>.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL SUPER ADMIN ==================== -->
-  <div id="modalSuperAdmin" class="modal-fullscreen hidden">
-    <div class="bg-yellow-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-      <div class="flex items-center gap-2">
-        <button onclick="closeModal('modalSuperAdmin')" class="w-8 h-8 rounded-full hover:bg-yellow-700 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-        <span class="font-extrabold text-sm md:text-base">Super Admin Database Manager</span>
-      </div>
-      <select id="superAdminSheetPicker" onchange="loadSuperAdminSheetRows()" class="text-xs bg-yellow-700 text-white font-bold p-1.5 rounded-lg border-none"></select>
-    </div>
-    <div class="p-4 overflow-x-auto">
-      <div id="superAdminTableContainer" class="bg-white rounded-2xl shadow border overflow-x-auto"></div>
-    </div>
-  </div>
-
-  <!-- ==================== JAVASCRIPT LOGIC CLIENT ==================== -->
+  <!-- =========================================================================
+       4. JAVASCRIPT ENGINE FRONTEND
+       ========================================================================= -->
   <script>
-    // Konfigurasi Endpoint Backend Google Apps Script (Ganti dengan URL Deployment Web App Anda)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylcafthleKGORjuBML-RMz801HN_4UUhCrdxnOMDg84DBiBdC4qLBnqvKfaZovxG_18g/exec';
+    // Konfigurasi Web App URL Apps Script
+    const API_URL = "https://script.google.com/macros/s/AKfycbyq5GeVy2ZKJVU_q1jxIjeVZbD1jER8M04XzT-zjZZ_TiGw2-ICyNIZYxn_dChzbQj4Bg/exec"; 
+    const WATERMARK_URL = "https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i";
 
-    // State Aplikasi
-    let currentUser = null;
-    let initialData = null;
-    let activeCameraStream = null;
-    let barcodeList = [];
-    let activeBarcodeIndex = 0;
-    let currentCalDate = new Date();
+    let CURRENT_USER = null;
+    let APP_CACHE = {
+      initialData: null,
+      dynamicMenus: [],
+      personnel: []
+    };
+    let activeChartInstance = null;
 
-    // 15 Menu Inti Aplikasi
-    const CORE_MENUS = [
-      { id: 'modalCeklisExp', title: '1. Ceklis EXP', icon: 'fa-clipboard-check', color: 'bg-green-100 text-green-700', badgeKey: 'expValidation' },
-      { id: 'modalSerahTerima', title: '2. Serah Terima', icon: 'fa-handshake', color: 'bg-blue-100 text-blue-700' },
-      { id: 'modalMastershift', title: '3. Plan Mastershift', icon: 'fa-calendar-week', color: 'bg-purple-100 text-purple-700' },
-      { id: 'modalBelanjaKaryawan', title: '4. Belanja Karyawan', icon: 'fa-cart-shopping', color: 'bg-pink-100 text-pink-700', badgeKey: 'belanjaApproval' },
-      { id: 'modalSimulasiGm', title: '5. Simulasi GM RP IKT', icon: 'fa-calculator', color: 'bg-yellow-100 text-yellow-700' },
-      { id: 'modalSalesMtd', title: '6. Sales MTD', icon: 'fa-chart-pie', color: 'bg-indigo-100 text-indigo-700' },
-      { id: 'modalSalesHarian', title: '7. Sales Harian', icon: 'fa-chart-line', color: 'bg-emerald-100 text-emerald-700' },
-      { id: 'modalIkt', title: '8. Monitoring IKT', icon: 'fa-bullseye', color: 'bg-teal-100 text-teal-700' },
-      { id: 'modalKonversiBon', title: '9. Konversi No Bon', icon: 'fa-barcode', color: 'bg-orange-100 text-orange-700' },
-      { id: 'modalPenawaran', title: '10. Penawaran Langsung', icon: 'fa-bullhorn', color: 'bg-cyan-100 text-cyan-700' },
-      { id: 'modalRekapPsm', title: '11. Rekap PSM Kasir', icon: 'fa-cash-register', color: 'bg-rose-100 text-rose-700' },
-      { id: 'modalSalesOpr', title: '12. Sales OPR', icon: 'fa-clock', color: 'bg-amber-100 text-amber-700' },
-      { id: 'modalKwh', title: '13. Monitoring KWH', icon: 'fa-bolt', color: 'bg-lime-100 text-lime-700' },
-      { id: 'modalReturn', title: '14. Catatan Return', icon: 'fa-truck-ramp-box', color: 'bg-violet-100 text-violet-700' },
-      { id: 'modalScanBarang', title: '15. Scan Barang', icon: 'fa-qrcode', color: 'bg-green-100 text-green-700' }
-    ];
-
-    // Inisialisasi PWA & Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
-    }
-
-    // Eksekusi Saat Dokumen Dimuat
-    document.addEventListener('DOMContentLoaded', () => {
-      animateSplashScreen(() => {
-        const savedNik = localStorage.getItem('kacida_nik');
-        if (savedNik) {
-          loginWithNik(savedNik, true);
-        } else {
-          showLoginScreen();
-        }
-      });
+    // Inisialisasi saat web selesai dimuat
+    document.addEventListener("DOMContentLoaded", () => {
+      initAppSession();
+      registerServiceWorker();
     });
 
-    function animateSplashScreen(callback) {
-      const bar = document.getElementById('splashProgressBar');
-      const text = document.getElementById('splashProgressText');
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 15;
-        if (progress > 100) progress = 100;
-        bar.style.width = progress + '%';
-        text.innerText = `Memuat Sistem... ${progress}%`;
-        if (progress === 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            document.getElementById('splashScreen').classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-              document.getElementById('splashScreen').style.display = 'none';
-              callback();
-            }, 400);
-          }, 200);
-        }
-      }, 50);
-    }
-
-    function showLoginScreen() {
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
-
-    async function callApi(action, payload = {}) {
-      try {
-        const bodyData = { action, ...payload };
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(bodyData)
-        });
-        return await response.json();
-      } catch (err) {
-        console.error('API Call Error:', err);
-        return { status: 'error', message: 'Koneksi ke backend gagal.' };
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
       }
     }
 
-    async function handleLoginSubmit() {
-      const nik = document.getElementById('inputNik').value.trim();
+    // ==========================================
+    // AUTENTIKASI & SESI
+    // ==========================================
+    function initAppSession() {
+      const savedUser = localStorage.getItem("kacida_session");
+      if (savedUser) {
+        try {
+          CURRENT_USER = JSON.parse(savedUser);
+          renderAppShell();
+          loadInitialData();
+        } catch (e) {
+          localStorage.removeItem("kacida_session");
+        }
+      }
+    }
+
+    async function doLogin() {
+      const nik = document.getElementById("input-nik").value.trim();
       if (!nik) {
-        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan isi NIK Anda.' });
+        Swal.fire("Perhatian", "Silakan masukkan NIK Anda!", "warning");
         return;
       }
-      await loginWithNik(nik, false);
-    }
 
-    async function loginWithNik(nik, isSilent) {
-      if (!isSilent) {
-        Swal.fire({ title: 'Memeriksa NIK...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-      }
-
-      const res = await callApi('login', { nik });
-      if (!isSilent) Swal.close();
-
-      if (res.status === 'success') {
-        currentUser = res.user;
-        localStorage.setItem('kacida_nik', currentUser.nik);
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('appShell').classList.remove('hidden');
-
-        setupUserInterface();
-        await loadInitialAppData();
-      } else {
-        localStorage.removeItem('kacida_nik');
-        showLoginScreen();
-        Swal.fire({ icon: 'error', title: 'Login Gagal', text: res.message || 'NIK tidak valid.' });
-      }
-    }
-
-    function setupUserInterface() {
-      document.getElementById('headerUserName').innerText = currentUser.nama;
-      document.getElementById('headerUserRole').innerText = currentUser.jabatan;
-      document.getElementById('headerStoreBadge').innerText = currentUser.kodeToko || 'Store';
-      document.getElementById('headerUserAvatar').src = currentUser.fotoProfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nama)}&background=005a36&color=fff`;
-
-      document.getElementById('heroAvatar').src = currentUser.fotoProfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nama)}&background=fff&color=005a36`;
-      document.getElementById('heroGreeting').innerText = `Selamat ${getGreetingTime()}, ${currentUser.nama.split(' ')[0]}!`;
-      document.getElementById('heroUserSub').innerText = `${currentUser.jabatan} — Toko ${currentUser.namaToko}`;
-
-      document.getElementById('profilStoreName').innerText = currentUser.namaToko.toUpperCase();
-      document.getElementById('profilStoreCode').innerText = `KODE: ${currentUser.kodeToko}`;
-
-      // Tampilkan menu Super Admin jika NIK 14125034
-      if (currentUser.isSuperAdmin) {
-        document.getElementById('superAdminMenuNav').classList.remove('hidden');
-      }
-
-      renderSideMenus();
-      renderHomeMenus();
-      initCalendarView();
-    }
-
-    async function loadInitialAppData() {
-      const res = await callApi('getInitialData', { nik: currentUser.nik });
-      if (res.status === 'success') {
-        initialData = res;
-        updateDashboardCards(res.kpiSummary);
-        updateBadges(res.badges);
-        document.getElementById('heroSyncTime').innerText = res.syncTimestamp;
-        checkShiftReminderInApp();
-      }
-    }
-
-    function updateDashboardCards(kpi) {
-      if (!kpi) return;
-      document.getElementById('heroSalesH1').innerText = `Rp ${kpi.salesH1.toLocaleString('id-ID')}`;
-      document.getElementById('heroSalesGrowth').innerText = `${kpi.salesH1Growth >= 0 ? '+' : ''}${kpi.salesH1Growth}%`;
-      
-      document.getElementById('cardIktAcv').innerText = `${kpi.iktAcvSales}%`;
-      document.getElementById('cardIktTf').innerText = `${kpi.iktTimeFactor}%`;
-      document.getElementById('cardMtdTotal').innerText = `Rp ${(kpi.salesMtdTotal / 1000000).toFixed(1)}Jt`;
-      document.getElementById('cardMtdGrowth').innerText = `${kpi.salesMtdGrowth >= 0 ? '+' : ''}${kpi.salesMtdGrowth}%`;
-      document.getElementById('cardPlPoint').innerText = kpi.penawaranPoint;
-      document.getElementById('cardPlRank').innerText = `#${kpi.penawaranRank}`;
-      document.getElementById('cardHarianAcv').innerText = `${kpi.salesH1Growth >= 0 ? '100%' : '95%'}`;
-      document.getElementById('dashGmAcv').innerText = `${kpi.gmPercentAcv}%`;
-
-      renderTrenChart();
-    }
-
-    function updateBadges(badges) {
-      if (!badges) return;
-      const bell = document.getElementById('bellBadge');
-      if (badges.total > 0) {
-        bell.innerText = badges.total;
-        bell.classList.remove('hidden');
-      } else {
-        bell.classList.add('hidden');
-      }
-
-      // Update badge tab belanja karyawan
-      const blkBadge = document.getElementById('badgeBelanjaCos');
-      if (blkBadge && badges.belanjaApproval > 0) {
-        blkBadge.innerText = badges.belanjaApproval;
-        blkBadge.classList.remove('hidden');
-      }
-    }
-
-    // ==================== RENDERING MENU ====================
-    function renderSideMenus() {
-      const list = document.getElementById('desktopMenuList');
-      list.innerHTML = '';
-      CORE_MENUS.forEach(menu => {
-        list.innerHTML += `
-          <button onclick="openModal('${menu.id}')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-green-100 hover:bg-green-900/60 transition">
-            <span class="flex items-center gap-2.5 truncate">
-              <i class="fa-solid ${menu.icon} w-4 text-center text-green-300"></i> ${menu.title}
-            </span>
-            ${menu.badgeKey ? `<span id="sideBadge_${menu.badgeKey}" class="hidden bg-red-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0</span>` : ''}
-          </button>
-        `;
-      });
-    }
-
-    function renderHomeMenus() {
-      const grid = document.getElementById('homeMenuGrid');
-      grid.innerHTML = '';
-      // Tampilkan 11 menu pertama + 1 tombol Lihat Semua di Beranda
-      CORE_MENUS.slice(0, 11).forEach(menu => {
-        grid.innerHTML += `
-          <div onclick="openModal('${menu.id}')" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-green-400 hover:bg-green-50/50 cursor-pointer transition text-center shadow-sm active:scale-95">
-            <div class="w-10 h-10 rounded-2xl ${menu.color} flex items-center justify-center text-lg mb-2 shadow-inner">
-              <i class="fa-solid ${menu.icon}"></i>
-            </div>
-            <span class="text-[11px] font-bold text-gray-700 leading-tight">${menu.title.replace(/^[0-9]+\.\s*/, '')}</span>
-          </div>
-        `;
+      Swal.fire({
+        title: "Memverifikasi NIK...",
+        text: "Menghubungkan ke basis data retail",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
       });
 
-      // Tombol Ke-12: Lihat Semua
-      grid.innerHTML += `
-        <div onclick="openModal('modalAllMenus')" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-green-50 border border-green-200 hover:bg-green-100 cursor-pointer transition text-center shadow-sm active:scale-95">
-          <div class="w-10 h-10 rounded-2xl bg-green-700 text-white flex items-center justify-center text-lg mb-2 shadow">
-            <i class="fa-solid fa-grid-2"></i>
-          </div>
-          <span class="text-[11px] font-black text-green-900 leading-tight">Lihat Semua</span>
-        </div>
-      `;
-
-      // Render Modal All Menus Container
-      const allGrid = document.getElementById('allMenuGridContainer');
-      allGrid.innerHTML = '';
-      CORE_MENUS.forEach(menu => {
-        allGrid.innerHTML += `
-          <div onclick="closeModal('modalAllMenus'); openModal('${menu.id}')" class="flex flex-col items-center p-4 rounded-2xl bg-gray-50 border hover:border-green-500 cursor-pointer text-center">
-            <div class="w-12 h-12 rounded-2xl ${menu.color} flex items-center justify-center text-xl mb-2">
-              <i class="fa-solid ${menu.icon}"></i>
-            </div>
-            <span class="text-xs font-bold text-gray-800">${menu.title}</span>
-          </div>
-        `;
-      });
-    }
-
-    // ==================== ROUTER & MODAL ENGINE ====================
-    function switchNavbarView(viewName) {
-      document.querySelectorAll('#viewBeranda, #viewChatAi, #viewKalender, #viewProfil').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => {
-        btn.classList.remove('active', 'text-green-700', 'bg-green-900/70');
-        if (btn.getAttribute('data-nav') === viewName) {
-          btn.classList.add('active', 'text-green-700', 'bg-green-900/70');
-        }
-      });
-
-      if (viewName === 'beranda') document.getElementById('viewBeranda').classList.remove('hidden');
-      if (viewName === 'chat-ai') document.getElementById('viewChatAi').classList.remove('hidden');
-      if (viewName === 'kalender') document.getElementById('viewKalender').classList.remove('hidden');
-      if (viewName === 'profil') document.getElementById('viewProfil').classList.remove('hidden');
-    }
-
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.remove('hidden');
-      // Trigger data loader jika menu memerlukan data real-time
-      if (modalId === 'modalCeklisExp') loadDataRakTable();
-      if (modalId === 'modalSerahTerima') loadSerahTerimaHistory();
-      if (modalId === 'modalMastershift') loadMastershiftTable();
-      if (modalId === 'modalBelanjaKaryawan') loadBelanjaKaryawan();
-      if (modalId === 'modalSalesMtd') loadSalesMtdData();
-      if (modalId === 'modalSalesHarian') loadSalesHarianData();
-      if (modalId === 'modalIkt') loadIktData();
-      if (modalId === 'modalPenawaran') loadPenawaranLangsung();
-      if (modalId === 'modalRekapPsm') loadRekapPsm();
-      if (modalId === 'modalSalesOpr') loadSalesOpr();
-      if (modalId === 'modalKwh') loadMonitoringKwh();
-      if (modalId === 'modalReturn') loadCatatanReturn();
-      if (modalId === 'modalScanBarang') loadScannedList();
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.add('hidden');
-    }
-
-    // ==================== SYNC MANUAL ====================
-    async function triggerSyncManual() {
-      const modal = document.getElementById('modalSync');
-      const bar = document.getElementById('syncModalBar');
-      const pct = document.getElementById('syncModalPercent');
-      const stage = document.getElementById('syncStatusStage');
-      modal.classList.remove('hidden');
-
-      const setProgress = (p, msg, stepId) => {
-        bar.style.width = p + '%';
-        pct.innerText = p + '%';
-        stage.innerText = msg;
-        if (stepId) {
-          const el = document.getElementById(stepId);
-          el.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 mr-1"></i> ${el.innerText.trim()}`;
-        }
-      };
-
-      setProgress(20, 'Memeriksa koneksi...', null);
-      await new Promise(r => setTimeout(r, 400));
-      setProgress(50, 'Membaca spreadsheet Google...', 'stepConn');
-
-      const res = await callApi('syncManual', { nik: currentUser.nik });
-      if (res.status === 'success') {
-        setProgress(85, 'Memperbarui KPI & approval...', 'stepSheet');
-        updateDashboardCards(res.kpiSummary);
-        updateBadges(res.badges);
-        document.getElementById('heroSyncTime').innerText = res.syncTimestamp;
-        await new Promise(r => setTimeout(r, 400));
-        setProgress(100, 'Sinkronisasi selesai!', 'stepKpi');
-        setTimeout(() => {
-          modal.classList.add('hidden');
-          Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data telah disinkronkan.' });
-        }, 500);
-      } else {
-        modal.classList.add('hidden');
-        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
-      }
-    }
-
-    // ==================== SCANNER BARCODE (KAMERA & DETECTOR) ====================
-    async function startCameraScanner() {
-      const video = document.getElementById('scannerVideo');
       try {
-        activeCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        video.srcObject = activeCameraStream;
-        await video.play();
-        document.getElementById('btnStartScan').classList.add('hidden');
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "login", nik: nik })
+        });
+        const res = await response.json();
 
-        if ('BarcodeDetector' in window) {
-          const detector = new BarcodeDetector({ formats: ['code_128', 'ean_13', 'ean_8', 'qr_code'] });
-          const scanLoop = async () => {
-            if (!activeCameraStream) return;
-            try {
-              const barcodes = await detector.detect(video);
-              if (barcodes.length > 0) {
-                const detectedCode = barcodes[0].rawValue;
-                stopCameraScanner();
-                promptBarcodeQty(detectedCode);
-                return;
-              }
-            } catch (e) {}
-            requestAnimationFrame(scanLoop);
-          };
-          scanLoop();
+        if (res.status === "success" && res.user) {
+          CURRENT_USER = res.user;
+          localStorage.setItem("kacida_session", JSON.stringify(CURRENT_USER));
+          Swal.close();
+          renderAppShell();
+          loadInitialData();
+        } else {
+          Swal.fire("Akses Ditolak", res.message || "NIK tidak terdaftar", "error");
         }
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Kamera Tidak Tersedia', text: 'Izin kamera ditolak atau perangkat tidak mendukung.' });
+        Swal.fire("Koneksi Gagal", "Gagal menghubungi backend: " + err.message, "error");
       }
     }
 
-    function stopCameraScanner() {
-      if (activeCameraStream) {
-        activeCameraStream.getTracks().forEach(t => t.stop());
-        activeCameraStream = null;
-      }
-      document.getElementById('btnStartScan').classList.remove('hidden');
-    }
-
-    async function promptBarcodeQty(barcode) {
-      if (!barcode) return;
-      const { value: qty } = await Swal.fire({
-        title: 'Konfirmasi Kuantitas',
-        text: `Barcode: ${barcode}`,
-        input: 'number',
-        inputValue: 1,
-        inputAttributes: { min: 1 },
-        showCancelButton: true,
-        confirmButtonText: 'Simpan',
-        confirmButtonColor: '#005a36'
-      });
-
-      if (qty) {
-        await callApi('saveScanBarang', {
-          nik: currentUser.nik,
-          barcode: barcode,
-          qty: parseInt(qty) || 1
-        });
-        loadScannedList();
-      }
-    }
-
-    async function loadScannedList() {
-      const res = await callApi('getScanBarang', { nik: currentUser.nik });
-      const container = document.getElementById('scannedItemsList');
-      container.innerHTML = '';
-      if (res.status === 'success' && res.data) {
-        barcodeList = res.data;
-        document.getElementById('scanCountTotal').innerText = `Total: ${barcodeList.length} Item`;
-        barcodeList.forEach((item, index) => {
-          container.innerHTML += `
-            <div class="p-3 flex justify-between items-center hover:bg-gray-50">
-              <div>
-                <div class="font-bold text-gray-800 font-mono">${item.barcode}</div>
-                <div class="text-[10px] text-gray-400">Qty: ${item.qty} pcs — ${item.timestamp}</div>
-              </div>
-              <div class="flex gap-2">
-                <button onclick="previewBarcodeVisual(${index})" class="p-2 text-green-700 hover:bg-green-50 rounded-lg"><i class="fa-solid fa-eye"></i></button>
-                <button onclick="deleteScannedItem('${item.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash"></i></button>
-              </div>
-            </div>
-          `;
-        });
-      }
-    }
-
-    function previewBarcodeVisual(index) {
-      if (!barcodeList[index]) return;
-      activeBarcodeIndex = index;
-      const item = barcodeList[index];
-      document.getElementById('modalBarcodePreview').classList.remove('hidden');
-      document.getElementById('barcodePreviewTitle').innerText = item.namaBarang || 'Barcode Item';
-      document.getElementById('barcodePreviewNumber').innerText = item.barcode;
-      document.getElementById('barcodePreviewIndex').innerText = `${index + 1} / ${barcodeList.length}`;
-
-      JsBarcode('#barcodeSvgCanvas', item.barcode, {
-        format: 'CODE128',
-        lineColor: '#000',
-        width: 2,
-        height: 60,
-        displayValue: false
-      });
-    }
-
-    function navigateBarcodePreview(direction) {
-      const newIndex = activeBarcodeIndex + direction;
-      if (newIndex >= 0 && newIndex < barcodeList.length) {
-        previewBarcodeVisual(newIndex);
-      }
-    }
-
-    // ==================== CHAT AI GROQ HANDLER ====================
-    async function sendChatMessage() {
-      const input = document.getElementById('inputChatMessage');
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      const container = document.getElementById('chatMessageList');
-      container.innerHTML += `
-        <div class="flex items-start justify-end gap-2.5">
-          <div class="bg-green-700 text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-xs max-w-sm">${escapeHtml(msg)}</div>
-        </div>
-      `;
-      input.value = '';
-      container.scrollTop = container.scrollHeight;
-
-      // Loading bubble
-      const loadingId = 'aiLoading_' + Date.now();
-      container.innerHTML += `
-        <div id="${loadingId}" class="flex items-start gap-2.5">
-          <div class="w-7 h-7 rounded-full bg-green-800 text-white flex items-center justify-center text-xs font-bold">AI</div>
-          <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs text-gray-500 italic">Sedang mengetik...</div>
-        </div>
-      `;
-      container.scrollTop = container.scrollHeight;
-
-      const res = await callApi('chatGroqAI', { nik: currentUser.nik, message: msg });
-      document.getElementById(loadingId).remove();
-
-      if (res.status === 'success') {
-        container.innerHTML += `
-          <div class="flex items-start gap-2.5">
-            <div class="w-7 h-7 rounded-full bg-green-800 text-white flex items-center justify-center text-xs font-bold">AI</div>
-            <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs text-gray-800 max-w-sm whitespace-pre-wrap">${escapeHtml(res.reply)}</div>
-          </div>
-        `;
-      } else {
-        container.innerHTML += `<div class="text-center text-red-500 text-xs py-1">Gagal mendapatkan respon AI.</div>`;
-      }
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function handleChatKeyDown(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        // Shift+Enter untuk baris baru, Enter biasa kirim
-        e.preventDefault();
-        sendChatMessage();
-      }
-    }
-
-    function clearChatHistory() {
-      document.getElementById('chatMessageList').innerHTML = `
-        <div class="flex items-start gap-2.5">
-          <div class="w-7 h-7 rounded-full bg-green-800 text-white flex items-center justify-center text-xs font-bold">AI</div>
-          <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs text-gray-800 max-w-sm">
-            Riwayat dibersihkan. Silakan tanyakan hal lain seputar operasional retail Anda!
-          </div>
-        </div>
-      `;
-    }
-
-    // ==================== KALENDER INTERAKTIF ====================
-    function initCalendarView() {
-      renderCalendarDays();
-      loadAgendaList();
-    }
-
-    function renderCalendarDays() {
-      const grid = document.getElementById('calendarDaysGrid');
-      grid.innerHTML = '';
-      const year = currentCalDate.getFullYear();
-      const month = currentCalDate.getMonth();
-      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      document.getElementById('calendarCurrentMonth').innerText = `${monthNames[month]} ${year}`;
-
-      const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      // Sesuaikan agar Senin = 0, Minggu = 6
-      const startOffset = (firstDay + 6) % 7;
-      for (let e = 0; e < startOffset; e++) {
-        grid.innerHTML += `<div class="h-12 bg-gray-50 rounded-xl"></div>`;
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const checkDate = new Date(year, month, d);
-        const dayOfWeek = checkDate.getDay();
-        let bgClass = 'bg-white hover:bg-green-50';
-        if (dayOfWeek === 5) bgClass = 'bg-blue-50/60 font-bold text-blue-900'; // Jumat
-        if (dayOfWeek === 6) bgClass = 'bg-yellow-50/60 font-bold text-yellow-900'; // Sabtu
-        if (dayOfWeek === 0) bgClass = 'bg-red-50/60 font-bold text-red-900'; // Minggu
-
-        grid.innerHTML += `
-          <div onclick="selectCalendarDate(${d})" class="h-12 ${bgClass} rounded-xl border border-gray-100 flex flex-col items-center justify-center cursor-pointer transition">
-            <span>${d}</span>
-          </div>
-        `;
-      }
-    }
-
-    function changeCalendarMonth(offset) {
-      currentCalDate.setMonth(currentCalDate.getMonth() + offset);
-      renderCalendarDays();
-    }
-
-    async function loadAgendaList() {
-      const res = await callApi('getAgendaKalender', { nik: currentUser.nik });
-      const container = document.getElementById('agendaListContainer');
-      container.innerHTML = '';
-      if (res.status === 'success' && res.data) {
-        res.data.forEach(item => {
-          container.innerHTML += `
-            <div class="p-3 bg-gray-50 rounded-2xl flex justify-between items-center border">
-              <div>
-                <span class="font-bold text-gray-800">${item.judul}</span>
-                <div class="text-[10px] text-gray-400">${item.tanggal} — ${item.waktu} WIB (${item.tipe})</div>
-              </div>
-              <button onclick="deleteAgenda('${item.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          `;
-        });
-      }
-    }
-
-    // ==================== EKSPOR DOKUMEN PDF & EXCEL ====================
-    function exportCurrentTableToPdf(title, tableId) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'pt');
-      doc.setFontSize(14);
-      doc.text(title, 40, 40);
-      doc.setFontSize(9);
-      doc.text(`Toko: ${currentUser.namaToko} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 40, 56);
-      doc.autoTable({ html: `#${tableId}`, startY: 70, styles: { fontSize: 8 } });
-      doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
-    }
-
-    function exportCurrentTableToXlsx(filename, tableId) {
-      const table = document.getElementById(tableId);
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, `${filename}.xlsx`);
-    }
-
-    // ==================== UTILITY HELPERS ====================
-    function getGreetingTime() {
-      const hour = new Date().getHours();
-      if (hour < 11) return 'Pagi';
-      if (hour < 15) return 'Siang';
-      if (hour < 18) return 'Sore';
-      return 'Malam';
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function setTheme(mode) {
-      document.body.classList.remove('theme-malam');
-      if (mode === 'malam') document.body.classList.add('theme-malam');
-    }
-
-    function handleLogout() {
+    function doLogout() {
       Swal.fire({
-        title: 'Konfirmasi Keluar',
-        text: 'Apakah Anda ingin keluar dari aplikasi?',
-        icon: 'question',
+        title: "Konfirmasi Keluar",
+        text: "Apakah Anda ingin keluar dari aplikasi Kacida Bersatu?",
+        icon: "question",
         showCancelButton: true,
-        confirmButtonText: 'Ya, Keluar',
-        confirmButtonColor: '#ef4444'
+        confirmButtonColor: "#0A8A4B",
+        cancelButtonColor: "#EF4444",
+        confirmButtonText: "Ya, Keluar"
       }).then((result) => {
         if (result.isConfirmed) {
-          localStorage.removeItem('kacida_nik');
+          localStorage.removeItem("kacida_session");
           location.reload();
         }
       });
     }
 
-    function renderTrenChart() {
-      const ctx = document.getElementById('chartTrenHarian').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
+    // ==========================================
+    // TAMPILAN BERANDA & INITIAL DATA
+    // ==========================================
+    function renderAppShell() {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app-container").style.display = "flex";
+
+      document.getElementById("sidebar-store-code").innerText = CURRENT_USER.kodeToko + " - " + CURRENT_USER.namaToko;
+      document.getElementById("header-store-label").innerText = CURRENT_USER.kodeToko + " - " + CURRENT_USER.namaToko;
+      document.getElementById("header-user-name").innerText = CURRENT_USER.nama;
+      document.getElementById("header-user-role").innerText = CURRENT_USER.jabatan;
+
+      if (CURRENT_USER.fotoProfil) {
+        document.getElementById("header-user-avatar").src = CURRENT_USER.fotoProfil;
+        document.getElementById("hero-user-avatar").src = CURRENT_USER.fotoProfil;
+      }
+
+      document.getElementById("hero-greeting-text").innerText = getGreeting() + ", " + CURRENT_USER.nama.split(" ")[0] + "!";
+      document.getElementById("hero-store-info").innerText = CURRENT_USER.jabatan + " • " + CURRENT_USER.namaToko;
+
+      renderMainMenus();
+    }
+
+    async function loadInitialData() {
+      try {
+        const response = await fetch(API_URL + "?action=getInitialData&nik=" + CURRENT_USER.nik + "&kodeToko=" + CURRENT_USER.kodeToko);
+        const res = await response.json();
+
+        if (res.status === "success") {
+          APP_CACHE.initialData = res;
+          updateDashboardVisuals(res);
+        }
+      } catch (e) {
+        console.error("Gagal memuat data awal: ", e);
+      }
+    }
+
+    function updateDashboardVisuals(data) {
+      if (data.heroSales) {
+        document.getElementById("hero-sales-val").innerText = formatRupiah(data.heroSales.salesHmin1);
+        document.getElementById("hero-growth-tag").innerText = (data.heroSales.growth >= 0 ? "+" : "") + data.heroSales.growth + "% Growth";
+      }
+
+      if (data.kpiCarousel) {
+        document.getElementById("kpi-val-ikt").innerText = data.kpiCarousel.ikt.acvSales + "%";
+        document.getElementById("kpi-tgt-ikt").innerText = formatRupiah(data.kpiCarousel.ikt.target);
+        document.getElementById("kpi-act-ikt").innerText = formatRupiah(data.kpiCarousel.ikt.actual);
+
+        document.getElementById("kpi-val-sh").innerText = formatRupiah(data.kpiCarousel.salesHarian.actual);
+        document.getElementById("kpi-tag-sh").innerText = "ACV " + data.kpiCarousel.salesHarian.acv + "%";
+
+        document.getElementById("kpi-val-pl").innerText = data.kpiCarousel.penawaran.point + "%";
+        document.getElementById("kpi-tag-pl").innerText = "RANK " + data.kpiCarousel.penawaran.rank;
+      }
+
+      const totalBadges = (data.badges.approvalRak || 0) + (data.badges.approvalBelanja || 0);
+      const bell = document.getElementById("bell-counter");
+      if (totalBadges > 0) {
+        bell.innerText = totalBadges;
+        bell.style.display = "block";
+      } else {
+        bell.style.display = "none";
+      }
+
+      if (data.strukturToko) {
+        renderPersonnelList(data.strukturToko);
+      }
+
+      renderTrendChart();
+    }
+
+    function renderPersonnelList(personnel) {
+      const container = document.getElementById("store-personnel-list");
+      document.getElementById("badge-total-crew").innerText = personnel.length + " Orang";
+      container.innerHTML = "";
+
+      personnel.forEach(p => {
+        const item = document.createElement("div");
+        item.style.cssText = "display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-color);";
+        item.innerHTML = `
+          <img src="${p.fotoProfil || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nama)}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
+          <div style="flex: 1; line-height: 1.2;">
+            <div style="font-size: 13px; font-weight: 600;">${p.nama}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${p.jabatan} • NIK: ${p.nik}</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function renderTrendChart() {
+      const ctx = document.getElementById('trendChartHarian').getContext('2d');
+      if (activeChartInstance) activeChartInstance.destroy();
+
+      activeChartInstance = new Chart(ctx, {
+        type: 'line',
         data: {
           labels: ['H-7', 'H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1'],
           datasets: [{
-            label: 'Aktual Sales (Jt)',
-            data: [12.4, 14.1, 11.2, 13.8, 15.5, 12.9, 14.8],
-            backgroundColor: '#059669',
-            borderRadius: 6
-          }, {
-            label: 'Target (Jt)',
-            data: [13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0],
-            type: 'line',
-            borderColor: '#f59e0b',
-            borderDash: [5, 5],
-            fill: false
+            label: 'Sales Actual (Jt)',
+            data: [11.2, 12.4, 9.8, 14.2, 13.1, 10.5, 12.8],
+            borderColor: '#0A8A4B',
+            backgroundColor: 'rgba(10, 138, 75, 0.08)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4,
+            pointBackgroundColor: '#022A18'
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
-          scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#E2E8F0' }, ticks: { font: { size: 10 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+          }
         }
       });
+    }
+
+    // ==========================================
+    // 15 MENU UTAMA REGISTRATION & MODAL SYSTEM
+    // ==========================================
+    const CORE_MENUS = [
+      { id: 1, name: "Ceklis EXP", icon: "fa-solid fa-calendar-check" },
+      { id: 2, name: "Serah Terima", icon: "fa-solid fa-handshake" },
+      { id: 3, name: "Plan Mastershift", icon: "fa-solid fa-calendar-days" },
+      { id: 4, name: "Belanja Karyawan", icon: "fa-solid fa-cart-shopping" },
+      { id: 5, name: "Simulasi GM RP IKT", icon: "fa-solid fa-calculator" },
+      { id: 6, name: "Sales MTD", icon: "fa-solid fa-chart-column" },
+      { id: 7, name: "Sales Harian", icon: "fa-solid fa-calendar-day" },
+      { id: 8, name: "Monitoring IKT", icon: "fa-solid fa-bullseye" },
+      { id: 9, name: "Konversi No Bon", icon: "fa-solid fa-barcode" },
+      { id: 10, name: "Penawaran Langsung", icon: "fa-solid fa-tags" },
+      { id: 11, name: "Rekap PSM Kasir", icon: "fa-solid fa-receipt" },
+      { id: 12, name: "Monitoring Sales OPR", icon: "fa-solid fa-clock" },
+      { id: 13, name: "Monitoring KWH", icon: "fa-solid fa-bolt" },
+      { id: 14, name: "Catatan Return", icon: "fa-solid fa-truck-ramp-box" },
+      { id: 15, name: "Scan Barang", icon: "fa-solid fa-qrcode" }
+    ];
+
+    function renderMainMenus() {
+      const grid = document.getElementById("main-menu-grid");
+      const sidebarNav = document.getElementById("sidebar-dynamic-menus");
+      grid.innerHTML = "";
+      sidebarNav.innerHTML = "";
+
+      CORE_MENUS.forEach((m, idx) => {
+        // Render ke Grid Beranda
+        const card = document.createElement("div");
+        card.className = "menu-card-btn";
+        card.onclick = () => openMenuModal(m.id);
+        card.innerHTML = `
+          <div class="menu-icon-wrap"><i class="${m.icon}"></i></div>
+          <div class="menu-label">${m.name}</div>
+        `;
+        grid.appendChild(card);
+
+        // Render ke Sidebar Desktop
+        const sItem = document.createElement("div");
+        sItem.className = "nav-item";
+        sItem.onclick = () => openMenuModal(m.id);
+        sItem.innerHTML = `<i class="${m.icon}"></i><span>${m.name}</span>`;
+        sidebarNav.appendChild(sItem);
+      });
+    }
+
+    function openMenuModal(menuId) {
+      const modal = document.getElementById("kacida-modal");
+      const title = document.getElementById("modal-title-label");
+      const tabsBar = document.getElementById("modal-tabs-bar");
+      const body = document.getElementById("modal-body-container");
+
+      tabsBar.innerHTML = "";
+      body.innerHTML = "";
+      modal.classList.add("active");
+
+      const menu = CORE_MENUS.find(m => m.id === menuId);
+      title.innerText = menu ? menu.name : "Menu Fitur";
+
+      switch (menuId) {
+        case 1:
+          setupMenu1CeklisExp();
+          break;
+        case 5:
+          setupMenu5SimulasiGmRp();
+          break;
+        case 9:
+          setupMenu9KonversiBon();
+          break;
+        case 15:
+          setupMenu15ScanBarang();
+          break;
+        default:
+          body.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+              <i class="${menu.icon}" style="font-size: 48px; color: #0A8A4B; margin-bottom: 16px;"></i>
+              <h3>${menu.name}</h3>
+              <p style="color: var(--text-muted); margin-top: 8px;">Memuat data operasional dari database spreadsheet...</p>
+            </div>
+          `;
+          break;
+      }
+    }
+
+    function closeMenuModal() {
+      document.getElementById("kacida-modal").classList.remove("active");
+    }
+
+    // ==========================================
+    // MENU 5: SIMULASI GM RP IKT (CALCULATOR)
+    // ==========================================
+    function setupMenu5SimulasiGmRp() {
+      const body = document.getElementById("modal-body-container");
+      body.innerHTML = `
+        <div style="max-width: 650px; margin: 0 auto; background: var(--surface-white); padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
+          <div class="login-form-group">
+            <label>Hari Kerja (HK) & Jumlah Hari Kerja (JHK)</label>
+            <div style="display: flex; gap: 12px;">
+              <input type="number" id="sim-hk" placeholder="HK (misal 30)" value="30" class="input-with-icon" style="padding: 12px; width: 50%;">
+              <input type="number" id="sim-jhk" placeholder="JHK (misal 22)" value="22" class="input-with-icon" style="padding: 12px; width: 50%;">
+            </div>
+          </div>
+          <div class="login-form-group">
+            <label>Target Net Sales (Rp)</label>
+            <input type="number" id="sim-tgt-sales" class="input-with-icon" style="padding: 12px; width: 100%;" value="350000000">
+          </div>
+          <div class="login-form-group">
+            <label>Actual Net Sales (Rp)</label>
+            <input type="number" id="sim-act-sales" class="input-with-icon" style="padding: 12px; width: 100%;" value="365000000">
+          </div>
+          <div class="login-form-group">
+            <label>Target GM % & Actual GM %</label>
+            <div style="display: flex; gap: 12px;">
+              <input type="number" id="sim-tgt-gm" placeholder="Target % (19)" value="19" class="input-with-icon" style="padding: 12px; width: 50%;">
+              <input type="number" id="sim-act-gm" placeholder="Actual % (19.5)" value="19.5" class="input-with-icon" style="padding: 12px; width: 50%;">
+            </div>
+          </div>
+          <button class="btn-primary-block" onclick="calculateSimulasiGmRp()">
+            <i class="fa-solid fa-calculator"></i> Hitung Simulasi
+          </button>
+
+          <div id="sim-results" style="margin-top: 24px; display: none;"></div>
+        </div>
+      `;
+    }
+
+    function calculateSimulasiGmRp() {
+      const hk = Number(document.getElementById("sim-hk").value) || 1;
+      const jhk = Number(document.getElementById("sim-jhk").value) || 1;
+      const tgtSales = Number(document.getElementById("sim-tgt-sales").value) || 0;
+      const actSales = Number(document.getElementById("sim-act-sales").value) || 0;
+      const tgtGm = Number(document.getElementById("sim-tgt-gm").value) || 0;
+      const actGm = Number(document.getElementById("sim-act-gm").value) || 0;
+
+      const acvSales = tgtSales > 0 ? Math.round((actSales / tgtSales) * 100) : 0;
+      const gapSales = actSales - tgtSales;
+      const tgtGmRp = tgtSales * (tgtGm / 100);
+      const actGmRp = actSales * (actGm / 100);
+      const gapGmRp = actGmRp - tgtGmRp;
+      const timeFactor = Math.round((jhk / hk) * 100);
+
+      const resBox = document.getElementById("sim-results");
+      resBox.style.display = "block";
+      resBox.innerHTML = `
+        <div style="background: #F0FDF4; border: 1.5px solid #0A8A4B; border-radius: 12px; padding: 18px;">
+          <h4 style="color: #022A18; margin-bottom: 12px;">Hasil Analisis Simulasi:</h4>
+          <p><b>ACV Net Sales:</b> ${acvSales}% (${gapSales >= 0 ? 'Surplus' : 'Defisit'} ${formatRupiah(gapSales)})</p>
+          <p><b>Target GM Rp:</b> ${formatRupiah(tgtGmRp)}</p>
+          <p><b>Actual GM Rp:</b> ${formatRupiah(actGmRp)}</p>
+          <p><b>Gap Margin Rp:</b> <span style="color: ${gapGmRp >= 0 ? '#10B981' : '#EF4444'}; font-weight: 700;">${formatRupiah(gapGmRp)}</span></p>
+          <p><b>Time Factor:</b> ${timeFactor}%</p>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MENU 9: KONVERSI NO BON / STRUK
+    // ==========================================
+    function setupMenu9KonversiBon() {
+      const body = document.getElementById("modal-body-container");
+      body.innerHTML = `
+        <div style="max-width: 480px; margin: 0 auto; text-align: center; background: var(--surface-white); padding: 28px; border-radius: 16px; border: 1px solid var(--border-color);">
+          <h3>Konversi Bon / Struk Alfanumerik</h3>
+          <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 20px;">Masukkan maksimal 4 digit nomor bon kasir:</p>
+          <input type="text" id="input-bon" maxlength="4" placeholder="Contoh: 123" style="width: 100%; padding: 14px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 12px; border: 2px solid #0A8A4B; margin-bottom: 16px;">
+          <button class="btn-primary-block" onclick="doKonversiBon()">Konversi Sekarang</button>
+          <div id="bon-result-wrap" style="margin-top: 24px; display: none;">
+            <div style="font-size: 13px; color: var(--text-muted);">Hasil Konversi:</div>
+            <div id="bon-result-text" style="font-size: 36px; font-weight: 800; color: #022A18; letter-spacing: 4px; margin: 10px 0;"></div>
+            <button class="header-btn" style="margin: 0 auto;" onclick="copyBonResult()"><i class="fa-regular fa-copy"></i> Salin Kode</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function doKonversiBon() {
+      const map = { '0':'M', '1':'O', '2':'Y', '3':'D', '4':'T', '5':'U', '6':'H', '7':'C', '8':'I', '9':'K' };
+      let raw = document.getElementById("input-bon").value.trim();
+      if (!raw) return;
+      while (raw.length < 4) raw = "0" + raw;
+
+      let converted = "";
+      for (let ch of raw) {
+        converted += (map[ch] || ch);
+      }
+
+      document.getElementById("bon-result-wrap").style.display = "block";
+      document.getElementById("bon-result-text").innerText = converted;
+    }
+
+    function copyBonResult() {
+      const txt = document.getElementById("bon-result-text").innerText;
+      navigator.clipboard.writeText(txt);
+      Swal.fire({ icon: 'success', title: 'Tersalin', text: 'Kode konversi disalin: ' + txt, timer: 1500, showConfirmButton: false });
+    }
+
+    // ==========================================
+    // UTILITIES & HELPERS
+    // ==========================================
+    function formatRupiah(num) {
+      const n = Math.round(Number(num) || 0);
+      return "Rp " + n.toLocaleString("id-ID");
+    }
+
+    function getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 11) return "Selamat Pagi";
+      if (hour < 15) return "Selamat Siang";
+      if (hour < 18) return "Selamat Sore";
+      return "Selamat Malam";
+    }
+
+    function executeSyncManual() {
+      Swal.fire({
+        title: "Sinkronisasi...",
+        text: "Memperbarui cache lokal dari database cloud",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+      loadInitialData().then(() => {
+        Swal.fire({ icon: "success", title: "Tersinkronisasi!", text: "Seluruh data operasional paling mutakhir siap.", timer: 1500, showConfirmButton: false });
+      });
+    }
+
+    function showNotificationAlert() {
+      Swal.fire("Pemberitahuan", "Tidak ada approval mendesak yang tertunda.", "info");
     }
   </script>
 </body>

@@ -114,8 +114,9 @@ class KacidaApiClient {
       const response = await fetch(this.baseUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8" // Kompatibel dengan redirect CORS Apps Script
+          "Content-Type": "text/plain;charset=utf-8"
         },
+        redirect: "follow", // <-- Tambahkan baris ini
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });

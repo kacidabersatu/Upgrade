@@ -1761,3 +1761,15 @@ function formatDateTimeIndo(d) {
   const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then((reg) => {
+        console.log("PWA Service Worker terdaftar dengan scope:", reg.scope);
+      })
+      .catch((err) => {
+        console.warn("Registrasi Service Worker gagal:", err);
+      });
+  });
+}

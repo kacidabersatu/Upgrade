@@ -2,733 +2,1772 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
-  
-  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#022A18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
-  
-  <!-- Font & Icons -->
+  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR">
+
+  <!-- Typography Poppins & Font Awesome -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Libraries (SweetAlert, ChartJS, SheetJS, HTML2PDF) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+  <!-- Eksternal CDN: SweetAlert2, Chart.js, SheetJS, jsPDF, JsBarcode, Html5-QRCode -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <!-- Stylesheet Utama -->
   <link rel="stylesheet" href="Styles.css">
 </head>
-<body>
+<body class="theme-default">
 
-  <!-- =========================================================================
-       1. SCREEN LOGIN
-       ========================================================================= -->
-  <div id="login-screen">
+  <!-- ========================================================================= -->
+  <!-- 1. OVERLAY LOGIN & SPLASH SCREEN                                          -->
+  <!-- ========================================================================= -->
+  <div id="loginScreen" class="login-overlay active">
+    <div class="login-bg-glow"></div>
     <div class="login-card">
-      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="login-logo">
-      <h1 class="login-title">KACIDA BERSATU</h1>
-      <div class="login-subtitle">Portal Performa & Operasional Retail</div>
-      <div class="login-slogan">"Bersama Kita Kuat"</div>
-
-      <div class="login-form-group">
-        <label for="input-nik">Nomor Induk Karyawan (NIK)</label>
-        <div class="input-with-icon">
-          <i class="fa-solid fa-id-card"></i>
-          <input type="text" id="input-nik" placeholder="Masukkan NIK Anda" autocomplete="off">
-        </div>
+      <div class="login-header text-center">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida Bersatu" class="app-logo-bounce">
+        <h1 class="brand-title">Kacida Bersatu</h1>
+        <p class="brand-subtitle">Portal Performa & Operasional Retail</p>
+        <span class="brand-slogan"><i class="fa-solid fa-leaf"></i> Bersama Kita Kuat</span>
       </div>
 
-      <button id="btn-login-submit" class="btn-primary-block" onclick="doLogin()">
-        <span>Masuk</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
+      <form id="loginForm" class="login-form" onsubmit="event.preventDefault(); handleAuthLogin();">
+        <div class="form-group-custom">
+          <label for="inputNik"><i class="fa-solid fa-id-badge"></i> Masukkan NIK Anda</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-user-lock"></i>
+            <input type="text" id="inputNik" placeholder="Contoh: 14125034 atau 21105609" inputmode="numeric" required autocomplete="username">
+          </div>
+        </div>
 
-      <div class="login-help-link">
-        Tidak bisa Login? Hubungi admin:<br>
-        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login" target="_blank">
-          <i class="fa-brands fa-whatsapp"></i> WhatsApp 085862719780
-        </a>
+        <button type="submit" id="btnLoginSubmit" class="btn-primary-glow btn-block">
+          <span>Masuk ke Akun</span>
+          <i class="fa-solid fa-arrow-right-long"></i>
+        </button>
+
+        <div class="login-footer text-center">
+          <p>Tidak bisa Login atau NIK belum terdaftar?</p>
+          <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20mengalami%20kendala%20saat%20login.%20Mohon%20bantuan." target="_blank" rel="noopener" class="btn-whatsapp-direct">
+            <i class="fa-brands fa-whatsapp"></i> Hubungi Admin (085862719780)
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. LAYAR SINKRONISASI MANUAL (REAL PROGRESS ANIMATION)                    -->
+  <!-- ========================================================================= -->
+  <div id="syncModal" class="sync-modal-backdrop">
+    <div class="sync-card">
+      <div class="sync-icon-rotate">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Sync Logo">
+      </div>
+      <h3>Sinkronisasi Data</h3>
+      <p id="syncStatusText">Mengambil data terbaru dari server Google Spreadsheet...</p>
+
+      <div class="progress-container">
+        <div id="syncProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+      </div>
+      <div class="progress-percentage-label"><span id="syncPercentValue">0</span>%</div>
+
+      <ul class="sync-step-list">
+        <li id="stepConn"><i class="fa-regular fa-circle-check"></i> Memeriksa koneksi backend</li>
+        <li id="stepSheet"><i class="fa-regular fa-circle-check"></i> Membaca data 6 database Google Spreadsheet</li>
+        <li id="stepCache"><i class="fa-regular fa-circle-check"></i> Memperbarui cache offline & session</li>
+        <li id="stepKpi"><i class="fa-regular fa-circle-check"></i> Menghitung ulang KPI harian & badge persetujuan</li>
+      </ul>
+
+      <div class="sync-footer text-center">
+        <small id="lastSyncTimeText">Sinkronisasi Terakhir: Menghubungkan...</small>
+        <button type="button" class="btn-secondary-sm mt-3" onclick="closeSyncModal()">Tutup</button>
       </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       2. APPLICATION SHELL
-       ========================================================================= -->
-  <div id="app-container" style="display: none;">
-    <!-- SIDEBAR DESKTOP -->
+  <!-- ========================================================================= -->
+  <!-- 3. STRUKTUR UTAMA APLIKASI (DESKTOP & MOBILE WRAPPER)                    -->
+  <!-- ========================================================================= -->
+  <div id="appRoot" class="app-container hidden">
+
+    <!-- DESKTOP SIDEBAR -->
     <aside class="desktop-sidebar">
-      <div class="sidebar-header">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="sidebar-logo">
-        <div class="sidebar-brand">
-          <h2>KACIDA BERSATU</h2>
-          <span id="sidebar-store-code">TOKO: -</span>
+      <div class="sidebar-brand">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="App Logo" class="brand-mini-logo">
+        <div class="brand-text">
+          <h2>Kacida Bersatu</h2>
+          <small>Portal Performa Retail</small>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-item active" onclick="switchNavTab('beranda')">
-          <i class="fa-solid fa-house"></i>
-          <span>Beranda</span>
-        </div>
-        <div class="nav-item" onclick="switchNavTab('chat')">
-          <i class="fa-solid fa-robot"></i>
-          <span>Chat AI</span>
-        </div>
-        <div class="nav-item" onclick="switchNavTab('kalender')">
-          <i class="fa-solid fa-calendar-days"></i>
-          <span>Kalender</span>
-        </div>
-        <div class="nav-item" onclick="switchNavTab('profil')">
-          <i class="fa-solid fa-user-tie"></i>
-          <span>Profil Toko</span>
+        <div class="nav-section-title">NAVIGASI UTAMA</div>
+        <a href="javascript:void(0)" class="nav-item active" onclick="switchMainTab('beranda')"><i class="fa-solid fa-house"></i> Beranda</a>
+        <a href="javascript:void(0)" class="nav-item" onclick="switchMainTab('chatAi')"><i class="fa-solid fa-robot"></i> Chat AI <span class="badge-pill-neon">Baru</span></a>
+        <a href="javascript:void(0)" class="nav-item" onclick="switchMainTab('kalender')"><i class="fa-solid fa-calendar-days"></i> Kalender & Agenda</a>
+        <a href="javascript:void(0)" class="nav-item" onclick="switchMainTab('profil')"><i class="fa-solid fa-user-gear"></i> Profil & Personil</a>
+
+        <div class="nav-section-title">15 MENU OPERASIONAL</div>
+        <div class="sidebar-menu-scroll" id="desktopSidebarMenuList">
+          <!-- Item menu terisi otomatis via JavaScript -->
         </div>
 
-        <div class="nav-section-title">Menu Utama</div>
-        <div id="sidebar-dynamic-menus"></div>
+        <div class="nav-section-title" id="adminSidebarSection" style="display: none;">ADMINISTRATOR</div>
+        <a href="javascript:void(0)" id="btnSidebarAdmin" class="nav-item" style="display: none;" onclick="openAdminDashboardModal()"><i class="fa-solid fa-shield-halved"></i> Audit Log & Admin</a>
+
+        <div class="sidebar-bottom-actions">
+          <button type="button" class="btn-sidebar-logout" onclick="confirmLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar / Ganti NIK
+          </button>
+        </div>
       </nav>
-
-      <div class="sidebar-footer">
-        <div class="nav-item" onclick="doLogout()">
-          <i class="fa-solid fa-right-from-bracket" style="color: #EF4444;"></i>
-          <span>Keluar Sesi</span>
-        </div>
-      </div>
     </aside>
 
-    <!-- MAIN CONTENT WRAPPER -->
-    <main class="main-wrapper">
-      <!-- TOPBAR / APP HEADER -->
-      <header class="app-header">
+    <!-- KONTEN UTAMA (HEADER + DASHBOARD VIEW) -->
+    <main class="main-content-wrapper">
+
+      <!-- TOP HEADER BAR -->
+      <header class="app-top-header">
         <div class="header-left">
-          <div class="store-badge">
-            <span class="status-dot" id="network-dot"></span>
-            <span id="header-store-label">Memuat Toko...</span>
+          <div class="mobile-brand-title">
+            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Kacida Logo" class="mobile-logo">
+            <div>
+              <h3>Kacida Bersatu</h3>
+              <div class="store-select-wrapper" id="storeSelectWrapper">
+                <!-- Dropdown toko binaan khusus AC / info toko statis untuk non-AC -->
+                <span class="store-badge-header" id="currentStoreBadge">2J16 - CARINGIN KULON</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="header-right">
-          <button class="header-btn" onclick="executeSyncManual()">
-            <i class="fa-solid fa-rotate"></i>
-            <span>Sync</span>
-          </button>
-          
-          <div class="notification-bell" onclick="showNotificationAlert()">
-            <i class="fa-regular fa-bell"></i>
-            <span class="badge-counter" id="bell-counter" style="display: none;">0</span>
+          <!-- Indikator Online/Offline -->
+          <div id="networkStatusBadge" class="status-badge-online">
+            <span class="indicator-dot"></span> <span id="networkStatusText">Online</span>
           </div>
 
-          <div class="user-profile-badge">
-            <img src="" alt="Avatar" id="header-user-avatar" class="user-avatar-sm" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0A8A4B&color=fff'">
-            <div class="user-info-text">
-              <div class="user-name-title" id="header-user-name">-</div>
-              <div class="user-role-sub" id="header-user-role">-</div>
+          <!-- Tombol Sync Manual -->
+          <button type="button" class="btn-sync-header" onclick="startManualSync()" title="Sinkronkan Data Sekarang">
+            <i class="fa-solid fa-arrows-rotate"></i> <span class="btn-text-desktop">Sync Manual</span>
+          </button>
+
+          <!-- Toggle Mode Siang / Malam -->
+          <div class="theme-toggle-box">
+            <button type="button" class="theme-btn active" id="btnThemeDefault" onclick="setTheme('default')" title="Default Hijau"><i class="fa-solid fa-leaf"></i></button>
+            <button type="button" class="theme-btn" id="btnThemeLight" onclick="setTheme('light')" title="Mode Siang"><i class="fa-solid fa-sun"></i></button>
+            <button type="button" class="theme-btn" id="btnThemeDark" onclick="setTheme('dark')" title="Mode Malam"><i class="fa-solid fa-moon"></i></button>
+          </div>
+
+          <!-- Icon Lonceng Notifikasi & Pending Badges -->
+          <div class="notif-bell-wrapper" onclick="openNotificationModal()">
+            <i class="fa-solid fa-bell"></i>
+            <span id="notifBadgeCount" class="badge-count hidden">0</span>
+          </div>
+
+          <!-- Profil Ringkas Header -->
+          <div class="user-header-profile" onclick="switchMainTab('profil')">
+            <img id="userHeaderAvatar" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="User Avatar" class="user-avatar-circle">
+            <div class="user-header-meta">
+              <span class="user-name-txt" id="userHeaderName">Wildan Supandi</span>
+              <small class="user-role-txt" id="userHeaderRole">Chief of Store</small>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- BODY CONTENT -->
-      <div class="content-body" id="main-view-container">
-        <!-- HERO CARD -->
-        <div class="hero-banner-card">
-          <div class="hero-profile-info">
-            <img src="" id="hero-user-avatar" class="hero-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0A8A4B&color=fff'">
-            <div class="hero-greeting">
-              <h3 id="hero-greeting-text">Selamat Pagi, Rekan!</h3>
-              <p id="hero-store-info">Chief of Store • Memuat Profil Toko...</p>
-            </div>
-          </div>
+      <!-- VIEW TAB 1: BERANDA -->
+      <section id="viewTabBeranda" class="tab-view-content active">
 
-          <div class="hero-sales-box">
-            <span>Sales H-1 Kemarin</span>
-            <div class="hero-sales-nominal" id="hero-sales-val">Rp 0</div>
-            <div class="hero-growth-badge" id="hero-growth-tag">+0% Growth</div>
-          </div>
-        </div>
+        <!-- HERO CARD (SESUAI MOCKUP ID: 16LWQVS2khktL1miWFSAzMnHU_tf0blDa) -->
+        <div class="hero-card-banner">
+          <div class="hero-bg-overlay"></div>
+          <div class="hero-content">
+            <div class="hero-user-info">
+              <img id="heroUserPhoto" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Foto Profil" class="hero-avatar">
+              <div class="hero-user-greeting">
+                <h2 id="heroGreetingText">Selamat Pagi, Rekan Juara!</h2>
+                <p id="heroUserMetaText">Chief of Store • Toko 2J16 - CARINGIN KULON</p>
+                <div class="hero-badge-tag"><i class="fa-solid fa-shield-heart"></i> Bersama Kita Kuat</div>
+              </div>
+            </div>
 
-        <!-- KPI CAROUSEL (4 KARTU UTAMA) -->
-        <div class="kpi-grid">
-          <div class="kpi-card" onclick="openMenuModal(8)">
-            <div class="kpi-header">
-              <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
-              <span class="kpi-status-tag tag-ok" id="kpi-tag-ikt">OK</span>
-            </div>
-            <div class="kpi-value" id="kpi-val-ikt">0%</div>
-            <div class="kpi-title">IKT Net Sales</div>
-            <div class="kpi-footer">
-              <span>Target: <b id="kpi-tgt-ikt">0</b></span>
-              <span>Act: <b id="kpi-act-ikt">0</b></span>
-            </div>
-          </div>
-
-          <div class="kpi-card" onclick="openMenuModal(6)">
-            <div class="kpi-header">
-              <div class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></div>
-              <span class="kpi-status-tag tag-ok" id="kpi-tag-mtd">MTD</span>
-            </div>
-            <div class="kpi-value" id="kpi-val-mtd">Rp 0</div>
-            <div class="kpi-title">Sales MTD Berjalan</div>
-            <div class="kpi-footer">
-              <span>Growth YoY</span>
-              <span id="kpi-growth-mtd">+0%</span>
-            </div>
-          </div>
-
-          <div class="kpi-card" onclick="openMenuModal(10)">
-            <div class="kpi-header">
-              <div class="kpi-icon"><i class="fa-solid fa-gift"></i></div>
-              <span class="kpi-status-tag tag-nok" id="kpi-tag-pl">RANK 0</span>
-            </div>
-            <div class="kpi-value" id="kpi-val-pl">0%</div>
-            <div class="kpi-title">Point Penawaran Langsung</div>
-            <div class="kpi-footer">
-              <span>PSM & PWP Fokus</span>
-              <span>Detail <i class="fa-solid fa-chevron-right"></i></span>
-            </div>
-          </div>
-
-          <div class="kpi-card" onclick="openMenuModal(7)">
-            <div class="kpi-header">
-              <div class="kpi-icon"><i class="fa-solid fa-cash-register"></i></div>
-              <span class="kpi-status-tag tag-ok" id="kpi-tag-sh">ACV 0%</span>
-            </div>
-            <div class="kpi-value" id="kpi-val-sh">Rp 0</div>
-            <div class="kpi-title">Sales Harian Aktual</div>
-            <div class="kpi-footer">
-              <span>Time Factor</span>
-              <span id="kpi-tf-sh">0%</span>
+            <div class="hero-sales-box">
+              <div class="sales-box-label"><i class="fa-solid fa-chart-line"></i> Sales H-1 Kemarin</div>
+              <div class="sales-box-value" id="heroSalesValue">Rp 0</div>
+              <div class="sales-box-growth" id="heroSalesGrowth">
+                <i class="fa-solid fa-arrow-trend-up"></i> <span>+0% dari H-1 kemarin</span>
+              </div>
+              <small class="sync-note" id="heroSyncTimeText">Sinkronisasi: Real-time Database</small>
             </div>
           </div>
         </div>
 
-        <!-- 15 MENU UTAMA & MENU DINAMIS -->
-        <div class="section-title-wrap">
-          <div class="section-title">Menu Utama & Operasional</div>
-          <button class="btn-view-all" onclick="toggleAllMenus()">Lihat Semua</button>
-        </div>
+        <!-- KPI CAROUSEL AUTO-SLIDER / RESPONSIVE GRID -->
+        <div class="kpi-carousel-wrapper">
+          <button type="button" class="carousel-arrow prev" onclick="moveKpiSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
 
-        <div class="menu-grid" id="main-menu-grid">
-          <!-- Item 1 - 15 Di-generate secara dinamis via JS -->
-        </div>
-
-        <!-- DASHBOARD RINGKASAN & GRAFIK -->
-        <div class="dashboard-split-grid">
-          <div class="dash-panel">
-            <div class="chart-header">
-              <span class="chart-title">Tren Sales Harian (7 Hari Terakhir)</span>
-              <button class="btn-view-all" onclick="openMenuModal(7)">Buka Rincian</button>
+          <div class="kpi-cards-track" id="kpiCardsTrack">
+            <!-- Kartu 1: IKT -->
+            <div class="kpi-card-item card-green" onclick="openMenuModal(8)">
+              <div class="kpi-card-header">
+                <div class="kpi-title"><i class="fa-solid fa-bullseye"></i> IKT ACV Net Sales</div>
+                <span class="status-pill-ok" id="kpiIktStatusBadge">OK</span>
+              </div>
+              <div class="kpi-main-number" id="kpiIktAcvVal">0%</div>
+              <div class="kpi-sub-info">
+                <span>Target Sales: <strong id="kpiIktTargetVal">Rp 0</strong></span>
+                <span>Time Factor: <strong id="kpiIktTfVal">85%</strong></span>
+              </div>
+              <div class="kpi-card-action">Lihat Detail IKT <i class="fa-solid fa-arrow-right"></i></div>
             </div>
-            <canvas id="trendChartHarian" height="150"></canvas>
+
+            <!-- Kartu 2: Sales MTD -->
+            <div class="kpi-card-item card-blue" onclick="openMenuModal(6)">
+              <div class="kpi-card-header">
+                <div class="kpi-title"><i class="fa-solid fa-calendar-check"></i> Sales MTD (Bulan Berjalan)</div>
+                <span class="status-pill-ok" id="kpiMtdGrowthBadge">+0%</span>
+              </div>
+              <div class="kpi-main-number" id="kpiMtdTotalVal">Rp 0</div>
+              <div class="kpi-sub-info">
+                <span>Avg SPD: <strong id="kpiMtdAvgSpd">Rp 0</strong></span>
+                <span>Avg APC: <strong id="kpiMtdAvgApc">Rp 0</strong></span>
+              </div>
+              <div class="kpi-card-action">Buka Sales MTD <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <!-- Kartu 3: Penawaran Langsung -->
+            <div class="kpi-card-item card-orange" onclick="openMenuModal(10)">
+              <div class="kpi-card-header">
+                <div class="kpi-title"><i class="fa-solid fa-tags"></i> Penawaran Langsung</div>
+                <span class="status-pill-rank" id="kpiPlRankBadge">Rank #0</span>
+              </div>
+              <div class="kpi-main-number" id="kpiPlPointVal">0%</div>
+              <div class="kpi-sub-info">
+                <span>Point Dashboard: <strong id="kpiPlPointText">0%</strong></span>
+                <span>Total ACV: <strong id="kpiPlAcvVal">0%</strong></span>
+              </div>
+              <div class="kpi-card-action">Buka Penawaran <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <!-- Kartu 4: Sales Harian H-1 -->
+            <div class="kpi-card-item card-purple" onclick="openMenuModal(7)">
+              <div class="kpi-card-header">
+                <div class="kpi-title"><i class="fa-solid fa-receipt"></i> Sales Harian (H-1)</div>
+                <span class="status-pill-ok" id="kpiHarianStatusBadge">OK</span>
+              </div>
+              <div class="kpi-main-number" id="kpiHarianActualVal">Rp 0</div>
+              <div class="kpi-sub-info">
+                <span>Target: <strong id="kpiHarianTargetVal">Rp 0</strong></span>
+                <span>ACV Sales: <strong id="kpiHarianAcvVal">0%</strong></span>
+              </div>
+              <div class="kpi-card-action">Buka Sales Harian <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
           </div>
 
-          <div class="dash-panel">
-            <div class="chart-header">
-              <span class="chart-title">Struktur Personel Toko</span>
-              <span class="hero-growth-badge" id="badge-total-crew">0 Orang</span>
+          <button type="button" class="carousel-arrow next" onclick="moveKpiSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+
+        <!-- GRID 15 MENU OPERASIONAL & DINAMIS NAVIGASI -->
+        <div class="section-card-panel mt-4">
+          <div class="panel-header-flex">
+            <div>
+              <h3 class="panel-heading"><i class="fa-solid fa-grid-2"></i> Menu Utama & Operasional Retail</h3>
+              <p class="panel-sub">15 menu inti retail & menu dinamis terintegrasi Google Spreadsheet</p>
             </div>
-            <div id="store-personnel-list" style="max-height: 230px; overflow-y: auto;">
-              <!-- Personel toko terisi via JS -->
+            <button type="button" class="btn-outline-custom" onclick="openViewAllMenuModal()">
+              <i class="fa-solid fa-table-cells"></i> Lihat Semua Menu
+            </button>
+          </div>
+
+          <div class="main-menu-grid" id="mainMenuGridContainer">
+            <!-- 12 Menu Utama Prioritas Ditampilkan di Muka (Sisa di Lihat Semua) -->
+            <!-- Dibuat otomatis oleh JS sesuai urutan & menu favorit -->
+          </div>
+        </div>
+
+        <!-- DASHBOARD RINGKASAN: GRAFIK & STRUKTUR PERSONIL TOKO -->
+        <div class="dashboard-analytics-grid mt-4">
+
+          <!-- Grafik Tren Sales Harian 7 Hari Terakhir -->
+          <div class="section-card-panel">
+            <div class="panel-header-flex">
+              <div>
+                <h4 class="panel-heading-sm"><i class="fa-solid fa-chart-column"></i> Tren Sales Harian</h4>
+                <small class="text-muted">Target vs Realisasi 7 Hari Terakhir</small>
+              </div>
+              <button type="button" class="btn-table-action" onclick="openMenuModal(7)"><i class="fa-solid fa-expand"></i> Detail</button>
+            </div>
+            <div class="chart-canvas-container">
+              <canvas id="chartTrenSalesHarian"></canvas>
+            </div>
+          </div>
+
+          <!-- Pencapaian GM% & Rasio Bisnis -->
+          <div class="section-card-panel">
+            <div class="panel-header-flex">
+              <div>
+                <h4 class="panel-heading-sm"><i class="fa-solid fa-percent"></i> Pencapaian Gross Margin %</h4>
+                <small class="text-muted">IKT Retail Toko Berjalan</small>
+              </div>
+              <span class="badge-status-ok" id="badgeGmStatus">OK</span>
+            </div>
+            <div class="gm-kpi-summary">
+              <div class="gm-stat-item">
+                <small>Target GM%</small>
+                <h4 id="txtGmTarget">0%</h4>
+              </div>
+              <div class="gm-stat-item">
+                <small>Aktual GM%</small>
+                <h4 id="txtGmActual">0%</h4>
+              </div>
+              <div class="gm-stat-item highlight">
+                <small>ACV GM</small>
+                <h4 id="txtGmAcv">0%</h4>
+              </div>
+            </div>
+            <div class="chart-canvas-container-sm">
+              <canvas id="chartGmMiniTrend"></canvas>
+            </div>
+          </div>
+
+          <!-- Profil & Struktur Personil Toko (Master_User) -->
+          <div class="section-card-panel structure-card-panel">
+            <div class="panel-header-flex">
+              <div>
+                <h4 class="panel-heading-sm"><i class="fa-solid fa-id-card-clip"></i> Profil & Personil Toko</h4>
+                <small class="text-muted" id="txtStructureStoreName">2J16 - CARINGIN KULON</small>
+              </div>
+              <span class="badge-personnel-count" id="badgeTeamCount">0 Anggota</span>
+            </div>
+
+            <div class="store-identity-banner" style="background-image: url('https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J');">
+              <div class="store-identity-tint">
+                <strong id="bannerStoreTitle">Toko Caringin Kulon</strong>
+                <p id="bannerStoreAddress">Jl. Raya Caringin Kulon • Jam Operasional: 08:00 - 22:00</p>
+              </div>
+            </div>
+
+            <div class="personnel-list-scroll mt-3" id="personnelListContainer">
+              <!-- Terisi otomatis personil Chief, ACOS, dan Crew dari Master_User -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- VIEW TAB 2: CHAT AI GROQ -->
+      <section id="viewTabChatAi" class="tab-view-content">
+        <div class="chat-container-layout">
+          <div class="chat-header">
+            <div class="chat-bot-info">
+              <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="AI Avatar" class="chat-bot-avatar">
+              <div>
+                <h4>Al Kacida AI</h4>
+                <p><span class="online-dot-mini"></span> Siap menjawab seputar performa, target & obrolan santai</p>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button type="button" class="btn-clear-chat" onclick="clearChatHistory()" title="Bersihkan Riwayat"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </div>
+
+          <div class="chat-conversation-area" id="chatMessagesBox">
+            <div class="chat-bubble-ai">
+              <div class="bubble-sender">Al Kacida AI</div>
+              <p>Halo Rekan! Saya <strong>Al Kacida</strong>, asisten cerdas ritel Anda. Ada yang bisa saya bantu terkait performa sales, pencapaian IKT, stok rak, atau ingin berdiskusi santai?</p>
+              <div class="quick-prompt-chips">
+                <button type="button" class="prompt-chip" onclick="applyQuickPrompt('Berapa pencapaian Sales Harian kemarin?')">📊 Sales Harian Kemarin</button>
+                <button type="button" class="prompt-chip" onclick="applyQuickPrompt('Bagaimana status IKT toko kita bulan ini?')">🎯 Status IKT Toko</button>
+                <button type="button" class="prompt-chip" onclick="applyQuickPrompt('Ceritakan tebak-tebakan seru untuk mencairkan suasana shift!')">😄 Tebak-tebakan Santai</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-bar">
+            <textarea id="txtChatInput" rows="1" placeholder="Ketik pertanyaan... (Tekan Shift+Enter untuk baris baru)" onkeydown="handleChatKeyDown(event)"></textarea>
+            <button type="button" id="btnSendChat" class="btn-send-message" onclick="submitUserChat()"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW TAB 3: KALENDER & PENGINGAT AGENDA -->
+      <section id="viewTabKalender" class="tab-view-content">
+        <div class="calendar-layout-grid">
+          <div class="section-card-panel calendar-main-card">
+            <div class="calendar-month-selector">
+              <button type="button" class="btn-cal-nav" onclick="changeCalendarMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <h3 id="calendarCurrentMonthTitle">April 2026</h3>
+              <button type="button" class="btn-cal-nav" onclick="changeCalendarMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <div class="calendar-week-header">
+              <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span>
+              <span class="day-highlight-fri">Jum</span><span class="day-highlight-sat">Sab</span><span class="day-highlight-sun">Min</span>
+            </div>
+
+            <div class="calendar-days-grid" id="calendarDaysGrid">
+              <!-- Terisi oleh JS hari 1 s.d 31 + penanda Jumat Sabtu Minggu & agenda -->
+            </div>
+          </div>
+
+          <div class="section-card-panel agenda-sidebar-card">
+            <div class="panel-header-flex">
+              <div>
+                <h4 class="panel-heading-sm"><i class="fa-solid fa-clipboard-list"></i> Agenda & Pengingat</h4>
+                <small id="selectedCalendarDateText">Pilih tanggal di kalender</small>
+              </div>
+              <button type="button" class="btn-primary-sm" onclick="openAddAgendaModal()"><i class="fa-solid fa-plus"></i> Tambah</button>
+            </div>
+
+            <div class="agenda-items-list mt-3" id="agendaItemsList">
+              <!-- Terisi list kegiatan tanggal yang diklik -->
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- VIEW TAB 4: PROFIL PENGGUNA & TOKO LENGKAP -->
+      <section id="viewTabProfil" class="tab-view-content">
+        <div class="profile-layout-grid">
+          <div class="section-card-panel profile-bio-card text-center">
+            <div class="profile-avatar-wrapper">
+              <img id="profileBigAvatar" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="User Avatar" class="profile-big-avatar">
+              <button type="button" class="btn-change-avatar" onclick="triggerProfileAvatarUpload()"><i class="fa-solid fa-camera"></i></button>
+              <input type="file" id="fileProfileAvatar" accept="image/*" class="hidden" onchange="handleProfileAvatarSelected(this)">
+            </div>
+            <h3 id="profileBioName">Budi Santoso</h3>
+            <p id="profileBioRole" class="badge-role-pill">Chief of Store</p>
+            <p id="profileBioStore" class="text-muted">2J16 - CARINGIN KULON</p>
+
+            <div class="bio-meta-box">
+              <div class="meta-row"><span>NIK:</span> <strong id="profileBioNik">-</strong></div>
+              <div class="meta-row"><span>Sesi:</span> <strong class="text-success">Aktif (24 Jam)</strong></div>
+              <div class="meta-row"><span>Waktu Login:</span> <strong id="profileBioLoginTime">-</strong></div>
+            </div>
+
+            <button type="button" class="btn-danger-outline btn-block mt-4" onclick="confirmLogout()">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar / Ganti Akun NIK
+            </button>
+          </div>
+
+          <div class="section-card-panel profile-details-card">
+            <h4 class="panel-heading-sm mb-3"><i class="fa-solid fa-store"></i> Informasi Gerai & Operasional</h4>
+
+            <div class="store-big-banner" style="background-image: url('https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J');"></div>
+
+            <div class="store-info-details-table mt-3">
+              <div class="info-row">
+                <span class="info-label"><i class="fa-solid fa-shop"></i> Nama Toko</span>
+                <span class="info-val" id="profileStoreFullName">2J16 - CARINGIN KULON</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label"><i class="fa-solid fa-hashtag"></i> Kode Alfanumerik</span>
+                <span class="info-val" id="profileStoreCodeVal">2J16</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label"><i class="fa-solid fa-clock"></i> Jam Operasional</span>
+                <span class="info-val">08:00 - 22:00 WIB</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label"><i class="fa-solid fa-users"></i> Total Personil Toko</span>
+                <span class="info-val" id="profileStoreTotalPersonel">0 Orang</span>
+              </div>
+            </div>
+
+            <h4 class="panel-heading-sm mt-4 mb-3"><i class="fa-solid fa-headset"></i> Layanan Bantuan & Kontak</h4>
+            <div class="admin-support-box">
+              <p>Butuh bantuan teknis, perbaikan data spreadsheet, atau penambahan hak akses?</p>
+              <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan." target="_blank" rel="noopener" class="btn-whatsapp-outline">
+                <i class="fa-brands fa-whatsapp"></i> Chat WhatsApp Administrator (085862719780)
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
-    <!-- NAVBAR BOTTOM UNTUK HP -->
-    <nav class="bottom-navbar-hp">
-      <div class="bottom-nav-item active" onclick="switchNavTab('beranda')">
+    <!-- BOTTOM NAVBAR KHUSUS MOBILE RESPONSIVE -->
+    <nav class="mobile-bottom-navbar">
+      <a href="javascript:void(0)" class="nav-bottom-item active" id="btnNavBottomBeranda" onclick="switchMainTab('beranda')">
         <i class="fa-solid fa-house"></i>
         <span>Beranda</span>
-      </div>
-      <div class="bottom-nav-item" onclick="switchNavTab('chat')">
+      </a>
+      <a href="javascript:void(0)" class="nav-bottom-item" id="btnNavBottomChat" onclick="switchMainTab('chatAi')">
         <i class="fa-solid fa-robot"></i>
         <span>Chat AI</span>
-      </div>
-      <div class="bottom-nav-item" onclick="switchNavTab('kalender')">
+      </a>
+      <a href="javascript:void(0)" class="nav-bottom-item" id="btnNavBottomKalender" onclick="switchMainTab('kalender')">
         <i class="fa-solid fa-calendar-days"></i>
         <span>Kalender</span>
-      </div>
-      <div class="bottom-nav-item" onclick="switchNavTab('profil')">
-        <i class="fa-solid fa-user"></i>
+      </a>
+      <a href="javascript:void(0)" class="nav-bottom-item" id="btnNavBottomProfil" onclick="switchMainTab('profil')">
+        <i class="fa-solid fa-user-circle"></i>
         <span>Profil</span>
-      </div>
+      </a>
     </nav>
+
   </div>
 
-  <!-- =========================================================================
-       3. MODAL FULL-SCREEN UNTUK KE-15 MENU (CONTAINER)
-       ========================================================================= -->
-  <div id="kacida-modal" class="kacida-modal-full">
-    <div class="modal-full-header">
-      <div class="modal-header-left">
-        <button class="modal-back-btn" onclick="closeMenuModal()">
-          <i class="fa-solid fa-arrow-left"></i>
-        </button>
-        <span class="modal-title-text" id="modal-title-label">Judul Fitur</span>
+  <!-- ========================================================================= -->
+  <!-- 4. MODAL LAYAR PENUH UNTUK 15 MENU UTAMA OPERASIONAL                      -->
+  <!-- ========================================================================= -->
+
+  <!-- MODAL 1: CEKLIS EXP (DATA RAK, INPUT EXP, ALERT EXP, RIWAYAT) -->
+  <div id="modalMenu1" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 1: Ceklis EXP</h3>
+          <small>Kelola Data Rak, Input Item EXP, Alert Eksekusi & Riwayat Validasi</small>
+        </div>
       </div>
-      <div id="modal-header-actions"></div>
+      <div class="modal-subtab-nav">
+        <button type="button" class="subtab-btn active" onclick="switchCeklisSubTab('dataRak')"><i class="fa-solid fa-cubes"></i> Data Rak</button>
+        <button type="button" class="subtab-btn" onclick="switchCeklisSubTab('inputExp')"><i class="fa-solid fa-pen-to-square"></i> Input EXP</button>
+        <button type="button" class="subtab-btn" onclick="switchCeklisSubTab('alertExp')"><i class="fa-solid fa-triangle-exclamation"></i> Alert EXP <span class="badge-pill" id="badgeCountAlertExp">0</span></button>
+        <button type="button" class="subtab-btn" onclick="switchCeklisSubTab('riwayatExp')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Input</button>
+      </div>
     </div>
 
-    <div class="modal-tabs-bar" id="modal-tabs-bar">
-      <!-- Tabs dinamis sesuai menu -->
-    </div>
+    <div class="modal-body-scrollable watermark-table-container">
+      <!-- SubTab 1A: Data Rak -->
+      <div id="subTabCeklisDataRak" class="ceklis-subview active">
+        <div class="stats-summary-bar">
+          <div class="stat-box" onclick="filterRakByStatus('ALL')"><span>Total Rak</span><h4 id="cntTotalRak">0</h4></div>
+          <div class="stat-box green" onclick="filterRakByStatus('Selesai')"><span>Selesai</span><h4 id="cntRakSelesai">0</h4></div>
+          <div class="stat-box orange" onclick="filterRakByStatus('Belum Selesai')"><span>Belum Selesai</span><h4 id="cntRakBelum">0</h4></div>
+          <div class="stat-box red" onclick="filterRakByStatus('Butuh Validasi')"><span>Butuh Validasi</span><h4 id="cntRakValidasi">0</h4></div>
+        </div>
 
-    <div class="modal-full-body" id="modal-body-container">
-      <!-- Konten dinamis sesuai menu -->
+        <div class="table-responsive-custom mt-3">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>No Rak</th>
+                <th>Kategori</th>
+                <th>Penanggung Jawab</th>
+                <th>Status</th>
+                <th>Bukti Foto</th>
+                <th>Aksi Operasional</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyRak">
+              <!-- Terisi baris rak -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tombol Melayang Tambah Rak (Khusus COS / ACOS) -->
+        <button type="button" id="btnFloatingAddRak" class="floating-action-btn" onclick="openFormAddRakModal()" title="Tambah Setting Rak">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <!-- SubTab 1B: Input EXP -->
+      <div id="subTabCeklisInputExp" class="ceklis-subview">
+        <div class="filter-action-bar">
+          <h4>Daftar Input Item Kedaluwarsa</h4>
+          <button type="button" class="btn-primary-sm" onclick="openFormAddExpItemModal()"><i class="fa-solid fa-plus"></i> Tambah Item EXP</button>
+        </div>
+        <div class="table-responsive-custom mt-3">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Nama Item</th>
+                <th>Posisi Rak</th>
+                <th>Qty</th>
+                <th>Tgl Expired</th>
+                <th>RH (Hari)</th>
+                <th>Estimasi Eksekusi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyExpItems">
+              <!-- Baris item EXP -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SubTab 1C: Alert EXP (Estimasi Tgl EXP - RH - 10 Hari) -->
+      <div id="subTabCeklisAlertExp" class="ceklis-subview">
+        <div class="alert-info-banner">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <div>
+            <strong>Peringatan Jadwal Eksekusi Retur / Tarik Barang</strong>
+            <p>Item di bawah ini telah mendekati atau melewati batas eksekusi (Tgl EXP dikurangi RH dikurangi 10 hari). Segera tarik dari rak penjualan.</p>
+          </div>
+        </div>
+        <div class="table-responsive-custom mt-3">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Nama Item</th>
+                <th>Posisi Rak</th>
+                <th>Qty</th>
+                <th>Tgl EXP</th>
+                <th>Tgl Eksekusi</th>
+                <th>Status Waktu</th>
+                <th>Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyAlertExp">
+              <!-- Baris Alert EXP -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SubTab 1D: Riwayat Input EXP -->
+      <div id="subTabCeklisRiwayatExp" class="ceklis-subview">
+        <div class="filter-action-bar">
+          <div class="d-flex align-items-center gap-2">
+            <label>Filter Status:</label>
+            <select id="selectFilterRiwayatExp" class="form-select-sm" onchange="renderRiwayatExpTable()">
+              <option value="ALL">Semua Item</option>
+              <option value="SUDAH DIEKSEKUSI">Sudah Dieksekusi</option>
+              <option value="BELUM EKSEKUSI">Belum Dieksekusi</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive-custom mt-3">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Tgl Input</th>
+                <th>Nama Penginput</th>
+                <th>Nama Item</th>
+                <th>Posisi Rak</th>
+                <th>Qty</th>
+                <th>Tgl EXP</th>
+                <th>Status Eksekusi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyRiwayatExp">
+              <!-- Baris Riwayat EXP -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       4. JAVASCRIPT ENGINE FRONTEND
-       ========================================================================= -->
-  <script>
-    // Konfigurasi Web App URL Apps Script
-    const API_URL = "https://script.google.com/macros/s/AKfycbyq5GeVy2ZKJVU_q1jxIjeVZbD1jER8M04XzT-zjZZ_TiGw2-ICyNIZYxn_dChzbQj4Bg/exec"; 
-    const WATERMARK_URL = "https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i";
-
-    let CURRENT_USER = null;
-    let APP_CACHE = {
-      initialData: null,
-      dynamicMenus: [],
-      personnel: []
-    };
-    let activeChartInstance = null;
-
-    // Inisialisasi saat web selesai dimuat
-    document.addEventListener("DOMContentLoaded", () => {
-      initAppSession();
-      registerServiceWorker();
-    });
-
-    function registerServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(console.error);
-      }
-    }
-
-    // ==========================================
-    // AUTENTIKASI & SESI
-    // ==========================================
-    function initAppSession() {
-      const savedUser = localStorage.getItem("kacida_session");
-      if (savedUser) {
-        try {
-          CURRENT_USER = JSON.parse(savedUser);
-          renderAppShell();
-          loadInitialData();
-        } catch (e) {
-          localStorage.removeItem("kacida_session");
-        }
-      }
-    }
-
-    async function doLogin() {
-      const nik = document.getElementById("input-nik").value.trim();
-      if (!nik) {
-        Swal.fire("Perhatian", "Silakan masukkan NIK Anda!", "warning");
-        return;
-      }
-
-      Swal.fire({
-        title: "Memverifikasi NIK...",
-        text: "Menghubungkan ke basis data retail",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "login", nik: nik })
-        });
-        const res = await response.json();
-
-        if (res.status === "success" && res.user) {
-          CURRENT_USER = res.user;
-          localStorage.setItem("kacida_session", JSON.stringify(CURRENT_USER));
-          Swal.close();
-          renderAppShell();
-          loadInitialData();
-        } else {
-          Swal.fire("Akses Ditolak", res.message || "NIK tidak terdaftar", "error");
-        }
-      } catch (err) {
-        Swal.fire("Koneksi Gagal", "Gagal menghubungi backend: " + err.message, "error");
-      }
-    }
-
-    function doLogout() {
-      Swal.fire({
-        title: "Konfirmasi Keluar",
-        text: "Apakah Anda ingin keluar dari aplikasi Kacida Bersatu?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#0A8A4B",
-        cancelButtonColor: "#EF4444",
-        confirmButtonText: "Ya, Keluar"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          localStorage.removeItem("kacida_session");
-          location.reload();
-        }
-      });
-    }
-
-    // ==========================================
-    // TAMPILAN BERANDA & INITIAL DATA
-    // ==========================================
-    function renderAppShell() {
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("app-container").style.display = "flex";
-
-      document.getElementById("sidebar-store-code").innerText = CURRENT_USER.kodeToko + " - " + CURRENT_USER.namaToko;
-      document.getElementById("header-store-label").innerText = CURRENT_USER.kodeToko + " - " + CURRENT_USER.namaToko;
-      document.getElementById("header-user-name").innerText = CURRENT_USER.nama;
-      document.getElementById("header-user-role").innerText = CURRENT_USER.jabatan;
-
-      if (CURRENT_USER.fotoProfil) {
-        document.getElementById("header-user-avatar").src = CURRENT_USER.fotoProfil;
-        document.getElementById("hero-user-avatar").src = CURRENT_USER.fotoProfil;
-      }
-
-      document.getElementById("hero-greeting-text").innerText = getGreeting() + ", " + CURRENT_USER.nama.split(" ")[0] + "!";
-      document.getElementById("hero-store-info").innerText = CURRENT_USER.jabatan + " • " + CURRENT_USER.namaToko;
-
-      renderMainMenus();
-    }
-
-    async function loadInitialData() {
-      try {
-        const response = await fetch(API_URL + "?action=getInitialData&nik=" + CURRENT_USER.nik + "&kodeToko=" + CURRENT_USER.kodeToko);
-        const res = await response.json();
-
-        if (res.status === "success") {
-          APP_CACHE.initialData = res;
-          updateDashboardVisuals(res);
-        }
-      } catch (e) {
-        console.error("Gagal memuat data awal: ", e);
-      }
-    }
-
-    function updateDashboardVisuals(data) {
-      if (data.heroSales) {
-        document.getElementById("hero-sales-val").innerText = formatRupiah(data.heroSales.salesHmin1);
-        document.getElementById("hero-growth-tag").innerText = (data.heroSales.growth >= 0 ? "+" : "") + data.heroSales.growth + "% Growth";
-      }
-
-      if (data.kpiCarousel) {
-        document.getElementById("kpi-val-ikt").innerText = data.kpiCarousel.ikt.acvSales + "%";
-        document.getElementById("kpi-tgt-ikt").innerText = formatRupiah(data.kpiCarousel.ikt.target);
-        document.getElementById("kpi-act-ikt").innerText = formatRupiah(data.kpiCarousel.ikt.actual);
-
-        document.getElementById("kpi-val-sh").innerText = formatRupiah(data.kpiCarousel.salesHarian.actual);
-        document.getElementById("kpi-tag-sh").innerText = "ACV " + data.kpiCarousel.salesHarian.acv + "%";
-
-        document.getElementById("kpi-val-pl").innerText = data.kpiCarousel.penawaran.point + "%";
-        document.getElementById("kpi-tag-pl").innerText = "RANK " + data.kpiCarousel.penawaran.rank;
-      }
-
-      const totalBadges = (data.badges.approvalRak || 0) + (data.badges.approvalBelanja || 0);
-      const bell = document.getElementById("bell-counter");
-      if (totalBadges > 0) {
-        bell.innerText = totalBadges;
-        bell.style.display = "block";
-      } else {
-        bell.style.display = "none";
-      }
-
-      if (data.strukturToko) {
-        renderPersonnelList(data.strukturToko);
-      }
-
-      renderTrendChart();
-    }
-
-    function renderPersonnelList(personnel) {
-      const container = document.getElementById("store-personnel-list");
-      document.getElementById("badge-total-crew").innerText = personnel.length + " Orang";
-      container.innerHTML = "";
-
-      personnel.forEach(p => {
-        const item = document.createElement("div");
-        item.style.cssText = "display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-color);";
-        item.innerHTML = `
-          <img src="${p.fotoProfil || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nama)}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
-          <div style="flex: 1; line-height: 1.2;">
-            <div style="font-size: 13px; font-weight: 600;">${p.nama}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${p.jabatan} • NIK: ${p.nik}</div>
-          </div>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    function renderTrendChart() {
-      const ctx = document.getElementById('trendChartHarian').getContext('2d');
-      if (activeChartInstance) activeChartInstance.destroy();
-
-      activeChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['H-7', 'H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1'],
-          datasets: [{
-            label: 'Sales Actual (Jt)',
-            data: [11.2, 12.4, 9.8, 14.2, 13.1, 10.5, 12.8],
-            borderColor: '#0A8A4B',
-            backgroundColor: 'rgba(10, 138, 75, 0.08)',
-            fill: true,
-            tension: 0.35,
-            pointRadius: 4,
-            pointBackgroundColor: '#022A18'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { grid: { color: '#E2E8F0' }, ticks: { font: { size: 10 } } },
-            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-          }
-        }
-      });
-    }
-
-    // ==========================================
-    // 15 MENU UTAMA REGISTRATION & MODAL SYSTEM
-    // ==========================================
-    const CORE_MENUS = [
-      { id: 1, name: "Ceklis EXP", icon: "fa-solid fa-calendar-check" },
-      { id: 2, name: "Serah Terima", icon: "fa-solid fa-handshake" },
-      { id: 3, name: "Plan Mastershift", icon: "fa-solid fa-calendar-days" },
-      { id: 4, name: "Belanja Karyawan", icon: "fa-solid fa-cart-shopping" },
-      { id: 5, name: "Simulasi GM RP IKT", icon: "fa-solid fa-calculator" },
-      { id: 6, name: "Sales MTD", icon: "fa-solid fa-chart-column" },
-      { id: 7, name: "Sales Harian", icon: "fa-solid fa-calendar-day" },
-      { id: 8, name: "Monitoring IKT", icon: "fa-solid fa-bullseye" },
-      { id: 9, name: "Konversi No Bon", icon: "fa-solid fa-barcode" },
-      { id: 10, name: "Penawaran Langsung", icon: "fa-solid fa-tags" },
-      { id: 11, name: "Rekap PSM Kasir", icon: "fa-solid fa-receipt" },
-      { id: 12, name: "Monitoring Sales OPR", icon: "fa-solid fa-clock" },
-      { id: 13, name: "Monitoring KWH", icon: "fa-solid fa-bolt" },
-      { id: 14, name: "Catatan Return", icon: "fa-solid fa-truck-ramp-box" },
-      { id: 15, name: "Scan Barang", icon: "fa-solid fa-qrcode" }
-    ];
-
-    function renderMainMenus() {
-      const grid = document.getElementById("main-menu-grid");
-      const sidebarNav = document.getElementById("sidebar-dynamic-menus");
-      grid.innerHTML = "";
-      sidebarNav.innerHTML = "";
-
-      CORE_MENUS.forEach((m, idx) => {
-        // Render ke Grid Beranda
-        const card = document.createElement("div");
-        card.className = "menu-card-btn";
-        card.onclick = () => openMenuModal(m.id);
-        card.innerHTML = `
-          <div class="menu-icon-wrap"><i class="${m.icon}"></i></div>
-          <div class="menu-label">${m.name}</div>
-        `;
-        grid.appendChild(card);
-
-        // Render ke Sidebar Desktop
-        const sItem = document.createElement("div");
-        sItem.className = "nav-item";
-        sItem.onclick = () => openMenuModal(m.id);
-        sItem.innerHTML = `<i class="${m.icon}"></i><span>${m.name}</span>`;
-        sidebarNav.appendChild(sItem);
-      });
-    }
-
-    function openMenuModal(menuId) {
-      const modal = document.getElementById("kacida-modal");
-      const title = document.getElementById("modal-title-label");
-      const tabsBar = document.getElementById("modal-tabs-bar");
-      const body = document.getElementById("modal-body-container");
-
-      tabsBar.innerHTML = "";
-      body.innerHTML = "";
-      modal.classList.add("active");
-
-      const menu = CORE_MENUS.find(m => m.id === menuId);
-      title.innerText = menu ? menu.name : "Menu Fitur";
-
-      switch (menuId) {
-        case 1:
-          setupMenu1CeklisExp();
-          break;
-        case 5:
-          setupMenu5SimulasiGmRp();
-          break;
-        case 9:
-          setupMenu9KonversiBon();
-          break;
-        case 15:
-          setupMenu15ScanBarang();
-          break;
-        default:
-          body.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-              <i class="${menu.icon}" style="font-size: 48px; color: #0A8A4B; margin-bottom: 16px;"></i>
-              <h3>${menu.name}</h3>
-              <p style="color: var(--text-muted); margin-top: 8px;">Memuat data operasional dari database spreadsheet...</p>
-            </div>
-          `;
-          break;
-      }
-    }
-
-    function closeMenuModal() {
-      document.getElementById("kacida-modal").classList.remove("active");
-    }
-
-    // ==========================================
-    // MENU 5: SIMULASI GM RP IKT (CALCULATOR)
-    // ==========================================
-    function setupMenu5SimulasiGmRp() {
-      const body = document.getElementById("modal-body-container");
-      body.innerHTML = `
-        <div style="max-width: 650px; margin: 0 auto; background: var(--surface-white); padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
-          <div class="login-form-group">
-            <label>Hari Kerja (HK) & Jumlah Hari Kerja (JHK)</label>
-            <div style="display: flex; gap: 12px;">
-              <input type="number" id="sim-hk" placeholder="HK (misal 30)" value="30" class="input-with-icon" style="padding: 12px; width: 50%;">
-              <input type="number" id="sim-jhk" placeholder="JHK (misal 22)" value="22" class="input-with-icon" style="padding: 12px; width: 50%;">
-            </div>
-          </div>
-          <div class="login-form-group">
-            <label>Target Net Sales (Rp)</label>
-            <input type="number" id="sim-tgt-sales" class="input-with-icon" style="padding: 12px; width: 100%;" value="350000000">
-          </div>
-          <div class="login-form-group">
-            <label>Actual Net Sales (Rp)</label>
-            <input type="number" id="sim-act-sales" class="input-with-icon" style="padding: 12px; width: 100%;" value="365000000">
-          </div>
-          <div class="login-form-group">
-            <label>Target GM % & Actual GM %</label>
-            <div style="display: flex; gap: 12px;">
-              <input type="number" id="sim-tgt-gm" placeholder="Target % (19)" value="19" class="input-with-icon" style="padding: 12px; width: 50%;">
-              <input type="number" id="sim-act-gm" placeholder="Actual % (19.5)" value="19.5" class="input-with-icon" style="padding: 12px; width: 50%;">
-            </div>
-          </div>
-          <button class="btn-primary-block" onclick="calculateSimulasiGmRp()">
-            <i class="fa-solid fa-calculator"></i> Hitung Simulasi
-          </button>
-
-          <div id="sim-results" style="margin-top: 24px; display: none;"></div>
+  <!-- POPUP CEKLIS PENYELESAIAN RAK (6 CHECKBOX WAJIB SEBELUM SELESAI) -->
+  <div id="modalChecklistValidation" class="mini-popup-backdrop">
+    <div class="mini-popup-card">
+      <div class="popup-header">
+        <h4>Validasi Kesiapan Rak <span id="txtValRakNo">-</span></h4>
+        <button type="button" class="btn-close-popup" onclick="closeChecklistValidation()">&times;</button>
+      </div>
+      <div class="popup-body">
+        <p class="text-muted mb-3">Tandai seluruh poin kelayakan rak berikut ini sebelum mengunggah foto bukti:</p>
+        <div class="checklist-items-stack">
+          <label class="check-container">Rak Sudah Sesuai Planogram
+            <input type="checkbox" id="chkPlano"><span class="checkmark"></span>
+          </label>
+          <label class="check-container">Item di rak Sudah di FEFO (First Expired First Out)
+            <input type="checkbox" id="chkFefo"><span class="checkmark"></span>
+          </label>
+          <label class="check-container">Kondisi Rak Bersih dan Rapi
+            <input type="checkbox" id="chkClean"><span class="checkmark"></span>
+          </label>
+          <label class="check-container">Kondisi Tanggal Expired Sudah di Cek Menyeluruh
+            <input type="checkbox" id="chkExp"><span class="checkmark"></span>
+          </label>
+          <label class="check-container">Kondisi Label Price Lengkap & Update
+            <input type="checkbox" id="chkPrice"><span class="checkmark"></span>
+          </label>
+          <label class="check-container">Tidak ada Sarana / Barang Display yang Rusak
+            <input type="checkbox" id="chkSarana"><span class="checkmark"></span>
+          </label>
         </div>
-      `;
-    }
 
-    function calculateSimulasiGmRp() {
-      const hk = Number(document.getElementById("sim-hk").value) || 1;
-      const jhk = Number(document.getElementById("sim-jhk").value) || 1;
-      const tgtSales = Number(document.getElementById("sim-tgt-sales").value) || 0;
-      const actSales = Number(document.getElementById("sim-act-sales").value) || 0;
-      const tgtGm = Number(document.getElementById("sim-tgt-gm").value) || 0;
-      const actGm = Number(document.getElementById("sim-act-gm").value) || 0;
-
-      const acvSales = tgtSales > 0 ? Math.round((actSales / tgtSales) * 100) : 0;
-      const gapSales = actSales - tgtSales;
-      const tgtGmRp = tgtSales * (tgtGm / 100);
-      const actGmRp = actSales * (actGm / 100);
-      const gapGmRp = actGmRp - tgtGmRp;
-      const timeFactor = Math.round((jhk / hk) * 100);
-
-      const resBox = document.getElementById("sim-results");
-      resBox.style.display = "block";
-      resBox.innerHTML = `
-        <div style="background: #F0FDF4; border: 1.5px solid #0A8A4B; border-radius: 12px; padding: 18px;">
-          <h4 style="color: #022A18; margin-bottom: 12px;">Hasil Analisis Simulasi:</h4>
-          <p><b>ACV Net Sales:</b> ${acvSales}% (${gapSales >= 0 ? 'Surplus' : 'Defisit'} ${formatRupiah(gapSales)})</p>
-          <p><b>Target GM Rp:</b> ${formatRupiah(tgtGmRp)}</p>
-          <p><b>Actual GM Rp:</b> ${formatRupiah(actGmRp)}</p>
-          <p><b>Gap Margin Rp:</b> <span style="color: ${gapGmRp >= 0 ? '#10B981' : '#EF4444'}; font-weight: 700;">${formatRupiah(gapGmRp)}</span></p>
-          <p><b>Time Factor:</b> ${timeFactor}%</p>
+        <div class="upload-photo-section mt-3">
+          <label>Unggah Foto Bukti Fisik Rak (Wajib):</label>
+          <input type="file" id="fileBuktiRak" accept="image/*" class="form-control-file">
+          <small class="text-muted">Foto akan otomatis disimpan ke Google Drive folder sistem.</small>
         </div>
-      `;
-    }
+      </div>
+      <div class="popup-footer">
+        <button type="button" class="btn-secondary-sm" onclick="closeChecklistValidation()">Batal</button>
+        <button type="button" class="btn-primary-sm" onclick="submitChecklistRakData()">Kirim Bukti & Selesaikan</button>
+      </div>
+    </div>
+  </div>
 
-    // ==========================================
-    // MENU 9: KONVERSI NO BON / STRUK
-    // ==========================================
-    function setupMenu9KonversiBon() {
-      const body = document.getElementById("modal-body-container");
-      body.innerHTML = `
-        <div style="max-width: 480px; margin: 0 auto; text-align: center; background: var(--surface-white); padding: 28px; border-radius: 16px; border: 1px solid var(--border-color);">
-          <h3>Konversi Bon / Struk Alfanumerik</h3>
-          <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 20px;">Masukkan maksimal 4 digit nomor bon kasir:</p>
-          <input type="text" id="input-bon" maxlength="4" placeholder="Contoh: 123" style="width: 100%; padding: 14px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 12px; border: 2px solid #0A8A4B; margin-bottom: 16px;">
-          <button class="btn-primary-block" onclick="doKonversiBon()">Konversi Sekarang</button>
-          <div id="bon-result-wrap" style="margin-top: 24px; display: none;">
-            <div style="font-size: 13px; color: var(--text-muted);">Hasil Konversi:</div>
-            <div id="bon-result-text" style="font-size: 36px; font-weight: 800; color: #022A18; letter-spacing: 4px; margin: 10px 0;"></div>
-            <button class="header-btn" style="margin: 0 auto;" onclick="copyBonResult()"><i class="fa-regular fa-copy"></i> Salin Kode</button>
+  <!-- MODAL FORM TAMBAH RAK -->
+  <div id="modalFormAddRak" class="mini-popup-backdrop">
+    <div class="mini-popup-card">
+      <div class="popup-header">
+        <h4>Setting Rak Baru</h4>
+        <button type="button" class="btn-close-popup" onclick="closeFormAddRakModal()">&times;</button>
+      </div>
+      <form id="formAddRak" onsubmit="event.preventDefault(); submitAddRak();">
+        <div class="popup-body">
+          <div class="form-group-sm">
+            <label>Nomor / Kode Rak</label>
+            <input type="text" id="addRakNomor" placeholder="Contoh: R01, R02, G01" required>
+          </div>
+          <div class="form-group-sm mt-2">
+            <label>Kategori Rak</label>
+            <input type="text" id="addRakKategori" placeholder="Contoh: Snack, Minuman, Non-Food, Chiller" required>
+          </div>
+          <div class="form-group-sm mt-2">
+            <label>Penanggung Jawab (PIC Personil)</label>
+            <select id="addRakPic" class="form-select-sm" required>
+              <!-- Dropdown personil toko -->
+            </select>
           </div>
         </div>
-      `;
-    }
+        <div class="popup-footer">
+          <button type="button" class="btn-secondary-sm" onclick="closeFormAddRakModal()">Batal</button>
+          <button type="submit" class="btn-primary-sm">Simpan Rak</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    function doKonversiBon() {
-      const map = { '0':'M', '1':'O', '2':'Y', '3':'D', '4':'T', '5':'U', '6':'H', '7':'C', '8':'I', '9':'K' };
-      let raw = document.getElementById("input-bon").value.trim();
-      if (!raw) return;
-      while (raw.length < 4) raw = "0" + raw;
+  <!-- MODAL FORM TAMBAH ITEM EXP -->
+  <div id="modalFormAddExpItem" class="mini-popup-backdrop">
+    <div class="mini-popup-card">
+      <div class="popup-header">
+        <h4>Input Item Expired</h4>
+        <button type="button" class="btn-close-popup" onclick="closeFormAddExpItemModal()">&times;</button>
+      </div>
+      <form id="formAddExpItem" onsubmit="event.preventDefault(); submitAddExpItem();">
+        <div class="popup-body">
+          <div class="form-group-sm">
+            <label>Nama Item / Produk</label>
+            <input type="text" id="addExpNama" placeholder="Contoh: Indomie Goreng Spesial 85g" required>
+          </div>
+          <div class="form-group-sm mt-2">
+            <label>Posisi Rak</label>
+            <select id="addExpPosisiRak" class="form-select-sm" required>
+              <!-- Terisi daftar rak -->
+            </select>
+          </div>
+          <div class="grid-2-col mt-2">
+            <div class="form-group-sm">
+              <label>Kuantitas (Qty)</label>
+              <input type="number" id="addExpQty" min="1" value="1" required>
+            </div>
+            <div class="form-group-sm">
+              <label>Return Hari (RH)</label>
+              <input type="number" id="addExpRh" min="0" value="30" required>
+            </div>
+          </div>
+          <div class="form-group-sm mt-2">
+            <label>Tanggal Expired (EXP)</label>
+            <input type="date" id="addExpTanggal" required>
+          </div>
+        </div>
+        <div class="popup-footer">
+          <button type="button" class="btn-secondary-sm" onclick="closeFormAddExpItemModal()">Batal</button>
+          <button type="submit" class="btn-primary-sm">Simpan Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-      let converted = "";
-      for (let ch of raw) {
-        converted += (map[ch] || ch);
-      }
+  <!-- MODAL 2: SERAH TERIMA SHIFT -->
+  <div id="modalMenu2" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 2: Serah Terima Shift</h3>
+          <small>Input Sales, Kasir, Redeem Promo, Member Baru & Riwayat Serah Terima</small>
+        </div>
+      </div>
+      <div class="modal-subtab-nav">
+        <button type="button" class="subtab-btn active" onclick="switchSerahTerimaTab('input')"><i class="fa-solid fa-pen-clip"></i> Form Input</button>
+        <button type="button" class="subtab-btn" onclick="switchSerahTerimaTab('riwayat')"><i class="fa-solid fa-list-check"></i> Riwayat Shift</button>
+      </div>
+    </div>
 
-      document.getElementById("bon-result-wrap").style.display = "block";
-      document.getElementById("bon-result-text").innerText = converted;
-    }
+    <div class="modal-body-scrollable">
+      <!-- SubTab Input -->
+      <div id="subTabStInput" class="serah-terima-view active">
+        <div class="form-max-width-card">
+          <form id="formSerahTerima" onsubmit="event.preventDefault(); submitSerahTerimaData();">
+            <div class="grid-2-col">
+              <div class="form-group-sm">
+                <label>Tanggal Operasional</label>
+                <input type="date" id="stTanggal" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Pilihan Shift</label>
+                <select id="stShift" class="form-select-sm" required>
+                  <option value="1">Shift 1 (Pagi: 07:00 - 15:00)</option>
+                  <option value="2">Shift 2 (Siang: 15:00 - 23:00)</option>
+                </select>
+              </div>
+            </div>
 
-    function copyBonResult() {
-      const txt = document.getElementById("bon-result-text").innerText;
-      navigator.clipboard.writeText(txt);
-      Swal.fire({ icon: 'success', title: 'Tersalin', text: 'Kode konversi disalin: ' + txt, timer: 1500, showConfirmButton: false });
-    }
+            <div class="grid-2-col mt-2">
+              <div class="form-group-sm">
+                <label>Nominal Sales Shift (Rp)</label>
+                <input type="number" id="stSales" placeholder="Contoh: 14500000" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Quantity PSM Kasir</label>
+                <input type="number" id="stQtyPsm" placeholder="Contoh: 120" required>
+              </div>
+            </div>
 
-    // ==========================================
-    // UTILITIES & HELPERS
-    // ==========================================
-    function formatRupiah(num) {
-      const n = Math.round(Number(num) || 0);
-      return "Rp " + n.toLocaleString("id-ID");
-    }
+            <div class="grid-3-col mt-2">
+              <div class="form-group-sm">
+                <label>Redeem Serba Gratis</label>
+                <input type="number" id="stRedeemSg" placeholder="0" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Redeem PWP</label>
+                <input type="number" id="stRedeemPwp" placeholder="0" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Member Baru</label>
+                <input type="number" id="stNewMember" placeholder="0" required>
+              </div>
+            </div>
 
-    function getGreeting() {
-      const hour = new Date().getHours();
-      if (hour < 11) return "Selamat Pagi";
-      if (hour < 15) return "Selamat Siang";
-      if (hour < 18) return "Selamat Sore";
-      return "Selamat Malam";
-    }
+            <div class="form-group-sm mt-2">
+              <label>% Contribution Struk Penawaran</label>
+              <input type="number" id="stContribStruk" step="0.1" placeholder="Contoh: 15.5" required>
+            </div>
 
-    function executeSyncManual() {
-      Swal.fire({
-        title: "Sinkronisasi...",
-        text: "Memperbarui cache lokal dari database cloud",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-      loadInitialData().then(() => {
-        Swal.fire({ icon: "success", title: "Tersinkronisasi!", text: "Seluruh data operasional paling mutakhir siap.", timer: 1500, showConfirmButton: false });
-      });
-    }
+            <div class="form-group-sm mt-2">
+              <label>Catatan Operasional & Kendala Gerai</label>
+              <textarea id="stCatatan" rows="3" placeholder="Tuliskan kendala sarana, komplain pelanggan, atau catatan serah terima kas..."></textarea>
+            </div>
 
-    function showNotificationAlert() {
-      Swal.fire("Pemberitahuan", "Tidak ada approval mendesak yang tertunda.", "info");
-    }
-  </script>
+            <button type="submit" class="btn-primary-glow btn-block mt-4">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Data Serah Terima
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SubTab Riwayat -->
+      <div id="subTabStRiwayat" class="serah-terima-view watermark-table-container">
+        <div class="table-responsive-custom">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Shift</th>
+                <th>Sales Shift</th>
+                <th>Qty PSM</th>
+                <th>Redeem SG</th>
+                <th>Redeem PWP</th>
+                <th>New Member</th>
+                <th>% Struk</th>
+                <th>Penginput</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodySerahTerima">
+              <!-- Riwayat input serah terima -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP IN-APP SERAH TERIMA SHIFT SEBELUMNYA -->
+  <div id="modalPopupSerahTerimaReminder" class="mini-popup-backdrop">
+    <div class="mini-popup-card alert-theme-card">
+      <div class="popup-header">
+        <h4><i class="fa-solid fa-bell"></i> Serah Terima Shift Sebelumnya</h4>
+        <button type="button" class="btn-close-popup" onclick="closeSerahTerimaReminder(false)">&times;</button>
+      </div>
+      <div class="popup-body">
+        <p>Terdapat rekap catatan serah terima shift dari rekan Anda:</p>
+        <div class="meta-box-highlight">
+          <div class="row-flex"><span>Penginput:</span> <strong id="popStPenginput">-</strong></div>
+          <div class="row-flex"><span>Shift:</span> <strong id="popStShift">-</strong></div>
+          <div class="row-flex"><span>Sales Shift:</span> <strong id="popStSales">Rp 0</strong></div>
+          <div class="row-flex"><span>Qty PSM:</span> <strong id="popStPsm">0</strong></div>
+          <div class="row-flex"><span>Catatan:</span> <p id="popStCatatan" class="mt-1 text-muted">-</p></div>
+        </div>
+      </div>
+      <div class="popup-footer">
+        <button type="button" class="btn-secondary-sm" onclick="closeSerahTerimaReminder(false)">Tutup Sementara</button>
+        <button type="button" class="btn-primary-sm" onclick="closeSerahTerimaReminder(true)">Sudah Saya Baca (Selesai)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PLAN MASTERSHIFT -->
+  <div id="modalMenu3" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 3: Plan Mastershift</h3>
+          <small>Pengaturan Jadwal Kerja Shift Toko (P=Pagi, S=Siang, M=Malam, OFF=Libur, AO=Add Off, CT=Cuti, SAKIT=Sakit)</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <select id="selectShiftBulan" class="form-select-sm" onchange="loadMasterShiftTable()">
+          <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+          <option value="4" selected>April</option><option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <select id="selectShiftTahun" class="form-select-sm" onchange="loadMasterShiftTable()">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+        <button type="button" id="btnSaveMasterShift" class="btn-primary-sm" onclick="submitMasterShiftSchedule()">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Jadwal
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="table-responsive-custom mastershift-wrapper">
+        <table class="table-styled table-bordered" id="tableMasterShift">
+          <thead>
+            <tr id="headerRowMasterShift">
+              <th>No</th>
+              <th>Nama Personil</th>
+              <th>Jabatan</th>
+              <!-- Kolom 1 s/d 31 terisi via JS -->
+            </tr>
+          </thead>
+          <tbody id="bodyMasterShift">
+            <!-- Grid jadwal personil -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: BELANJA KARYAWAN & APPROVAL COS -->
+  <div id="modalMenu4" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 4: Belanja Karyawan</h3>
+          <small>Form Pengajuan Belanja, Persetujuan Chief of Store & Riwayat Transaksi</small>
+        </div>
+      </div>
+      <div class="modal-subtab-nav">
+        <button type="button" class="subtab-btn active" onclick="switchBelanjaTab('input')"><i class="fa-solid fa-cart-plus"></i> Form Pengajuan</button>
+        <button type="button" class="subtab-btn" id="btnTabApprovalBelanja" onclick="switchBelanjaTab('approval')"><i class="fa-solid fa-user-check"></i> Approval COS <span class="badge-pill" id="badgeApprovalBelanja">0</span></button>
+        <button type="button" class="subtab-btn" onclick="switchBelanjaTab('riwayat')"><i class="fa-solid fa-history"></i> Riwayat Belanja</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <!-- SubTab Input -->
+      <div id="subTabBkInput" class="belanja-view active">
+        <div class="form-max-width-card">
+          <form id="formBelanjaKaryawan" onsubmit="event.preventDefault(); submitPengajuanBelanja();">
+            <div class="grid-2-col">
+              <div class="form-group-sm">
+                <label>Nomor Member Karyawan</label>
+                <input type="text" id="bkNomorMember" placeholder="Contoh: MBR-123456" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Nomor Bon Struk Transaksi</label>
+                <input type="text" id="bkNomorBon" placeholder="Contoh: BON-99812" required>
+              </div>
+            </div>
+
+            <div class="form-group-sm mt-2">
+              <label>Nominal Belanja (Rp)</label>
+              <input type="number" id="bkNominal" placeholder="Contoh: 150000" min="1" required>
+            </div>
+
+            <div class="form-group-sm mt-2">
+              <label>Unggah Foto Struk Belanja (Wajib Google Drive)</label>
+              <input type="file" id="bkFotoStruk" accept="image/*" class="form-control-file" required>
+            </div>
+
+            <button type="submit" class="btn-primary-glow btn-block mt-4">
+              <i class="fa-solid fa-paper-plane"></i> Kirim Pengajuan Belanja
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SubTab Approval COS -->
+      <div id="subTabBkApproval" class="belanja-view watermark-table-container">
+        <div class="table-responsive-custom">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Waktu Pengajuan</th>
+                <th>Karyawan</th>
+                <th>Nomor Bon</th>
+                <th>Nominal</th>
+                <th>Foto Struk</th>
+                <th>Keputusan COS</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyApprovalBelanja">
+              <!-- Item pending belanja -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SubTab Riwayat Belanja -->
+      <div id="subTabBkRiwayat" class="belanja-view watermark-table-container">
+        <div class="table-responsive-custom">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Karyawan</th>
+                <th>Nomor Bon</th>
+                <th>Nominal</th>
+                <th>Status</th>
+                <th>Validator</th>
+                <th>Foto Struk</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBodyRiwayatBelanja">
+              <!-- Riwayat belanja karyawan -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: SIMULASI GM RP IKT (INSTAN TANPA DATABASE) -->
+  <div id="modalMenu5" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 5: Simulasi GM Rupiah IKT</h3>
+          <small>Kalkulasi Instan ACV Net Sales, Margin Rupiah, Gap & Time Factor</small>
+        </div>
+      </div>
+      <button type="button" class="btn-secondary-sm" onclick="resetFormSimulasiGm()"><i class="fa-solid fa-rotate-left"></i> Reset Form</button>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="simulasi-gm-grid">
+        <div class="form-card-panel">
+          <h4 class="panel-heading-sm mb-3">Parameter Input Simulasi</h4>
+          <form id="formSimulasiGm" onsubmit="event.preventDefault(); calculateSimulasiGm();">
+            <div class="grid-2-col">
+              <div class="form-group-sm">
+                <label>HK (Total Hari Kalender)</label>
+                <input type="number" id="simHk" value="30" min="28" max="31" required>
+              </div>
+              <div class="form-group-sm">
+                <label>JHK (Jumlah Hari Settle H-1)</label>
+                <input type="number" id="simJhk" value="22" min="1" max="31" required>
+              </div>
+            </div>
+
+            <div class="grid-2-col mt-2">
+              <div class="form-group-sm">
+                <label>Target Net Sales (Rp)</label>
+                <input type="number" id="simTargetSales" placeholder="Contoh: 85000000" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Actual Net Sales (Rp)</label>
+                <input type="number" id="simActualSales" placeholder="Contoh: 87000000" required>
+              </div>
+            </div>
+
+            <div class="grid-2-col mt-2">
+              <div class="form-group-sm">
+                <label>Target Margin %</label>
+                <input type="number" id="simTargetMarginPct" step="0.01" placeholder="Contoh: 22.10" required>
+              </div>
+              <div class="form-group-sm">
+                <label>Actual Margin %</label>
+                <input type="number" id="simActualMarginPct" step="0.01" placeholder="Contoh: 21.80" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-glow btn-block mt-4">
+              <i class="fa-solid fa-calculator"></i> Hitung Hasil Simulasi
+            </button>
+          </form>
+        </div>
+
+        <div class="results-card-panel">
+          <h4 class="panel-heading-sm mb-3">Hasil Evaluasi & Rekomendasi</h4>
+          <div class="sim-result-box">
+            <div class="result-row"><span>Time Factor Gerai:</span> <strong id="resTimeFactor">0%</strong></div>
+            <div class="result-row"><span>ACV Net Sales:</span> <strong id="resAcvSales">0%</strong></div>
+            <div class="result-row"><span>Gap Net Sales:</span> <strong id="resGapSales">Rp 0</strong></div>
+            <div class="result-row"><span>Target Margin Rupiah:</span> <strong id="resTargetGmRp">Rp 0</strong></div>
+            <div class="result-row"><span>Actual Margin Rupiah:</span> <strong id="resActualGmRp">Rp 0</strong></div>
+            <div class="result-row highlight"><span>Gap Margin Rupiah:</span> <strong id="resGapGmRp">Rp 0</strong></div>
+            <div class="result-row"><span>Status Kelayakan:</span> <span id="resStatusBadge" class="status-pill-ok">OK</span></div>
+          </div>
+          <div class="analysis-explanation mt-3">
+            <p id="resAnalysisText">Masukkan parameter di atas untuk mendapatkan analisa menyeluruh.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: SALES MTD (SUMBER: YTD_Sales) -->
+  <div id="modalMenu6" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 6: Sales MTD (Month to Date)</h3>
+          <small>Sumber Database: Sheet YTD_Sales • Perbandingan Tahun 2024, 2025 vs 2026</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <select id="selectMonthMtd" class="form-select-sm" onchange="loadSalesMtdTable()">
+          <option value="JANUARI">Januari</option><option value="FEBRUARI">Februari</option><option value="MARET">Maret</option>
+          <option value="APRIL" selected>April</option><option value="MEI">Mei</option><option value="JUNI">Juni</option>
+          <option value="JULI">Juli</option><option value="AGUSTUS">Agustus</option><option value="SEPTEMBER">September</option>
+          <option value="OKTOBER">Oktober</option><option value="NOVEMBER">November</option><option value="DESEMBER">Desember</option>
+        </select>
+        <button type="button" class="btn-excel-export" onclick="exportMtdToExcel()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+        <button type="button" class="btn-pdf-export" onclick="exportMtdToPdf()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box"><span>Total Sales 2026</span><h4 id="txtMtdTotalSales">Rp 0</h4></div>
+        <div class="stat-box"><span>Average SPD</span><h4 id="txtMtdAvgSpdBox">Rp 0</h4></div>
+        <div class="stat-box"><span>Average STD</span><h4 id="txtMtdAvgStdBox">0</h4></div>
+        <div class="stat-box"><span>Average APC</span><h4 id="txtMtdAvgApcBox">Rp 0</h4></div>
+        <div class="stat-box green"><span>Growth vs 2025</span><h4 id="txtMtdGrowthBox">+0%</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Sales 2026 (Utama)</th>
+              <th>STD 2026</th>
+              <th>APC 2026</th>
+              <th>Sales 2025</th>
+              <th>Sales 2024</th>
+              <th>Growth %</th>
+              <th>Status</th>
+              <th>Detail Banding</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodySalesMtd">
+            <!-- Terisi baris sales harian MTD -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP PERBANDINGAN TANGGAL VS TAHUN LALU (DARI SALES MTD) -->
+  <div id="modalCompareYears" class="mini-popup-backdrop">
+    <div class="mini-popup-card">
+      <div class="popup-header">
+        <h4>Komparasi Sales: <span id="compTanggalTitle">-</span></h4>
+        <button type="button" class="btn-close-popup" onclick="closeCompareModal()">&times;</button>
+      </div>
+      <div class="popup-body">
+        <div class="table-responsive-custom">
+          <table class="table-styled">
+            <thead>
+              <tr>
+                <th>Metrik</th>
+                <th>2024</th>
+                <th>2025</th>
+                <th>2026</th>
+                <th>Pertumbuhan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sales (SPD)</strong></td>
+                <td id="cmpSales24">Rp 0</td>
+                <td id="cmpSales25">Rp 0</td>
+                <td id="cmpSales26">Rp 0</td>
+                <td id="cmpGrowthSales">+0%</td>
+              </tr>
+              <tr>
+                <td><strong>STD (Struk)</strong></td>
+                <td id="cmpStd24">0</td>
+                <td id="cmpStd25">0</td>
+                <td id="cmpStd26">0</td>
+                <td id="cmpGrowthStd">+0%</td>
+              </tr>
+              <tr>
+                <td><strong>APC (Belanja/Struk)</strong></td>
+                <td id="cmpApc24">Rp 0</td>
+                <td id="cmpApc25">Rp 0</td>
+                <td id="cmpApc26">Rp 0</td>
+                <td id="cmpGrowthApc">+0%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="popup-footer">
+        <button type="button" class="btn-secondary-sm" onclick="closeCompareModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: SALES HARIAN (SUMBER: Sheet Sales_Harian) -->
+  <div id="modalMenu7" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 7: Sales Harian Gerai</h3>
+          <small>Sumber: Sheet Sales_Harian • Target, Actual, Gap, NSB, OOS & Gross Margin</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn-excel-export" onclick="exportHarianToExcel()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+        <button type="button" class="btn-pdf-export" onclick="exportHarianToPdf()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box"><span>Total Bulan Lalu</span><h4 id="shTotalBulanLalu">Rp 0</h4></div>
+        <div class="stat-box"><span>Total Target</span><h4 id="shTotalTarget">Rp 0</h4></div>
+        <div class="stat-box"><span>Total Actual</span><h4 id="shTotalActual">Rp 0</h4></div>
+        <div class="stat-box green"><span>ACV Sales</span><h4 id="shAcvSales">0%</h4></div>
+        <div class="stat-box"><span>Growth MoM</span><h4 id="shGrowthMom">+0%</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Bulan Lalu</th>
+              <th>Target</th>
+              <th>Actual</th>
+              <th>Actual STD</th>
+              <th>Actual APC</th>
+              <th>Gap Target</th>
+              <th>ACV %</th>
+              <th>% NSB</th>
+              <th>% OOS</th>
+              <th>Gross Margin</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodySalesHarian">
+            <!-- Terisi tabel sales harian -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: MONITORING IKT (SUMBER: Sheet Ikt) -->
+  <div id="modalMenu8" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 8: Monitoring IKT Gerai</h3>
+          <small>Sumber: Sheet Ikt • Indikator Net Sales, GM%, GM Rupiah, Net Profit & Time Factor</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn-primary-sm" onclick="openSimulasiGmDirect()"><i class="fa-solid fa-calculator"></i> Simulasi GM RP IKT</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box"><span>Time Factor Settle</span><h4 id="iktTimeFactorBox">85%</h4></div>
+        <div class="stat-box"><span>ACV Net Sales</span><h4 id="iktSalesAcvBox">0%</h4></div>
+        <div class="stat-box"><span>ACV GM %</span><h4 id="iktGmAcvBox">0%</h4></div>
+        <div class="stat-box"><span>ACV GM Rupiah</span><h4 id="iktGmRpAcvBox">0%</h4></div>
+        <div class="stat-box"><span>ACV Net Profit</span><h4 id="iktNetProfitAcvBox">0%</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Indikator Kinerja</th>
+              <th>Target Toko</th>
+              <th>Aktual Toko</th>
+              <th>% Pencapaian (ACV)</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyMonitoringIkt">
+            <!-- Terisi baris IKT -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: KONVERSI NO BON / STRUK (INSTAN 0-9 KE MOYDTUHCIK) -->
+  <div id="modalMenu9" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 9: Konversi Nomor Bon / Struk</h3>
+          <small>Transformasi Instan Digit Angka Transaksi Menjadi Kode Alfanumerik Toko</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable">
+      <div class="form-max-width-card text-center">
+        <div class="konversi-box">
+          <label>Masukkan 1 - 4 Digit Angka Nomor Bon:</label>
+          <input type="text" id="inputNomorBonRaw" maxlength="4" placeholder="Contoh: 123 atau 0123" inputmode="numeric" oninput="executeBonConversion()">
+
+          <div class="konversi-result-display mt-4">
+            <span class="label-muted">Hasil Kode Konversi Alfanumerik:</span>
+            <div class="kode-box-grid" id="containerKodeBonResult">
+              <span class="digit-box">-</span>
+              <span class="digit-box">-</span>
+              <span class="digit-box">-</span>
+              <span class="digit-box">-</span>
+            </div>
+            <h2 id="txtHasilKonversiFinal" class="mt-2">-</h2>
+          </div>
+
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <button type="button" class="btn-secondary-sm" onclick="resetBonConversion()"><i class="fa-solid fa-rotate-left"></i> Bersihkan</button>
+            <button type="button" class="btn-primary-sm" onclick="copyBonResult()"><i class="fa-solid fa-copy"></i> Salin Kode</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 10: PENAWARAN LANGSUNG (SUMBER: Sheet Penawaran_Langsung) -->
+  <div id="modalMenu10" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 10: Penawaran Langsung</h3>
+          <small>Sumber: Sheet Penawaran_Langsung • PSM, PWP, Serba Gratis, APC & Point Dashboard</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn-excel-export" onclick="exportPlToExcel()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box orange"><span>Point Dashboard</span><h4 id="txtPlPointVal">0%</h4></div>
+        <div class="stat-box"><span>Peringkat Toko</span><h4 id="txtPlRankVal">#0</h4></div>
+        <div class="stat-box green"><span>Total ACV</span><h4 id="txtPlTotalAcvVal">0%</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Indikator Penawaran</th>
+              <th>Target Toko</th>
+              <th>Aktual Toko</th>
+              <th>% ACV</th>
+              <th>GAP Penawaran</th>
+              <th>Status Target</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyPenawaranLangsung">
+            <!-- Terisi indikator PSM, PWP, Serba Gratis, APC -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 11: REKAP PSM KASIR -->
+  <div id="modalMenu11" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 11: Rekapitulasi PSM Kasir</h3>
+          <small>Pencatatan Penjualan Produk Special Mingguan Harian per Kasir (H1 s/d H8)</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn-primary-sm" onclick="openAddPsmKasirModal()"><i class="fa-solid fa-plus"></i> Tambah Item Kasir</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box"><span>Total Item</span><h4 id="cntTotalItemPsm">0</h4></div>
+        <div class="stat-box green"><span>Mencapai Target</span><h4 id="cntPsmAchieved">0</h4></div>
+        <div class="stat-box orange"><span>Belum Target</span><h4 id="cntPsmUnachieved">0</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Nama Kasir</th>
+              <th>Nama Item PSM</th>
+              <th>Target</th>
+              <th>Total Aktual</th>
+              <th>H1</th><th>H2</th><th>H3</th><th>H4</th>
+              <th>H5</th><th>H6</th><th>H7</th><th>H8</th>
+              <th>ACV %</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyRekapPsmKasir">
+            <!-- Terisi tabel rekap kasir -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 12: MONITORING SALES OPR (06:07 & 22:23) -->
+  <div id="modalMenu12" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 12: Monitoring Sales OPR</h3>
+          <small>Rekapitulasi Real-Time Transaksi Buka Gerai (06:07) & Tutup Gerai (22:23)</small>
+        </div>
+      </div>
+      <div class="modal-subtab-nav">
+        <button type="button" class="subtab-btn active" onclick="switchSalesOprTab('0607')"><i class="fa-solid fa-sun"></i> Rekap 06:07 (Pagi)</button>
+        <button type="button" class="subtab-btn" onclick="switchSalesOprTab('2223')"><i class="fa-solid fa-moon"></i> Rekap 22:23 (Malam)</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="filter-action-bar">
+        <h4>Data Transaksi Operasional</h4>
+        <button type="button" class="btn-primary-sm" onclick="openAddSalesOprModal()"><i class="fa-solid fa-plus"></i> Input Rekap OPR</button>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Jam Transaksi</th>
+              <th>Sales (Rp)</th>
+              <th>STD</th>
+              <th>APC</th>
+              <th>Qty ETRANS</th>
+              <th>Penginput</th>
+              <th>Waktu Rekam</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodySalesOpr">
+            <!-- Terisi data OPR -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 13: MONITORING KWH LISTRIK -->
+  <div id="modalMenu13" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 13: Monitoring KWH & Listrik</h3>
+          <small>Pencatatan Meter Listrik Harian, Biaya Pemakaian & Efisiensi Energi</small>
+        </div>
+      </div>
+      <div class="modal-actions-right">
+        <button type="button" class="btn-primary-sm" onclick="openAddKwhModal()"><i class="fa-solid fa-plus"></i> Input Meter KWH</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="stats-summary-bar">
+        <div class="stat-box"><span>Total Pemakaian</span><h4 id="txtTotalKwhVal">0 kWh</h4></div>
+        <div class="stat-box"><span>Total Estimasi Biaya</span><h4 id="txtTotalKwhCost">Rp 0</h4></div>
+        <div class="stat-box green"><span>Rata-rata Harian</span><h4 id="txtAvgKwhVal">0 kWh</h4></div>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>KWH Awal</th>
+              <th>KWH Akhir</th>
+              <th>Pemakaian (kWh)</th>
+              <th>Tarif (Rp)</th>
+              <th>Estimasi Biaya</th>
+              <th>Status Efisiensi</th>
+              <th>Keterangan</th>
+              <th>Penginput</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyMonitoringKwh">
+            <!-- Terisi riwayat meter listrik -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 14: CATATAN RETURN (DC REG, DC FRESH, BKL) -->
+  <div id="modalMenu14" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 14: Catatan Retur Barang Gerai</h3>
+          <small>Dokumentasi Pengembalian Barang: DC Reguler, DC Fresh & BKL (Barang Kirim Langsung)</small>
+        </div>
+      </div>
+      <div class="modal-subtab-nav">
+        <button type="button" class="subtab-btn active" onclick="switchReturnTab('DCREG')">DC REG</button>
+        <button type="button" class="subtab-btn" onclick="switchReturnTab('DCFRESH')">DC FRESH</button>
+        <button type="button" class="subtab-btn" onclick="switchReturnTab('BKL')">BKL</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="filter-action-bar">
+        <h4>Riwayat Dokumen Faktur Retur</h4>
+        <button type="button" class="btn-primary-sm" onclick="openAddReturnModal()"><i class="fa-solid fa-plus"></i> Input Dokumen Retur</button>
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>No Faktur</th>
+              <th>Nama Driver</th>
+              <th>No Polisi Mobil</th>
+              <th>Foto Dokumen</th>
+              <th>Catatan</th>
+              <th>Penginput</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyCatatanReturn">
+            <!-- Terisi riwayat retur -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 15: SCAN BARANG (BARCODE CAMERA & MANUAL PREVIEW) -->
+  <div id="modalMenu15" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Menu 15: Pemindaian Barcode Barang</h3>
+          <small>Pemindai Kamera Sensitif Cepat, Input Manual & Preview Barcode Rapat</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="scan-grid-layout">
+        <!-- Panel Pemindai & Input Manual -->
+        <div class="scanner-control-panel">
+          <div class="scanner-view-box">
+            <div id="scannerCameraView" class="scanner-video-preview"></div>
+            <div class="scanner-laser-line"></div>
+          </div>
+
+          <div class="scanner-btn-group mt-3">
+            <button type="button" id="btnToggleCamera" class="btn-primary-sm" onclick="toggleCameraScanner()">
+              <i class="fa-solid fa-camera"></i> Mulai Scan Kamera
+            </button>
+          </div>
+
+          <div class="manual-barcode-entry mt-3">
+            <label>Input Barcode Manual:</label>
+            <div class="d-flex gap-2">
+              <input type="text" id="inputManualBarcode" placeholder="Ketik barcode angka..." inputmode="numeric">
+              <button type="button" class="btn-secondary-sm" onclick="handleManualBarcodeEntered()"><i class="fa-solid fa-check"></i> Proses</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Daftar Hasil Scan & Barcode Preview -->
+        <div class="scanned-items-panel">
+          <div class="panel-header-flex">
+            <h4>Daftar Barang Terpindai</h4>
+            <span class="badge-status-ok" id="cntScannedItems">0 Item</span>
+          </div>
+
+          <div class="barcode-preview-carousel-card mt-3">
+            <div class="carousel-preview-header">
+              <span>Preview Visual Barcode</span>
+              <span id="barcodePreviewIndex">1 / 1</span>
+            </div>
+            <div class="barcode-render-box">
+              <svg id="svgBarcodePreview"></svg>
+            </div>
+            <h4 id="txtBarcodeNumberDisplay" class="mt-2">-</h4>
+          </div>
+
+          <div class="table-responsive-custom mt-3">
+            <table class="table-styled">
+              <thead>
+                <tr>
+                  <th>Barcode</th>
+                  <th>Nama Barang</th>
+                  <th>Qty</th>
+                  <th>Waktu</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tableBodyScanBarang">
+                <!-- Terisi daftar hasil scan -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP KONFIRMASI QUANTITY SCAN BARANG -->
+  <div id="modalConfirmScanQty" class="mini-popup-backdrop">
+    <div class="mini-popup-card">
+      <div class="popup-header">
+        <h4>Konfirmasi Jumlah Item</h4>
+        <button type="button" class="btn-close-popup" onclick="closeScanQtyModal()">&times;</button>
+      </div>
+      <div class="popup-body text-center">
+        <p class="text-muted">Barcode Terbaca:</p>
+        <h3 id="txtScannedBarcodeCode" class="barcode-badge-text">8991234567890</h3>
+        <div class="qty-stepper-box mt-3">
+          <button type="button" class="btn-stepper" onclick="stepScanQty(-1)">-</button>
+          <input type="number" id="numScanQuantity" min="1" value="1">
+          <button type="button" class="btn-stepper" onclick="stepScanQty(1)">+</button>
+        </div>
+      </div>
+      <div class="popup-footer">
+        <button type="button" class="btn-secondary-sm" onclick="closeScanQtyModal()">Batal</button>
+        <button type="button" class="btn-primary-sm" onclick="saveConfirmedScannedItem()">Simpan ke List</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. MODAL LIHAT SEMUA MENU (15 MENU + MENU DINAMIS SPREADSHEET)           -->
+  <!-- ========================================================================= -->
+  <div id="modalAllMenu" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Semua Menu & Pintasan Aplikasi</h3>
+          <small>Seluruh 15 fitur inti dan link menu dinamis terdaftar</small>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body-scrollable">
+      <div class="all-menu-grid" id="allMenuContainerGrid">
+        <!-- Dimuat otomatis via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 6. MODAL ADMINISTRATOR & AUDIT LOG (KHUSUS SUPER ADMIN NIK 14125034)     -->
+  <!-- ========================================================================= -->
+  <div id="modalAdminDashboard" class="fullscreen-feature-modal">
+    <div class="modal-top-bar">
+      <div class="modal-title-left">
+        <button type="button" class="btn-modal-back" onclick="closeAllFeatureModals()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h3>Dashboard Super Administrator</h3>
+          <small>Kendali Hak Akses, Status Pemetaan Kolom Sheet & Audit Log Aktivitas</small>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body-scrollable watermark-table-container">
+      <div class="admin-diagnostic-banner">
+        <h4><i class="fa-solid fa-server"></i> Status Kesehatan Spreadsheet Backend</h4>
+        <div class="diagnostic-badges mt-2">
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> Master_User (Normal)</span>
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> Menu_Navigasi (Normal)</span>
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> Ikt (Normal)</span>
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> YTD_Sales (Normal)</span>
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> Sales_Harian (Normal)</span>
+          <span class="diag-badge ok"><i class="fa-solid fa-check"></i> Penawaran_Langsung (Normal)</span>
+        </div>
+      </div>
+
+      <div class="filter-action-bar mt-4">
+        <h4>Log Aktivitas Seluruh Pengguna</h4>
+        <input type="date" id="filterAuditDate" class="form-control-sm" onchange="loadAdminAuditLogs()">
+      </div>
+
+      <div class="table-responsive-custom mt-3">
+        <table class="table-styled">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>NIK</th>
+              <th>Nama Pengguna</th>
+              <th>Tindakan (Action)</th>
+              <th>Keterangan Aktivitas</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyAuditLog">
+            <!-- Terisi via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 7. ELEMEN WATERMARK GLOBAL TRANSLUCENT (ID: 1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i) -->
+  <!-- ========================================================================= -->
+  <div class="global-watermark-overlay" style="background-image: url('https://lh3.googleusercontent.com/d/1xAINOGLsjRaFc1CVc8ZonDzgwlL6Lt5i');"></div>
+
+  <!-- Scripts Logic Utama -->
+  <script src="api.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

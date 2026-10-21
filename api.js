@@ -8,7 +8,7 @@
 
 const API_CONFIG = {
   // Ganti URL di bawah ini dengan URL Deployment Web App Google Apps Script Anda:
-  DEFAULT_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbwHk32zq9xcetw8Uf4TltXd4vLI-uFDwFBlAp4H5nMoj5JPTg5ytAewQG807wnVBDTRJg/exec",
+  DEFAULT_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbzkft_AD8Kesf2uPcl_YdnX40szjuQyd5pFixRxdpO97gHnJnq32y39laiXt5ws23jh_g/exec",
   STORAGE_KEYS: {
     WEBAPP_URL: "kacida_webapp_url",
     SESSION_TOKEN: "kacida_session_token",

@@ -90,13 +90,18 @@ async function checkAuthenticationState() {
   }
 }
 
+/* UBAH MENJADI: */
 function showLoginScreen() {
+  document.getElementById("loginScreen").classList.remove("hidden");
   document.getElementById("loginScreen").classList.add("active");
+  document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("appRoot").classList.add("hidden");
 }
 
 function hideLoginScreen() {
   document.getElementById("loginScreen").classList.remove("active");
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appRoot").classList.remove("hidden");
 }
 

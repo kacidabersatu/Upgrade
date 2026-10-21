@@ -1,12 +1,20 @@
 {
-  "name": "Kacida Bersatu - Portal Performa & Operasional Retail",
+  "name": "KACIDA BERSATU — Portal Performa & Operasional Retail",
   "short_name": "Kacida Bersatu",
-  "description": "Portal Performa & Operasional Retail Alfamart Terintegrasi Spreadsheet & Drive",
+  "description": "Portal Performa & Operasional Retail Terpadu - Bersama Kita Kuat",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#F0FDF4",
   "theme_color": "#022A18",
-  "orientation": "portrait-primary",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
@@ -19,6 +27,47 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Beranda Retail",
+      "short_name": "Beranda",
+      "description": "Buka Dashboard Ringkasan Toko",
+      "url": "./index.html#beranda",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Chat AI Ritel",
+      "short_name": "Chat AI",
+      "description": "Konsultasi Asisten Al Kacida AI",
+      "url": "./index.html#chatAi",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Kalender & Agenda",
+      "short_name": "Kalender",
+      "description": "Lihat Agenda dan Pengingat Gerai",
+      "url": "./index.html#kalender",
+      "icons": [
+        {
+          "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

@@ -123,20 +123,6 @@ input, select, textarea {
 .justify-content-center { justify-content: center; }
 
 /* 3. OVERLAY LOGIN & OTENTIKASI */
-/* UBAH DARI: */
-.login-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9') center center/cover no-repeat;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-
-/* MENJADI SEPERTI INI (Tambahkan display: none & .login-overlay.active): */
 .login-overlay {
   position: fixed;
   inset: 0;

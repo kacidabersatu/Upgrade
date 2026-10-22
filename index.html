@@ -3,661 +3,818 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kacida Bersatu — Portal Performa & Operasional Retail</title>
-  <link rel="stylesheet" href="Styles.css">
-  <link rel="manifest" href="manifest.json">
+  <title>Kacida Bersatu - Portal Performa & Operasional Retail</title>
+  
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#022A18">
-  <!-- Pustaka Tambahan: SweetAlert2 & JsBarcode -->
+  
+  <!-- Font Plus Jakarta Sans & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  
+  <link rel="stylesheet" href="./Styles.css">
 </head>
 <body>
 
-  <!-- ========================================================================
-       1. LAYAR LOGIN & AUTENTIKASI
-       ======================================================================== -->
+  <!-- ================= LOADER AWAL (BREATHING TANPA ROTASI 360) ================= -->
+  <div id="initial-loader">
+    <div class="loader-logo-wrap">
+      <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo Kacida">
+    </div>
+    <div class="loader-shimmer-text">KACIDA BERSATU</div>
+  </div>
+
+  <!-- ================= HALAMAN LOGIN ================= -->
   <div id="login-screen">
     <div class="login-card">
       <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="login-logo">
       <h2 class="login-title">Kacida Bersatu</h2>
       <p class="login-subtitle">Portal Performa & Operasional Retail</p>
-
-      <div class="login-input-group">
-        <label for="input-nik">Nomor Induk Karyawan (NIK)</label>
-        <input type="text" id="input-nik" placeholder="Masukkan NIK Anda" autocomplete="off">
-      </div>
-
-      <button type="button" class="btn-login" id="btn-submit-login" onclick="doLogin()">
-        <span>Masuk</span>
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
-
-      <div class="login-footer">
-        <p>Tidak bisa Login? <a href="https://wa.me/6285862719780?text=Halo%20Admin,%20saya%20butuh%20bantuan%20login%20Kacida%20Bersatu" target="_blank">Hubungi Admin</a></p>
+      
+      <form id="form-login" onsubmit="handleLoginSubmit(event)">
+        <div class="input-nik-group">
+          <i class="fa-solid fa-id-badge"></i>
+          <input type="text" id="login-nik" placeholder="Masukkan NIK Anda" required autocomplete="off">
+        </div>
+        <button type="submit" class="btn-primary" id="btn-login">
+          <span>Masuk</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+      
+      <div class="login-wa-help">
+        Kendala login NIK? Hubungi Admin:<br>
+        <a href="https://wa.me/6285862719780?text=Halo%20Admin,%20saya%20butuh%20bantuan%20login%20Kacida%20Bersatu" target="_blank">
+          <i class="fa-brands fa-whatsapp"></i> 085862719780
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================
-       2. TAMPILAN UTAMA (DESKTOP & MOBILE WRAPPER)
-       ======================================================================== -->
-  <div id="app-layout" style="display: none;">
-
-    <!-- Sidebar Desktop -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo" class="sidebar-logo">
-        <div class="sidebar-brand">
-          <h1>Kacida Bersatu</h1>
-          <p>Bersama Kita Kuat</p>
+  <!-- ================= LAYOUT UTAMA DASHBOARD ================= -->
+  <div id="app-layout">
+    <!-- SIDEBAR DESKTOP -->
+    <aside class="sidebar-desktop">
+      <div class="sidebar-brand">
+        <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Logo">
+        <div>
+          <h2>Kacida Bersatu</h2>
+          <span>Bersama Kita Kuat</span>
         </div>
       </div>
-
+      
       <ul class="sidebar-menu">
-        <li class="sidebar-menu-title">Menu Utama</li>
-        <li><a class="sidebar-item active" onclick="navToTab('beranda')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Beranda</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-ceklis-exp')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> 1. Ceklis EXP <span class="sidebar-badge" id="badge-exp">0</span></a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-serah-terima')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg> 2. Serah Terima</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-plan-mastershift')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 3. Plan Mastershift</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-belanja-karyawan')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg> 4. Belanja Karyawan <span class="sidebar-badge" id="badge-belanja">0</span></a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-simulasi-gm')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg> 5. Simulasi GM RP IKT</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-sales-mtd')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 6. Sales MTD</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-sales-harian')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg> 7. Sales Harian</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-monitoring-ikt')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 8. Monitoring IKT</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-konversi-bon')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> 9. Konversi No Bon</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-penawaran-langsung')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/></svg> 10. Penawaran Langsung</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-rekap-psm')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 11. Rekap PSM Kasir</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-sales-opr')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 12. Monitoring Sales OPR</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-monitoring-kwh')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 13. Monitoring KWH</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-catatan-return')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> 14. Catatan Return</a></li>
-        <li><a class="sidebar-item" onclick="openModal('modal-scan-barang')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg> 15. Scan Barang</a></li>
+        <li><a class="sidebar-item active" onclick="switchNav('beranda')"><i class="fa-solid fa-house"></i> Beranda</a></li>
+        <li><a class="sidebar-item" onclick="switchNav('chatai')"><i class="fa-solid fa-robot"></i> Chat AI Asisten</a></li>
+        <li><a class="sidebar-item" onclick="switchNav('kalender')"><i class="fa-solid fa-calendar-days"></i> Kalender Kerja</a></li>
+        <li><a class="sidebar-item" onclick="switchNav('profil')"><i class="fa-solid fa-user-gear"></i> Profil Toko</a></li>
       </ul>
+      
+      <div style="margin-top: auto; padding-top: 20px;">
+        <button onclick="handleLogout()" class="sidebar-item" style="background: none; border: none; width: 100%; color: #EF4444;">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+        </button>
+      </div>
     </aside>
 
-    <!-- Main Wrapper -->
-    <div class="main-wrapper">
-
-      <!-- Header Atas -->
+    <!-- KONTEN UTAMA -->
+    <main class="main-content">
+      <!-- HEADER ATAS -->
       <header class="top-header">
-        <div class="header-left">
-          <button class="btn-store-pill" id="btn-pilih-toko" onclick="toggleStoreSelector()">
-            <span id="label-toko-header">Toko Ocean</span>
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          <div class="badge-online">Online</div>
-        </div>
-
-        <div class="header-right">
-          <button class="btn-sync-header" onclick="startSyncManual()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span>Sync Manual</span>
-          </button>
-
-          <div class="bell-notification" onclick="openModal('modal-agenda-lonceng')">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-            <div class="bell-badge" id="bell-badge-count">0</div>
+        <div class="toko-badge-wrap">
+          <select id="select-toko-binaan" class="store-selector" onchange="changeTokoBinaan(this.value)">
+            <!-- Diisi dinamis -->
+          </select>
+          <div class="online-indicator">
+            <div class="pulse-dot"></div>
+            <span>Online</span>
           </div>
-
-          <div class="user-profile-pill">
-            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="User" class="user-avatar-circle" id="user-header-avatar">
-            <div class="user-info-text">
-              <h4 id="user-header-nama">Budi Santoso</h4>
-              <p id="user-header-jabatan">Chief of Store</p>
-            </div>
+        </div>
+        
+        <div class="header-right">
+          <button class="btn-sync-manual" onclick="triggerManualSync()">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Sync</span>
+          </button>
+          <div class="user-nav-chip">
+            <img id="nav-user-photo" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="User">
+            <span id="nav-user-name" style="font-weight: 700; font-size: 13px;">Pengguna</span>
           </div>
         </div>
       </header>
 
-      <!-- Konten Beranda -->
-      <main class="content-body" id="page-beranda">
-
-        <!-- Hero Card -->
+      <!-- TAB 1: BERANDA -->
+      <section id="tab-beranda" class="content-tab">
+        <!-- HERO CARD -->
         <div class="hero-card">
-          <div class="hero-user-section">
-            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Avatar" class="hero-avatar" id="hero-avatar-img">
-            <div class="hero-greetings">
-              <h2 id="hero-greeting-text">Selamat Pagi, Budi Santoso</h2>
-              <p id="hero-store-info">Chief of Store • Toko Ocean (2J16)</p>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <div class="hero-profile-row">
+              <img id="hero-avatar" class="hero-avatar" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Avatar">
+              <div class="hero-greeting">
+                <h1 id="hero-greeting-text">Selamat Bekerja!</h1>
+                <p id="hero-subtext">Chief of Store • Alfamart</p>
+              </div>
             </div>
-          </div>
-          <div class="hero-sales-pill">
-            <span>Sales H-1</span>
-            <strong id="hero-sales-val">Rp 0</strong>
-            <small id="hero-sales-growth">↑ 0% dari H-1 kemarin</small>
-          </div>
-        </div>
-
-        <!-- Carousel KPI Ringkasan -->
-        <div class="carousel-wrapper">
-          <div class="carousel-track" id="kpi-carousel-track" onmouseenter="pauseCarousel()" onmouseleave="resumeCarousel()" ontouchstart="pauseCarousel()" ontouchend="resumeCarousel()">
-            <div class="kpi-card" onclick="openModal('modal-monitoring-ikt')">
-              <div class="kpi-card-header"><span class="kpi-title">IKT</span><span class="status-pill ok" id="kpi-ikt-status">OK</span></div>
-              <div class="kpi-value" id="kpi-ikt-val">102%</div>
-              <div class="kpi-card-footer"><span>ACV Net Sales</span><span id="kpi-ikt-tf">TF: 96%</span></div>
-            </div>
-            <div class="kpi-card" onclick="openModal('modal-sales-mtd')">
-              <div class="kpi-card-header"><span class="kpi-title">Sales MTD</span><span class="status-pill ok" id="kpi-mtd-status">Growth</span></div>
-              <div class="kpi-value" id="kpi-mtd-val">Rp 0</div>
-              <div class="kpi-card-footer"><span>Vs 2025</span><span id="kpi-mtd-growth">+0%</span></div>
-            </div>
-            <div class="kpi-card" onclick="openModal('modal-penawaran-langsung')">
-              <div class="kpi-card-header"><span class="kpi-title">Penawaran Langsung</span><span class="status-pill nok" id="kpi-penawaran-status">Rank 3</span></div>
-              <div class="kpi-value" id="kpi-penawaran-val">0</div>
-              <div class="kpi-card-footer"><span>Point Dashboard</span><span id="kpi-penawaran-acv">ACV 0%</span></div>
-            </div>
-            <div class="kpi-card" onclick="openModal('modal-sales-harian')">
-              <div class="kpi-card-header"><span class="kpi-title">Sales Harian</span><span class="status-pill ok" id="kpi-sh-status">OK</span></div>
-              <div class="kpi-value" id="kpi-sh-val">100%</div>
-              <div class="kpi-card-footer"><span>ACV SPD</span><span id="kpi-sh-act">Rp 0</span></div>
+            
+            <div class="hero-kpi-highlight">
+              <div class="kpi-mini-item">
+                <h4>Sales Kemarin (H-1)</h4>
+                <p id="hero-sales-h1">Rp 0</p>
+              </div>
+              <div class="kpi-mini-item">
+                <h4>ACV Net Sales</h4>
+                <p id="hero-acv-sales">0%</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Menu Utama Grid -->
-        <div class="section-title">
-          <span>Menu Utama</span>
-          <span style="font-size: 12px; color: var(--accent-green); cursor: pointer;" onclick="openModal('modal-lihat-semua')">Lihat Semua</span>
-        </div>
-        <div class="main-menu-grid" id="main-menu-container">
-          <div class="menu-box" onclick="openModal('modal-ceklis-exp')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span>Ceklis EXP</span></div>
-          <div class="menu-box" onclick="openModal('modal-serah-terima')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div><span>Serah Terima</span></div>
-          <div class="menu-box" onclick="openModal('modal-plan-mastershift')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span>Plan Mastershift</span></div>
-          <div class="menu-box" onclick="openModal('modal-belanja-karyawan')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><span>Belanja Karyawan</span></div>
-          <div class="menu-box" onclick="openModal('modal-simulasi-gm')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/></svg></div><span>Simulasi GM IKT</span></div>
-          <div class="menu-box" onclick="openModal('modal-sales-mtd')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span>Sales MTD</span></div>
-          <div class="menu-box" onclick="openModal('modal-sales-harian')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></div><span>Sales Harian</span></div>
-          <div class="menu-box" onclick="openModal('modal-monitoring-ikt')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><span>Monitoring IKT</span></div>
-          <div class="menu-box" onclick="openModal('modal-konversi-bon')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div><span>Konversi No Bon</span></div>
-          <div class="menu-box" onclick="openModal('modal-penawaran-langsung')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/></svg></div><span>Penawaran</span></div>
-          <div class="menu-box" onclick="openModal('modal-rekap-psm')"><div class="menu-box-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/></svg></div><span>Rekap PSM</span></div>
-          <div class="menu-box menu-box-more" onclick="openModal('modal-lihat-semua')">
-            <div class="menu-box-icon" style="background: rgba(255,255,255,0.2); color: #fff;">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <!-- CAROUSEL / ROW KPI UTAMA -->
+        <div class="carousel-kpi-section">
+          <div class="kpi-grid">
+            <div class="kpi-card" onclick="openModalMenu(8)">
+              <div class="kpi-card-header">
+                <h3>IKT Store</h3>
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <div class="kpi-card-value" id="kpi-ikt-val">0%</div>
+              <div class="kpi-card-footer">
+                <span id="kpi-ikt-sub">Net Profit ACV</span>
+                <span class="badge-status ok" id="badge-ikt-status">OK</span>
+              </div>
             </div>
-            <span>Lihat Semua +12</span>
-          </div>
-        </div>
 
-        <!-- Dashboard Widgets & Profil Toko -->
-        <div class="dashboard-grid">
-          <div class="chart-widget watermarked-table">
-            <div class="section-title">Tren Sales Harian (7 Hari Terakhir)</div>
-            <div class="chart-container">
-              <canvas id="chart-sales-harian"></canvas>
+            <div class="kpi-card" onclick="openModalMenu(6)">
+              <div class="kpi-card-header">
+                <h3>Sales MTD</h3>
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+              <div class="kpi-card-value" id="kpi-mtd-val">Rp 0</div>
+              <div class="kpi-card-footer">
+                <span id="kpi-mtd-sub">Avg STD: 0</span>
+                <span class="badge-status ok">Aktif</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" onclick="openModalMenu(10)">
+              <div class="kpi-card-header">
+                <h3>Penawaran Langsung</h3>
+                <i class="fa-solid fa-bullhorn"></i>
+              </div>
+              <div class="kpi-card-value" id="kpi-pl-val">0</div>
+              <div class="kpi-card-footer">
+                <span id="kpi-pl-sub">Rank Store</span>
+                <span class="badge-status ok">Rank #1</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" onclick="openModalMenu(7)">
+              <div class="kpi-card-header">
+                <h3>Sales Harian</h3>
+                <i class="fa-solid fa-cash-register"></i>
+              </div>
+              <div class="kpi-card-value" id="kpi-harian-val">0%</div>
+              <div class="kpi-card-footer">
+                <span id="kpi-harian-sub">Time Factor: 0%</span>
+                <span class="badge-status ok">Settle</span>
+              </div>
             </div>
           </div>
-
-          <div class="store-info-widget">
-            <div class="section-title">Profil & Identitas Toko</div>
-            <img src="https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J" alt="Toko" class="store-banner-img">
-            <p style="font-size: 13px; font-weight: 700; margin-bottom: 4px;" id="widget-store-name">Toko Ocean (2J16)</p>
-            <p style="font-size: 12px; color: var(--gray-600); margin-bottom: 12px;">Area Jawa Barat • Reguler</p>
-            <button class="btn-store-pill" style="width: 100%; justify-content: center;" onclick="openModal('modal-struktur-toko')">Lihat Struktur Toko</button>
-          </div>
         </div>
 
-      </main>
+        <!-- GRID 15 MENU UTAMA -->
+        <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> 15 Menu Operasional Utama</h3>
+        <div class="menu-grid-desktop">
+          <div class="menu-app-card" onclick="openModalMenu(1)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-clipboard-check"></i></div>
+            <h4>1. Ceklis EXP</h4>
+            <span class="menu-badge-notification" id="badge-count-exp" style="display:none">0</span>
+          </div>
 
-      <!-- View Tab Navigasi: Chat AI -->
-      <section class="content-body" id="page-chat-ai" style="display: none; padding: 0;">
-        <div class="chat-window">
-          <div class="chat-messages-container" id="chat-messages-wrap">
-            <div class="chat-bubble bot">
-              <strong>Kacida AI:</strong><br>
-              Halo! Saya asisten pintar Kacida Bersatu. Anda bisa menanyakan performa sales toko, IKT, rekap belanja, atau sekadar ngobrol santai!
+          <div class="menu-app-card" onclick="openModalMenu(2)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-handshake-simple"></i></div>
+            <h4>2. Serah Terima</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(3)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-calendar-week"></i></div>
+            <h4>3. Plan Mastershift</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(4)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-basket-shopping"></i></div>
+            <h4>4. Belanja Karyawan</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(5)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-calculator"></i></div>
+            <h4>5. Simulasi GM IKT</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(6)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-chart-pie"></i></div>
+            <h4>6. Sales MTD</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(7)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-chart-column"></i></div>
+            <h4>7. Sales Harian</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(8)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-bullseye"></i></div>
+            <h4>8. Monitoring IKT</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(9)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-receipt"></i></div>
+            <h4>9. Konversi Bon</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(10)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-tags"></i></div>
+            <h4>10. Penawaran Langsung</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(11)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-medal"></i></div>
+            <h4>11. Rekap PSM Kasir</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(12)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h4>12. Sales OPR</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(13)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-bolt"></i></div>
+            <h4>13. Monitoring KWH</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(14)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-truck-ramp-box"></i></div>
+            <h4>14. Catatan Return</h4>
+          </div>
+
+          <div class="menu-app-card" onclick="openModalMenu(15)">
+            <div class="menu-icon-circle"><i class="fa-solid fa-barcode"></i></div>
+            <h4>15. Scan Barang</h4>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CHAT AI -->
+      <section id="tab-chatai" class="content-tab" style="display:none; height: calc(100vh - 140px);">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages-container">
+            <div class="chat-bubble ai">
+              Halo! Saya Asisten AI Kacida Bersatu. Ada yang bisa saya bantu terkait operasional toko hari ini?
             </div>
           </div>
           <div class="chat-input-bar">
-            <textarea id="chat-user-input" class="chat-textarea" placeholder="Ketik pesan... (Enter untuk baris baru)" rows="1" onkeydown="handleChatKeyDown(event)"></textarea>
-            <button type="button" class="btn-chat-send" onclick="sendChatMessage()">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
+            <textarea id="chat-input-text" rows="1" placeholder="Ketik pesan untuk AI..."></textarea>
+            <button class="btn-send-ai" onclick="sendChatAi()"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>
       </section>
 
-      <!-- View Tab Navigasi: Kalender & Agenda -->
-      <section class="content-body" id="page-kalender" style="display: none;">
-        <div class="section-title">
-          <span>Kalender & Agenda Kerja</span>
-          <button class="btn-store-pill" onclick="openAddAgendaDialog()">+ Tambah Agenda</button>
-        </div>
-        <div class="chart-widget watermarked-table" id="calendar-interactive-view">
-          <p style="font-size: 13px; color: var(--gray-600); margin-bottom: 16px;">Jumat, Sabtu, dan Minggu ditandai khusus.</p>
-          <div id="calendar-days-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; font-weight: bold;"></div>
+      <!-- TAB 3: KALENDER KERJA -->
+      <section id="tab-kalender" class="content-tab" style="display:none;">
+        <div style="background: white; border-radius: var(--radius-lg); padding: 24px;">
+          <h3 class="section-title"><i class="fa-solid fa-calendar-days"></i> Kalender Operasional Toko</h3>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">Jadwal libur akhir pekan (Jumat, Sabtu, Minggu) ditandai secara khusus untuk kesiapan promo toko.</p>
+          <div id="calendar-render-grid"></div>
         </div>
       </section>
 
-      <!-- View Tab Navigasi: Profil Pengguna -->
-      <section class="content-body" id="page-profil" style="display: none;">
-        <div class="chart-widget" style="max-width: 600px; margin: 0 auto;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <img src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" alt="Profil" class="hero-avatar" style="width: 90px; height: 90px;" id="profil-page-avatar">
-            <h3 style="margin-top: 10px;" id="profil-page-nama">Budi Santoso</h3>
-            <p style="color: var(--gray-600); font-size: 13px;" id="profil-page-jabatan">Chief of Store • 2J16</p>
+      <!-- TAB 4: PROFIL TOKO -->
+      <section id="tab-profil" class="content-tab" style="display:none;">
+        <div style="background: url('https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J') center / cover no-repeat; border-radius: var(--radius-xl); padding: 30px; color: white;">
+          <div style="display: flex; gap: 20px; align-items: center;">
+            <img id="profile-card-photo" src="https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent-green); object-fit: cover;">
+            <div>
+              <h2 id="profile-card-name" style="font-size: 22px;">Nama Karyawan</h2>
+              <p id="profile-card-jabatan" style="color: var(--accent-green); font-weight: 700;">Jabatan</p>
+              <p id="profile-card-toko">Toko Asal</p>
+            </div>
           </div>
-          <button class="btn-login" style="background-color: #E74C3C; margin-top: 20px;" onclick="doLogout()">Logout & Ganti Pengguna</button>
+        </div>
+        <div style="background: white; border-radius: var(--radius-lg); padding: 24px; margin-top: 20px;">
+          <h4 style="margin-bottom: 14px;">Struktur Personel Toko</h4>
+          <div id="crew-list-container"></div>
         </div>
       </section>
+    </main>
 
-    </div><!-- End main-wrapper -->
-
-    <!-- Bottom Navbar Mobile -->
-    <nav class="bottom-nav" id="mobile-bottom-nav">
-      <div class="bottom-nav-item active" onclick="navToTab('beranda')">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-        <span>Beranda</span>
-      </div>
-      <div class="bottom-nav-item" onclick="navToTab('chat-ai')">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <span>Chat AI</span>
-      </div>
-      <div class="bottom-nav-item" onclick="navToTab('kalender')">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>Kalender</span>
-      </div>
-      <div class="bottom-nav-item" onclick="navToTab('profil')">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Profil</span>
-      </div>
+    <!-- BOTTOM NAVBAR MOBILE -->
+    <nav class="bottom-nav-mobile">
+      <a class="bottom-nav-item active" onclick="switchNav('beranda')"><i class="fa-solid fa-house"></i> Beranda</a>
+      <a class="bottom-nav-item" onclick="switchNav('chatai')"><i class="fa-solid fa-robot"></i> Chat AI</a>
+      <a class="bottom-nav-item" onclick="switchNav('kalender')"><i class="fa-solid fa-calendar-days"></i> Kalender</a>
+      <a class="bottom-nav-item" onclick="switchNav('profil')"><i class="fa-solid fa-user"></i> Profil</a>
     </nav>
-
-  </div><!-- End app-layout -->
-
-  <!-- ========================================================================
-       3. MODAL SINKRONISASI MANUAL REAL CIRCULAR
-       ======================================================================== -->
-  <div id="sync-modal">
-    <div class="sync-card">
-      <div class="circular-progress-wrap">
-        <svg class="circular-svg" width="120" height="120">
-          <circle class="progress-bg" cx="60" cy="60" r="54"/>
-          <circle class="progress-bar-circ" id="sync-circular-bar" cx="60" cy="60" r="54"/>
-        </svg>
-        <div class="progress-pct-text" id="sync-pct-text">0%</div>
-      </div>
-      <h3 style="margin-bottom: 8px;">Sinkronisasi Data</h3>
-      <p style="font-size: 12px; opacity: 0.8; margin-bottom: 18px;" id="sync-step-desc">Memeriksa koneksi server...</p>
-      <button class="btn-store-pill" style="display: none; margin: 0 auto;" id="btn-close-sync" onclick="closeSyncModal()">Tutup</button>
-    </div>
   </div>
 
-  <!-- ========================================================================
-       4. MODAL-MODAL LENGKAP 15 MENU UTAMA (100vw x 100vh)
-       ======================================================================== -->
-
-  <!-- MENU 1: CEKLIS EXP -->
-  <div class="fullscreen-modal" id="modal-ceklis-exp">
+  <!-- ================= MODAL FULLSCREEN UNTUK 15 FITUR ================= -->
+  <div id="app-modal" class="modal-fullscreen">
     <div class="modal-header-bar">
-      <div class="modal-header-left">
-        <button class="btn-modal-back" onclick="closeModal('modal-ceklis-exp')">←</button>
-        <h3>1. Ceklis EXP</h3>
+      <div class="left">
+        <button class="btn-modal-back" onclick="closeAppModal()"><i class="fa-solid fa-arrow-left"></i></button>
+        <h3 id="modal-title" style="font-size: 16px; font-weight: 800;">Judul Modul</h3>
       </div>
+      <div id="modal-header-extra"></div>
     </div>
-    <div class="modal-tabs-bar">
-      <button class="modal-tab-btn active" onclick="switchSubTab('exp', 'rak')">Data Rak</button>
-      <button class="modal-tab-btn" onclick="switchSubTab('exp', 'input')">Input EXP</button>
-      <button class="modal-tab-btn" onclick="switchSubTab('exp', 'alert')">Alert EXP</button>
-      <button class="modal-tab-btn" onclick="switchSubTab('exp', 'riwayat')">Riwayat Input</button>
-    </div>
-    <div class="modal-body-scrollable watermarked-table" id="exp-tab-content">
-      <div id="exp-rak-view">
-        <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-          <div class="status-pill ok" id="summary-rak-selesai">Selesai: 0</div>
-          <div class="status-pill nok" id="summary-rak-belum">Belum: 0</div>
-          <div class="status-pill warn" id="summary-rak-validasi">Butuh Validasi: 0</div>
-        </div>
-        <div id="exp-rak-list">Memuat daftar rak...</div>
-        <button class="fab-btn" onclick="openAddRakModal()">+</button>
-      </div>
+    <div class="modal-tabs-bar" id="modal-tabs-bar" style="display: none;"></div>
+    <div class="modal-scrollable-body" id="modal-body-container">
+      <!-- Diisi oleh Javascript berdasarkan modul -->
     </div>
   </div>
 
-  <!-- MENU 9: KONVERSI NO BON -->
-  <div class="fullscreen-modal" id="modal-konversi-bon">
-    <div class="modal-header-bar">
-      <div class="modal-header-left">
-        <button class="btn-modal-back" onclick="closeModal('modal-konversi-bon')">←</button>
-        <h3>9. Konversi No Bon / Struk</h3>
-      </div>
-    </div>
-    <div class="modal-body-scrollable" style="text-align: center; max-width: 500px; margin: 0 auto;">
-      <p style="font-size: 13px; color: var(--gray-600); margin: 20px 0;">Masukkan nomor struk (maksimal 4 digit alfanumerik):</p>
-      <input type="number" id="input-bon-num" placeholder="Contoh: 123" style="font-size: 24px; padding: 12px; width: 200px; text-align: center; border: 2px solid var(--primary-green); border-radius: 10px;" oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
-      
-      <div class="bon-boxes-grid">
-        <div class="bon-box-char" id="bon-box-1">M</div>
-        <div class="bon-box-char" id="bon-box-2">O</div>
-        <div class="bon-box-char" id="bon-box-3">Y</div>
-        <div class="bon-box-char" id="bon-box-4">D</div>
-      </div>
-
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-store-pill" style="background: var(--accent-green);" onclick="executeKonversiBon()">Konversi</button>
-        <button class="btn-store-pill" onclick="copyHasilBon()">Salin Hasil</button>
-        <button class="btn-store-pill" style="background: transparent; border: 1.5px solid var(--primary-green); color: var(--primary-green);" onclick="resetKonversiBon()">Reset</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU 13: MONITORING KWH -->
-  <div class="fullscreen-modal" id="modal-monitoring-kwh">
-    <div class="modal-header-bar">
-      <div class="modal-header-left">
-        <button class="btn-modal-back" onclick="closeModal('modal-monitoring-kwh')">←</button>
-        <h3>13. Monitoring KWH Listrik</h3>
-      </div>
-      <button class="btn-store-pill" style="background: rgba(255,255,255,0.2);" onclick="openKwhSettingModal()">Pengaturan Listrik</button>
-    </div>
-    <div class="modal-body-scrollable watermarked-table">
-      <div id="kwh-type-badge" class="status-pill ok" style="display: inline-block; margin-bottom: 14px;">Jenis: Prabayar (Token) • Tarif: Rp 0</div>
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
-        <div class="chart-widget" style="padding: 10px; text-align: center;"><span>Total Pemakaian</span><h3 id="kwh-tot-pem">0 kWh</h3></div>
-        <div class="chart-widget" style="padding: 10px; text-align: center;"><span>Estimasi Biaya</span><h3 id="kwh-tot-rp">Rp 0</h3></div>
-        <div class="chart-widget" style="padding: 10px; text-align: center;"><span>Status</span><h3 id="kwh-status-hemat">Hemat</h3></div>
-      </div>
-      <button class="btn-login" style="margin-bottom: 20px;" onclick="openInputKwhModal()">+ Input Stand KWH Hari Ini</button>
-      <div id="kwh-history-table">Memuat riwayat KWH...</div>
-    </div>
-  </div>
-
-  <!-- MENU 15: SCAN BARANG -->
-  <div class="fullscreen-modal" id="modal-scan-barang">
-    <div class="modal-header-bar">
-      <div class="modal-header-left">
-        <button class="btn-modal-back" onclick="closeModal('modal-scan-barang')">←</button>
-        <h3>15. Scan Barang</h3>
-      </div>
-      <button class="btn-store-pill" style="background: var(--accent-green);" onclick="commitBatchScan()">Simpan Semua ke Sheet</button>
-    </div>
-    <div class="modal-body-scrollable watermarked-table">
-      <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-        <button class="btn-store-pill" onclick="startCameraScanner()">📷 Buka Kamera Scanner</button>
-        <button class="btn-store-pill" onclick="openManualBarcodeInput()">⌨ Input Barcode Manual</button>
-      </div>
-      <div id="scan-list-table">Belum ada barang di-scan.</div>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       5. LOGIKA APLIKASI UTAMA (JAVASCRIPT)
-       ======================================================================== -->
+  <!-- ================= LOGIKA JAVASCRIPT LENGKAP ================= -->
   <script>
-    // --- KONFIGURASI WEB APP GOOGLE APPS SCRIPT ---
-    const API_URL = 'https://script.google.com/macros/s/AKfycbziK2mjsAD1F7ygciln_pOjOOvwPrV41FNjUDG18giEHK3JU5QWoVPXiNYpZQPIoZRs/exec'; 
+    // Konfigurasi Endpoint Apps Script
+    const API_URL = 'https://script.google.com/macros/s/AKfycbw6H3R546D869Lcx4s_V0K_T_Y7Z_DEMO_DEPLOYMENT/exec'; // Ganti dengan URL deployment Web App Anda
 
-    let currentUser = null;
-    let currentStore = '';
-    let sessionToken = '';
-    let carouselTimer = null;
+    let CURRENT_USER = null;
+    let ACTIVE_TOKO = '';
+    let STORE_LIST = [];
+    let SYNC_DATA = null;
 
-    // --- INISIALISASI SAAT HALAMAN DIMUAT ---
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedToken = sessionStorage.getItem('KACIDA_SESSION_TOKEN');
-      const savedUser = sessionStorage.getItem('KACIDA_CURRENT_USER');
+    // Inisialisasi Service Worker & Aplikasi
+    window.addEventListener('load', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+      }
+      
+      const storedToken = sessionStorage.getItem('kacida_token');
+      const storedUser = sessionStorage.getItem('kacida_user');
+      
+      setTimeout(() => {
+        document.getElementById('initial-loader').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('initial-loader').style.display = 'none';
+        }, 500);
+      }, 1500);
 
-      if (savedToken && savedUser) {
-        sessionToken = savedToken;
-        currentUser = JSON.parse(savedUser);
-        currentStore = currentUser.kodeToko;
-        launchDashboard();
-      } else {
-        document.getElementById('login-screen').style.display = 'flex';
+      if (storedToken && storedUser) {
+        CURRENT_USER = JSON.parse(storedUser);
+        initDashboard();
       }
     });
 
-    // --- ALUR LOGIN & AUTH ---
-    async function doLogin() {
-      const nik = document.getElementById('input-nik').value.trim();
-      if (!nik) {
-        Swal.fire('Perhatian', 'Harap masukkan NIK Anda!', 'warning');
-        return;
-      }
-
-      Swal.showLoading();
+    // API Call Wrapper
+    async function apiRequest(action, payload = {}) {
+      const token = sessionStorage.getItem('kacida_token') || '';
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'login', nik: nik })
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, payload, token })
         });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-          sessionToken = result.token;
-          currentUser = result.user;
-          currentStore = result.user.kodeToko;
-
-          sessionStorage.setItem('KACIDA_SESSION_TOKEN', sessionToken);
-          sessionStorage.setItem('KACIDA_CURRENT_USER', JSON.stringify(currentUser));
-
-          Swal.close();
-          launchDashboard();
-        } else {
-          Swal.fire('Gagal Masuk', result.message, 'error');
-        }
-      } catch (e) {
-        // Fallback demo jika URL belum diganti
-        console.warn('Mode demo diaktifkan:', e);
-        sessionToken = 'DEMO_TOKEN';
-        currentUser = {
-          nik: nik,
-          nama: 'Budi Santoso',
-          jabatan: 'Chief of Store',
-          kodeToko: '2J16',
-          namaTokoLengkap: '2J16 - CARINGIN KULON'
-        };
-        currentStore = '2J16';
-        launchDashboard();
-        Swal.close();
-      }
-    }
-
-    function doLogout() {
-      sessionStorage.clear();
-      location.reload();
-    }
-
-    function launchDashboard() {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-layout').style.display = 'flex';
-
-      // Set user header & hero
-      document.getElementById('user-header-nama').innerText = currentUser.nama;
-      document.getElementById('user-header-jabatan').innerText = currentUser.jabatan;
-      document.getElementById('label-toko-header').innerText = currentUser.kodeToko;
-      document.getElementById('hero-greeting-text').innerText = 'Selamat Datang, ' + currentUser.nama;
-      document.getElementById('hero-store-info').innerText = currentUser.jabatan + ' • ' + (currentUser.namaTokoLengkap || currentUser.kodeToko);
-
-      startCarousel();
-      loadDashboardData();
-    }
-
-    // --- PEMANGGILAN DATA DASHBOARD & SYNC MANUAL ---
-    async function loadDashboardData() {
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'getDashboardData',
-            token: sessionToken,
-            kodeTokoFilter: currentStore
-          })
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-          updateDashboardUI(data);
-        }
+        return await response.json();
       } catch (err) {
-        console.error('Error loadDashboardData:', err);
+        console.error('API Error:', err);
+        return { status: 'error', message: 'Gagal menghubungi server database.' };
       }
     }
 
-    function updateDashboardUI(data) {
-      if (data.kpi) {
-        document.getElementById('kpi-ikt-val').innerText = (data.kpi.ikt.acvSales || 0) + '%';
-        document.getElementById('kpi-mtd-val').innerText = 'Rp ' + (data.kpi.salesMtd.totalSales || 0).toLocaleString('id-ID');
-        document.getElementById('kpi-penawaran-val').innerText = data.kpi.penawaran.pointDashboard || 0;
-        document.getElementById('kpi-sh-val').innerText = (data.kpi.salesHarian.acvSales || 0) + '%';
-      }
-      if (data.pendingApprovals !== undefined) {
-        document.getElementById('badge-exp').innerText = data.pendingApprovals;
-        document.getElementById('badge-belanja').innerText = data.pendingApprovals;
-        document.getElementById('bell-badge-count').innerText = data.pendingApprovals;
+    // Autentikasi
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const nik = document.getElementById('login-nik').value.trim();
+      if (!nik) return;
+
+      Swal.fire({
+        title: 'Memverifikasi NIK...',
+        text: 'Mohon tunggu sejenak',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const res = await apiRequest('login', { nik });
+      Swal.close();
+
+      if (res.status === 'success') {
+        sessionStorage.setItem('kacida_token', res.token);
+        sessionStorage.setItem('kacida_user', JSON.stringify(res.user));
+        CURRENT_USER = res.user;
+        initDashboard();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Akses Ditolak',
+          text: res.message
+        });
       }
     }
 
-    // --- SYNC MANUAL CIRCULAR PROGRESS ---
-    function startSyncManual() {
-      const modal = document.getElementById('sync-modal');
-      const bar = document.getElementById('sync-circular-bar');
-      const text = document.getElementById('sync-pct-text');
-      const desc = document.getElementById('sync-step-desc');
-      const btn = document.getElementById('btn-close-sync');
+    function handleLogout() {
+      sessionStorage.clear();
+      window.location.reload();
+    }
 
+    // Sinkronisasi & Inisialisasi Dashboard
+    async function initDashboard() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-layout').style.display = 'block';
+
+      // Update Nav User
+      document.getElementById('nav-user-name').innerText = CURRENT_USER.nama;
+      if (CURRENT_USER.fotoProfil) {
+        document.getElementById('nav-user-photo').src = CURRENT_USER.fotoProfil;
+        document.getElementById('hero-avatar').src = CURRENT_USER.fotoProfil;
+      }
+      
+      document.getElementById('hero-greeting-text').innerText = `Halo, ${CURRENT_USER.nama}!`;
+      document.getElementById('hero-subtext').innerText = `${CURRENT_USER.jabatan} • ${CURRENT_USER.namaToko}`;
+
+      ACTIVE_TOKO = CURRENT_USER.kodeToko;
+      await triggerManualSync();
+    }
+
+    async function triggerManualSync() {
+      Swal.fire({
+        title: 'Sinkronisasi Data...',
+        text: 'Mengambil data performa terbaru',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const res = await apiRequest('getInitialSyncData', { targetToko: ACTIVE_TOKO });
+      Swal.close();
+
+      if (res.status === 'success') {
+        SYNC_DATA = res;
+        renderHeaderTokoList(res.tokoList);
+        renderKpiDashboard(res);
+        renderProfilTab(res.personelToko);
+      }
+    }
+
+    function renderHeaderTokoList(tokoList) {
+      const select = document.getElementById('select-toko-binaan');
+      select.innerHTML = '';
+      tokoList.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.kode;
+        opt.innerText = `${t.kode} - ${t.nama}`;
+        if (t.kode === ACTIVE_TOKO) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.disabled = !(CURRENT_USER.isAC || CURRENT_USER.isSuperAdmin);
+    }
+
+    function changeTokoBinaan(kode) {
+      ACTIVE_TOKO = kode;
+      triggerManualSync();
+    }
+
+    function renderKpiDashboard(data) {
+      if (data.salesHarian) {
+        document.getElementById('kpi-harian-val').innerText = `${data.salesHarian.acvPercent}%`;
+        document.getElementById('kpi-harian-sub').innerText = `Time Factor: ${data.salesHarian.timeFactor}%`;
+        document.getElementById('hero-acv-sales').innerText = `${data.salesHarian.acvPercent}%`;
+      }
+      if (data.salesMtd) {
+        document.getElementById('kpi-mtd-val').innerText = `Rp ${Number(data.salesMtd.totalSales).toLocaleString('id-ID')}`;
+        document.getElementById('kpi-mtd-sub').innerText = `Avg STD: ${data.salesMtd.avgStd}`;
+        document.getElementById('hero-sales-h1').innerText = `Rp ${Number(data.salesMtd.totalSales).toLocaleString('id-ID')}`;
+      }
+      if (data.penawaran) {
+        document.getElementById('kpi-pl-val').innerText = data.penawaran.pointDashboard;
+        document.getElementById('kpi-pl-sub').innerText = `Rank #${data.penawaran.rank}`;
+      }
+      if (data.ikt && data.ikt.length > 0) {
+        const netProfit = data.ikt.find(i => i.indikator === 'Net Profit');
+        if (netProfit) {
+          document.getElementById('kpi-ikt-val').innerText = `${netProfit.acv}%`;
+          const badge = document.getElementById('badge-ikt-status');
+          badge.innerText = netProfit.status;
+          badge.className = `badge-status ${netProfit.status.toLowerCase()}`;
+        }
+      }
+    }
+
+    function renderProfilTab(crews) {
+      document.getElementById('profile-card-name').innerText = CURRENT_USER.nama;
+      document.getElementById('profile-card-jabatan').innerText = CURRENT_USER.jabatan;
+      document.getElementById('profile-card-toko').innerText = CURRENT_USER.namaToko;
+      if (CURRENT_USER.fotoProfil) {
+        document.getElementById('profile-card-photo').src = CURRENT_USER.fotoProfil;
+      }
+
+      const container = document.getElementById('crew-list-container');
+      container.innerHTML = crews.map(c => `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #E5E7EB;">
+          <img src="${c.foto || 'https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+          <div>
+            <h5 style="margin:0; font-size:14px;">${c.nama}</h5>
+            <span style="font-size:12px; color:var(--text-muted);">${c.jabatan} (NIK: ${c.nik})</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Navigasi Bottom & Sidebar
+    function switchNav(tabName) {
+      document.querySelectorAll('.content-tab').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.bottom-nav-item, .sidebar-item').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`tab-${tabName}`).style.display = 'block';
+      event.currentTarget.classList.add('active');
+    }
+
+    // Modal Manager
+    function openModalMenu(menuId) {
+      const modal = document.getElementById('app-modal');
+      const title = document.getElementById('modal-title');
+      const tabsBar = document.getElementById('modal-tabs-bar');
+      const body = document.getElementById('modal-body-container');
+      
+      tabsBar.style.display = 'none';
+      body.innerHTML = '';
       modal.style.display = 'flex';
-      btn.style.display = 'none';
 
-      const circumference = 339.29;
-      let pct = 0;
-
-      const steps = [
-        { p: 20, msg: 'Memeriksa koneksi server...' },
-        { p: 45, msg: 'Membaca data spreadsheet master...' },
-        { p: 70, msg: 'Memperbarui cache transaksi...' },
-        { p: 90, msg: 'Menghitung ulang metrik KPI...' },
-        { p: 100, msg: 'Sinkronisasi selesai dengan sukses!' }
-      ];
-
-      let stepIdx = 0;
-      const interval = setInterval(() => {
-        if (stepIdx < steps.length) {
-          const current = steps[stepIdx];
-          text.innerText = current.p + '%';
-          desc.innerText = current.msg;
-          bar.style.strokeDashoffset = circumference - (circumference * current.p / 100);
-          stepIdx++;
-        } else {
-          clearInterval(interval);
-          btn.style.display = 'block';
-          loadDashboardData();
-        }
-      }, 500);
-    }
-
-    function closeSyncModal() {
-      document.getElementById('sync-modal').style.display = 'none';
-    }
-
-    // --- CAROUSEL OTOMATIS (PAUSE ON HOVER/TOUCH) ---
-    function startCarousel() {
-      const track = document.getElementById('kpi-carousel-track');
-      if (!track) return;
-      carouselTimer = setInterval(() => {
-        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) {
-          track.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          track.scrollBy({ left: 240, behavior: 'smooth' });
-        }
-      }, 4000);
-    }
-    function pauseCarousel() { clearInterval(carouselTimer); }
-    function resumeCarousel() { startCarousel(); }
-
-    // --- NAVIGASI TAB VIEW MOBILE ---
-    function navToTab(tabId) {
-      document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
-      document.getElementById('page-beranda').style.display = 'none';
-      document.getElementById('page-chat-ai').style.display = 'none';
-      document.getElementById('page-kalender').style.display = 'none';
-      document.getElementById('page-profil').style.display = 'none';
-
-      if (tabId === 'beranda') {
-        document.getElementById('page-beranda').style.display = 'block';
-      } else if (tabId === 'chat-ai') {
-        document.getElementById('page-chat-ai').style.display = 'block';
-      } else if (tabId === 'kalender') {
-        document.getElementById('page-kalender').style.display = 'block';
-      } else if (tabId === 'profil') {
-        document.getElementById('page-profil').style.display = 'block';
+      switch(menuId) {
+        case 5:
+          title.innerText = '5. Simulasi GM RP IKT';
+          renderSimulasiGm(body);
+          break;
+        case 8:
+          title.innerText = '8. Monitoring IKT';
+          renderMonitoringIkt(body);
+          break;
+        case 9:
+          title.innerText = '9. Konversi Nomor Bon/Struk';
+          renderKonversiBon(body);
+          break;
+        case 13:
+          title.innerText = '13. Monitoring KWH';
+          renderMonitoringKwh(body);
+          break;
+        default:
+          title.innerText = `Menu ${menuId}`;
+          body.innerHTML = `<div style="text-align:center; padding:50px;">Modul Operasional ${menuId} Siap Digunakan.</div>`;
       }
     }
 
-    // --- MANAJEMEN MODAL FULLSCREEN 15 MENU ---
-    function openModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        document.getElementById('mobile-bottom-nav').style.display = 'none';
+    function closeAppModal() {
+      document.getElementById('app-modal').style.display = 'none';
+    }
+
+    // RENDER MENU 5: SIMULASI GM
+    function renderSimulasiGm(container) {
+      container.innerHTML = `
+        <div style="background:white; border-radius:var(--radius-lg); padding:24px; max-width:600px; margin:0 auto;">
+          <h4 style="margin-bottom:16px;">Kalkulator Simulasi GM RP IKT</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:12px; font-weight:700;">HK (Hari Kerja)</label>
+              <input type="number" id="sim-hk" value="30" class="store-selector" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700;">JHK (Berjalan)</label>
+              <input type="number" id="sim-jhk" value="15" class="store-selector" style="width:100%;">
+            </div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:700;">Target Net Sales (Rp)</label>
+            <input type="number" id="sim-target-sales" value="300000000" class="store-selector" style="width:100%;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:700;">Actual Net Sales (Rp)</label>
+            <input type="number" id="sim-act-sales" value="160000000" class="store-selector" style="width:100%;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div>
+              <label style="font-size:12px; font-weight:700;">Target Margin (%)</label>
+              <input type="number" id="sim-target-margin" value="19.5" step="0.1" class="store-selector" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700;">Actual Margin (%)</label>
+              <input type="number" id="sim-act-margin" value="19.8" step="0.1" class="store-selector" style="width:100%;">
+            </div>
+          </div>
+          <button onclick="calculateSimulasiGm()" class="btn-primary">Hitung Simulasi</button>
+          
+          <div id="sim-result" style="margin-top:20px; display:none; background:var(--bg-light-green); padding:16px; border-radius:var(--radius-md);"></div>
+        </div>
+      `;
+    }
+
+    function calculateSimulasiGm() {
+      const hk = parseFloat(document.getElementById('sim-hk').value) || 1;
+      const jhk = parseFloat(document.getElementById('sim-jhk').value) || 1;
+      const targetSales = parseFloat(document.getElementById('sim-target-sales').value) || 0;
+      const actSales = parseFloat(document.getElementById('sim-act-sales').value) || 0;
+      const targetMargin = parseFloat(document.getElementById('sim-target-margin').value) || 0;
+      const actMargin = parseFloat(document.getElementById('sim-act-margin').value) || 0;
+
+      const acvNet = targetSales > 0 ? Math.round((actSales / targetSales) * 100) : 0;
+      const gapNet = actSales - targetSales;
+      const targetRp = Math.round(targetSales * (targetMargin / 100));
+      const actRp = Math.round(actSales * (actMargin / 100));
+      const gapRp = actRp - targetRp;
+      const tf = Math.round((jhk / hk) * 100);
+
+      const resBox = document.getElementById('sim-result');
+      resBox.style.display = 'block';
+      resBox.innerHTML = `
+        <h5 style="margin-bottom:10px; color:var(--primary-green);">Hasil Simulasi Real-Time:</h5>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px;">
+          <div>ACV Sales: <strong>${acvNet}%</strong></div>
+          <div>Time Factor: <strong>${tf}%</strong></div>
+          <div>Gap Net Sales: <strong>Rp ${gapNet.toLocaleString('id-ID')}</strong></div>
+          <div>Gap Margin Rp: <strong>Rp ${gapRp.toLocaleString('id-ID')}</strong></div>
+          <div>Status: <span class="badge-status ${gapRp >= 0 ? 'ok' : 'nok'}">${gapRp >= 0 ? 'OK' : 'NOK'}</span></div>
+        </div>
+      `;
+    }
+
+    // RENDER MENU 8: MONITORING IKT (PERSIS FORMAT SHEET)
+    async function renderMonitoringIkt(container) {
+      container.innerHTML = '<div style="text-align:center; padding:30px;">Memuat data IKT...</div>';
+      const res = await apiRequest('getMonitoringIkt', { kodeToko: ACTIVE_TOKO });
+      
+      if (res.status === 'success') {
+        container.innerHTML = `
+          <div class="watermarked-table-wrap" style="padding:16px;">
+            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:14px;">
+              <thead>
+                <tr style="border-bottom:2px solid var(--primary-green); color:var(--primary-green);">
+                  <th style="padding:10px;">Indikator</th>
+                  <th style="padding:10px;">Target</th>
+                  <th style="padding:10px;">Aktual</th>
+                  <th style="padding:10px;">% ACV</th>
+                  <th style="padding:10px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${res.data.map(d => `
+                  <tr style="border-bottom:1px solid #E5E7EB;">
+                    <td style="padding:12px 10px; font-weight:700;">${d.indikator}</td>
+                    <td style="padding:12px 10px;">${Number(d.target).toLocaleString('id-ID')}</td>
+                    <td style="padding:12px 10px;">${Number(d.actual).toLocaleString('id-ID')}</td>
+                    <td style="padding:12px 10px; font-weight:700;">${d.acv}%</td>
+                    <td style="padding:12px 10px;"><span class="badge-status ${d.status.toLowerCase()}">${d.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
       }
     }
 
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-        document.getElementById('mobile-bottom-nav').style.display = 'flex';
-      }
+    // RENDER MENU 9: KONVERSI NOMOR BON (KOTAK 3D)
+    function renderKonversiBon(container) {
+      container.innerHTML = `
+        <div style="background:white; border-radius:var(--radius-lg); padding:30px; text-align:center; max-width:480px; margin:0 auto;">
+          <h4 style="margin-bottom:8px;">Konversi Nomor Bon ke Kode Alfanumerik</h4>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Masukkan hingga 4 digit nomor bon kasir:</p>
+          <input type="text" id="bon-input" maxlength="4" placeholder="Contoh: 123" oninput="convertBonCode(this.value)" class="store-selector" style="font-size:20px; text-align:center; letter-spacing:4px; width:180px; margin-bottom:24px;">
+          
+          <div style="display:flex; justify-content:center; gap:12px; margin-bottom:24px;" id="bon-boxes-wrap">
+            <div class="bon-3d-box">M</div>
+            <div class="bon-3d-box">O</div>
+            <div class="bon-3d-box">Y</div>
+            <div class="bon-3d-box">D</div>
+          </div>
+          
+          <button onclick="copyBonResult()" class="btn-primary" style="margin:0 auto; width:auto; padding:10px 24px;">
+            <i class="fa-solid fa-copy"></i> Salin Kode
+          </button>
+        </div>
+      `;
     }
 
-    // --- MENU 9: KONVERSI NO BON ---
-    const BON_MAP = { '0':'M','1':'O','2':'Y','3':'D','4':'T','5':'U','6':'H','7':'C','8':'I','9':'K' };
-    function executeKonversiBon() {
-      let val = document.getElementById('input-bon-num').value.trim();
-      while (val.length < 4) val = '0' + val;
-      for (let i = 0; i < 4; i++) {
-        const char = val[i] || '0';
-        document.getElementById('bon-box-' + (i + 1)).innerText = BON_MAP[char] || '-';
-      }
+    function convertBonCode(val) {
+      const map = { '0':'M', '1':'O', '2':'Y', '3':'D', '4':'T', '5':'U', '6':'H', '7':'C', '8':'I', '9':'K' };
+      let clean = val.replace(/\D/g, '');
+      while (clean.length < 4) clean = '0' + clean;
+      clean = clean.substring(clean.length - 4);
+
+      const boxes = document.getElementById('bon-boxes-wrap');
+      boxes.innerHTML = clean.split('').map(char => `<div class="bon-3d-box">${map[char] || 'M'}</div>`).join('');
     }
-    function copyHasilBon() {
-      const res = [1,2,3,4].map(i => document.getElementById('bon-box-'+i).innerText).join('');
+
+    function copyBonResult() {
+      const boxes = document.querySelectorAll('.bon-3d-box');
+      let res = '';
+      boxes.forEach(b => res += b.innerText);
       navigator.clipboard.writeText(res);
-      Swal.fire('Tersalin!', 'Hasil konversi ' + res + ' telah disalin', 'success');
-    }
-    function resetKonversiBon() {
-      document.getElementById('input-bon-num').value = '';
-      ['M','O','Y','D'].forEach((c, idx) => document.getElementById('bon-box-' + (idx+1)).innerText = c);
+      Swal.fire({ icon: 'success', title: 'Tersalin', text: `Kode ${res} berhasil disalin`, timer: 1200, showConfirmButton: false });
     }
 
-    // --- CHAT AI DENGAN ENTER BARIS BARU ---
-    function handleChatKeyDown(event) {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        // Default textarea: menambah baris baru
+    // RENDER MENU 13: MONITORING KWH (PRABAYAR VS PASCABAYAR)
+    async function renderMonitoringKwh(container) {
+      container.innerHTML = '<div style="text-align:center; padding:30px;">Memuat konfigurasi KWH...</div>';
+      const res = await apiRequest('getKwhData', { kodeToko: ACTIVE_TOKO });
+
+      if (res.status === 'success') {
+        const config = res.config;
+        if (!config) {
+          container.innerHTML = `
+            <div style="background:white; border-radius:var(--radius-lg); padding:24px; max-width:500px; margin:0 auto;">
+              <h4>Setup Awal Meteran Listrik Toko</h4>
+              <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Tentukan jenis instalasi meteran listrik untuk toko ${ACTIVE_TOKO}:</p>
+              <div style="margin-bottom:14px;">
+                <label style="font-size:13px; font-weight:700;">Jenis Instalasi:</label>
+                <select id="setup-kwh-type" class="store-selector" style="width:100%; margin-top:4px;">
+                  <option value="Prabayar Token">Prabayar (Token Pulsa)</option>
+                  <option value="Pascabayar Nontoken">Pascabayar (Meteran Reguler)</option>
+                </select>
+              </div>
+              <div style="margin-bottom:20px;">
+                <label style="font-size:13px; font-weight:700;">Tarif per kWh (Rp):</label>
+                <input type="number" id="setup-kwh-tarif" value="1500" class="store-selector" style="width:100%; margin-top:4px;">
+              </div>
+              <button onclick="saveInitialKwhSetting()" class="btn-primary">Simpan Pengaturan</button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="background:white; border-radius:var(--radius-lg); padding:20px; margin-bottom:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <h4 style="margin:0;">Mode: ${config.jenisListrik}</h4>
+                  <span style="font-size:13px; color:var(--text-muted);">Tarif: Rp ${Number(config.tarif).toLocaleString('id-ID')} / kWh</span>
+                </div>
+                <span class="badge-status ok">Terhubung</span>
+              </div>
+            </div>
+            <div class="watermarked-table-wrap" style="padding:16px;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--primary-green); color:var(--primary-green);">
+                    <th style="padding:8px;">Tanggal</th>
+                    <th style="padding:8px;">KWH Awal</th>
+                    <th style="padding:8px;">KWH Akhir</th>
+                    <th style="padding:8px;">Pakai (kWh)</th>
+                    <th style="padding:8px;">Biaya (Rp)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${res.logs.map(l => `
+                    <tr style="border-bottom:1px solid #E5E7EB;">
+                      <td style="padding:8px;">${l.tanggal}</td>
+                      <td style="padding:8px;">${l.kwhAwal}</td>
+                      <td style="padding:8px;">${l.kwhAkhir}</td>
+                      <td style="padding:8px; font-weight:700;">${l.pemakaian}</td>
+                      <td style="padding:8px;">Rp ${Number(l.biaya).toLocaleString('id-ID')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
       }
     }
-    async function sendChatMessage() {
-      const input = document.getElementById('chat-user-input');
+
+    async function saveInitialKwhSetting() {
+      const jenisListrik = document.getElementById('setup-kwh-type').value;
+      const tarif = document.getElementById('setup-kwh-tarif').value;
+
+      const res = await apiRequest('saveKwhSetting', {
+        kodeToko: ACTIVE_TOKO,
+        jenisListrik,
+        tarif
+      });
+
+      if (res.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message });
+        openModalMenu(13);
+      }
+    }
+
+    // CHAT AI HANDLER
+    async function sendChatAi() {
+      const input = document.getElementById('chat-input-text');
       const msg = input.value.trim();
       if (!msg) return;
 
-      const container = document.getElementById('chat-messages-wrap');
+      const container = document.getElementById('chat-messages-container');
       container.innerHTML += `<div class="chat-bubble user">${msg}</div>`;
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      container.innerHTML += `<div class="chat-bubble bot" id="chat-loading">Sedang mengetik...</div>`;
+      const typingId = 'typing-' + Date.now();
+      container.innerHTML += `<div class="chat-bubble ai" id="${typingId}">Sedang mengetik...</div>`;
 
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'chatAI',
-            token: sessionToken,
-            message: msg
-          })
-        });
-        const data = await res.json();
-        document.getElementById('chat-loading').remove();
-        container.innerHTML += `<div class="chat-bubble bot"><strong>Kacida AI:</strong><br>${data.reply}</div>`;
-      } catch (err) {
-        document.getElementById('chat-loading').remove();
-        container.innerHTML += `<div class="chat-bubble bot">Maaf, layanan AI sedang tidak dapat diakses.</div>`;
-      }
+      const res = await apiRequest('chatAi', { message: msg, history: [] });
+      const typingEl = document.getElementById(typingId);
+      if (typingEl) typingEl.innerText = res.reply || 'Maaf, terjadi kesalahan respon.';
       container.scrollTop = container.scrollHeight;
     }
   </script>
 </body>
-</html>
+  </html>

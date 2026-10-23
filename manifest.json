@@ -1,21 +1,21 @@
 {
-  "name": "Kacida Bersatu - Portal Performa & Operasional Retail",
-  "short_name": "KacidaBersatu",
-  "description": "Portal Performa & Operasional Retail Modern untuk Toko Alfamart",
+  "name": "Kacida Bersatu — Portal Performa & Operasional Retail",
+  "short_name": "Kacida Bersatu",
+  "description": "Portal Performa & Operasional Retail Modern, Cepat, dan Terintegrasi",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0A4D3C",
-  "theme_color": "#0A4D3C",
   "orientation": "portrait-primary",
+  "background_color": "#0D6A40",
+  "theme_color": "#0D6A40",
   "icons": [
     {
-      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR=s192",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR",
+      "src": "https://lh3.googleusercontent.com/d/15CaPCEZgcdzO_xf7r2HSimuW5I1KnJIR=s512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

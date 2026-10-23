@@ -1,62 +1,72 @@
-const CACHE_NAME = 'kacida-bersatu-v2.4.0';
+const CACHE_NAME = 'kacida-bersatu-v1.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './styles.css',
+  './Styles.css',
   './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/sweetalert2@11',
   'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js',
-  'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://unpkg.com/html5-qrcode'
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(STATIC_ASSETS).catch(err => {
+        console.warn('Cache initial assets partially loaded:', err);
+      });
+    })
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(keys => {
       return Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // Jangan cache request API Google Apps Script dan Groq AI
-  if (requestUrl.hostname.includes('script.google.com') ||
-      requestUrl.hostname.includes('api.groq.com') ||
-      event.request.method !== 'GET') {
-    return event.respondWith(fetch(event.request));
+self.addEventListener('fetch', event => {
+  // Hanya intercept GET request statis, biarkan POST API langsung tembus ke server Apps Script
+  if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
+    return;
   }
 
-  // Network First dengan Fallback ke Cache untuk aset statis
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
+        // Fetch fresh copy in background (Stale-While-Revalidate)
+        fetch(event.request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse));
+          }
+        }).catch(() => {});
+        return cachedResponse;
+      }
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
         }
-        return networkResponse;
-      })
-      .catch(() => caches.match(event.request))
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      }).catch(() => {
+        if (event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('./index.html');
+        }
+      });
+    })
   );
 });

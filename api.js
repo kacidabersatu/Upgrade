@@ -1,7 +1,6 @@
 /**
  * KACIDA BERSATU - Frontend Engine
- * File: api.js
- * Deskripsi: API Client Layer via fetch() text/plain ke Google Apps Script Web App
+ * File: api.js (FIXED)
  */
 
 let APP_CONFIG = null;
@@ -14,7 +13,6 @@ async function loadConfig() {
     return APP_CONFIG;
   } catch (error) {
     console.error('Gagal memuat config.json:', error);
-    // Fallback default
     APP_CONFIG = {
       apiUrl: 'https://script.google.com/macros/s/AKfycbxYOUR_DEPLOYMENT_ID/exec',
       assets: {
@@ -54,17 +52,18 @@ async function callApi(action, data = {}, method = 'GET', showLoading = false) {
     let options = {};
 
     if (method.toUpperCase() === 'GET') {
-      const queryParams = new URLSearchParams({ action, ...data }).toString();
+      const queryParams = new URLSearchParams({ ...data, action }).toString();
       url += (url.includes('?') ? '&' : '?') + queryParams;
       options = { method: 'GET' };
     } else {
-      // POST dengan text/plain payload untuk bypass preflight CORS GAS
+      // PERBAIKAN: Memastikan properti 'action' selalu berada di akhir agar tidak tertimpa oleh isi 'data'
+      const payloadBody = { ...data, action: action };
       options = {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         },
-        body: JSON.stringify({ action, ...data })
+        body: JSON.stringify(payloadBody)
       };
     }
 
@@ -81,12 +80,16 @@ async function callApi(action, data = {}, method = 'GET', showLoading = false) {
   } catch (err) {
     if (showLoading) Swal.close();
     console.error(`API Error [${action}]:`, err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Kendala Sistem',
-      text: err.message || 'Tidak dapat terhubung ke server.',
-      confirmButtonColor: '#059669'
-    });
+    
+    // Jangan munculkan alert pop-up mengganggu jika hanya kegagalan log aktivitas background
+    if (action !== 'logActivity' && action !== 'trackMenuClick') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Kendala Sistem',
+        text: err.message || 'Tidak dapat terhubung ke server.',
+        confirmButtonColor: '#059669'
+      });
+    }
     throw err;
   }
 }

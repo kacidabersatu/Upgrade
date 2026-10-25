@@ -1,0 +1,16 @@
+{
+  "apiUrl": "https://script.google.com/macros/s/AKfycbxYOUR_DEPLOYMENT_ID/exec",
+  "assets": {
+    "loginBackground": "13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9",
+    "logoLoading": "1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-",
+    "watermark": "1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V",
+    "storeHeader": "1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J",
+    "heroBackground": "16LWQVS2khktL1miWFSAzMnHU_tf0blDa"
+  },
+  "app": {
+    "name": "KACIDA BERSATU",
+    "version": "1.0.0",
+    "slogan": "Bersama Kita Kuat",
+    "supportPhone": "085852719780"
+  }
+}

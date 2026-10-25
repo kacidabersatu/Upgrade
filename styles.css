@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary-emerald: #059669;
+  --dark-emerald: #064e3b;
+  --accent-red: #e11d48;
+  --accent-yellow: #f59e0b;
+  --bg-soft: #f8fafc;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-soft);
+  color: #1e293b;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Glassmorphism Card Effect */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Watermark Tabel Transparan Sesuai Drive Asset ID */
+.table-watermark-container {
+  position: relative;
+  background-color: #ffffff;
+}
+
+.table-watermark-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://lh3.googleusercontent.com/d/1dROWFJnnEIzxJeEJlpmsMkih9ppnGy7V');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 260px auto;
+  opacity: 0.045;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Animasi Pulsing Warning untuk NSB / OOS */
+@keyframes warning-pulse {
+  0%, 100% {
+    background-color: rgba(225, 29, 72, 0.15);
+    border-color: rgba(225, 29, 72, 0.5);
+  }
+  50% {
+    background-color: rgba(225, 29, 72, 0.35);
+    border-color: rgba(225, 29, 72, 1);
+  }
+}
+
+.pulsing-danger {
+  animation: warning-pulse 1.8s infinite ease-in-out;
+}
+
+/* Horizontal Scrollbar Halus */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Responsivitas Frame Desktop vs HP */
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  }
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+  body {
+    padding-bottom: 84px; /* Space untuk floating bottom nav */
+  }
+}

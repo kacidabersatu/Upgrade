@@ -2875,12 +2875,19 @@
     /**
      * INITIALISASI SAAT APLIKASI PERTAMA KALI DIBUKA
      */
-    document.addEventListener("DOMContentLoaded", () => {
+    function startApp() {
       initTheme();
       loadStoredStoreConfig();
       checkSavedSession();
       setupPwaServiceWorker();
-    });
+    }
+
+    // Jalankan segera tanpa menunggu jika DOM sudah siap
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startApp);
+    } else {
+      startApp();
+    }
 
     function showLoading(text = "Memproses...") {
       const el = document.getElementById("appLoadingOverlay");
@@ -3003,15 +3010,17 @@
     }
 
     function checkSavedSession() {
-      const rawUser = localStorage.getItem("user_login");
-      if (rawUser && APP_STATE.currentStoreConfig) {
-        try {
+      try {
+        const rawUser = localStorage.getItem("user_login");
+        if (rawUser && APP_STATE.currentStoreConfig) {
           APP_STATE.currentUser = JSON.parse(rawUser);
           showDashboardView();
-        } catch (e) {
+        } else {
+          // Jika belum login, langsung buka form login
           hideLoading();
         }
-      } else {
+      } catch (e) {
+        console.error("Session error:", e);
         hideLoading();
       }
     }
@@ -3070,6 +3079,11 @@
       document.getElementById("loginView").classList.add("hidden");
       populateHeroUserData();
       checkUserRolesVisibility();
+      
+      // WAJIB: Tutup loading screen segera agar dashboard langsung tampil
+      hideLoading();
+
+      // Jalankan sinkronisasi data di background tanpa menghalangi layar
       triggerManualSync(true);
       checkShiftReminder();
     }

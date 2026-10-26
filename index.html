@@ -3303,23 +3303,170 @@
     }
 
     async function loadDashboardQuickKpi() {
-      // Muat Ringkasan Hero, KPI Carousel, dan Grafik Beranda
-      try {
-        const shRes = await callBackend("salesHarian_getData", { selectedStore: APP_STATE.currentStoreConfig.kode });
-        if (shRes.status === "SUCCESS" && shRes.data.length > 0) {
-          const lastDay = shRes.data[shRes.data.length - 1];
-          document.getElementById("heroSalesH1Nominal").innerText = formatRupiah(lastDay.actual);
-          document.getElementById("kpiSalesHarianAcv").innerText = lastDay.target > 0 ? Math.round((lastDay.actual / lastDay.target) * 100) + "%" : "0%";
-          document.getElementById("kpiSalesHarianGap").innerText = formatRupiah(lastDay.gapTarget);
-          renderDashboardSalesChart(shRes.data.slice(-7));
-        }
+      const storeCode = APP_STATE.currentStoreConfig ? APP_STATE.currentStoreConfig.kode : "";
+      if (!storeCode) return;
 
+      // 1. HITUNG TANGGAL H-1 KEMARIN (Karena sales settle malam hari)
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yDay = String(yesterday.getDate()).padStart(2, "0");
+      const yMonth = String(yesterday.getMonth() + 1).padStart(2, "0");
+      const yYear = yesterday.getFullYear();
+      const h1Formatted = `${yDay}/${yMonth}/${yYear}`; // format DD/MM/YYYY
+
+      // A. ISI HERO CARD SALES H-1 & CAROUSEL SALES HARIAN
+      try {
+        const shRes = await callBackend("salesHarian_getData", { selectedStore: storeCode });
+        if (shRes.status === "SUCCESS" && shRes.data && shRes.data.length > 0) {
+          const rows = shRes.data;
+          
+          // Cari baris yang tanggalnya pas dengan H-1 kemarin
+          let h1Data = rows.find(r => String(r.tanggal).includes(h1Formatted));
+          
+          // Fallback: Jika tanggal kemarin belum diinput, ambil data terakhir yang actual > 0
+          if (!h1Data) {
+            const settledRows = rows.filter(r => Number(r.actual) > 0);
+            h1Data = settledRows.length > 0 ? settledRows[settledRows.length - 1] : rows[rows.length - 1];
+          }
+
+          if (h1Data) {
+            const act = Number(h1Data.actual) || 0;
+            const tgt = Number(h1Data.target) || 0;
+            const gap = Number(h1Data.gapTarget) || (act - tgt);
+            const growth = tgt > 0 ? Math.round(((act - tgt) / tgt) * 100) : 0;
+
+            // Masukkan nominal ke Hero Card
+            document.getElementById("heroSalesH1Nominal").innerText = formatRupiah(act);
+            const h1GrowthEl = document.getElementById("heroSalesH1Growth");
+            if (h1GrowthEl) {
+              h1GrowthEl.innerHTML = `
+                <span class="${gap >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-bold">
+                  <i class="fa-solid fa-calendar-check mr-1"></i>${h1Data.tanggal} (${growth >= 0 ? '+' : ''}${growth}% vs target)
+                </span>
+              `;
+            }
+
+            // Masukkan angka ke Carousel KPI (Sales Harian)
+            const acvSalesHarian = tgt > 0 ? Math.round((act / tgt) * 100) : 0;
+            document.getElementById("kpiSalesHarianAcv").innerText = acvSalesHarian + "%";
+            document.getElementById("kpiSalesHarianGap").innerText = formatRupiah(gap);
+            document.getElementById("kpiSalesHarianGap").className = `text-xs font-bold ${gap >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+          }
+
+          renderDashboardSalesChart(rows.slice(-7));
+        }
+      } catch (e) {
+        console.warn("Gagal load Sales H-1:", e);
+      }
+
+      // B. ISI CAROUSEL KPI: IKT SALES
+      try {
+        const iktRes = await callBackend("ikt_getData", { selectedStore: storeCode });
+        if (iktRes.status === "SUCCESS" && iktRes.storeData) {
+          const ikt = iktRes.storeData;
+          const acv = ikt.acvSales || 0;
+          const tf = ikt.timeFaktor || 0;
+          document.getElementById("kpiIktPercent").innerText = acv + "%";
+          const badgeIkt = document.getElementById("kpiIktStatusBadge");
+          if (badgeIkt) {
+            const isOk = acv >= tf;
+            badgeIkt.innerText = isOk ? "OKE" : "NOK";
+            badgeIkt.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${isOk ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950' : 'text-rose-600 bg-rose-50 dark:bg-rose-950'}`;
+          }
+        }
+      } catch (e) {}
+
+      // C. ISI CAROUSEL KPI: SALES MTD
+      try {
+        const mtdRes = await callBackend("salesMtd_getData", { selectedStore: storeCode });
+        if (mtdRes.status === "SUCCESS" && mtdRes.data) {
+          let totalS26 = 0;
+          let totalS25 = 0;
+          mtdRes.data.forEach(r => {
+            totalS26 += Number(r.sales2026) || 0;
+            totalS25 += Number(r.sales2025) || 0;
+          });
+          document.getElementById("kpiSalesMtdTotal").innerText = formatRupiah(totalS26);
+          const growthYoY = totalS25 > 0 ? Math.round(((totalS26 - totalS25) / totalS25) * 100) : 0;
+          const mtdGrowthEl = document.getElementById("kpiSalesMtdGrowth");
+          if (mtdGrowthEl) {
+            mtdGrowthEl.innerText = `${growthYoY >= 0 ? '+' : ''}${growthYoY}%`;
+            mtdGrowthEl.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${growthYoY >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`;
+          }
+        }
+      } catch (e) {}
+
+      // D. ISI CAROUSEL KPI: PENAWARAN LANGSUNG
+      try {
+        const plRes = await callBackend("penawaran_getData", { selectedStore: storeCode });
+        if (plRes.status === "SUCCESS" && plRes.currentStore) {
+          const cs = plRes.currentStore;
+          document.getElementById("kpiPenawaranPoint").innerText = (cs.pointDashboard || 0) + "%";
+          document.getElementById("kpiPenawaranRank").innerText = `Rank #${cs.rank || '--'}`;
+          const acvTotal = cs.totalAcv || 0;
+          const plAcvEl = document.getElementById("kpiPenawaranAcv");
+          if (plAcvEl) {
+            plAcvEl.innerText = acvTotal + "%";
+            plAcvEl.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${acvTotal >= 80 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`;
+          }
+        }
+      } catch (e) {}
+
+      // E. STRUKTUR PERSONEL
+      try {
         const profRes = await callBackend("getProfileAndStructure");
         if (profRes.status === "SUCCESS" && profRes.structure) {
+          APP_STATE.structure = profRes.structure;
           document.getElementById("badgeTotalPersonel").innerText = profRes.structure.length + " Staf";
           renderPersonnelListWidget(profRes.structure);
         }
       } catch (e) {}
+
+      // F. GABUNGKAN MENU DINAMIS DARI SPREADSHEET KE GRID UTAMA
+      await loadAndMergeDynamicMenus();
+    }
+
+    /**
+     * Menampilkan menu dari sheet Menu_Navigasi berdampingan dengan 15 menu utama
+     */
+    async function loadAndMergeDynamicMenus() {
+      try {
+        const res = await callBackend("nav_getMenuNavigasi");
+        if (res.status === "SUCCESS" && res.data) {
+          const grid = document.getElementById("mainMenuGridContainer");
+          if (!grid) return;
+
+          // Bersihkan menu dinamis lama agar tidak ganda saat sync ulang
+          const oldCards = grid.querySelectorAll(".dynamic-menu-card");
+          oldCards.forEach(c => c.remove());
+
+          // Ambil hanya yang statusnya 'Aktif'
+          const activeMenus = res.data.filter(m => String(m.statusTampil).trim().toLowerCase() === "aktif");
+
+          activeMenus.forEach(m => {
+            const card = document.createElement("a");
+            card.href = m.linkTujuan || "#";
+            card.target = "_blank";
+            card.rel = "noopener noreferrer";
+            card.className = "dynamic-menu-card relative cursor-pointer glass-card p-3.5 sm:p-4 rounded-2xl text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-200 group flex flex-col items-center";
+            
+            const iconContent = m.iconUrl 
+              ? `<img src="${m.iconUrl}" class="w-6 h-6 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1160/1160358.png'">`
+              : `<i class="fa-solid fa-arrow-up-right-from-square text-teal-600 text-lg"></i>`;
+
+            card.innerHTML = `
+              <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-600 flex items-center justify-center mb-2 group-hover:scale-110 transition shadow-sm">
+                ${iconContent}
+              </div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">${m.namaMenu}</span>
+              <span class="text-[9px] text-teal-600 font-semibold mt-1">Eksternal</span>
+            `;
+            grid.appendChild(card);
+          });
+        }
+      } catch (e) {
+        console.warn("Gagal memuat menu dinamis:", e);
+      }
     }
 
     function renderDashboardSalesChart(dailyRows) {
@@ -5052,6 +5199,83 @@
     function toggleAllMenusView() {
       // Toggle menu container
       document.getElementById("mainMenuGridContainer").classList.toggle("grid-cols-2");
+    }
+    // --- FUNGSI MODAL TAMBAH PENUGASAN RAK ---
+    function openExpTambahPenugasanModal() {
+      const modal = document.getElementById("modalExpTambahPenugasan");
+      if (modal) {
+        modal.classList.remove("hidden");
+        const rowList = document.getElementById("expPenugasanRowList");
+        if (rowList && rowList.children.length === 0) {
+          addExpPenugasanRow();
+        }
+      }
+    }
+
+    function closeExpTambahPenugasanModal() {
+      const modal = document.getElementById("modalExpTambahPenugasan");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function addExpPenugasanRow() {
+      const c = document.getElementById("expPenugasanRowList");
+      if (!c) return;
+      const div = document.createElement("div");
+      div.className = "grid grid-cols-1 sm:grid-cols-4 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600 items-center";
+      div.innerHTML = `
+        <input type="text" placeholder="No Rak (cth: RAK-01)" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs exp-add-norak font-bold bg-white dark:bg-slate-700">
+        <input type="text" placeholder="Nama Rak (cth: Snack)" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs exp-add-namarak bg-white dark:bg-slate-700">
+        <select class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-semibold exp-add-cat bg-white dark:bg-slate-700">
+          <option value="FOOD">FOOD</option>
+          <option value="NONFOOD">NONFOOD</option>
+        </select>
+        <div class="flex items-center space-x-1">
+          <input type="text" placeholder="Nama PJ Staf" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs exp-add-pj bg-white dark:bg-slate-700">
+          <button type="button" onclick="this.closest('div.grid').remove()" class="text-rose-500 hover:text-rose-700 p-1.5"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+      c.appendChild(div);
+    }
+
+    async function savePenugasanRakBatch() {
+      const rows = document.querySelectorAll("#expPenugasanRowList > div");
+      const items = [];
+      rows.forEach(r => {
+        const noRak = r.querySelector(".exp-add-norak").value.trim();
+        const namaRak = r.querySelector(".exp-add-namarak").value.trim();
+        const category = r.querySelector(".exp-add-cat").value;
+        const pj = r.querySelector(".exp-add-pj").value.trim();
+        if (noRak) {
+          items.push({
+            noRak: noRak,
+            namaRak: namaRak || noRak,
+            category: category,
+            penanggungJawab: pj || (APP_STATE.currentUser ? APP_STATE.currentUser.nama : "Personel"),
+            pjNik: APP_STATE.currentUser ? APP_STATE.currentUser.nik : ""
+          });
+        }
+      });
+
+      if (items.length === 0) {
+        Swal.fire("Perhatian", "Silakan isi minimal 1 data rak.", "warning");
+        return;
+      }
+
+      showLoading("Menyimpan penugasan rak...");
+      try {
+        const res = await callBackend("exp_savePenugasan", { items: items });
+        if (res.status === "SUCCESS") {
+          Swal.fire("Berhasil", "Penugasan rak berhasil disimpan.", "success");
+          closeExpTambahPenugasanModal();
+          loadExpData();
+        } else {
+          Swal.fire("Gagal", res.message, "error");
+        }
+      } catch (e) {
+        Swal.fire("Error", e.message, "error");
+      } finally {
+        hideLoading();
+      }
     }
   </script>
 </body>

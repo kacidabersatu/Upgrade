@@ -2855,12 +2855,18 @@
         else if (BACKEND_FALLBACK_URL) {
           fetch(BACKEND_FALLBACK_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            // GANTI Content-Type menjadi text/plain untuk bypass preflight CORS
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: action, payload: payload, auth: authData })
           })
           .then(res => res.json())
           .then(data => resolve(data))
-          .catch(err => reject(err));
+          .catch(err => {
+            console.error("Fetch Error:", err);
+            hideLoading(); // Pastikan loading tertutup jika ada kendala
+            reject(err);
+          });
+        }
         } else {
           reject(new Error("Backend Google Apps Script tidak terdeteksi."));
         }

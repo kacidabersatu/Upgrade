@@ -242,7 +242,7 @@
   <!-- ========================================================================= -->
   <!-- 3. LAYAR LOGIN UTAMA -->
   <!-- ========================================================================= -->
-  <section id="loginView" class="fixed inset-0 z-[4000] flex items-center justify-center bg-cover bg-center p-4" style="background-image: url('https://drive.google.com/uc?export=view&id=13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+  <section id="loginView" class="fixed inset-0 z-[4000] flex items-center justify-center bg-cover bg-center p-4" style="background-image: url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
     <!-- Overlay gradasi -->
     <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-slate-900/60 to-black/70 backdrop-blur-[2px]"></div>
 
@@ -450,7 +450,7 @@
   <main id="mainAppDashboard" class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 space-y-6 mb-20 md:mb-8">
     
     <!-- HERO CARD -->
-    <div class="relative overflow-hidden rounded-3xl text-white shadow-xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 p-6 sm:p-8" style="background-image: url('https://drive.google.com/uc?export=view&id=16LWQVS2khktL1miWFSAzMnHU_tf0blDa'); background-size: cover; background-position: center;">
+    <div class="relative overflow-hidden rounded-3xl text-white shadow-xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 p-6 sm:p-8" style="background-image: url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa'); background-size: cover; background-position: center;">
       <!-- Overlay transparan halus -->
       <div class="absolute inset-0 bg-emerald-950/75 backdrop-blur-[1px]"></div>
 
@@ -2831,7 +2831,7 @@
       charts: {}
     };
 
-    // Alamat Web App URL jika aplikasi dijalankan di luar iframe GAS
+    // Alamat Web App URL deployment Google Apps Script Anda
     const BACKEND_FALLBACK_URL = "https://script.google.com/macros/s/AKfycbyWUuwexdiTcAmZkTHQI53VoEGg2NL962o4bGYOLnLOX2poMG96RHf3JVn8cONdo_qEFQ/exec";
 
     /**
@@ -2844,30 +2844,29 @@
           targetStoreCode: APP_STATE.currentStoreConfig ? APP_STATE.currentStoreConfig.kode : ""
         };
 
-        // Jika dideploy di Google Apps Script HTML Service
+        // Jika dijalankan di dalam Google Apps Script (HTMLService)
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run
-            .withSuccessHandler(response => resolve(response))
-            .withFailureHandler(error => reject(error))
+            .withSuccessHandler((response) => resolve(response))
+            .withFailureHandler((error) => reject(error))
             .handleRequest({ action: action, payload: payload, auth: authData }, "POST");
         } 
-        // Fallback fetch jika dideploy secara terpisah di GitHub Pages
+        // Fallback fetch jika di-host di GitHub Pages
         else if (BACKEND_FALLBACK_URL) {
           fetch(BACKEND_FALLBACK_URL, {
             method: 'POST',
-            // GANTI Content-Type menjadi text/plain untuk bypass preflight CORS
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: action, payload: payload, auth: authData })
           })
-          .then(res => res.json())
-          .then(data => resolve(data))
-          .catch(err => {
+          .then((res) => res.json())
+          .then((data) => resolve(data))
+          .catch((err) => {
             console.error("Fetch Error:", err);
-            hideLoading(); // Pastikan loading tertutup jika ada kendala
+            hideLoading();
             reject(err);
           });
-        }
         } else {
+          hideLoading();
           reject(new Error("Backend Google Apps Script tidak terdeteksi."));
         }
       });

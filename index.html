@@ -560,6 +560,20 @@
         </div>
       </div>
     </div>
+    <!-- WIDGET ⭐ MENU FAVORIT (SERING DIGUNAKAN) -->
+    <div id="sectionMenuFavorit" class="glass-card p-4 rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-800/40 bg-gradient-to-r from-amber-50/60 to-emerald-50/40 dark:from-slate-800 dark:to-slate-800">
+      <div class="flex items-center justify-between px-1">
+        <div class="flex items-center space-x-2">
+          <span class="text-amber-500 text-sm">⭐</span>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-white">Sering Digunakan (Favorit)</h4>
+        </div>
+        <span class="text-[10px] text-slate-400 font-semibold">Otomatis dari riwayat klik Anda</span>
+      </div>
+      <!-- Daftar Tombol Menu Favorit -->
+      <div id="favoriteMenuListContainer" class="flex flex-wrap gap-2 pt-1">
+        <!-- Diisi otomatis oleh JavaScript -->
+      </div>
+    </div>
 
     <!-- GRID 15 MENU UTAMA DENGAN BADGE NOTIFIKASI AKTUAL -->
     <div id="sectionMenuGrid" class="space-y-3 pt-2">
@@ -785,6 +799,36 @@
   <!-- ========================================================================= -->
   <!-- WADAH MODAL SELURUH 15 FITUR & NAVBAR TAMBAHAN (DILANJUTKAN DI BAGIAN 2 & 3) -->
   <!-- ========================================================================= -->
+  <!-- MODAL LIHAT SEMUA MENU (GRID KOTAK LENGKAP + MENU DINAMIS SPREADSHEET) -->
+  <div id="modalViewAllMenus" class="hidden fixed inset-0 z-[5500] bg-slate-900/80 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
+      <!-- Header Modal -->
+      <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
+        <div>
+          <h3 class="font-extrabold text-base text-slate-800 dark:text-white">Semua Menu & Fitur Portal</h3>
+          <p class="text-xs text-slate-500">15 Menu Utama Retail & Tautan Operasional Spreadsheet</p>
+        </div>
+        <button onclick="closeViewAllMenusModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Konten Grid Kotak -->
+      <div class="p-6 overflow-y-auto space-y-6">
+        <!-- Section Menu Dinamis dari Spreadsheet -->
+        <div>
+          <h4 class="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-3 flex items-center space-x-1.5">
+            <i class="fa-solid fa-cloud-arrow-down"></i>
+            <span>Tautan Menu Dinamis (Sheet: Menu_Navigasi)</span>
+          </h4>
+          <div id="dynamicSpreadsheetGridContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            <!-- Diisi otomatis oleh JavaScript lengkap dengan Icon URL -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div id="modalContainer" class="relative z-50">
     <!-- Bagian 2 & 3 akan menyisipkan form, tabel, filter, dan script interaktif di sini -->
     <!-- ======================================================================= -->
@@ -3079,11 +3123,10 @@
       document.getElementById("loginView").classList.add("hidden");
       populateHeroUserData();
       checkUserRolesVisibility();
-      
-      // WAJIB: Tutup loading screen segera agar dashboard langsung tampil
       hideLoading();
 
-      // Jalankan sinkronisasi data di background tanpa menghalangi layar
+      renderFavoriteMenus(); // <--- TAMBAHKAN BARIS INI
+      
       triggerManualSync(true);
       checkShiftReminder();
     }
@@ -3306,24 +3349,25 @@
       const storeCode = APP_STATE.currentStoreConfig ? APP_STATE.currentStoreConfig.kode : "";
       if (!storeCode) return;
 
-      // 1. HITUNG TANGGAL H-1 KEMARIN (Karena sales settle malam hari)
+      // 1. TENTUKAN BULAN BERJALAN SAAT INI (CONTOH: "OKTOBER")
+      const monthNames = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+      const now = new Date();
+      const currentMonthStr = monthNames[now.getMonth()];
+
+      // 2. TENTUKAN TANGGAL H-1 KEMARIN
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yDay = String(yesterday.getDate()).padStart(2, "0");
       const yMonth = String(yesterday.getMonth() + 1).padStart(2, "0");
       const yYear = yesterday.getFullYear();
-      const h1Formatted = `${yDay}/${yMonth}/${yYear}`; // format DD/MM/YYYY
+      const h1Formatted = `${yDay}/${yMonth}/${yYear}`;
 
-      // A. ISI HERO CARD SALES H-1 & CAROUSEL SALES HARIAN
+      // A. HERO CARD SALES H-1 & CAROUSEL SALES HARIAN
       try {
         const shRes = await callBackend("salesHarian_getData", { selectedStore: storeCode });
         if (shRes.status === "SUCCESS" && shRes.data && shRes.data.length > 0) {
           const rows = shRes.data;
-          
-          // Cari baris yang tanggalnya pas dengan H-1 kemarin
           let h1Data = rows.find(r => String(r.tanggal).includes(h1Formatted));
-          
-          // Fallback: Jika tanggal kemarin belum diinput, ambil data terakhir yang actual > 0
           if (!h1Data) {
             const settledRows = rows.filter(r => Number(r.actual) > 0);
             h1Data = settledRows.length > 0 ? settledRows[settledRows.length - 1] : rows[rows.length - 1];
@@ -3332,10 +3376,9 @@
           if (h1Data) {
             const act = Number(h1Data.actual) || 0;
             const tgt = Number(h1Data.target) || 0;
-            const gap = Number(h1Data.gapTarget) || (act - tgt);
+            const gap = Math.round(Number(h1Data.gapTarget) || (act - tgt));
             const growth = tgt > 0 ? Math.round(((act - tgt) / tgt) * 100) : 0;
 
-            // Masukkan nominal ke Hero Card
             document.getElementById("heroSalesH1Nominal").innerText = formatRupiah(act);
             const h1GrowthEl = document.getElementById("heroSalesH1Growth");
             if (h1GrowthEl) {
@@ -3346,68 +3389,70 @@
               `;
             }
 
-            // Masukkan angka ke Carousel KPI (Sales Harian)
-            const acvSalesHarian = tgt > 0 ? Math.round((act / tgt) * 100) : 0;
-            document.getElementById("kpiSalesHarianAcv").innerText = acvSalesHarian + "%";
+            // Carousel Sales Harian (Persentase & Gap Tanpa Koma Sen)
+            document.getElementById("kpiSalesHarianAcv").innerText = formatPercent(tgt > 0 ? (act / tgt) : 0);
             document.getElementById("kpiSalesHarianGap").innerText = formatRupiah(gap);
             document.getElementById("kpiSalesHarianGap").className = `text-xs font-bold ${gap >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
           }
 
           renderDashboardSalesChart(rows.slice(-7));
         }
-      } catch (e) {
-        console.warn("Gagal load Sales H-1:", e);
-      }
+      } catch (e) {}
 
-      // B. ISI CAROUSEL KPI: IKT SALES
+      // B. CAROUSEL IKT SALES (DIBULATKAN RAPI)
       try {
         const iktRes = await callBackend("ikt_getData", { selectedStore: storeCode });
         if (iktRes.status === "SUCCESS" && iktRes.storeData) {
           const ikt = iktRes.storeData;
-          const acv = ikt.acvSales || 0;
-          const tf = ikt.timeFaktor || 0;
-          document.getElementById("kpiIktPercent").innerText = acv + "%";
+          document.getElementById("kpiIktPercent").innerText = formatPercent(ikt.acvSales);
+          
           const badgeIkt = document.getElementById("kpiIktStatusBadge");
           if (badgeIkt) {
-            const isOk = acv >= tf;
+            const tfVal = parseFloat(ikt.timeFaktor) > 1 ? parseFloat(ikt.timeFaktor) / 100 : parseFloat(ikt.timeFaktor);
+            const acvVal = parseFloat(ikt.acvSales) > 1 ? parseFloat(ikt.acvSales) / 100 : parseFloat(ikt.acvSales);
+            const isOk = acvVal >= tfVal;
             badgeIkt.innerText = isOk ? "OKE" : "NOK";
             badgeIkt.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${isOk ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950' : 'text-rose-600 bg-rose-50 dark:bg-rose-950'}`;
           }
         }
       } catch (e) {}
 
-      // C. ISI CAROUSEL KPI: SALES MTD
+      // C. CAROUSEL SALES MTD (HANYA BULAN BERJALAN SAJA)
       try {
-        const mtdRes = await callBackend("salesMtd_getData", { selectedStore: storeCode });
+        const mtdRes = await callBackend("salesMtd_getData", { selectedStore: storeCode, month: currentMonthStr });
         if (mtdRes.status === "SUCCESS" && mtdRes.data) {
-          let totalS26 = 0;
-          let totalS25 = 0;
+          let totalS26BulanIni = 0;
+          let totalS25BulanIni = 0;
+          
           mtdRes.data.forEach(r => {
-            totalS26 += Number(r.sales2026) || 0;
-            totalS25 += Number(r.sales2025) || 0;
+            totalS26BulanIni += Number(r.sales2026) || 0;
+            totalS25BulanIni += Number(r.sales2025) || 0;
           });
-          document.getElementById("kpiSalesMtdTotal").innerText = formatRupiah(totalS26);
-          const growthYoY = totalS25 > 0 ? Math.round(((totalS26 - totalS25) / totalS25) * 100) : 0;
+
+          document.getElementById("kpiSalesMtdTotal").innerText = formatRupiah(totalS26BulanIni);
+          const growthYoY = totalS25BulanIni > 0 ? Math.round(((totalS26BulanIni - totalS25BulanIni) / totalS25BulanIni) * 100) : 0;
           const mtdGrowthEl = document.getElementById("kpiSalesMtdGrowth");
           if (mtdGrowthEl) {
-            mtdGrowthEl.innerText = `${growthYoY >= 0 ? '+' : ''}${growthYoY}%`;
+            mtdGrowthEl.innerText = `${growthYoY >= 0 ? '+' : ''}${growthYoY}% (${currentMonthStr})`;
             mtdGrowthEl.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${growthYoY >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`;
           }
         }
       } catch (e) {}
 
-      // D. ISI CAROUSEL KPI: PENAWARAN LANGSUNG
+      // D. CAROUSEL PENAWARAN LANGSUNG (DIBULATKAN RAPI)
       try {
         const plRes = await callBackend("penawaran_getData", { selectedStore: storeCode });
         if (plRes.status === "SUCCESS" && plRes.currentStore) {
           const cs = plRes.currentStore;
-          document.getElementById("kpiPenawaranPoint").innerText = (cs.pointDashboard || 0) + "%";
+          // Format persentase Point Dashboard & Total ACV
+          document.getElementById("kpiPenawaranPoint").innerText = formatPercent(cs.pointDashboard);
           document.getElementById("kpiPenawaranRank").innerText = `Rank #${cs.rank || '--'}`;
-          const acvTotal = cs.totalAcv || 0;
+          
           const plAcvEl = document.getElementById("kpiPenawaranAcv");
           if (plAcvEl) {
-            plAcvEl.innerText = acvTotal + "%";
-            plAcvEl.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${acvTotal >= 80 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`;
+            plAcvEl.innerText = formatPercent(cs.totalAcv);
+            const numAcv = parseFloat(cs.totalAcv) <= 1.5 ? parseFloat(cs.totalAcv) * 100 : parseFloat(cs.totalAcv);
+            plAcvEl.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${numAcv >= 80 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`;
           }
         }
       } catch (e) {}
@@ -3421,6 +3466,7 @@
           renderPersonnelListWidget(profRes.structure);
         }
       } catch (e) {}
+    }
 
       // F. GABUNGKAN MENU DINAMIS DARI SPREADSHEET KE GRID UTAMA
       await loadAndMergeDynamicMenus();
@@ -3523,9 +3569,75 @@
     }
 
     // =========================================================================
+    // METADATA & SISTEM MENU FAVORIT (PILIHAN 2)
+    // =========================================================================
+    const MENU_META = {
+      'CEKLIS_EXP': { title: 'Ceklis EXP', icon: 'fa-boxes-packing', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950' },
+      'SERAH_TERIMA': { title: 'Serah Terima', icon: 'fa-handshake-simple', color: 'text-teal-600 bg-teal-100 dark:bg-teal-950' },
+      'TABUNGANKU': { title: 'Tabunganku', icon: 'fa-piggy-bank', color: 'text-sky-600 bg-sky-100 dark:bg-sky-950' },
+      'KAS_AREA': { title: 'Kas Area', icon: 'fa-vault', color: 'text-indigo-600 bg-indigo-100 dark:bg-indigo-950' },
+      'DONASI_AREA': { title: 'Donasi Area', icon: 'fa-hand-holding-heart', color: 'text-violet-600 bg-violet-100 dark:bg-violet-950' },
+      'SIMULASI_IKT': { title: 'Simulasi IKT', icon: 'fa-calculator', color: 'text-fuchsia-600 bg-fuchsia-100 dark:bg-fuchsia-950' },
+      'SALES_MTD': { title: 'Sales MTD', icon: 'fa-chart-line', color: 'text-blue-600 bg-blue-100 dark:bg-blue-950' },
+      'SALES_HARIAN': { title: 'Sales Harian', icon: 'fa-calendar-days', color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-950' },
+      'MONITORING_IKT': { title: 'Monitoring IKT', icon: 'fa-crosshairs', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950' },
+      'KONVERSI_BON': { title: 'Konversi Bon', icon: 'fa-receipt', color: 'text-amber-600 bg-amber-100 dark:bg-amber-950' },
+      'PENAWARAN_LANGSUNG': { title: 'Penawaran Langsung', icon: 'fa-bullhorn', color: 'text-orange-600 bg-orange-100 dark:bg-orange-950' },
+      'REKAP_PSM': { title: 'Rekap PSM', icon: 'fa-cash-register', color: 'text-rose-600 bg-rose-100 dark:bg-rose-950' },
+      'SALES_OPR': { title: 'Sales OPR', icon: 'fa-clock-rotate-left', color: 'text-purple-600 bg-purple-100 dark:bg-purple-950' },
+      'MONITORING_KWH': { title: 'Monitoring KWH', icon: 'fa-bolt', color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-950' },
+      'BANTUAN': { title: 'Bantuan', icon: 'fa-circle-question', color: 'text-slate-600 bg-slate-100 dark:bg-slate-800' }
+    };
+
+    // 1. Rekam jumlah klik menu ke LocalStorage
+    function trackMenuClick(menuKey) {
+      if (!MENU_META[menuKey]) return;
+      try {
+        let clicks = JSON.parse(localStorage.getItem("kacida_menu_clicks") || "{}");
+        clicks[menuKey] = (clicks[menuKey] || 0) + 1;
+        localStorage.setItem("kacida_menu_clicks", JSON.stringify(clicks));
+        renderFavoriteMenus(); // Update tampilan favorit seketika
+      } catch (e) {}
+    }
+
+    // 2. Tampilkan 4-5 menu dengan frekuensi klik tertinggi
+    function renderFavoriteMenus() {
+      const container = document.getElementById("favoriteMenuListContainer");
+      if (!container) return;
+
+      const clicks = JSON.parse(localStorage.getItem("kacida_menu_clicks") || "{}");
+      
+      // Ambil key menu yang sudah pernah diklik dan urutkan dari terbanyak
+      let sortedKeys = Object.keys(clicks).sort((a, b) => clicks[b] - clicks[a]);
+
+      // Jika pengguna baru / belum ada klik, gunakan 4 default populer retail
+      if (sortedKeys.length === 0) {
+        sortedKeys = ['CEKLIS_EXP', 'SERAH_TERIMA', 'SALES_HARIAN', 'MONITORING_IKT'];
+      }
+
+      // Ambil maksimal 5 menu teratas
+      const topFavorites = sortedKeys.slice(0, 5);
+
+      container.innerHTML = topFavorites.map(key => {
+        const item = MENU_META[key];
+        if (!item) return '';
+        return `
+          <button onclick="openMenuModal('${key}')" class="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-200 transition group hover:border-amber-400">
+            <div class="w-6 h-6 rounded-lg ${item.color} flex items-center justify-center text-[11px] group-hover:scale-110 transition">
+              <i class="fa-solid ${item.icon}"></i>
+            </div>
+            <span>${item.title}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
     // MODAL MANAGER & ROUTER (15 MENU)
     // =========================================================================
     function openMenuModal(menuKey) {
+      trackMenuClick(menuKey); // <--- TAMBAHKAN BARIS INI
+      
       // Cek otorisasi khusus Menu 4 Kas Area
       if (menuKey === "KAS_AREA") {
         const u = APP_STATE.currentUser;
@@ -5176,9 +5288,23 @@
     // =========================================================================
     // HELPER FORMATTING
     // =========================================================================
+    // =========================================================================
+    // HELPER FORMATTING (PERSENTASE & RUPIAH RAPI)
+    // =========================================================================
     function formatRupiah(num) {
-      const val = Number(num) || 0;
+      const val = Math.round(Number(num) || 0); // Dibulatkan agar tidak ada koma sen (,18)
       return "Rp " + val.toLocaleString("id-ID");
+    }
+
+    // Helper khusus untuk membulatkan desimal proporsi (0.8657... -> 87%)
+    function formatPercent(val) {
+      if (val === undefined || val === null || val === "" || isNaN(val)) return "0%";
+      let num = parseFloat(val);
+      // Jika bernilai pecahan desimal (misal 0.8657), kalikan 100
+      if (num > 0 && num <= 2.0) {
+        num = num * 100;
+      }
+      return Math.round(num) + "%";
     }
 
     function formatDateIndo(dateObj) {
@@ -5196,9 +5322,57 @@
       document.getElementById("sectionMenuGrid").scrollIntoView({ behavior: 'smooth' });
     }
 
-    function toggleAllMenusView() {
-      // Toggle menu container
-      document.getElementById("mainMenuGridContainer").classList.toggle("grid-cols-2");
+    // =========================================================================
+    // KENDALI MODAL "LIHAT SEMUA MENU"
+    // =========================================================================
+    async function toggleAllMenusView() {
+      const modal = document.getElementById("modalViewAllMenus");
+      if (modal) {
+        modal.classList.remove("hidden");
+        loadSpreadsheetDynamicMenus();
+      }
+    }
+
+    function closeViewAllMenusModal() {
+      const modal = document.getElementById("modalViewAllMenus");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    // Mengambil menu dinamis dari sheet Menu_Navigasi beserta Icon URL
+    async function loadSpreadsheetDynamicMenus() {
+      const c = document.getElementById("dynamicSpreadsheetGridContainer");
+      if (!c) return;
+      c.innerHTML = '<div class="col-span-full text-center py-4 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat menu dinamis...</div>';
+
+      try {
+        const res = await callBackend("nav_getMenuNavigasi");
+        if (res.status === "SUCCESS" && res.data) {
+          const activeMenus = res.data.filter(m => String(m.statusTampil).trim().toLowerCase() === "aktif");
+          
+          if (activeMenus.length === 0) {
+            c.innerHTML = '<div class="col-span-full text-center py-4 text-xs text-slate-400">Tidak ada menu dinamis aktif di sheet Menu_Navigasi.</div>';
+            return;
+          }
+
+          c.innerHTML = activeMenus.map(m => {
+            // Gunakan iconUrl dari kolom spreadsheet
+            const iconImg = m.iconUrl 
+              ? `<img src="${m.iconUrl}" class="w-7 h-7 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1160/1160358.png'">`
+              : `<i class="fa-solid fa-link text-emerald-600 text-lg"></i>`;
+
+            return `
+              <a href="${m.linkTujuan || '#'}" target="_blank" rel="noopener noreferrer" class="glass-card p-3.5 rounded-2xl text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-200 group flex flex-col items-center border border-slate-200 dark:border-slate-700">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mb-2 group-hover:scale-110 transition shadow-sm">
+                  ${iconImg}
+                </div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-clamp-2">${m.namaMenu}</span>
+              </a>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        c.innerHTML = '<div class="col-span-full text-center py-4 text-xs text-rose-500">Gagal memuat menu dari spreadsheet.</div>';
+      }
     }
     // --- FUNGSI MODAL TAMBAH PENUGASAN RAK ---
     function openExpTambahPenugasanModal() {

@@ -3287,33 +3287,43 @@
         }
 
         async function apiCall(action, params = {}) {
-            try {
-                if (typeof google !== "undefined" && google.script && google.script.run) {
-                    return new Promise((resolve, reject) => {
-                        let r = google.script.run.withSuccessHandler(res => resolve(res)).withFailureHandler(err => reject(err));
-                        if (action === "login") r.loginUser(params.nik);
-                        else if (action === "getDashboard") r.getDashboardData(currentNik, selectedKodeTokoAC);
-                        else if (action === "askAI") r.askKacidaAI(currentNik, params.pertanyaan);
-                        else if (action === "getCatatanReturn") r.getCatatanReturnData(params.kodeToko);
-                        else if (action === "getRekapPsm") r.getRekapPsmData(currentNik, params.kodeToko);
-                        else if (action === "getSalesOPR") r.getSalesOPRData(params.kodeToko);
-                        else if (action === "getKwhData") r.getKwhDataStore(params.kodeToko);
-                    });
-                } else {
-                    const url = new URL(SCRIPT_URL);
-                    url.searchParams.append("action", action);
-                    url.searchParams.append("nik", currentNik);
-                    if (selectedKodeTokoAC) url.searchParams.append("kodeToko", selectedKodeTokoAC);
-                    Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
-
-                    const res = await fetch(url);
-                    return await res.json();
+    try {
+        if (typeof google !== "undefined" && google.script && google.script.run) {
+            return new Promise((resolve, reject) => {
+                let r = google.script.run.withSuccessHandler(res => resolve(res)).withFailureHandler(err => reject(err));
+                if (action === "login") r.loginUser(params.nik);
+                else if (action === "getDashboard") r.getDashboardData(params.nik || currentNik, selectedKodeTokoAC);
+                else if (action === "askAI") r.askKacidaAI(params.nik || currentNik, params.pertanyaan);
+                else if (action === "getCatatanReturn") r.getCatatanReturnData(params.kodeToko);
+                else if (action === "getRekapPsm") r.getRekapPsmData(params.nik || currentNik, params.kodeToko);
+                else if (action === "getSalesOPR") r.getSalesOPRData(params.kodeToko);
+                else if (action === "getKwhData") r.getKwhDataStore(params.kodeToko);
+            });
+        } else {
+            const url = new URL(SCRIPT_URL);
+            url.searchParams.append("action", action);
+            
+            // ✅ PRIORITASKAN params.nik (yang diketik saat login), baru fallback ke currentNik
+            const targetNik = params.nik || currentNik || "";
+            url.searchParams.append("nik", targetNik);
+            
+            if (selectedKodeTokoAC) url.searchParams.append("kodeToko", selectedKodeTokoAC);
+            
+            // Masukkan parameter lainnya
+            Object.keys(params).forEach(k => {
+                if (k !== "nik") { // cegah duplikasi
+                    url.searchParams.append(k, params[k]);
                 }
-            } catch(err) {
-                hideLoading();
-                return { status: "offline", message: err.toString() };
-            }
+            });
+
+            const res = await fetch(url);
+            return await res.json();
         }
+    } catch(err) {
+        hideLoading();
+        return { status: "offline", message: err.toString() };
+    }
+}
 
         function trackActivityToSheet(actionName) {
             if (!currentNik) return;

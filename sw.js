@@ -1,10 +1,8 @@
 /**
- * KACIDA BERSATU Service Worker
- * Offline Fast Cache & Asset Proxy (CORS-Safe)
+ * KACIDA BERSATU Service Worker - v3.0 Auto Update
  */
-const CACHE_NAME = 'kacida-static-v2.0';
+const CACHE_NAME = 'kacida-static-v3.0';
 
-// Seluruh aset inti & CDN eksternal tetap dimasukkan lengkap
 const STATIC_ASSETS = [
   './index.html',
   './manifest.json',
@@ -17,66 +15,67 @@ const STATIC_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js'
 ];
 
-// Tahap Install: Cache semua aset secara aman tanpa crash CORS
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Langsung aktif tanpa menunggu browser ditutup
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       for (const url of STATIC_ASSETS) {
         try {
-          // Gunakan no-cors untuk URL pihak ketiga agar tidak diblokir CORS policy
-          const isExternal = url.startsWith('http');
-          const request = new Request(url, { mode: isExternal ? 'no-cors' : 'cors' });
-          const response = await fetch(request);
-          await cache.put(request, response);
+          const req = new Request(url, { mode: url.startsWith('http') ? 'no-cors' : 'cors' });
+          const res = await fetch(req);
+          await cache.put(req, res);
         } catch (err) {
-          // Melewati aset jika jaringan saat build sedang timeout tanpa menggagalkan install SW
-          console.warn('Lewati precache untuk:', url);
+          console.warn('Lewati asset:', url);
         }
       }
     })
   );
-  self.skipWaiting();
 });
 
-// Tahap Aktivasi: Hapus cache versi lama
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key); // Hapus seluruh cache lama secara otomatis
+          }
+        })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Tahap Fetch: Sajikan langsung dari Cache Storage untuk kecepatan 0.1 detik
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Jangan cache panggilan API ke backend Google Apps Script & Google Drive
   const reqUrl = event.request.url;
+  // Jangan halangi panggilan ke backend Google Apps Script & Google Drive
   if (reqUrl.includes('script.google.com') || reqUrl.includes('googleusercontent.com')) {
+    return;
+  }
+
+  // Network First untuk index.html agar perubahan kode selalu termuat langsung
+  if (reqUrl.includes('index.html') || reqUrl.endsWith('/Upgrade/') || reqUrl.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        const resClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        return networkResponse;
+      }).catch(() => caches.match(event.request))
+    );
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        // Izinkan caching untuk respon normal (status 200) maupun opaque response (CDN luar)
+      return cachedResponse || fetch(event.request).then((networkResponse) => {
         if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          const resClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
         }
         return networkResponse;
-      }).catch(() => {
-        return caches.match('./index.html');
       });
-    })
+    }).catch(() => caches.match('./index.html'))
   );
 });

@@ -934,126 +934,136 @@
         <!-- ==================== VIEW 1: BERANDA ==================== -->
         <section id="viewBeranda" class="space-y-6">
 
-          <!-- 1. HERO CARD PERSONIL -->
-          <div class="relative w-full rounded-card overflow-hidden shadow-lg border border-emerald-200 text-white p-5 md:p-6 flex flex-col justify-between min-h-[170px]"
-               style="background-image: linear-gradient(135deg, rgba(6, 95, 70, 0.92) 0%, rgba(5, 150, 105, 0.85) 100%), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa'); background-size: cover; background-position: center;">
+          <!-- 1. HERO CARD PERSONIL (TRANSPARAN KACA ELEGAN + ICON MATA) -->
+          <div class="relative w-full rounded-card overflow-hidden shadow-xl border border-white/20 text-white p-5 md:p-6 flex flex-col justify-between min-h-[185px] bg-cover bg-center"
+               style="background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.75) 100%), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa');">
+            
             <div class="flex items-start justify-between relative z-10">
               <div class="flex items-center space-x-3.5">
                 <img id="heroUserAvatar" src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-"
                      alt="Avatar" class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white/80 shadow-md">
                 <div>
                   <div class="flex items-center space-x-2">
-                    <span id="heroGreeting" class="text-xs text-emerald-200 font-semibold">Selamat Bertugas</span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span id="heroGreeting" class="text-xs text-slate-200 font-semibold drop-shadow">Selamat Bertugas</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   </div>
-                  <h3 id="heroUserName" class="text-lg md:text-xl font-extrabold tracking-tight text-white leading-tight mt-0.5">
-                    Personil Hebat
+                  <h3 id="heroUserName" class="text-lg md:text-xl font-black tracking-tight text-white leading-tight drop-shadow-md">
+                    Personil Toko
                   </h3>
-                  <p id="heroUserJabatan" class="text-xs text-emerald-100 font-medium mt-0.5">
-                    Chief Of Store - Toko
+                  <p id="heroUserJabatan" class="text-xs text-slate-200 font-medium drop-shadow">
+                    -
                   </p>
                 </div>
               </div>
-              <span id="heroCurrentDate" class="text-[10px] md:text-xs font-mono font-bold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
+              <span id="heroCurrentDate" class="text-[10px] md:text-xs font-mono font-bold bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-white shadow-inner">
                 -
               </span>
             </div>
 
-            <!-- Rangkuman Mini Sales H-1 di Hero Card -->
+            <!-- Rangkuman Sales Kemarin (H-1) & Gross Margin Vs Kemarin -->
             <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between relative z-10 text-xs">
-              <div class="flex items-center space-x-2">
-                <div class="w-7 h-7 rounded-lg bg-emerald-500/40 flex items-center justify-center">
-                  <i class="fa-solid fa-chart-line text-xs text-emerald-200"></i>
-                </div>
+              <!-- Sales H-1 dengan Icon Mata -->
+              <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner flex items-center space-x-3">
                 <div>
-                  <span class="text-[10px] text-emerald-200 uppercase tracking-wider block">Sales Kemarin (H-1)</span>
-                  <span id="heroSalesHMin1" class="font-black text-sm md:text-base text-white font-mono">Rp 0</span>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Sales Kemarin (H-1)</span>
+                    <button onclick="toggleSembunyikanSalesHMin1()" title="Sembunyikan / Tampilkan Nominal" class="text-slate-300 hover:text-white p-0.5">
+                      <i id="iconMataSales" class="fa-solid fa-eye text-[11px]"></i>
+                    </button>
+                  </div>
+                  <span id="heroSalesHMin1" class="font-black text-sm md:text-base text-white font-mono block">Rp 0</span>
                 </div>
               </div>
-              <div class="text-right">
-                <span class="text-[10px] text-emerald-200 uppercase tracking-wider block">Gross Margin H-1</span>
-                <span id="heroGmHMin1" class="font-extrabold text-xs md:text-sm text-emerald-300 font-mono">0.00%</span>
+
+              <!-- Gross Margin H-1 dengan Perbandingan vs H-2 -->
+              <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner text-right">
+                <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold block">Gross Margin H-1</span>
+                <div class="flex items-center justify-end space-x-1.5">
+                  <span id="heroGmHMin1" class="font-black text-xs md:text-sm text-emerald-300 font-mono">0.00%</span>
+                  <span id="heroGmDiffBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/20 text-white font-mono">+0.0%</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 2. CAROUSEL AUTO GESER 4 KPI UTAMA -->
-          <div class="relative w-full overflow-hidden">
-            <div id="carouselWrapper" class="flex transition-transform duration-500 ease-out space-x-3.5 py-1">
+          <!-- 2. CAROUSEL AUTO GESER & MANUAL SWIPE 4 KPI UTAMA -->
+          <div class="relative w-full">
+            <div id="carouselWrapper" 
+                 class="flex overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory space-x-3.5 py-1.5 cursor-grab active:cursor-grabbing">
               
-              <!-- Card Carousel 1: IKT -->
+              <!-- Card 1: IKT (Tema Mint Elegan) -->
               <div onclick="bukaModalMenuTerpilih('MONITORING IKT')"
-                   class="min-w-[85%] sm:min-w-[45%] lg:min-w-[24%] bg-white rounded-card p-4 shadow-sm border border-emerald-100 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-emerald-50 to-teal-50/60 rounded-card p-4 shadow-sm border border-emerald-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Indikator IKT</span>
-                  <span class="w-6 h-6 rounded-lg bg-emerald-50 text-brand-primary flex items-center justify-center text-xs">
+                  <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Indikator IKT</span>
+                  <span class="w-7 h-7 rounded-lg bg-emerald-200/60 text-brand-dark flex items-center justify-center text-xs">
                     <i class="fa-solid fa-bullseye"></i>
                   </span>
                 </div>
                 <div>
                   <h4 id="carouselIktAcv" class="text-2xl font-black text-brand-dark font-mono">0%</h4>
-                  <p id="carouselIktKet" class="text-xs font-semibold text-emerald-700 mt-0.5">ACV Sales IKT</p>
+                  <p id="carouselIktKet" class="text-xs font-bold text-emerald-700 mt-0.5">ACV Sales IKT</p>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between text-[11px] font-medium text-slate-500">
+                <div class="mt-3 pt-2 border-t border-emerald-200/60 flex justify-between text-[11px] font-medium text-emerald-800">
                   <span>Target Net Sales</span>
-                  <span id="carouselIktTarget" class="font-bold text-slate-700 font-mono">Rp 0</span>
+                  <span id="carouselIktTarget" class="font-bold font-mono">Rp 0</span>
                 </div>
               </div>
 
-              <!-- Card Carousel 2: Sales MTD -->
+              <!-- Card 2: Sales MTD (Tema Biru Laut) -->
               <div onclick="bukaModalMenuTerpilih('SALES MTD')"
-                   class="min-w-[85%] sm:min-w-[45%] lg:min-w-[24%] bg-white rounded-card p-4 shadow-sm border border-emerald-100 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-blue-50 to-sky-50/60 rounded-card p-4 shadow-sm border border-blue-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales MTD 2026</span>
-                  <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                  <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wider" id="labelMtdBulanBerjalan">Sales MTD</span>
+                  <span class="w-7 h-7 rounded-lg bg-blue-200/60 text-blue-800 flex items-center justify-center text-xs">
                     <i class="fa-solid fa-sack-dollar"></i>
                   </span>
                 </div>
                 <div>
-                  <h4 id="carouselMtdSales" class="text-xl font-black text-slate-800 font-mono truncate">Rp 0</h4>
-                  <p id="carouselMtdGrowth" class="text-xs font-bold text-emerald-600 mt-0.5">Growth vs 2025: +0.0%</p>
+                  <h4 id="carouselMtdSales" class="text-xl font-black text-blue-950 font-mono truncate">Rp 0</h4>
+                  <p id="carouselMtdGrowth" class="text-xs font-bold text-emerald-600 mt-0.5">Growth: +0.0%</p>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between text-[11px] font-medium text-slate-500">
-                  <span>Sales MTD 2025</span>
-                  <span id="carouselMtdSalesLalu" class="font-bold text-slate-700 font-mono">Rp 0</span>
+                <div class="mt-3 pt-2 border-t border-blue-200/60 flex justify-between text-[11px] font-medium text-blue-800">
+                  <span>Sales MTD Lalu</span>
+                  <span id="carouselMtdSalesLalu" class="font-bold font-mono">Rp 0</span>
                 </div>
               </div>
 
-              <!-- Card Carousel 3: Penawaran Langsung -->
+              <!-- Card 3: Penawaran Langsung (Tema Emas Amber) -->
               <div onclick="bukaModalMenuTerpilih('PENAWARAN LANGSUNG')"
-                   class="min-w-[85%] sm:min-w-[45%] lg:min-w-[24%] bg-white rounded-card p-4 shadow-sm border border-emerald-100 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-amber-50 to-yellow-50/60 rounded-card p-4 shadow-sm border border-amber-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Penawaran Langsung</span>
-                  <span class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                  <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Penawaran Langsung</span>
+                  <span class="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-800 flex items-center justify-center text-xs">
                     <i class="fa-solid fa-gift"></i>
                   </span>
                 </div>
                 <div>
-                  <h4 id="carouselPlPoint" class="text-2xl font-black text-slate-800 font-mono">0 Pt</h4>
-                  <p id="carouselPlRank" class="text-xs font-bold text-amber-600 mt-0.5">Rank Toko: -</p>
+                  <h4 id="carouselPlPoint" class="text-2xl font-black text-amber-950 font-mono">0.0%</h4>
+                  <p id="carouselPlRank" class="text-xs font-bold text-amber-700 mt-0.5">Point Dashboard Toko</p>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between text-[11px] font-medium text-slate-500">
-                  <span>ACV PSM</span>
-                  <span id="carouselPlAcvPsm" class="font-bold text-slate-700 font-mono">0%</span>
+                <div class="mt-3 pt-2 border-t border-amber-200/60 flex justify-between text-[11px] font-medium text-amber-800">
+                  <span>Rank Toko</span>
+                  <span id="carouselPlRankSub" class="font-bold font-mono">#0</span>
                 </div>
               </div>
 
-              <!-- Card Carousel 4: Sales Harian -->
+              <!-- Card 4: Sales Harian (Tema Ungu Pastel) -->
               <div onclick="bukaModalMenuTerpilih('SALES HARIAN')"
-                   class="min-w-[85%] sm:min-w-[45%] lg:min-w-[24%] bg-white rounded-card p-4 shadow-sm border border-emerald-100 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-purple-50 to-fuchsia-50/60 rounded-card p-4 shadow-sm border border-purple-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Hari Ini</span>
-                  <span class="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
+                  <span class="text-[11px] font-bold text-purple-900 uppercase tracking-wider">Sales H-1 vs Target</span>
+                  <span class="w-7 h-7 rounded-lg bg-purple-200/60 text-purple-800 flex items-center justify-center text-xs">
                     <i class="fa-solid fa-receipt"></i>
                   </span>
                 </div>
                 <div>
-                  <h4 id="carouselShActual" class="text-xl font-black text-slate-800 font-mono truncate">Rp 0</h4>
-                  <p id="carouselShGap" class="text-xs font-bold text-emerald-600 mt-0.5">Gap Target: Rp 0</p>
+                  <h4 id="carouselShActual" class="text-xl font-black text-purple-950 font-mono truncate">Rp 0</h4>
+                  <p id="carouselShAcvTarget" class="text-xs font-bold text-purple-700 mt-0.5">ACV Target: 0.0%</p>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between text-[11px] font-medium text-slate-500">
-                  <span>OOS Toko</span>
-                  <span id="carouselShOos" class="font-bold text-slate-700 font-mono">0.00%</span>
+                <div class="mt-3 pt-2 border-t border-purple-200/60 flex justify-between text-[11px] font-medium text-purple-800">
+                  <span>Gap Target</span>
+                  <span id="carouselShGap" class="font-bold font-mono">Rp 0</span>
                 </div>
               </div>
 
@@ -1062,9 +1072,9 @@
             <!-- Bullet Indikator Carousel -->
             <div class="flex justify-center space-x-1.5 mt-2">
               <span class="carousel-dot w-2 h-2 rounded-full bg-brand-primary"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-200"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-200"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-200"></span>
+              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
+              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
+              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
             </div>
           </div>
 
@@ -1727,41 +1737,100 @@
       });
     }
 
+    // Helper Parse Tanggal DD/MM/YYYY
+    function parseDateIndo(tglStr) {
+      if (!tglStr) return new Date(0);
+      var parts = String(tglStr).trim().split('/');
+      if (parts.length === 3) {
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+      return new Date(tglStr);
+    }
+
+    // Toggle Sembunyikan Sales H-1
+    var isSalesHMin1Hidden = localStorage.getItem('kacida_hide_sales') === 'true';
+    var rawSalesHMin1Value = 0;
+
+    function toggleSembunyikanSalesHMin1() {
+      isSalesHMin1Hidden = !isSalesHMin1Hidden;
+      localStorage.setItem('kacida_hide_sales', isSalesHMin1Hidden);
+      updateDisplaySalesHMin1();
+    }
+
+    function updateDisplaySalesHMin1() {
+      var el = document.getElementById('heroSalesHMin1');
+      var icon = document.getElementById('iconMataSales');
+      if (isSalesHMin1Hidden) {
+        el.innerText = 'Rp ••••••••';
+        icon.className = 'fa-solid fa-eye-slash text-[11px] text-amber-300';
+      } else {
+        el.innerText = 'Rp ' + Math.round(rawSalesHMin1Value).toLocaleString('id-ID');
+        icon.className = 'fa-solid fa-eye text-[11px] text-white';
+      }
+    }
+
+    // ==================== RENDER SALES HARIAN & GRAFIK 7 HARI ====================
     function renderSalesHarianBeranda(salesRows) {
       if (!salesRows || salesRows.length === 0) return;
 
-      // Urutkan data berdasarkan tanggal
-      var sorted = salesRows.slice();
+      // Urutkan berdasarkan tanggal tertua ke terbaru
+      var sorted = salesRows.slice().sort(function(a, b) {
+        return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
+      });
+
+      // Ambil 7 hari terakhir yang memiliki data
       var last7 = sorted.slice(-7);
 
-      // Ambil H-1 (baris terakhir atau sebelum terakhir)
+      // Data H-1 (baris terakhir yang sudah settle)
       var hMin1 = last7[last7.length - 1] || {};
-      document.getElementById('heroSalesHMin1').innerText = 'Rp ' + Number(hMin1['ACTUAL'] || 0).toLocaleString('id-ID');
-      document.getElementById('heroGmHMin1').innerText = (parseFloat(hMin1['GROSS MARGIN'] || 0)).toFixed(2) + '%';
+      var hMin2 = last7.length >= 2 ? last7[last7.length - 2] : {};
 
-      // Carousel Sales Harian
-      document.getElementById('carouselShActual').innerText = 'Rp ' + Number(hMin1['ACTUAL'] || 0).toLocaleString('id-ID');
-      var gap = Number(hMin1['GAP TARGET'] || 0);
-      document.getElementById('carouselShGap').innerText = (gap >= 0 ? '+Rp ' : '-Rp ') + Math.abs(gap).toLocaleString('id-ID');
-      document.getElementById('carouselShOos').innerText = (parseFloat(hMin1['OOS %'] || 0)).toFixed(2) + '%';
+      rawSalesHMin1Value = parseAngkaIndo(hMin1['ACTUAL']);
+      updateDisplaySalesHMin1();
 
-      // Render Grafik Garis 7 Hari
+      var gmH1 = parseAngkaIndo(hMin1['GROSS MARGIN']);
+      var gmH2 = parseAngkaIndo(hMin2['GROSS MARGIN']);
+      document.getElementById('heroGmHMin1').innerText = gmH1.toFixed(2) + '%';
+
+      var gmDiff = gmH1 - gmH2;
+      var elDiff = document.getElementById('heroGmDiffBadge');
+      if (hMin2 && hMin2['GROSS MARGIN']) {
+        elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2) + '% vs H-2';
+        elDiff.className = gmDiff >= 0
+          ? 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/40 text-emerald-200 font-mono'
+          : 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-red-500/40 text-red-200 font-mono';
+      } else {
+        elDiff.innerText = 'H-1';
+      }
+
+      // Update Carousel Sales Harian (ACV By Target)
+      var targetH1 = parseAngkaIndo(hMin1['TARGET']);
+      var acvH1 = targetH1 > 0 ? ((rawSalesHMin1Value / targetH1) * 100).toFixed(1) : '0.0';
+      document.getElementById('carouselShActual').innerText = 'Rp ' + Math.round(rawSalesHMin1Value).toLocaleString('id-ID');
+      document.getElementById('carouselShAcvTarget').innerText = 'ACV Target: ' + acvH1 + '%';
+
+      var gapH1 = rawSalesHMin1Value - targetH1;
+      var elGap = document.getElementById('carouselShGap');
+      elGap.innerText = (gapH1 >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(gapH1)).toLocaleString('id-ID');
+      elGap.className = gapH1 >= 0 ? 'font-bold font-mono text-purple-950' : 'font-bold font-mono text-red-600';
+
+      // Render Grafik 7 Hari Terakhir
       var labels = [];
       var actualData = [];
       var targetData = [];
       var totalSales7 = 0;
 
       last7.forEach(function(r) {
-        var tgl = String(r['TANGGAL'] || '');
-        labels.push(tgl.substring(0, 5));
-        var act = Number(r['ACTUAL'] || 0);
-        var tgt = Number(r['TARGET'] || 0);
+        var tglStr = String(r['TANGGAL'] || '');
+        labels.push(tglStr.substring(0, 5)); // Menampilkan DD/MM
+        var act = parseAngkaIndo(r['ACTUAL']);
+        var tgt = parseAngkaIndo(r['TARGET']);
         actualData.push(act);
         targetData.push(tgt);
         totalSales7 += act;
       });
 
-      document.getElementById('infoTotalSales7Hari').innerText = 'Total: Rp ' + totalSales7.toLocaleString('id-ID');
+      document.getElementById('infoTotalSales7Hari').innerText = 'Total: Rp ' + Math.round(totalSales7).toLocaleString('id-ID');
 
       var ctx = document.getElementById('chartSales7HariBeranda').getContext('2d');
       if (chartSales7HariInstance) chartSales7HariInstance.destroy();
@@ -1772,23 +1841,24 @@
           labels: labels,
           datasets: [
             {
-              label: 'Aktual',
+              label: 'Aktual Sales',
               data: actualData,
               borderColor: '#059669',
-              backgroundColor: 'rgba(5, 150, 105, 0.1)',
+              backgroundColor: 'rgba(5, 150, 105, 0.12)',
               tension: 0.35,
               fill: true,
               pointBackgroundColor: '#065f46',
-              pointRadius: 4
+              pointRadius: 4,
+              pointHoverRadius: 6
             },
             {
-              label: 'Target',
+              label: 'Target Sales',
               data: targetData,
               borderColor: '#94a3b8',
               borderDash: [4, 4],
               tension: 0.35,
               fill: false,
-              pointRadius: 2
+              pointRadius: 3
             }
           ]
         },
@@ -1800,8 +1870,9 @@
           },
           scales: {
             y: {
+              beginAtZero: false,
               ticks: {
-                callback: function(v) { return (v / 1000000).toFixed(0) + 'Jt'; },
+                callback: function(v) { return (v / 1000000).toFixed(1) + 'Jt'; },
                 font: { size: 10 }
               },
               grid: { color: '#f1f5f9' }
@@ -1815,15 +1886,18 @@
       });
     }
 
+    // ==================== RENDER PENAWARAN LANGSUNG ====================
     function renderPenawaranLangsungBeranda(plRows) {
       if (!plRows || plRows.length === 0) return;
       var row = plRows[0];
 
-      document.getElementById('carouselPlPoint').innerText = (row['POINT DASHBOARD'] || '0') + ' Pt';
-      document.getElementById('carouselPlRank').innerText = 'Rank Toko: #' + (row['RANK'] || '-');
-      var acvPsm = parseFloat(row['ACV PSM']) || 0;
-      document.getElementById('carouselPlAcvPsm').innerText = (acvPsm <= 2 ? acvPsm * 100 : acvPsm).toFixed(1) + '%';
-      document.getElementById('badgePenawaranPoint').innerText = 'Point: ' + (row['POINT DASHBOARD'] || '0') + ' Pt';
+      // Format Point Dashboard ke Persentase (%)
+      var rawPoint = parseAngkaIndo(row['POINT DASHBOARD']);
+      var pctPoint = (rawPoint <= 1 && rawPoint > 0 ? rawPoint * 100 : rawPoint).toFixed(1) + '%';
+      
+      document.getElementById('carouselPlPoint').innerText = pctPoint;
+      document.getElementById('carouselPlRankSub').innerText = '#' + (row['RANK'] || '-');
+      document.getElementById('badgePenawaranPoint').innerText = 'Point: ' + pctPoint;
 
       var tbody = document.getElementById('tbodyPenawaranLangsungMini');
       var indikators = [
@@ -1835,7 +1909,7 @@
 
       var html = '';
       indikators.forEach(function(item) {
-        var acvVal = parseFloat(item.acv) || 0;
+        var acvVal = parseAngkaIndo(item.acv);
         var pct = (acvVal <= 2 && acvVal > 0 ? acvVal * 100 : acvVal).toFixed(1);
         var statusBadge = parseFloat(pct) >= 100
           ? '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded">OK</span>'
@@ -1845,8 +1919,8 @@
 
         html += '<tr class="hover:bg-slate-50/80">' +
           '<td class="py-2 font-semibold text-slate-800">' + item.nama + '</td>' +
-          '<td class="py-2 text-right text-slate-500 font-mono">' + Number(item.tgt || 0).toLocaleString('id-ID') + '</td>' +
-          '<td class="py-2 text-right font-bold text-slate-800 font-mono">' + Number(item.act || 0).toLocaleString('id-ID') + '</td>' +
+          '<td class="py-2 text-right text-slate-500 font-mono">' + Math.round(parseAngkaIndo(item.tgt)).toLocaleString('id-ID') + '</td>' +
+          '<td class="py-2 text-right font-bold text-slate-800 font-mono">' + Math.round(parseAngkaIndo(item.act)).toLocaleString('id-ID') + '</td>' +
           '<td class="py-2 text-right font-extrabold text-brand-dark font-mono">' + pct + '%</td>' +
           '<td class="py-2 text-center">' + statusBadge + '</td>' +
           '</tr>';
@@ -1854,18 +1928,31 @@
       tbody.innerHTML = html;
     }
 
+    // ==================== RENDER SALES MTD BULAN BERJALAN ====================
     function renderYtdSalesBeranda(ytdRows) {
       if (!ytdRows || ytdRows.length === 0) return;
+
+      var bulanIni = new Date().getMonth(); // 0 = Jan, 10 = Nov
+      var namaBulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      var targetBulan = namaBulanList[bulanIni];
+
+      document.getElementById('labelMtdBulanBerjalan').innerText = 'Sales MTD (' + targetBulan + ')';
+
       var sum2025 = 0;
       var sum2026 = 0;
 
       ytdRows.forEach(function(r) {
-        sum2025 += parseAngkaIndo(r['SALES 2025']);
-        sum2026 += parseAngkaIndo(r['SALES 2026']);
+        var rowBulan = String(r['BULAN'] || '').toUpperCase().trim();
+        // Hitung akumulasi jika bulan cocok atau jika data per tanggal di bulan berjalan
+        if (!rowBulan || rowBulan === targetBulan) {
+          sum2025 += parseAngkaIndo(r['SALES 2025']);
+          sum2026 += parseAngkaIndo(r['SALES 2026']);
+        }
       });
 
-      document.getElementById('carouselMtdSales').innerText = 'Rp ' + sum2026.toLocaleString('id-ID');
-      document.getElementById('carouselMtdSalesLalu').innerText = 'Rp ' + sum2025.toLocaleString('id-ID');
+      // Tampilkan Pembulatan Rupiah Tanpa Desimal Sesuai Standar Retail
+      document.getElementById('carouselMtdSales').innerText = 'Rp ' + Math.round(sum2026).toLocaleString('id-ID');
+      document.getElementById('carouselMtdSalesLalu').innerText = 'Rp ' + Math.round(sum2025).toLocaleString('id-ID');
 
       var growth = sum2025 > 0 ? ((sum2026 - sum2025) / sum2025 * 100) : 0;
       var elGrowth = document.getElementById('carouselMtdGrowth');

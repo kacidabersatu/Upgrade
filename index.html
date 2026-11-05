@@ -358,6 +358,14 @@
       if (onlyNum) return onlyNum[0];
       return s;
     }
+    // Helper Pembersih Angka Ribuan Format Indonesia (6.805.271 -> 6805271)
+    function parseAngkaIndo(val) {
+      if (val === null || val === undefined || val === '') return 0;
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      var clean = String(val).trim().replace(/\./g, '').replace(/,/g, '.');
+      var num = parseFloat(clean);
+      return isNaN(num) ? 0 : num;
+    }
 
     // ==================== 2. SPLASH SCREEN LIFECYCLE ====================
     window.addEventListener('DOMContentLoaded', function() {
@@ -1479,61 +1487,88 @@
       localStorage.setItem('kacida_menu_freq', JSON.stringify(counter));
     }
 
-    function renderGridMenuDinamis(menuList) {
+    // ==================== PENGGABUNGAN MENU BAWAAN + DINAMIS ====================
+    function renderGridMenuDinamis(sheetMenuList) {
       var container = document.getElementById('gridContainerMenuDinamis');
       var sidebarContainer = document.getElementById('sidebarListMenuDinamis');
       var modalGrid = document.getElementById('containerGridAllMenuModal');
 
-      if (!menuList || menuList.length === 0) {
-        // Fallback default 16 menu standar jika sheet belum terisi
-        menuList = dapatkanDefault17MenuList();
+      // 1. Ambil 17 Menu Bawaan Resmi Kacida Bersatu
+      var menuBawaan = dapatkanDefault17MenuList();
+
+      // 2. Format Menu Dinamis dari Sheet Menu_Navigasi
+      var menuDariSheet = [];
+      if (Array.isArray(sheetMenuList) && sheetMenuList.length > 0) {
+        menuDariSheet = sheetMenuList.map(function(item) {
+          return {
+            'Nama Menu': item['Nama Menu'] || '',
+            'Link Tujuan': item['Link Tujuan'] || '',
+            'Icon URL': item['Icon URL'] || 'fa-solid fa-arrow-up-right-from-square',
+            'isDynamic': true
+          };
+        });
       }
 
-      var freq = getMenuFrequencyCounter();
+      // 3. GABUNGKAN KEDUANYA (Tanpa Duplikasi Nama)
+      var gabunganMenu = menuBawaan.slice();
+      menuDariSheet.forEach(function(ds) {
+        var sudahAda = gabunganMenu.some(function(mb) {
+          return mb['Nama Menu'].toUpperCase().trim() === ds['Nama Menu'].toUpperCase().trim();
+        });
+        if (!sudahAda) {
+          gabunganMenu.push(ds);
+        }
+      });
 
-      // Sortir berdasarkan frekuensi klik tertinggi
-      var sortedList = menuList.slice().sort(function(a, b) {
+      // 4. Urutkan berdasarkan Frekuensi Klik (Menu sering diklik otomatis bergeser ke depan)
+      var freq = getMenuFrequencyCounter();
+      var sortedList = gabunganMenu.sort(function(a, b) {
         var countA = freq[a['Nama Menu']] || 0;
         var countB = freq[b['Nama Menu']] || 0;
         return countB - countA;
       });
 
-      // Render 16 Menu Teratas di Beranda
-      container.innerHTML = '';
-      var top16 = sortedList.slice(0, 16);
-      top16.forEach(function(item) {
-        var card = buatElemenCardMenu(item);
-        container.appendChild(card);
-      });
+      // 5. Render 16 Menu Teratas di Grid Beranda
+      if (container) {
+        container.innerHTML = '';
+        var top16 = sortedList.slice(0, 16);
+        top16.forEach(function(item) {
+          container.appendChild(buatElemenCardMenu(item));
+        });
+      }
 
-      // Render di Sidebar Desktop
-      sidebarContainer.innerHTML = '';
-      sortedList.forEach(function(item) {
-        var btn = document.createElement('button');
-        btn.className = 'w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 text-xs text-left transition-all';
-        btn.onclick = function() { bukaModalMenuTerpilih(item['Nama Menu']); };
-        btn.innerHTML = '<span class="truncate">' + item['Nama Menu'] + '</span><i class="fa-solid fa-angle-right text-[10px] text-slate-300"></i>';
-        sidebarContainer.appendChild(btn);
-      });
+      // 6. Render di Sidebar Desktop
+      if (sidebarContainer) {
+        sidebarContainer.innerHTML = '';
+        sortedList.forEach(function(item) {
+          var btn = document.createElement('button');
+          btn.className = 'w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 text-xs text-left transition-all';
+          btn.onclick = function() { tanganiEksekusiMenu(item); };
+          btn.innerHTML = '<span class="truncate">' + item['Nama Menu'] + '</span>' + 
+            (item['Link Tujuan'] ? '<i class="fa-solid fa-external-link text-[10px] text-slate-400"></i>' : '<i class="fa-solid fa-angle-right text-[10px] text-slate-300"></i>');
+          sidebarContainer.appendChild(btn);
+        });
+      }
 
-      // Render Seluruh Menu di Modal View All
-      modalGrid.innerHTML = '';
-      sortedList.forEach(function(item) {
-        var cardAll = buatElemenCardMenu(item);
-        modalGrid.appendChild(cardAll);
-      });
+      // 7. Render Seluruh Menu di Modal "Lihat Semua"
+      if (modalGrid) {
+        modalGrid.innerHTML = '';
+        sortedList.forEach(function(item) {
+          modalGrid.appendChild(buatElemenCardMenu(item));
+        });
+      }
     }
 
     function buatElemenCardMenu(menuItem) {
       var div = document.createElement('div');
       var menuName = menuItem['Nama Menu'];
       var iconUrl = menuItem['Icon URL'];
-      var defaultIcon = 'fa-solid fa-layer-group';
+      var defaultIcon = menuItem['Link Tujuan'] ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-layer-group';
 
       div.className = 'relative bg-white rounded-2xl p-2.5 md:p-3 shadow-sm border border-emerald-100 hover:border-emerald-300 hover:shadow-md cursor-pointer transition-all flex flex-col items-center text-center justify-between min-h-[92px] md:min-h-[105px] group active:scale-95';
       div.onclick = function() {
         catatFrekuensiKlikMenu(menuName);
-        bukaModalMenuTerpilih(menuName);
+        tanganiEksekusiMenu(menuItem);
       };
 
       var iconHtml = '';
@@ -1554,6 +1589,16 @@
       return div;
     }
 
+    function tanganiEksekusiMenu(item) {
+      // Jika memiliki Link Tujuan dari Spreadsheet -> Buka Link
+      if (item['Link Tujuan'] && String(item['Link Tujuan']).startsWith('http')) {
+        window.open(item['Link Tujuan'], '_blank');
+        return;
+      }
+      // Jika Menu Internal Bawaan -> Buka Modal Fitur
+      bukaModalMenuTerpilih(item['Nama Menu']);
+    }
+    
     function hitungBadgeNotifMenu(menuName) {
       // Menghitung angka notifikasi aktual yang relevan
       try {
@@ -1815,8 +1860,8 @@
       var sum2026 = 0;
 
       ytdRows.forEach(function(r) {
-        sum2025 += Number(r['SALES 2025'] || 0);
-        sum2026 += Number(r['SALES 2026'] || 0);
+        sum2025 += parseAngkaIndo(r['SALES 2025']);
+        sum2026 += parseAngkaIndo(r['SALES 2026']);
       });
 
       document.getElementById('carouselMtdSales').innerText = 'Rp ' + sum2026.toLocaleString('id-ID');

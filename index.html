@@ -368,6 +368,17 @@
       return isNaN(num) ? 0 : num;
     }
 
+    // Helper Format Persen Cerdas (Mengubah 0.1932 atau "19,32%" menjadi "19,32%")
+    function formatPersenIndo(val) {
+      if (val === null || val === undefined || val === '') return '0,00%';
+      var num = parseAngkaIndo(val);
+      // Jika angka tersimpan sebagai desimal pecahan (misal 0.1932)
+      if (num > 0 && num <= 1) {
+        num = num * 100;
+      }
+      return num.toFixed(2).replace('.', ',') + '%';
+    }
+
     // Helper Parser Tanggal Universal (Mendukung DD/MM/YYYY dan ISO String Google)
     function parseDateIndo(tglStr) {
       if (!tglStr) return new Date(0);
@@ -1728,51 +1739,78 @@
     }
 
 
-    // ==================== 5. CHART VISUALISASI BERANDA ====================
+    // ==================== RENDER IKT TOKO AKURAT ====================
     function renderIktBeranda(iktRows) {
       if (!iktRows || iktRows.length === 0) return;
-      var row = iktRows[0];
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Cari baris yang tepat sesuai KODE toko aktif (Bukan iktRows[0])
+      var row = iktRows.find(function(r) {
+        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      // Fallback jika tidak ditemukan
+      if (!row) row = iktRows[0];
 
       // Update Carousel KPI IKT
-      var acvSales = parseFloat(row['ACV SALES']) || 0;
-      document.getElementById('carouselIktAcv').innerText = (acvSales * (acvSales <= 2 ? 100 : 1)).toFixed(1) + '%';
-      document.getElementById('carouselIktKet').innerText = 'ACV Net Sales: ' + (row['KET SALES'] || '-');
-      document.getElementById('carouselIktTarget').innerText = 'Rp ' + Number(row['TARGET NET SALES'] || 0).toLocaleString('id-ID');
+      var acvSales = parseAngkaIndo(row['ACV SALES']);
+      if (acvSales > 0 && acvSales <= 2) acvSales = acvSales * 100;
 
-      // Update Widget GM%
-      var targetGm = parseFloat(row['TARGET GM %']) || 0;
-      var actualGm = parseFloat(row['ACTUAL GM %']) || 0;
-      var acvGm = parseFloat(row['ACV GM']) || 0;
-      var pctAcvGm = (acvGm <= 2 && acvGm > 0 ? acvGm * 100 : acvGm).toFixed(1);
+      var elIktAcv = document.getElementById('carouselIktAcv');
+      var elIktKet = document.getElementById('carouselIktKet');
+      var elIktTgt = document.getElementById('carouselIktTarget');
 
-      document.getElementById('valTargetGmIkt').innerText = (targetGm <= 1 ? targetGm * 100 : targetGm).toFixed(2) + '%';
-      document.getElementById('valActualGmIkt').innerText = (actualGm <= 1 ? actualGm * 100 : actualGm).toFixed(2) + '%';
-      document.getElementById('chartGmCenterText').innerText = pctAcvGm + '%';
-      document.getElementById('badgeKetGmIkt').innerText = row['KET GM %'] || 'OK';
+      if (elIktAcv) elIktAcv.innerText = acvSales.toFixed(1).replace('.', ',') + '%';
+      if (elIktKet) elIktKet.innerText = 'ACV Net Sales: ' + (row['KET SALES'] || '-');
+      if (elIktTgt) elIktTgt.innerText = 'Rp ' + Math.round(parseAngkaIndo(row['TARGET NET SALES'])).toLocaleString('id-ID');
 
-      // Render Chart Donut GM%
-      var ctx = document.getElementById('chartPieGmBeranda').getContext('2d');
-      if (chartGmPieInstance) chartGmPieInstance.destroy();
+      // Update Widget Donut GM%
+      var targetGm = parseAngkaIndo(row['TARGET GM %']);
+      if (targetGm > 0 && targetGm <= 1) targetGm = targetGm * 100;
 
-      var cap = Math.min(Math.max(parseFloat(pctAcvGm), 0), 100);
-      var sisa = 100 - cap;
+      var actualGm = parseAngkaIndo(row['ACTUAL GM %']);
+      if (actualGm > 0 && actualGm <= 1) actualGm = actualGm * 100;
 
-      chartGmPieInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [cap, sisa],
-            backgroundColor: ['#059669', '#e2e8f0'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          cutout: '76%',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { enabled: false } }
-        }
-      });
+      var acvGm = parseAngkaIndo(row['ACV GM']);
+      if (acvGm > 0 && acvGm <= 2) acvGm = acvGm * 100;
+
+      var elValTgtGm = document.getElementById('valTargetGmIkt');
+      var elValActGm = document.getElementById('valActualGmIkt');
+      var elCenterGm = document.getElementById('chartGmCenterText');
+      var elBadgeGm = document.getElementById('badgeKetGmIkt');
+
+      if (elValTgtGm) elValTgtGm.innerText = targetGm.toFixed(2).replace('.', ',') + '%';
+      if (elValActGm) elValActGm.innerText = actualGm.toFixed(2).replace('.', ',') + '%';
+      if (elCenterGm) elCenterGm.innerText = acvGm.toFixed(1).replace('.', ',') + '%';
+      if (elBadgeGm) elBadgeGm.innerText = row['KET GM %'] || 'OK';
+
+      // Render Donut Chart GM%
+      var canvasEl = document.getElementById('chartPieGmBeranda');
+      if (canvasEl) {
+        var ctx = canvasEl.getContext('2d');
+        if (chartGmPieInstance) chartGmPieInstance.destroy();
+
+        var cap = Math.min(Math.max(acvGm, 0), 100);
+        var sisa = Math.max(0, 100 - cap);
+
+        chartGmPieInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            datasets: [{
+              data: [cap, sisa],
+              backgroundColor: ['#059669', '#e2e8f0'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: '76%',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+          }
+        });
+      }
     }
 
     // Helper Parse Tanggal DD/MM/YYYY
@@ -1854,17 +1892,22 @@
       cachedNominalSales.hMin1 = parseAngkaIndo(hMin1['ACTUAL']);
       cachedNominalSales.shActual = cachedNominalSales.hMin1;
 
-      // Gross Margin H-1 & Perbandingan vs H-2
-      var gmH1 = parseAngkaIndo(hMin1['GROSS MARGIN']);
-      var gmH2 = parseAngkaIndo(hMin2['GROSS MARGIN']);
+      // Gross Margin H-1 Menggunakan Format Persen Presisi (Misal: 19,32%)
+      var gmH1Formatted = formatPersenIndo(hMin1['GROSS MARGIN']);
       var elHeroGm = document.getElementById('heroGmHMin1');
-      if (elHeroGm) elHeroGm.innerText = gmH1.toFixed(2) + '%';
+      if (elHeroGm) elHeroGm.innerText = gmH1Formatted;
+
+      var gmH1 = parseAngkaIndo(hMin1['GROSS MARGIN']);
+      if (gmH1 > 0 && gmH1 <= 1) gmH1 = gmH1 * 100;
+
+      var gmH2 = parseAngkaIndo(hMin2['GROSS MARGIN']);
+      if (gmH2 > 0 && gmH2 <= 1) gmH2 = gmH2 * 100;
 
       var gmDiff = gmH1 - gmH2;
       var elDiff = document.getElementById('heroGmDiffBadge');
       if (elDiff) {
         if (hMin2 && hMin2['GROSS MARGIN']) {
-          elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2) + '% vs H-2';
+          elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2).replace('.', ',') + '% vs H-2';
           elDiff.className = gmDiff >= 0
             ? 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/40 text-emerald-200 font-mono'
             : 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-red-500/40 text-red-200 font-mono';
@@ -2027,26 +2070,33 @@
     // ==================== RENDER SALES MTD BULAN BERJALAN ====================
     function renderYtdSalesBeranda(ytdRows) {
       if (!ytdRows || ytdRows.length === 0) return;
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
+      // 1. FILTER HANYA DATA TOKO INI
+      var storeRows = ytdRows.filter(function(r) {
+        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      var dataToProcess = storeRows.length > 0 ? storeRows : ytdRows;
+
+      // 2. FILTER BULAN BERJALAN (NOVEMBER)
       var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
-      var targetBulan = bulanList[new Date().getMonth()]; // Otomatis bulan berjalan (NOVEMBER)
+      var targetBulan = bulanList[new Date().getMonth()];
 
       var elLabel = document.getElementById('labelMtdBulanBerjalan');
-      if (elLabel) elLabel.innerText = 'Sales MTD (' + targetBulan + ')';
+      if (elLabel) elLabel.innerText = 'SALES MTD (' + targetBulan + ')';
+
+      var rowsBulanIni = dataToProcess.filter(function(r) {
+        return String(r['BULAN'] || '').toUpperCase().trim() === targetBulan;
+      });
+
+      var dataFinal = rowsBulanIni.length > 0 ? rowsBulanIni : dataToProcess;
 
       var sum2025 = 0;
       var sum2026 = 0;
 
-      // Cari baris yang sesuai dengan bulan berjalan
-      var rowsBulanIni = ytdRows.filter(function(r) {
-        var b = String(r['BULAN'] || '').toUpperCase().trim();
-        return b === targetBulan;
-      });
-
-      // Jika data bulan berjalan belum ada di sheet, gunakan seluruh data yang ada
-      var dataToSum = rowsBulanIni.length > 0 ? rowsBulanIni : ytdRows;
-
-      dataToSum.forEach(function(r) {
+      dataFinal.forEach(function(r) {
         sum2025 += parseAngkaIndo(r['SALES 2025']);
         sum2026 += parseAngkaIndo(r['SALES 2026']);
       });
@@ -2057,7 +2107,7 @@
       var growth = sum2025 > 0 ? ((sum2026 - sum2025) / sum2025 * 100) : 0;
       var elGrowth = document.getElementById('carouselMtdGrowth');
       if (elGrowth) {
-        elGrowth.innerText = 'Growth: ' + (growth >= 0 ? '+' : '') + growth.toFixed(2) + '%';
+        elGrowth.innerText = 'Growth: ' + (growth >= 0 ? '+' : '') + growth.toFixed(2).replace('.', ',') + '%';
         elGrowth.className = growth >= 0 ? 'text-xs font-bold text-emerald-600 mt-0.5' : 'text-xs font-bold text-red-600 mt-0.5';
       }
 
@@ -3607,58 +3657,232 @@
       });
     }
 
-    // ==================== [8] MODUL SALES HARIAN (TOLERANSI & PENANDA HARI) ====================
+    // ==================== MODAL SALES HARIAN & TOLERANSI OPERASIONAL ====================
     function renderModulSalesHarian(container) {
-      container.innerHTML = renderHeaderModalUniversal('Sales Harian & Toleransi Operasional', 'Monitoring NSB, OOS, Gross Margin, dan Penanda Akhir Pekan') +
+      container.innerHTML = renderHeaderModalUniversal('Sales Harian & Toleransi Operasional', 'Monitoring NSB, OOS, Gross Margin & Penanda Akhir Pekan') +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
+          
+          <!-- 1. KOTAK RESUME FINANSIAL TOKO -->
+          '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center" id="boxResumeSalesHarian">' +
+            '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-400 font-bold uppercase">Sales Bulan Lalu</span><span id="shResBulanLalu" class="text-sm font-black text-slate-700 font-mono mt-1">Rp 0</span></div>' +
+            '<div class="p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-blue-700 font-bold uppercase">Total Target</span><span id="shResTarget" class="text-sm font-black text-blue-900 font-mono mt-1">Rp 0</span></div>' +
+            '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-emerald-700 font-bold uppercase">Sales Bulan Ini</span><span id="shResActual" class="text-sm font-black text-emerald-950 font-mono mt-1">Rp 0</span></div>' +
+            '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-500 font-bold uppercase">Total NSB (Rp)</span><span id="shResNsbRp" class="text-sm font-black text-slate-800 font-mono mt-1">Rp 0</span></div>' +
+            '<div class="p-3 rounded-xl border shadow-sm flex flex-col justify-between" id="cardResNsbPct"><span class="text-[10px] font-bold uppercase" id="labelResNsbPct">% NSB (Tol &le; 0.14%)</span><span id="shResNsbPct" class="text-sm font-black font-mono mt-1">0,00%</span></div>' +
+          '</div>' +
+
+          <!-- 2. GRAFIK TREN SALES VS TARGET VS BULAN LALU -->
+          '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">' +
+              '<h4 class="text-xs font-black text-slate-800">Grafik Komparasi Harian (Aktual vs Target vs Bulan Lalu)</h4>' +
+              '<div class="flex items-center space-x-3 text-[10px] font-semibold text-slate-500">' +
+                '<span class="flex items-center"><span class="w-3 h-1 bg-emerald-600 rounded mr-1"></span> Aktual</span>' +
+                '<span class="flex items-center"><span class="w-3 h-1 bg-blue-500 rounded mr-1 border-dashed"></span> Target</span>' +
+                '<span class="flex items-center"><span class="w-3 h-1 bg-slate-400 rounded mr-1 border-dashed"></span> Bln Lalu</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="h-52 w-full">' +
+              '<canvas id="chartModalSalesHarianTren"></canvas>' +
+            '</div>' +
+          '</div>' +
+
+          <!-- 3. TABEL LEMBAR MONITORING HARIAN -->
           '<div id="containerTabelSalesHarianModal"></div>' +
         '</div>';
 
-      muatDataSheetLazy('Sales_Harian', false, function(rows) {
+      muatDataSheetLazy('Sales_Harian', false, function(allRows) {
         var cfg = getTokoConfig() || {};
-        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC' || currentSessionUser.nik === '14125034');
-        var filtered = filterDataBerdasarkanToko(rows, cfg.cleanCode, isAC);
+        var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
+        // Filter Toko
+        var storeRows = allRows.filter(function(r) {
+          return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+        });
+
+        var dataToUse = storeRows.length > 0 ? storeRows : allRows;
+
+        // Sort Tanggal Tertua ke Terbaru
+        var sorted = dataToUse.slice().sort(function(a, b) {
+          return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
+        });
+
+        // Hitung Resume
+        var totBulanLalu = 0;
+        var totTarget = 0;
+        var totActual = 0;
+        var totNsbRp = 0;
+
+        var labels = [];
+        var actSeries = [];
+        var tgtSeries = [];
+        var laluSeries = [];
+
+        sorted.forEach(function(r) {
+          var bl = parseAngkaIndo(r['BULAN LALU']);
+          var tg = parseAngkaIndo(r['TARGET']);
+          var ac = parseAngkaIndo(r['ACTUAL']);
+          var nsb = parseAngkaIndo(r['NSB']);
+
+          totBulanLalu += bl;
+          totTarget += tg;
+          totActual += ac;
+          totNsbRp += nsb;
+
+          var d = parseDateIndo(r['TANGGAL']);
+          labels.push(String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'));
+          actSeries.push(ac);
+          tgtSeries.push(tg);
+          laluSeries.push(bl);
+        });
+
+        // Update 5 Kotak Resume
+        document.getElementById('shResBulanLalu').innerText = 'Rp ' + Math.round(totBulanLalu).toLocaleString('id-ID');
+        document.getElementById('shResTarget').innerText = 'Rp ' + Math.round(totTarget).toLocaleString('id-ID');
+        document.getElementById('shResActual').innerText = 'Rp ' + Math.round(totActual).toLocaleString('id-ID');
+        document.getElementById('shResNsbRp').innerText = 'Rp ' + Math.round(totNsbRp).toLocaleString('id-ID');
+
+        var pctNsbTotal = totActual > 0 ? ((totNsbRp / totActual) * 100) : 0;
+        var elNsbPctCard = document.getElementById('cardResNsbPct');
+        var elNsbPctText = document.getElementById('shResNsbPct');
+        var elNsbLabel = document.getElementById('labelResNsbPct');
+
+        if (pctNsbTotal > 0.14) {
+          elNsbPctCard.className = 'p-3 bg-red-50 border border-red-300 rounded-xl shadow-sm text-center flex flex-col justify-between badge-pulse-red';
+          elNsbLabel.className = 'text-[10px] font-black text-red-700 uppercase flex items-center justify-center';
+          elNsbLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1 text-red-600"></i> % NSB (OVER)';
+          elNsbPctText.className = 'text-sm font-black text-red-700 font-mono mt-1';
+          elNsbPctText.innerText = pctNsbTotal.toFixed(2).replace('.', ',') + '%';
+        } else {
+          elNsbPctCard.className = 'p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm text-center flex flex-col justify-between';
+          elNsbLabel.className = 'text-[10px] font-bold text-emerald-800 uppercase';
+          elNsbPctText.className = 'text-sm font-black text-emerald-950 font-mono mt-1';
+          elNsbPctText.innerText = pctNsbTotal.toFixed(2).replace('.', ',') + '%';
+        }
+
+        // Render Grafik Tren Komparasi 3 Garis
+        var canvasChart = document.getElementById('chartModalSalesHarianTren');
+        if (canvasChart) {
+          var ctx = canvasChart.getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Aktual',
+                  data: actSeries,
+                  borderColor: '#059669',
+                  backgroundColor: 'rgba(5, 150, 105, 0.12)',
+                  fill: true,
+                  tension: 0.3,
+                  pointRadius: 3
+                },
+                {
+                  label: 'Target',
+                  data: tgtSeries,
+                  borderColor: '#2563eb',
+                  borderDash: [4, 4],
+                  fill: false,
+                  tension: 0.3,
+                  pointRadius: 2
+                },
+                {
+                  label: 'Bulan Lalu',
+                  data: laluSeries,
+                  borderColor: '#94a3b8',
+                  borderDash: [2, 2],
+                  fill: false,
+                  tension: 0.3,
+                  pointRadius: 0
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { ticks: { callback: function(v) { return (v / 1000000).toFixed(0) + 'Jt'; }, font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 } } }
+              }
+            }
+          });
+        }
+
+        // Render Tabel Lembar Monitoring Harian (Rapi di Tengah & Berisi Ikon)
         var boxTbl = document.getElementById('containerTabelSalesHarianModal');
         var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 watermark-bg">' +
           '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
-            '<h4 class="text-xs font-black text-slate-800">Lembar Monitoring Harian</h4>' +
-            '<span class="text-[10px] text-slate-400 font-bold">Toleransi: %NSB &le; 0.14% | OOS &le; 1.00%</span>' +
+            '<h4 class="text-xs font-black text-slate-800">Tabel Rincian Harian Toko</h4>' +
+            '<span class="text-[10px] text-slate-500 font-semibold">Toleransi: %NSB &le; 0.14% | OOS &le; 1.00%</span>' +
           '</div>' +
           '<div class="overflow-x-auto text-xs">' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
+            '<table class="w-full divide-y divide-slate-100 text-center">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2 sticky-col-left">Tanggal</th><th class="p-2 text-right">Target</th><th class="p-2 text-right">Actual</th><th class="p-2 text-right">Gap Target</th><th class="p-2 text-right">NSB</th><th class="p-2 text-right">% NSB</th><th class="p-2 text-right">OOS %</th><th class="p-2 text-right">GM %</th>' +
+                '<th class="p-2.5 text-center sticky-col-left">Tanggal</th>' +
+                '<th class="p-2.5 text-center">Bulan Lalu</th>' +
+                '<th class="p-2.5 text-center">Target</th>' +
+                '<th class="p-2.5 text-center">Actual</th>' +
+                '<th class="p-2.5 text-center">Gap Target</th>' +
+                '<th class="p-2.5 text-center">NSB (Rp)</th>' +
+                '<th class="p-2.5 text-center">% NSB</th>' +
+                '<th class="p-2.5 text-center">OOS %</th>' +
+                '<th class="p-2.5 text-center">GM %</th>' +
               '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
 
-        // Ganti pemrosesan baris tabel modal sales harian:
-    filtered.forEach(function(row) {
-      var dateObj = parseDateIndo(row['TANGGAL']);
-      var tglTampil = formatTanggalTampilan(dateObj); // Rapi DD/MM/YYYY
-      var dayOfWeek = dateObj.getDay();
+        sorted.forEach(function(row) {
+          var dateObj = parseDateIndo(row['TANGGAL']);
+          var tglTampil = formatTanggalTampilan(dateObj);
+          var dayOfWeek = dateObj.getDay();
 
-      var dayBadge = '';
-      if (dayOfWeek === 5) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-bold">JUM</span>';
-      else if (dayOfWeek === 6) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-bold">SAB</span>';
-      else if (dayOfWeek === 0) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-red-100 text-red-800 font-bold">MIN</span>';
+          var dayBadge = '';
+          if (dayOfWeek === 5) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-bold">JUM</span>';
+          else if (dayOfWeek === 6) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-bold">SAB</span>';
+          else if (dayOfWeek === 0) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-red-100 text-red-800 font-bold">MIN</span>';
 
-          var gap = Number(row['GAP TARGET'] || 0);
-          var pctNsb = parseFloat(row['% NSB'] || 0);
-          var oos = parseFloat(row['OOS %'] || 0);
-          var gm = parseFloat(row['GROSS MARGIN'] || 0);
+          var act = parseAngkaIndo(row['ACTUAL']);
+          var tgt = parseAngkaIndo(row['TARGET']);
+          var bl = parseAngkaIndo(row['BULAN LALU']);
+          var gap = act - tgt;
+          var nsbRp = parseAngkaIndo(row['NSB']);
 
-          var nsbWarning = (pctNsb > 0.14) ? 'text-red-600 font-black badge-pulse-red' : 'text-slate-700';
-          var oosWarning = (oos >= 1.0) ? 'text-red-600 font-black' : 'text-emerald-700';
+          // Kalkulasi % NSB
+          var nsbPct = parseAngkaIndo(row['% NSB']);
+          if (nsbPct > 0 && nsbPct <= 1) nsbPct = nsbPct * 100;
+          var isNsbOver = nsbPct > 0.14;
 
-          html += '<tr>' +
-            '<td class="p-2 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap">' + tglStr + dayBadge + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-500">Rp ' + Number(row['TARGET'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold text-slate-800">Rp ' + Number(row['ACTUAL'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold ' + (gap >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gap >= 0 ? '+' : '') + gap.toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-700">Rp ' + Number(row['NSB'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono ' + nsbWarning + '">' + pctNsb.toFixed(2) + '%</td>' +
-            '<td class="p-2 text-right font-mono ' + oosWarning + '">' + oos.toFixed(2) + '%</td>' +
-            '<td class="p-2 text-right font-mono font-bold ' + (gm >= 19 ? 'text-emerald-700' : (gm >= 17 ? 'text-amber-600' : 'text-red-600')) + '">' + gm.toFixed(2) + '%</td>' +
+          // Kalkulasi OOS %
+          var oosPct = parseAngkaIndo(row['OOS %']);
+          if (oosPct > 0 && oosPct <= 1) oosPct = oosPct * 100;
+          var isOosOver = oosPct > 1.0;
+
+          // Kalkulasi GM %
+          var gmPct = parseAngkaIndo(row['GROSS MARGIN']);
+          if (gmPct > 0 && gmPct <= 1) gmPct = gmPct * 100;
+
+          var gmClass = gmPct >= 19 ? 'text-emerald-700 font-bold' : (gmPct >= 17 ? 'text-amber-600 font-bold' : 'text-red-600 font-bold');
+
+          html += '<tr class="hover:bg-slate-50/80">' +
+            '<td class="p-2.5 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap text-center">' + tglTampil + dayBadge + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-500">Rp ' + Math.round(bl).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-600">Rp ' + Math.round(tgt).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-extrabold text-slate-800">Rp ' + Math.round(act).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-bold ' + (gap >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gap >= 0 ? '+' : '') + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-700">Rp ' + Math.round(nsbRp).toLocaleString('id-ID') + '</td>' +
+            
+            // Kolom % NSB dengan Ikon Peringatan Khusus
+            '<td class="p-2.5 text-center font-mono ' + (isNsbOver ? 'text-red-600 font-black' : 'text-slate-700') + '">' +
+              nsbPct.toFixed(2).replace('.', ',') + '%' +
+              (isNsbOver ? ' <i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] ml-0.5 animate-bounce"></i>' : '') +
+            '</td>' +
+
+            // Kolom OOS % dengan Ikon Peringatan Khusus
+            '<td class="p-2.5 text-center font-mono ' + (isOosOver ? 'text-red-600 font-black' : 'text-emerald-700') + '">' +
+              oosPct.toFixed(2).replace('.', ',') + '%' +
+              (isOosOver ? ' <i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] ml-0.5 animate-bounce"></i>' : '') +
+            '</td>' +
+
+            // Kolom GM %
+            '<td class="p-2.5 text-center font-mono ' + gmClass + '">' + gmPct.toFixed(2).replace('.', ',') + '%</td>' +
           '</tr>';
         });
 

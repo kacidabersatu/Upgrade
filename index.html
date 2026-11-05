@@ -1933,10 +1933,13 @@
       var hMin1 = rowsSettle[rowsSettle.length - 1] || {};
       var hMin2 = rowsSettle.length >= 2 ? rowsSettle[rowsSettle.length - 2] : {};
 
-      rawSalesHMin1Value = parseAngkaIndo(hMin1['ACTUAL']);
-      updateDisplaySeluruhSales();
+      // AMBIL NILAI ACTUAL H-1 & SIMPAN KE CACHE GLOBAL
+      var actualH1 = parseAngkaIndo(hMin1['ACTUAL']);
+      rawSalesHMin1Value = actualH1;
+      cachedNominalSales.hMin1 = actualH1;
+      cachedNominalSales.shActual = actualH1;
 
-      // Gross Margin H-1
+      // Gross Margin H-1 & Perbandingan vs H-2
       var gmH1Formatted = formatPersenIndo(hMin1['GROSS MARGIN']);
       var elHeroGm = document.getElementById('heroGmHMin1');
       if (elHeroGm) elHeroGm.innerText = gmH1Formatted;
@@ -1959,20 +1962,23 @@
         }
       }
 
-      // Carousel Sales Harian (Target & Gap)
+      // Update Carousel Sales Harian (Target & Gap)
       var targetH1 = parseAngkaIndo(hMin1['TARGET']);
-      var acvH1 = targetH1 > 0 ? ((rawSalesHMin1Value / targetH1) * 100).toFixed(1) : '0.0';
+      var acvH1 = targetH1 > 0 ? ((actualH1 / targetH1) * 100).toFixed(1) : '0.0';
       var elAcvTgt = document.getElementById('carouselShAcvTarget');
       if (elAcvTgt) elAcvTgt.innerText = 'ACV Target: ' + acvH1 + '%';
 
-      var gapH1 = rawSalesHMin1Value - targetH1;
+      var gapH1 = actualH1 - targetH1;
       var elGap = document.getElementById('carouselShGap');
       if (elGap) {
         elGap.innerText = (gapH1 >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(gapH1)).toLocaleString('id-ID');
         elGap.className = gapH1 >= 0 ? 'font-bold font-mono text-purple-950' : 'font-bold font-mono text-red-600';
       }
 
-      // 4. Render Grafik 7 Hari Terakhir (Mengambil tanggal unik masing-masing baris)
+      // Jalankan fungsi update display
+      updateDisplaySeluruhSales();
+
+      // 4. Render Grafik 7 Hari Terakhir
       var last7 = rowsSettle.slice(-7);
       var labels = [];
       var actualData = [];
@@ -1980,7 +1986,7 @@
       var totalSales7 = 0;
 
       last7.forEach(function(r) {
-        labels.push(getFormattedDateLabel(r['TANGGAL'])); // Tanggal unik per baris (DD/MM)
+        labels.push(getFormattedDateLabel(r['TANGGAL']));
         var act = parseAngkaIndo(r['ACTUAL']);
         var tgt = parseAngkaIndo(r['TARGET']);
         actualData.push(act);
@@ -3854,7 +3860,9 @@
           var nsbPctFormatted = formatPersenNsb(row['% NSB']);
           var nsbPctVal = parseAngkaIndo(row['% NSB']);
           if (Math.abs(nsbPctVal) <= 1) nsbPctVal *= 100;
-          var isNsbOver = nsbPctVal > 0.14;
+
+          // PENANDA KHUSUS: Jika mencapai/melebihi batas toleransi 0.14% (baik minus misal -0.14%, -0.25%, maupun plus)
+          var isNsbOver = Math.abs(nsbPctVal) >= 0.14 && nsbPctVal !== 0;
 
           // Format OOS %
           var oosPctFormatted = formatPersenIndo(row['OOS %']);
@@ -3869,29 +3877,29 @@
           var gmClass = gmVal >= 19 ? 'text-emerald-700 font-bold' : (gmVal >= 17 ? 'text-amber-600 font-bold' : 'text-red-600 font-bold');
 
           html += '<tr class="hover:bg-slate-50/80">' +
-            '<td class="p-2.5 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap text-center">' + tglTampil + dayBadge + '</td>' +
-            '<td class="p-2.5 text-center font-mono text-slate-500">Rp ' + Math.round(bl).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono text-slate-600">Rp ' + Math.round(tgt).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono font-extrabold text-slate-800">Rp ' + Math.round(act).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono font-bold ' + (gap >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gap >= 0 ? '+' : '') + Math.round(gap).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap text-center align-middle">' + tglTampil + dayBadge + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-500 align-middle">Rp ' + Math.round(bl).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-600 align-middle">Rp ' + Math.round(tgt).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-extrabold text-slate-800 align-middle">Rp ' + Math.round(act).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-bold align-middle ' + (gap >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gap >= 0 ? '+' : '') + Math.round(gap).toLocaleString('id-ID') + '</td>' +
             
             // Kolom NSB Rp
-            '<td class="p-2.5 text-center font-mono text-slate-700">' + formatRupiahNsb(nsbRp) + '</td>' +
+            '<td class="p-2.5 text-center font-mono text-slate-700 align-middle">' + formatRupiahNsb(nsbRp) + '</td>' +
             
-            // Kolom % NSB (Minus tampil minus, plus tanpa tanda)
-            '<td class="p-2.5 text-center font-mono ' + (isNsbOver ? 'text-red-600 font-black' : 'text-slate-700') + '">' +
+            // Kolom % NSB (Dilengkapi Ikon Segitiga Merah persis seperti OOS jika >= 0.14% atau <= -0.14%)
+            '<td class="p-2.5 text-center font-mono align-middle ' + (isNsbOver ? 'text-red-600 font-black' : 'text-slate-700') + '">' +
               nsbPctFormatted +
-              (isNsbOver ? ' <i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] ml-0.5 animate-bounce"></i>' : '') +
+              (isNsbOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px]"></i>' : '') +
             '</td>' +
 
-            // Kolom OOS %
-            '<td class="p-2.5 text-center font-mono ' + (isOosOver ? 'text-red-600 font-black' : 'text-emerald-700') + '">' +
+            // Kolom OOS % (Dilengkapi Ikon Segitiga Merah)
+            '<td class="p-2.5 text-center font-mono align-middle ' + (isOosOver ? 'text-red-600 font-black' : 'text-emerald-700') + '">' +
               oosPctFormatted +
-              (isOosOver ? ' <i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] ml-0.5 animate-bounce"></i>' : '') +
+              (isOosOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px]"></i>' : '') +
             '</td>' +
 
             // Kolom GM %
-            '<td class="p-2.5 text-center font-mono ' + gmClass + '">' + gmPctFormatted + '</td>' +
+            '<td class="p-2.5 text-center font-mono align-middle ' + gmClass + '">' + gmPctFormatted + '</td>' +
           '</tr>';
         });
 

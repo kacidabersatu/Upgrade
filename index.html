@@ -1699,14 +1699,48 @@
     }
     
     function hitungBadgeNotifMenu(menuName) {
-      // Menghitung angka notifikasi aktual yang relevan
+      var norm = menuName.toUpperCase().trim();
+      var count = 0;
+
+      // 1. Logika Khusus Menu Ceklis EXP
+      if (norm.indexOf('CEKLIS EXP') !== -1) {
+        var expCache = localStorage.getItem('kacida_cache_Ceklis_EXP');
+        if (expCache) {
+          try {
+            var items = JSON.parse(expCache).data || [];
+            var cfg = getTokoConfig() || {};
+            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            items.forEach(function(it) {
+              if (String(it['KODE'] || '').toUpperCase().trim() === myCode) {
+                // Item yang sudah masuk tanggal alert dan belum dieksekusi
+                if (it['TIPE_DATA'] === 'ITEM_EXP') {
+                  var alertD = parseDateIndo(it['TANGGAL_ALERT']);
+                  var isDone = String(it['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
+                  if (today >= alertD && !isDone) {
+                    count++;
+                  }
+                }
+                // Tugas rak yang belum selesai
+                if (it['TIPE_DATA'] === 'TUGAS_RAK' && (it['STATUS'] === 'BELUM' || it['STATUS'] === 'PENDING_APPROVAL')) {
+                  count++;
+                }
+              }
+            });
+          } catch (e) {}
+        }
+        return count;
+      }
+
+      // 2. Notifikasi Umum Sheet Notifikasi
       try {
         var notifCache = localStorage.getItem('kacida_cache_Notifikasi');
         if (!notifCache) return 0;
         var list = JSON.parse(notifCache).data || [];
-        var count = 0;
         list.forEach(function(n) {
-          if (String(n['status']) === 'UNREAD' && String(n['sourceMenu']).toUpperCase() === menuName.toUpperCase()) {
+          if (String(n['status']) === 'UNREAD' && String(n['sourceMenu']).toUpperCase() === norm) {
             count++;
           }
         });
@@ -2854,6 +2888,107 @@
       html += '</div>';
       container.innerHTML = html;
     }
+    // ==================== MODAL TAMBAH PENUGASAN RAK ====================
+    function bukaModalTambahTugasRak() {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Ambil personil toko aktif dari cache Master_User
+      var userCache = localStorage.getItem('kacida_cache_Master_User');
+      var allUsers = userCache ? JSON.parse(userCache).data || [] : [];
+      var storeUsers = allUsers.filter(function(u) {
+        return String(u['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      var optionsPersonil = '<option value="">-- Pilih Penanggung Jawab --</option>';
+      storeUsers.forEach(function(u) {
+        optionsPersonil += '<option value="' + u['NIK'] + '|' + u['NAMA'] + '">' + u['NAMA'] + ' (' + u['JABATAN'] + ')</option>';
+      });
+
+      Swal.fire({
+        title: 'Tambah Penugasan Rak',
+        html: 
+          '<div class="text-left text-xs space-y-3 text-slate-700 my-2">' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nomor Rak</label>' +
+              '<input type="text" id="rakModalNo" placeholder="Contoh: RAK-01 atau AA1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg uppercase font-mono font-bold">' +
+            '</div>' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nama / Deskripsi Rak</label>' +
+              '<input type="text" id="rakModalNama" placeholder="Contoh: Chiller Susu, Snack, Noodle" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-2">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Kategori</label>' +
+                '<select id="rakModalKat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold">' +
+                  '<option value="FOOD">FOOD</option>' +
+                  '<option value="NONFOOD">NONFOOD</option>' +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Penanggung Jawab</label>' +
+                '<select id="rakModalUser" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold">' +
+                  optionsPersonil +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+          '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Penugasan',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          var noRak = document.getElementById('rakModalNo').value.trim();
+          var namaRak = document.getElementById('rakModalNama').value.trim();
+          var kat = document.getElementById('rakModalKat').value;
+          var userVal = document.getElementById('rakModalUser').value;
+
+          if (!noRak || !namaRak || !userVal) {
+            Swal.showValidationMessage('Semua kolom wajib diisi');
+            return false;
+          }
+
+          var parts = userVal.split('|');
+          return {
+            noRak: noRak,
+            namaRak: namaRak,
+            category: kat,
+            penanggungJawabNik: parts[0],
+            penanggungJawabNama: parts[1]
+          };
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          var val = res.value;
+          Swal.fire({ title: 'Menyimpan Penugasan...', didOpen: function() { Swal.showLoading(); } });
+
+          var payload = {
+            subAction: 'ADD_PENUGASAN',
+            items: [{
+              kode: myStoreCode,
+              noRak: val.noRak,
+              namaRak: val.namaRak,
+              category: val.category,
+              penanggungJawabNik: val.penanggungJawabNik,
+              penanggungJawabNama: val.penanggungJawabNama,
+              diinputOlehNik: currentSessionUser ? currentSessionUser.nik : '',
+              diinputOlehNama: currentSessionUser ? currentSessionUser.nama : ''
+            }]
+          };
+
+          kirimBackendRequest('CRUD_CEKLIS_EXP', payload, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Penugasan Rak Tersimpan', timer: 1200, showConfirmButton: false });
+            muatDataSheetLazy('Ceklis_EXP', true, function() {
+              gantiTabCeklisExp('RAK');
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
+          });
+        }
+      });
+    }
 
     // Modal SOP 6 Centang Rak Frontend Only + Upload Foto Drive
     function bukaModalEksekusiSopRak(tugasId) {
@@ -2945,19 +3080,30 @@
     function renderSubTabExpInput(container) {
       container.innerHTML = 
         '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm max-w-xl mx-auto space-y-4">' +
-          '<h4 class="text-sm font-black text-slate-800 pb-2 border-b border-slate-100">Pencatatan Item Expired (Alert Formula)</h4>' +
+          '<h4 class="text-sm font-black text-slate-800 pb-2 border-b border-slate-100">Pencatatan Item Expired (Alert Formula Otomatis)</h4>' +
           '<div class="space-y-3 text-xs">' +
-            '<div><label class="block font-bold text-slate-700 mb-1">Nama Item / Produk</label><input type="text" id="expInputNamaItem" placeholder="Contoh: Susu UHT 1L" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"></div>' +
-            '<div class="grid grid-cols-2 gap-3">' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Posisi No Rak</label><input type="text" id="expInputNoRak" placeholder="Contoh: RAK-01" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Qty Exp (Pcs)</label><input type="number" id="expInputQty" value="1" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"></div>' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nama Item / Produk</label>' +
+              '<input type="text" id="expInputNamaItem" placeholder="Contoh: Susu UHT 1L, Cokelat Bar, dll" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' +
             '</div>' +
             '<div class="grid grid-cols-2 gap-3">' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Tanggal Expired</label><input type="date" id="expInputTglExp" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">RH (Hari Retur)</label>' +
-                '<select id="expInputRh" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold">' +
-                  '<option value="30">30 Hari</option><option value="60">60 Hari</option><option value="90">90 Hari</option>' +
-                '</select>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Posisi No Rak</label>' +
+                '<input type="text" id="expInputNoRak" placeholder="Contoh: AA1 atau RAK-01" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono uppercase">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Qty Exp (Pcs)</label>' +
+                '<input type="number" id="expInputQty" value="1" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold">' +
+              '</div>' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-3">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Tanggal Expired</label>' +
+                '<input type="date" id="expInputTglExp" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">RH / Hari Retur (Tulis Bebas)</label>' +
+                '<input type="number" id="expInputRh" placeholder="Contoh: 30, 45, 60" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold">' +
               '</div>' +
             '</div>' +
             '<button onclick="submitFormItemExp()" class="w-full py-2.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all mt-2">' +
@@ -2972,14 +3118,15 @@
       var noRak = document.getElementById('expInputNoRak').value.trim();
       var qty = Number(document.getElementById('expInputQty').value || 1);
       var tglExpStr = document.getElementById('expInputTglExp').value;
-      var rh = Number(document.getElementById('expInputRh').value || 30);
+      var rh = Number(document.getElementById('expInputRh').value || 0);
 
-      if (!namaItem || !tglExpStr) {
-        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Nama item dan tanggal expired wajib diisi.' });
+      if (!namaItem || !tglExpStr || rh <= 0) {
+        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Nama item, tanggal expired, dan RH (angka hari) wajib diisi.' });
         return;
       }
 
-      var expDate = new Date(tglExpStr);
+      // Rumus Tanggal Alert: Tanggal Exp - RH - 10 Hari Spare
+      var expDate = parseDateIndo(tglExpStr);
       var alertDate = new Date(expDate.getTime() - (rh + 10) * 24 * 60 * 60 * 1000);
       var today = new Date();
       var sisaHari = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
@@ -2987,7 +3134,7 @@
       var cfg = getTokoConfig() || {};
       var payload = {
         subAction: 'INPUT_EXP_ITEM',
-        kode: cfg.cleanCode || '',
+        kode: (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim(),
         namaItem: namaItem,
         posisiRak: noRak,
         noRak: noRak,
@@ -3013,35 +3160,186 @@
       });
     }
 
+    // State Filter Riwayat Ceklis EXP
+    window.currentExpFilterType = 'ALL';
+
+    function setFilterRiwayatExp(filterType) {
+      window.currentExpFilterType = filterType;
+      var container = document.getElementById('containerSubTabExp');
+      muatDataSheetLazy('Ceklis_EXP', false, function(dataExp) {
+        renderSubTabExpRiwayat(container, dataExp);
+      });
+    }
+
     function renderSubTabExpRiwayat(container, dataExp) {
-      var itemList = dataExp.filter(function(d) { return d['TIPE_DATA'] === 'ITEM_EXP'; });
-      var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
-        '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
-          '<h4 class="text-xs font-black text-slate-800">Riwayat Item Expired & Monitor Alert</h4>' +
-          '<span class="text-[11px] font-bold text-slate-500 font-mono">Total: ' + itemList.length + ' Item</span>' +
-        '</div>' +
-        '<div class="overflow-x-auto text-xs">' +
-          '<table class="w-full text-left divide-y divide-slate-100">' +
-            '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-              '<th class="p-2">Nama Produk</th><th class="p-2">Rak</th><th class="p-2 text-right">Qty</th><th class="p-2">Tgl Exp</th><th class="p-2">Alert Return</th><th class="p-2 text-center">Sisa Hari</th>' +
-            '</tr></thead>' +
-            '<tbody class="divide-y divide-slate-50 font-medium">';
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Filter hanya data tipe ITEM_EXP milik toko aktif
+      var itemList = dataExp.filter(function(d) {
+        return d['TIPE_DATA'] === 'ITEM_EXP' && String(d['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Hitung 5 Kategori Resume
+      var countTotal = itemList.length;
+      var countAkanExp = 0;
+      var countBelumEksekusi = 0;
+      var countLewatBatas = 0;
+      var countTereksekusi = 0;
 
       itemList.forEach(function(item) {
-        var sisa = Number(item['SISA_HARI'] || 0);
-        var badgeColor = sisa <= 10 ? 'bg-red-100 text-red-800 font-extrabold' : (sisa <= 30 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800');
-        html += '<tr>' +
-          '<td class="p-2 font-bold text-slate-800">' + item['NAMA_ITEM'] + '</td>' +
-          '<td class="p-2 text-slate-600 font-mono">' + (item['POSISI_RAK'] || '-') + '</td>' +
-          '<td class="p-2 text-right font-bold text-slate-800">' + item['QTY_EXP'] + '</td>' +
-          '<td class="p-2 font-mono text-slate-600">' + item['TANGGAL_EXP'] + '</td>' +
-          '<td class="p-2 font-mono text-red-600">' + item['TANGGAL_ALERT'] + '</td>' +
-          '<td class="p-2 text-center"><span class="px-2 py-0.5 rounded text-[10px] ' + badgeColor + '">' + sisa + ' Hari</span></td>' +
+        var expD = parseDateIndo(item['TANGGAL_EXP']);
+        var alertD = parseDateIndo(item['TANGGAL_ALERT']);
+        var isTereksekusi = String(item['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
+
+        var sisaHari = Math.ceil((expD - today) / (1000 * 60 * 60 * 24));
+        item._calcSisaHari = sisaHari;
+        item._isOverdue = (today >= alertD && !isTereksekusi);
+
+        if (isTereksekusi) {
+          countTereksekusi++;
+        } else {
+          countBelumEksekusi++;
+          if (sisaHari <= 30 && sisaHari >= 0) countAkanExp++;
+          if (item._isOverdue) countLewatBatas++;
+        }
+      });
+
+      // Filter Data sesuai Kartu yang Sedang Diklik
+      var activeFilter = window.currentExpFilterType || 'ALL';
+      var displayedList = itemList.filter(function(item) {
+        var isTereksekusi = String(item['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
+        if (activeFilter === 'AKAN_EXP') return (!isTereksekusi && item._calcSisaHari <= 30 && item._calcSisaHari >= 0);
+        if (activeFilter === 'BELUM') return !isTereksekusi;
+        if (activeFilter === 'LEWAT_BATAS') return item._isOverdue;
+        if (activeFilter === 'TEREKSEKUSI') return isTereksekusi;
+        return true; // ALL
+      });
+
+      var html = 
+        <!-- 5 KOTAK RESUME FILTERABLE -->
+        '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center mb-4">' +
+          '<div onclick="setFilterRiwayatExp(\'ALL\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'ALL' ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50') + '">' +
+            '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'ALL' ? 'text-slate-300' : 'text-slate-400') + '">Total Input</span>' +
+            '<span class="text-base font-black font-mono mt-0.5 block">' + countTotal + '</span>' +
+          '</div>' +
+
+          '<div onclick="setFilterRiwayatExp(\'AKAN_EXP\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'AKAN_EXP' ? 'bg-amber-600 text-white border-amber-700 shadow-md ring-2 ring-amber-400' : 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100') + '">' +
+            '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'AKAN_EXP' ? 'text-amber-200' : 'text-amber-700') + '">Akan Exp (&le;30H)</span>' +
+            '<span class="text-base font-black font-mono mt-0.5 block">' + countAkanExp + '</span>' +
+          '</div>' +
+
+          '<div onclick="setFilterRiwayatExp(\'BELUM\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'BELUM' ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-400' : 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100') + '">' +
+            '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'BELUM' ? 'text-blue-200' : 'text-blue-700') + '">Belum Dieksekusi</span>' +
+            '<span class="text-base font-black font-mono mt-0.5 block">' + countBelumEksekusi + '</span>' +
+          '</div>' +
+
+          '<div onclick="setFilterRiwayatExp(\'LEWAT_BATAS\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'LEWAT_BATAS' ? 'bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' : 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100') + '">' +
+            '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'LEWAT_BATAS' ? 'text-red-200' : 'text-red-700') + '">Lewat Batas Eksekusi</span>' +
+            '<span class="text-base font-black font-mono mt-0.5 block">' + countLewatBatas + '</span>' +
+          '</div>' +
+
+          '<div onclick="setFilterRiwayatExp(\'TEREKSEKUSI\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'TEREKSEKUSI' ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100') + '">' +
+            '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'TEREKSEKUSI' ? 'text-emerald-200' : 'text-emerald-700') + '">Tereksekusi</span>' +
+            '<span class="text-base font-black font-mono mt-0.5 block">' + countTereksekusi + '</span>' +
+          '</div>' +
+        '</div>' +
+
+        <!-- TABEL DATA RIWAYAT LENGKAP -->
+        '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800">Daftar Item Expired (' + activeFilter.replace('_', ' ') + ')</h4>' +
+            '<span class="text-[10px] text-slate-500 font-mono font-bold">Menampilkan: ' + displayedList.length + ' Item</span>' +
+          '</div>' +
+          '<div class="overflow-x-auto text-xs">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
+                '<th class="p-2.5 text-left">Nama Produk</th>' +
+                '<th class="p-2.5 text-center">Rak</th>' +
+                '<th class="p-2.5 text-center">Qty</th>' +
+                '<th class="p-2.5 text-center">Tgl Exp</th>' +
+                '<th class="p-2.5 text-center">Alert Return</th>' +
+                '<th class="p-2.5 text-center">Sisa Hari</th>' +
+                '<th class="p-2.5 text-center">Status</th>' +
+                '<th class="p-2.5 text-center">Aksi</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      if (displayedList.length === 0) {
+        html += '<tr><td colspan="8" class="p-6 text-center text-slate-400 italic">Tidak ada item dalam kategori ini.</td></tr>';
+      }
+
+      displayedList.forEach(function(item) {
+        var tglExpRapi = formatTanggalTampilan(item['TANGGAL_EXP']);
+        var tglAlertRapi = formatTanggalTampilan(item['TANGGAL_ALERT']);
+        var sisa = item._calcSisaHari;
+        var isTereksekusi = String(item['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
+
+        var badgeSisa = sisa <= 10 
+          ? 'bg-red-100 text-red-800 font-black' 
+          : (sisa <= 30 ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-emerald-100 text-emerald-800');
+
+        html += '<tr class="hover:bg-slate-50/80">' +
+          '<td class="p-2.5 text-left font-bold text-slate-800">' + item['NAMA_ITEM'] + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-600">' + (item['POSISI_RAK'] || '-') + '</td>' +
+          '<td class="p-2.5 text-center font-bold text-slate-800 font-mono">' + item['QTY_EXP'] + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-700">' + tglExpRapi + '</td>' +
+          '<td class="p-2.5 text-center font-mono ' + (item._isOverdue ? 'text-red-600 font-extrabold' : 'text-slate-600') + '">' + tglAlertRapi + '</td>' +
+          '<td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ' + badgeSisa + '">' + sisa + ' Hari</span></td>' +
+          '<td class="p-2.5 text-center">' +
+            (isTereksekusi 
+              ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-check mr-1"></i>Tereksekusi</span>' 
+              : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">Belum</span>') +
+          '</td>' +
+          '<td class="p-2.5 text-center space-x-1 whitespace-nowrap">' +
+            (!isTereksekusi 
+              ? '<button onclick="konfirmasiEksekusiItemExp(\'' + item['ID'] + '\', \'' + item['NAMA_ITEM'] + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-sm"><i class="fa-solid fa-check-double mr-1"></i>Eksekusi</button>' 
+              : '') +
+            '<button onclick="hapusRowUniversal(\'Ceklis_EXP\', \'' + item['ID'] + '\', function(){ setFilterRiwayatExp(window.currentExpFilterType); })" class="p-1 text-slate-400 hover:text-red-600 transition-colors" title="Hapus Item"><i class="fa-solid fa-trash text-xs"></i></button>' +
+          '</td>' +
         '</tr>';
       });
 
       html += '</tbody></table></div></div>';
       container.innerHTML = html;
+    }
+
+    // Fungsi Konfirmasi Eksekusi Return Item
+    function konfirmasiEksekusiItemExp(itemId, namaItem) {
+      Swal.fire({
+        title: 'Konfirmasi Eksekusi Return?',
+        html: 'Apakah produk <b>' + namaItem + '</b> sudah selesai diretur / diturunkan dari rak?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Sudah Dieksekusi',
+        cancelButtonText: 'Batal'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          Swal.fire({ title: 'Memproses...', didOpen: function() { Swal.showLoading(); } });
+
+          kirimBackendRequest('CRUD_CEKLIS_EXP', {
+            subAction: 'SUBMIT_KERJAKAN',
+            id: itemId,
+            newStatus: 'TEREKSEKUSI',
+            nik: currentSessionUser ? currentSessionUser.nik : ''
+          }, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Item Berhasil Dieksekusi', timer: 1200, showConfirmButton: false });
+            muatDataSheetLazy('Ceklis_EXP', true, function() {
+              setFilterRiwayatExp(window.currentExpFilterType);
+              // Perbarui badge notifikasi
+              renderDataBerandaDariCache();
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
+          });
+        }
+      });
     }
 
     // ==================== [2] MODUL SERAH TERIMA ====================

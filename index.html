@@ -345,7 +345,7 @@
     // ==================== STATE GLOBAL & CONFIG ====================
     var APP_CONFIG = {
       CACHE_EXPIRY_MS: 5 * 60 * 1000, // 5 Menit
-      API_ENDPOINT: 'https://script.google.com/macros/s/AKfycbzZ4hmr-ayH7MWrceJwAyrei76x0rjg8lnPwWBfVp1GYmMRV3e1szNWjz5Pf5GSqcEKPA/exec'
+      API_ENDPOINT: 'https://script.google.com/macros/s/AKfycbxVPaAeU4BisuLF34jmnqWJDxXVyzWmTS3fgudgXx_xAXUxikYd1FtB0oT876GNCLUuhw/exec'
     };
 
     var currentSessionUser = null;
@@ -865,16 +865,22 @@
           })
           .handleApiRouter(actionName, payloadData);
       } else {
-        // Mode Fetch untuk GitHub Pages (Gunakan text/plain agar tidak terkena blokir CORS Preflight)
+        } else {
+        // Mode Fetch untuk GitHub Pages (CORS & Redirect Safe)
         fetch(APP_CONFIG.API_ENDPOINT, {
           method: 'POST',
+          mode: 'cors',
+          redirect: 'follow',
           headers: {
             'Content-Type': 'text/plain;charset=utf-8'
           },
           body: JSON.stringify({ action: actionName, payload: payloadData })
         })
-        .then(function(res) { 
-          return res.json(); 
+        .then(function(res) {
+          if (!res.ok && res.status !== 0) {
+            throw new Error('HTTP Status ' + res.status);
+          }
+          return res.json();
         })
         .then(function(json) {
           if (json.status === 'success') {

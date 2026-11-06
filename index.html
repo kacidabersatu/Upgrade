@@ -148,24 +148,24 @@
     </div>
   </div>
 
-  <!-- ==================== 2. OVERLAY LOADING BUKA MENU TAB (Z-INDEX 80 + PURE CLEAN LOGO) ==================== -->
-  <div id="tabLoadingOverlay" class="fixed inset-0 z-[80] bg-emerald-950/60 backdrop-blur-sm hidden flex-col items-center justify-center p-6 transition-all duration-200">
-    <div class="bg-white rounded-card p-6 w-full max-w-xs flex flex-col items-center shadow-2xl border border-emerald-100 relative">
-      <!-- mix-blend-multiply menghilangkan latar belakang kotak putih logo -->
-      <img src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-" alt="Logo" class="w-16 h-16 object-contain mb-3 mix-blend-multiply animate-pulse">
-      <h4 id="tabLoadingTitle" class="text-sm font-bold text-emerald-900 mb-1">Membuka Tab Data...</h4>
+  <!-- ==================== 2. OVERLAY LOADING DENGAN LOGO ANIMASI BOUNCE MURNI ==================== -->
+  <div id="tabLoadingOverlay" class="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm hidden flex-col items-center justify-center p-6 transition-all duration-200">
+    <div class="bg-white rounded-card p-6 w-full max-w-xs flex flex-col items-center shadow-2xl border border-slate-100 relative">
+      <!-- Logo Animasi Bounce Tanpa Latar Belakang -->
+      <img src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-" alt="Logo" class="w-16 h-16 object-contain mb-3 animate-bounce">
+      <h4 id="tabLoadingTitle" class="text-sm font-bold text-slate-800 mb-1">Membuka Tab Data...</h4>
       <p id="tabLoadingSub" class="text-xs text-slate-500 mb-4 text-center">Mengambil data dari Spreadsheet...</p>
-      <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
+      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-200">
         <div id="tabProgressBar" class="h-full bg-brand-primary rounded-full transition-all duration-100 ease-linear" style="width: 0%"></div>
       </div>
       <span id="tabProgressPercentage" class="text-xs font-mono font-bold text-brand-dark mt-2">0%</span>
     </div>
   </div>
 
-  <!-- ==================== 3. OVERLAY SINKRONISASI MANUAL REAL ==================== -->
+  <!-- ==================== 3. OVERLAY SINKRONISASI MANUAL REAL (LATAR BELAKANG JELAS) ==================== -->
   <div id="syncManualOverlay" class="fixed inset-0 z-50 hidden flex-col items-center justify-center p-4 bg-cover bg-center"
-       style="background-image: linear-gradient(rgba(6, 95, 70, 0.9), rgba(5, 150, 105, 0.92)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
-    <div class="bg-white rounded-card w-full max-w-md p-6 shadow-2xl border border-emerald-200 flex flex-col relative overflow-hidden">
+       style="background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.65)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+    <div class="bg-white rounded-card w-full max-w-md p-6 shadow-2xl border border-slate-200 flex flex-col relative overflow-hidden">
       <div class="flex items-center space-x-3 mb-4 border-b border-slate-100 pb-3">
         <div class="w-12 h-12 rounded-xl bg-emerald-50 text-brand-primary flex items-center justify-center text-2xl font-bold shadow-inner">
           <i class="fa-solid fa-arrows-rotate animate-spin"></i>
@@ -223,26 +223,27 @@
     </div>
   </div>
 
-  <!-- ==================== 4. LAYAR LOGIN & MODAL CONFIG GERIGI ==================== -->
+  <!-- ==================== 4. LAYAR LOGIN (LATAR BELAKANG JELAS TANPA WARNA HIJAU) ==================== -->
   <div id="authScreen" class="fixed inset-0 z-30 flex flex-col justify-center items-center p-4 bg-cover bg-center min-h-screen"
-       style="background-image: linear-gradient(rgba(6, 95, 70, 0.85), rgba(6, 95, 70, 0.95)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+       style="background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.55)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
     
     <!-- Tombol Gerigi Config Pojok Kanan Atas -->
-    <button onclick="bukaModalConfigToko()" class="absolute top-5 right-5 w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-lg border border-white/30 transition-transform active:scale-95">
+    <button onclick="bukaModalConfigToko()" class="absolute top-5 right-5 w-12 h-12 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-lg border border-white/30 transition-transform active:scale-95">
       <i class="fa-solid fa-gear text-xl"></i>
     </button>
 
     <!-- Card Login -->
-    <div class="w-full max-w-sm bg-white rounded-card p-6 shadow-2xl border border-emerald-100 flex flex-col items-center relative">
-      <div class="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center p-2 mb-3 shadow-inner border border-emerald-100">
-        <img src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-" alt="Logo" class="w-full h-full object-contain">
+    <div class="w-full max-w-sm bg-white rounded-card p-6 shadow-2xl border border-slate-100 flex flex-col items-center relative">
+      <!-- Logo Bersih Pure PNG dengan Animasi Bounce Tanpa Kotak Background -->
+      <div class="w-20 h-20 flex items-center justify-center mb-2">
+        <img src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-" alt="Logo" class="w-full h-full object-contain animate-bounce">
       </div>
       <h2 class="text-xl font-extrabold text-slate-800">Masuk Akun Personil</h2>
       <p class="text-xs text-slate-500 mt-0.5 text-center">Portal Performa & Operasional Retail</p>
 
       <!-- Badge Indikator Toko Terkonfigurasi -->
-      <div id="loginStoreBadge" class="mt-3 py-1 px-3 bg-emerald-100 text-emerald-900 rounded-full text-xs font-bold border border-emerald-300 flex items-center space-x-1">
-        <i class="fa-solid fa-store mr-1"></i>
+      <div id="loginStoreBadge" class="mt-3 py-1 px-3 bg-slate-100 text-slate-800 rounded-full text-xs font-bold border border-slate-300 flex items-center space-x-1">
+        <i class="fa-solid fa-store mr-1 text-emerald-700"></i>
         <span id="labelTokoConfig">Toko: Belum Diatur (Klik Gerigi)</span>
       </div>
 
@@ -269,10 +270,10 @@
       <!-- Bantuan Login WhatsApp -->
       <div class="mt-6 pt-4 border-t border-slate-100 w-full text-center">
         <p class="text-xs text-slate-500">Butuh Bantuan Login? Hubungi Admin:</p>
-        <a href="https://wa.me/6285852719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20portal" target="_blank"
+        <a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20login%20portal" target="_blank"
            class="inline-flex items-center text-xs font-bold text-emerald-600 hover:text-emerald-700 mt-1">
           <i class="fa-brands fa-whatsapp text-sm mr-1.5 text-emerald-500"></i>
-          0858-6271-9780
+          Whatsapp Sekarang
         </a>
       </div>
     </div>
@@ -2391,16 +2392,36 @@
       }, function() {});
     }
 
+    // ==================== TANGANI KLIK ITEM NOTIFIKASI SECARA INSTAN ====================
     function tanganiKlikNotifikasiItem(notifId, targetMenu) {
-      kirimBackendRequest('CRUD_NOTIFIKASI', {
-        subAction: 'MARK_READ',
-        notificationId: notifId
-      }, function() {
-        muatDataSheetLazy('Notifikasi', true, function(refreshed) {
-          renderNotifikasiLonceng(refreshed);
-        });
-      }, function() {});
+      // 1. Optimistic Update Lokal (Langsung ubah status jadi READ tanpa loading)
+      var notifCache = localStorage.getItem('kacida_cache_Notifikasi');
+      if (notifCache) {
+        try {
+          var parsed = JSON.parse(notifCache);
+          var list = parsed.data || [];
+          list.forEach(function(n) {
+            if (String(n['notificationId']) === String(notifId)) {
+              n['status'] = 'READ';
+            }
+          });
+          localStorage.setItem('kacida_cache_Notifikasi', JSON.stringify({
+            data: list,
+            timestamp: Date.now()
+          }));
+          renderNotifikasiLonceng(list);
+        } catch (e) {}
+      }
 
+      // 2. Kirim update ke backend di latar belakang (Silent Background Sync Tanpa Menampilkan Loading)
+      if (notifId && String(notifId).indexOf('SYS_') === -1) {
+        kirimBackendRequest('CRUD_NOTIFIKASI', {
+          subAction: 'MARK_READ',
+          notificationId: notifId
+        }, function() {}, function() {});
+      }
+
+      // 3. Tutup drawer lonceng dan langsung arahkan ke menu yang bersangkutan
       tutupPanelNotifikasi();
       if (targetMenu) {
         bukaModalMenuTerpilih(targetMenu);

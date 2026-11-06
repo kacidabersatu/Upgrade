@@ -2221,17 +2221,83 @@
       var container = document.getElementById('listNotifikasiContainer');
       var labelUnread = document.getElementById('labelJumlahNotifUnread');
 
-      if (!notifList || notifList.length === 0) {
-        badge.classList.add('hidden');
-        labelUnread.innerText = '0 Notifikasi Baru';
-        container.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">Tidak ada notifikasi saat ini.</div>';
-        return;
+      var list = Array.isArray(notifList) ? notifList.slice() : [];
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var role = currentSessionUser ? currentSessionUser.jabatan : '';
+      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 1. INJEKSI PENGINGAT RAK & ALERT EXPIRED
+      var expCache = localStorage.getItem('kacida_cache_Ceklis_EXP');
+      if (expCache) {
+        try {
+          var expData = JSON.parse(expCache).data || [];
+          var userTasks = expData.filter(function(d) {
+            return d['TIPE_DATA'] === 'TUGAS_RAK' && 
+                   String(d['KODE']).toUpperCase().trim() === myCode &&
+                   String(d['PENANGGUNG_JAWAB_NIK']).trim() === String(currentSessionUser ? currentSessionUser.nik : '').trim() &&
+                   (d['STATUS'] === 'BELUM' || d['STATUS'] === 'DITOLAK');
+          });
+
+          // Pengingat harian personil jika ada rak belum selesai
+          if (userTasks.length > 0) {
+            list.unshift({
+              notificationId: 'SYS_RAK_PENDING_' + userTasks.length,
+              sourceMenu: 'CEKLIS EXP',
+              title: 'Pengingat Tugas Ceklis Rak',
+              message: 'Ada ' + userTasks.length + ' rak lagi yang belum Anda kerjakan hari ini.',
+              priority: 'HIGH',
+              status: 'UNREAD',
+              createdAt: 'Hari Ini'
+            });
+          }
+
+          // Notifikasi untuk COS jika ada tugas menunggu persetujuan
+          if (isCos) {
+            var needApproval = expData.filter(function(d) {
+              return d['TIPE_DATA'] === 'TUGAS_RAK' && 
+                     String(d['KODE']).toUpperCase().trim() === myCode &&
+                     d['STATUS'] === 'PENDING_APPROVAL';
+            });
+            if (needApproval.length > 0) {
+              list.unshift({
+                notificationId: 'SYS_COS_APPROVAL_' + needApproval.length,
+                sourceMenu: 'CEKLIS EXP',
+                title: 'Persetujuan Hasil Rak (COS)',
+                message: 'Ada ' + needApproval.length + ' rak menunggu verifikasi dan persetujuan Anda.',
+                priority: 'HIGH',
+                status: 'UNREAD',
+                createdAt: 'Hari Ini'
+              });
+            }
+          }
+
+          // Notifikasi jika ada item expired masuk waktu return
+          var overdueItems = expData.filter(function(d) {
+            return d['TIPE_DATA'] === 'ITEM_EXP' && 
+                   String(d['KODE']).toUpperCase().trim() === myCode &&
+                   String(d['STATUS']).toUpperCase() !== 'TEREKSEKUSI' &&
+                   today >= parseDateIndo(d['TANGGAL_ALERT']);
+          });
+
+          if (overdueItems.length > 0) {
+            list.unshift({
+              notificationId: 'SYS_ALERT_EXP_' + overdueItems.length,
+              sourceMenu: 'CEKLIS EXP',
+              title: 'Peringatan Return Produk Expired',
+              message: 'Terdapat ' + overdueItems.length + ' item yang sudah masuk batas alert retur dan harus segera dieksekusi.',
+              priority: 'HIGH',
+              status: 'UNREAD',
+              createdAt: 'Hari Ini'
+            });
+          }
+        } catch (e) {}
       }
 
-      var unreadCount = 0;
-      notifList.forEach(function(n) {
-        if (String(n['status']) === 'UNREAD') unreadCount++;
-      });
+      // Hitung total belum dibaca
+      var unreadCount = list.filter(function(n) { return String(n['status']) === 'UNREAD'; }).length;
 
       if (unreadCount > 0) {
         badge.classList.remove('hidden');
@@ -2242,21 +2308,25 @@
         labelUnread.innerText = 'Semua notifikasi telah dibaca';
       }
 
+      if (list.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">Tidak ada notifikasi saat ini.</div>';
+        return;
+      }
+
       var html = '';
-      notifList.forEach(function(item) {
+      list.forEach(function(item) {
         var isUnread = String(item['status']) === 'UNREAD';
-        var isHighPriority = String(item['priority']).toUpperCase() === 'HIGH';
+        var isHigh = String(item['priority']).toUpperCase() === 'HIGH';
 
         html += '<div class="p-3 rounded-xl transition-all cursor-pointer ' + (isUnread ? 'bg-emerald-50/70 border-l-4 border-brand-primary' : 'hover:bg-slate-50') + '"' +
-          ' onclick="tanganiKlikNotifikasiItem(\'' + item['notificationId'] + '\', \'' + (item['sourceMenu'] || '') + '\')">' +
+          ' onclick="tanganiKlikNotifikasiItem(\'' + (item['notificationId'] || '') + '\', \'' + (item['sourceMenu'] || '') + '\')">' +
           '<div class="flex items-center justify-between">' +
-          '<span class="text-[10px] font-extrabold uppercase ' + (isHighPriority ? 'text-red-600' : 'text-brand-primary') + '">' +
-          (item['sourceMenu'] || 'SISTEM') + '</span>' +
-          '<span class="text-[9px] text-slate-400 font-mono">' + (item['createdAt'] || '') + '</span>' +
+            '<span class="text-[10px] font-extrabold uppercase ' + (isHigh ? 'text-red-600' : 'text-brand-primary') + '">' + (item['sourceMenu'] || 'SISTEM') + '</span>' +
+            '<span class="text-[9px] text-slate-400 font-mono">' + (item['createdAt'] || '') + '</span>' +
           '</div>' +
           '<h5 class="text-xs font-bold text-slate-800 mt-1">' + item['title'] + '</h5>' +
           '<p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">' + item['message'] + '</p>' +
-          '</div>';
+        '</div>';
       });
 
       container.innerHTML = html;
@@ -2804,13 +2874,27 @@
       '</div>';
     }
 
-    // ==================== [1] MODUL CEKLIS EXP ====================
+    // ==================== [1] MODUL CEKLIS EXP LENGKAP (STAFF, COS & AC) ====================
+    var currentExpRakFilter = 'ALL';
+    var currentExpSearchQuery = '';
+    window.currentExpFilterType = 'ALL';
+
     function renderModulCeklisExp(container) {
-      container.innerHTML = renderHeaderModalUniversal('Ceklis Rak & Monitoring Expired', '3 Sub-Tab: Rak, Input Exp, dan Riwayat Lengkap') +
+      var isAC = currentSessionUser && (
+        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
+        currentSessionUser.jabatan === 'AC' || 
+        currentSessionUser.nik === '14125034'
+      );
+
+      container.innerHTML = renderHeaderModalUniversal(
+        'Ceklis Rak & Monitoring Expired', 
+        isAC ? 'Dashboard Pengawasan Area Coordinator' : 'Master Rak, Input Exp & Riwayat Alert'
+      ) +
         '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50">' +
           '<div class="flex border-b border-slate-200 bg-white text-xs font-bold text-slate-500 px-4 pt-2 space-x-2">' +
             '<button onclick="gantiTabCeklisExp(\'RAK\')" id="tabExpRak" class="py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark">Master Rak</button>' +
-            '<button onclick="gantiTabCeklisExp(\'INPUT\')" id="tabExpInput" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Input Exp</button>' +
+            // Sembunyikan Tab Input Exp untuk Role AC
+            (!isAC ? '<button onclick="gantiTabCeklisExp(\'INPUT\')" id="tabExpInput" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Input Exp</button>' : '') +
             '<button onclick="gantiTabCeklisExp(\'RIWAYAT\')" id="tabExpRiwayat" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Riwayat & Alert</button>' +
           '</div>' +
           '<div id="containerSubTabExp" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"></div>' +
@@ -2822,9 +2906,11 @@
     function gantiTabCeklisExp(tabName) {
       ['Rak', 'Input', 'Riwayat'].forEach(function(t) {
         var btn = document.getElementById('tabExp' + t);
-        if (btn) btn.className = t.toUpperCase() === tabName
-          ? 'py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold'
-          : 'py-2.5 px-4 border-b-2 border-transparent text-slate-500 font-semibold hover:text-brand-dark';
+        if (btn) {
+          btn.className = (t.toUpperCase() === tabName)
+            ? 'py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold'
+            : 'py-2.5 px-4 border-b-2 border-transparent text-slate-500 font-semibold hover:text-brand-dark';
+        }
       });
 
       var container = document.getElementById('containerSubTabExp');
@@ -2832,55 +2918,167 @@
         if (tabName === 'RAK') {
           renderSubTabExpRak(container, dataExp);
         } else if (tabName === 'INPUT') {
-          renderSubTabExpInput(container, dataExp);
+          renderSubTabExpInput(container);
         } else if (tabName === 'RIWAYAT') {
           renderSubTabExpRiwayat(container, dataExp);
         }
       });
     }
 
+    // ==================== TAB 1: MASTER RAK ====================
     function renderSubTabExpRak(container, dataExp) {
-      var tugasList = dataExp.filter(function(d) { return d['TIPE_DATA'] === 'TUGAS_RAK'; });
+      var isAC = currentSessionUser && (
+        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
+        currentSessionUser.jabatan === 'AC' || 
+        currentSessionUser.nik === '14125034'
+      );
+
+      if (isAC) {
+        renderSubTabExpRakModeAC(container, dataExp);
+      } else {
+        renderSubTabExpRakModeToko(container, dataExp);
+      }
+    }
+
+    // --- TAMPILAN MASTER RAK UNTUK TOKO (STAFF & COS) ---
+    function renderSubTabExpRakModeToko(container, dataExp) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var role = currentSessionUser ? currentSessionUser.jabatan : '';
+      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || currentSessionUser.nik === '14125034');
+      var currentMonth = new Date().getMonth();
+      var currentYear = new Date().getFullYear();
+
+      // Ambil tugas rak milik toko aktif
+      var tugasList = dataExp.filter(function(d) {
+        return d['TIPE_DATA'] === 'TUGAS_RAK' && String(d['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      // Kalkulasi status dan deteksi Reset Awal Bulan otomatis
+      tugasList.forEach(function(item) {
+        var rawStatus = String(item['STATUS'] || 'BELUM').toUpperCase().trim();
+        var tglKerja = parseDateIndo(item['TANGGAL_PENGERJAAN']);
+        
+        // Auto-Reset jika diselesaikan di bulan sebelumnya
+        if (rawStatus === 'APPROVED' && tglKerja && !isNaN(tglKerja.getTime())) {
+          if (tglKerja.getMonth() !== currentMonth || tglKerja.getFullYear() !== currentYear) {
+            item._computedStatus = 'BELUM';
+            item._isResetAwalBulan = true;
+            return;
+          }
+        }
+        item._computedStatus = rawStatus;
+      });
+
       var total = tugasList.length;
-      var sudah = tugasList.filter(function(d) { return d['STATUS'] === 'SUDAH' || d['STATUS'] === 'APPROVED'; }).length;
+      var sudah = tugasList.filter(function(d) { return d._computedStatus === 'APPROVED'; }).length;
       var belum = total - sudah;
       var pct = total > 0 ? ((sudah / total) * 100).toFixed(0) : 0;
 
-      var role = currentSessionUser ? currentSessionUser.jabatan : '';
-      var isCosOrAcos = (role === 'CHIEF OF STORE' || role === 'COS' || role.indexOf('ASSISTANT') !== -1 || role === 'ACOS');
+      // Filter pencarian dan kartu resume
+      var filterActive = currentExpRakFilter || 'ALL';
+      var query = (currentExpSearchQuery || '').toLowerCase().trim();
+
+      var filtered = tugasList.filter(function(item) {
+        if (filterActive === 'SUDAH' && item._computedStatus !== 'APPROVED') return false;
+        if (filterActive === 'BELUM' && item._computedStatus === 'APPROVED') return false;
+        if (query) {
+          var matchNo = String(item['NO_RAK'] || '').toLowerCase().indexOf(query) !== -1;
+          var matchNama = String(item['NAMA_RAK'] || '').toLowerCase().indexOf(query) !== -1;
+          var matchUser = String(item['PENANGGUNG_JAWAB_NAMA'] || '').toLowerCase().indexOf(query) !== -1;
+          if (!matchNo && !matchNama && !matchUser) return false;
+        }
+        return true;
+      });
 
       var html = 
-        '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
-          '<div class="p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 block font-bold">TOTAL RAK</span><span class="text-xl font-black text-slate-800">' + total + '</span></div>' +
-          '<div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-700 block font-bold">SUDAH DICEK</span><span class="text-xl font-black text-emerald-800">' + sudah + '</span></div>' +
-          '<div class="p-3.5 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 block font-bold">BELUM DICEK</span><span class="text-xl font-black text-red-800">' + belum + '</span></div>' +
-          '<div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-700 block font-bold">PROGRESS</span><span class="text-xl font-black text-blue-800">' + pct + '%</span></div>' +
+        // 3 Kotak Resume Filterable
+        '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">' +
+          '<div onclick="setFilterRakToko(\'ALL\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'ALL' ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50') + '">' +
+            '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'ALL' ? 'text-slate-300' : 'text-slate-400') + '">TOTAL RAK</span>' +
+            '<span class="text-xl font-black font-mono mt-0.5 block">' + total + '</span>' +
+          '</div>' +
+          '<div onclick="setFilterRakToko(\'SUDAH\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'SUDAH' ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100') + '">' +
+            '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'SUDAH' ? 'text-emerald-200' : 'text-emerald-700') + '">SUDAH DICEK (APPROVED)</span>' +
+            '<span class="text-xl font-black font-mono mt-0.5 block">' + sudah + '</span>' +
+          '</div>' +
+          '<div onclick="setFilterRakToko(\'BELUM\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'BELUM' ? 'bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' : 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100') + '">' +
+            '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'BELUM' ? 'text-red-200' : 'text-red-700') + '">BELUM DICEK</span>' +
+            '<span class="text-xl font-black font-mono mt-0.5 block">' + belum + '</span>' +
+          '</div>' +
+          '<div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200 shadow-sm">' +
+            '<span class="text-[10px] text-blue-700 block font-bold uppercase">PROGRESS</span>' +
+            '<span class="text-xl font-black text-blue-900 font-mono mt-0.5 block">' + pct + '%</span>' +
+          '</div>' +
         '</div>' +
 
-        '<div class="flex items-center justify-between">' +
-          '<h4 class="text-xs font-extrabold text-slate-800">Daftar Penugasan Rak</h4>' +
-          (isCosOrAcos ? '<button onclick="bukaModalTambahTugasRak()" class="px-3 py-1.5 bg-brand-primary text-white rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-plus mr-1"></i> Tambah Rak</button>' : '') +
+        // Bar Pencarian & Tombol Tambah Rak
+        '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">' +
+          '<div class="relative flex-1 max-w-md">' +
+            '<i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>' +
+            '<input type="text" id="inputSearchRakStaff" oninput="cariRakInstan(this.value)" value="' + currentExpSearchQuery + '" placeholder="Cari nama rak, nomor rak, penanggung jawab..." ' +
+                   'class="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary">' +
+          '</div>' +
+          (isCos ? '<button onclick="bukaModalTambahTugasRak()" class="px-4 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center space-x-1.5"><i class="fa-solid fa-plus"></i><span>Tambah Rak</span></button>' : '') +
         '</div>' +
 
-        '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">';
+        // Grid Daftar Rak
+        '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">';
 
-      tugasList.forEach(function(item) {
-        var isDone = item['STATUS'] === 'SUDAH' || item['STATUS'] === 'APPROVED';
-        var isFood = item['CATEGORY'] === 'FOOD';
+      if (filtered.length === 0) {
+        html += '<div class="col-span-full p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Tidak ada rak yang sesuai filter.</div>';
+      }
+
+      filtered.forEach(function(item) {
+        var status = item._computedStatus;
+        var isApproved = (status === 'APPROVED');
+        var isPending = (status === 'PENDING_APPROVAL');
+        var isDitolak = (status === 'DITOLAK');
+        var isFood = (item['CATEGORY'] === 'FOOD');
+
+        var badgeStatus = '';
+        if (isApproved) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-lock mr-1"></i>Disetujui</span>';
+        } else if (isPending) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 animate-pulse"><i class="fa-solid fa-clock mr-1"></i>Menunggu COS</span>';
+        } else if (isDitolak) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
+        } else {
+          badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">Belum</span>';
+        }
 
         html += '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">' +
           '<div class="flex items-start justify-between">' +
             '<div>' +
-              '<span class="text-[10px] font-bold px-2 py-0.5 rounded ' + (isFood ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800') + '">' + item['CATEGORY'] + '</span>' +
-              '<h5 class="text-sm font-black text-slate-800 mt-1">' + item['NO_RAK'] + ' - ' + item['NAMA_RAK'] + '</h5>' +
-              '<p class="text-[11px] text-slate-500 font-medium mt-0.5"><i class="fa-solid fa-user text-[10px] mr-1"></i> ' + item['PENANGGUNG_JAWAB_NAMA'] + '</p>' +
+              '<span class="text-[10px] font-bold px-2 py-0.5 rounded ' + (isFood ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800') + '">' + (item['CATEGORY'] || 'FOOD') + '</span>' +
+              '<h5 class="text-sm font-black text-slate-800 mt-1 uppercase">' + item['NO_RAK'] + ' - ' + item['NAMA_RAK'] + '</h5>' +
+              '<p class="text-[11px] text-slate-500 font-medium mt-0.5"><i class="fa-solid fa-user text-[10px] mr-1"></i> ' + (item['PENANGGUNG_JAWAB_NAMA'] || '-') + '</p>' +
             '</div>' +
-            '<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ' + (isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + item['STATUS'] + '</span>' +
+            badgeStatus +
           '</div>' +
 
           '<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">' +
-            (item['FOTO_BUKTI_URL_LH3'] ? '<a href="' + item['FOTO_BUKTI_URL_LH3'] + '" target="_blank" class="text-brand-primary font-bold hover:underline"><i class="fa-solid fa-image mr-1"></i> Lihat Foto</a>' : '<span class="text-slate-400 text-[11px]">Tanpa Foto</span>') +
-            (!isDone ? '<button onclick="bukaModalEksekusiSopRak(\'' + item['ID'] + '\')" class="px-3 py-1 bg-brand-primary hover:bg-emerald-700 text-white rounded-lg font-bold text-xs">Kerjakan</button>' : '<span class="text-emerald-700 font-bold text-xs"><i class="fa-solid fa-check-circle mr-1"></i> Tuntas</span>') +
+            (item['FOTO_BUKTI_URL_LH3'] 
+              ? '<a href="' + item['FOTO_BUKTI_URL_LH3'] + '" target="_blank" class="text-brand-primary font-bold hover:underline"><i class="fa-solid fa-image mr-1"></i>Foto Bukti</a>' 
+              : '<span class="text-slate-400 text-[10px]">Tanpa Foto</span>') +
+
+            '<div class="flex items-center space-x-1.5">' +
+              // Aksi Approval untuk COS
+              (isCos && isPending 
+                ? '<button onclick="aksiPersetujuanCos(\'' + item['ID'] + '\', \'APPROVED\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]">Setujui</button>' +
+                  '<button onclick="aksiPersetujuanCos(\'' + item['ID'] + '\', \'DITOLAK\')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[11px]">Tolak</button>'
+                : '') +
+
+              // Buka Kunci khusus COS jika sudah Approved
+              (isCos && isApproved 
+                ? '<button onclick="bukaKunciRakOlehCos(\'' + item['ID'] + '\')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-lock-open mr-1"></i>Buka Kunci</button>'
+                : '') +
+
+              // Tombol Kerjakan untuk Staf (Hanya jika Belum atau Ditolak)
+              (!isApproved && !isPending
+                ? '<button onclick="bukaModalEksekusiSopRak(\'' + item['ID'] + '\')" class="px-3 py-1 bg-brand-primary hover:bg-emerald-700 text-white rounded-lg font-bold text-xs">' + (isDitolak ? 'Kerjakan Ulang' : 'Kerjakan') + '</button>'
+                : '') +
+            '</div>' +
           '</div>' +
         '</div>';
       });
@@ -2888,12 +3086,228 @@
       html += '</div>';
       container.innerHTML = html;
     }
+
+    function setFilterRakToko(filterType) {
+      currentExpRakFilter = filterType;
+      var container = document.getElementById('containerSubTabExp');
+      muatDataSheetLazy('Ceklis_EXP', false, function(dataExp) {
+        renderSubTabExpRak(container, dataExp);
+      });
+    }
+
+    function cariRakInstan(val) {
+      currentExpSearchQuery = val;
+      var container = document.getElementById('containerSubTabExp');
+      muatDataSheetLazy('Ceklis_EXP', false, function(dataExp) {
+        renderSubTabExpRak(container, dataExp);
+      });
+    }
+
+    // --- FUNGSI APPROVAL DAN BUKA KUNCI COS ---
+    function aksiPersetujuanCos(tugasId, statusDecision) {
+      if (statusDecision === 'APPROVED') {
+        Swal.fire({
+          title: 'Setujui Hasil Ceklis Rak?',
+          text: 'Setelah disetujui, rak akan dikunci agar tidak dapat dikerjakan ulang sampai awal bulan depan.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#059669',
+          cancelButtonColor: '#94a3b8',
+          confirmButtonText: 'Ya, Setujui',
+          cancelButtonText: 'Batal'
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            kirimPersetujuanRakBackend(tugasId, 'APPROVED', '');
+          }
+        });
+      } else {
+        Swal.fire({
+          title: 'Tolak Hasil Ceklis Rak',
+          input: 'textarea',
+          inputPlaceholder: 'Tuliskan alasan penolakan (misal: label price belum rapi, foto buram)...',
+          inputAttributes: { autocapitalize: 'off' },
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#94a3b8',
+          confirmButtonText: 'Tolak & Minta Perbaikan',
+          cancelButtonText: 'Batal',
+          preConfirm: function(alasan) {
+            if (!alasan || !alasan.trim()) {
+              Swal.showValidationMessage('Alasan penolakan wajib diisi');
+              return false;
+            }
+            return alasan.trim();
+          }
+        }).then(function(res) {
+          if (res.isConfirmed && res.value) {
+            kirimPersetujuanRakBackend(tugasId, 'DITOLAK', res.value);
+          }
+        });
+      }
+    }
+
+    function kirimPersetujuanRakBackend(tugasId, statusBaru, catatan) {
+      Swal.fire({ title: 'Memproses Keputusan...', didOpen: function() { Swal.showLoading(); } });
+      kirimBackendRequest('CRUD_CEKLIS_EXP', {
+        subAction: 'SUBMIT_KERJAKAN',
+        id: tugasId,
+        newStatus: statusBaru,
+        catatan: catatan,
+        nik: currentSessionUser ? currentSessionUser.nik : ''
+      }, function() {
+        Swal.close();
+        Swal.fire({ icon: 'success', title: 'Persetujuan Disimpan', timer: 1200, showConfirmButton: false });
+        muatDataSheetLazy('Ceklis_EXP', true, function(dataExp) {
+          renderSubTabExpRak(document.getElementById('containerSubTabExp'), dataExp);
+          renderDataBerandaDariCache();
+        });
+      }, function(err) {
+        Swal.close();
+        Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
+      });
+    }
+
+    function bukaKunciRakOlehCos(tugasId) {
+      Swal.fire({
+        title: 'Buka Kunci Rak Ini?',
+        text: 'Rak akan dikembalikan ke status BELUM agar personil dapat mengecek ulang rak.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'Ya, Buka Kunci'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          kirimPersetujuanRakBackend(tugasId, 'BELUM', 'Dibuka kembali oleh COS');
+        }
+      });
+    }
+
+    // --- TAMPILAN MASTER RAK KHUSUS AC (ACCORDION GROUPING PER TOKO) ---
+    function renderSubTabExpRakModeAC(container, dataExp) {
+      var allTasks = dataExp.filter(function(d) { return d['TIPE_DATA'] === 'TUGAS_RAK'; });
+
+      var userCache = localStorage.getItem('kacida_cache_Master_User');
+      var allUsers = userCache ? JSON.parse(userCache).data || [] : [];
+      
+      var storeMap = {};
+      allUsers.forEach(function(u) {
+        var k = String(u['KODE'] || '').toUpperCase().trim();
+        if (k && k !== 'AC') {
+          if (!storeMap[k]) {
+            storeMap[k] = {
+              kode: k,
+              nama: u['NAMA TOKO'] || k,
+              personil: [],
+              tasks: []
+            };
+          }
+          if (!storeMap[k].personil.some(function(p) { return p.nik === u['NIK']; })) {
+            storeMap[k].personil.push({ nik: u['NIK'], nama: u['NAMA'], jabatan: u['JABATAN'] });
+          }
+        }
+      });
+
+      allTasks.forEach(function(t) {
+        var tk = String(t['KODE'] || '').toUpperCase().trim();
+        if (storeMap[tk]) {
+          storeMap[tk].tasks.push(t);
+        }
+      });
+
+      var storeList = Object.values(storeMap);
+      var totalToko = storeList.length;
+      var tokoBelumBuat = 0;
+      var totalTugas = allTasks.length;
+      var sudahSelesai = 0;
+      var belumSelesai = 0;
+
+      storeList.forEach(function(s) {
+        if (s.tasks.length === 0) tokoBelumBuat++;
+        s.tasks.forEach(function(t) {
+          if (String(t['STATUS']).toUpperCase() === 'APPROVED') sudahSelesai++;
+          else belumSelesai++;
+        });
+      });
+
+      var html = 
+        // 5 Kotak Resume Area AC
+        '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center mb-4">' +
+          '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Total Toko</span><span class="text-base font-black text-slate-800 font-mono mt-0.5 block">' + totalToko + ' Toko</span></div>' +
+          '<div class="p-3 bg-amber-50 rounded-xl border border-amber-200 shadow-sm"><span class="text-[10px] text-amber-700 font-bold uppercase">Belum Buat Tugas</span><span class="text-base font-black text-amber-900 font-mono mt-0.5 block">' + tokoBelumBuat + ' Toko</span></div>' +
+          '<div class="p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-700 font-bold uppercase">Total Tugas Area</span><span class="text-base font-black text-blue-900 font-mono mt-0.5 block">' + totalTugas + '</span></div>' +
+          '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-700 font-bold uppercase">Sudah Dikerjakan</span><span class="text-base font-black text-emerald-950 font-mono mt-0.5 block">' + sudahSelesai + '</span></div>' +
+          '<div class="p-3 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 font-bold uppercase">Belum Dikerjakan</span><span class="text-base font-black text-red-950 font-mono mt-0.5 block">' + belumSelesai + '</span></div>' +
+        '</div>' +
+
+        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Penugasan Rak per Toko Binaan (AC Area)</h4>' +
+        '<div class="space-y-3 pt-1">';
+
+      storeList.forEach(function(s, idx) {
+        var sSudah = s.tasks.filter(function(t) { return String(t['STATUS']).toUpperCase() === 'APPROVED'; }).length;
+        var sBelum = s.tasks.length - sSudah;
+        var accId = 'accAcStore_' + idx;
+
+        html += '<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + s.kode + '</span>' +
+              '<h5 class="text-xs font-extrabold text-slate-800">' + s.nama + '</h5>' +
+            '</div>' +
+            '<div class="flex items-center space-x-3">' +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ' + (sBelum > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700') + '">' + sBelum + ' Belum Selesai</span>' +
+              '<button type="button" id="btn' + accId + '" class="text-xs font-bold text-brand-primary">SHOW</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+            '<table class="w-full text-left divide-y divide-slate-100">' +
+              '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                '<th class="p-2">Nama Personil</th><th class="p-2">Jabatan</th><th class="p-2 text-center">Jumlah Rak</th><th class="p-2 text-center">Selesai</th><th class="p-2 text-center">Belum</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+        if (s.personil.length === 0) {
+          html += '<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">Data personil belum terdaftar.</td></tr>';
+        } else {
+          s.personil.forEach(function(p) {
+            var userTasks = s.tasks.filter(function(t) { return String(t['PENANGGUNG_JAWAB_NIK']).trim() === String(p.nik).trim(); });
+            var pDone = userTasks.filter(function(t) { return String(t['STATUS']).toUpperCase() === 'APPROVED'; }).length;
+            var pPending = userTasks.length - pDone;
+
+            html += '<tr>' +
+              '<td class="p-2 font-bold text-slate-800">' + p.nama + '</td>' +
+              '<td class="p-2 text-slate-500">' + p.jabatan + '</td>' +
+              '<td class="p-2 text-center font-mono font-bold">' + userTasks.length + '</td>' +
+              '<td class="p-2 text-center font-mono text-emerald-700 font-bold">' + pDone + '</td>' +
+              '<td class="p-2 text-center font-mono ' + (pPending > 0 ? 'text-red-600 font-bold' : 'text-slate-400') + '">' + pPending + '</td>' +
+            '</tr>';
+          });
+        }
+
+        html += '</tbody></table></div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function toggleAccordionAc(elemId) {
+      var el = document.getElementById(elemId);
+      var btn = document.getElementById('btn' + elemId);
+      if (!el || !btn) return;
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        btn.innerText = 'HIDE';
+      } else {
+        el.classList.add('hidden');
+        btn.innerText = 'SHOW';
+      }
+    }
+
     // ==================== MODAL TAMBAH PENUGASAN RAK ====================
     function bukaModalTambahTugasRak() {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      // Ambil personil toko aktif dari cache Master_User
       var userCache = localStorage.getItem('kacida_cache_Master_User');
       var allUsers = userCache ? JSON.parse(userCache).data || [] : [];
       var storeUsers = allUsers.filter(function(u) {
@@ -3052,9 +3466,16 @@
             newStatus: nextStatus
           }, function() {
             Swal.close();
-            Swal.fire({ icon: 'success', title: 'Tugas Rak Berhasil Dikerjakan', timer: 1500, showConfirmButton: false });
+            Swal.fire({ 
+              icon: 'success', 
+              title: (nextStatus === 'APPROVED' ? 'Rak Berhasil Disetujui' : 'Rak Selesai Dikerjakan'),
+              text: (nextStatus === 'PENDING_APPROVAL' ? 'Menunggu persetujuan Chief Of Store (COS).' : 'Rak telah dikunci.'),
+              timer: 1800, 
+              showConfirmButton: false 
+            });
             muatDataSheetLazy('Ceklis_EXP', true, function() {
               gantiTabCeklisExp('RAK');
+              renderDataBerandaDariCache();
             });
           }, function(err) {
             Swal.close();
@@ -3077,6 +3498,7 @@
       if (confirmBtn) confirmBtn.disabled = !allChecked;
     }
 
+    // ==================== TAB 2: INPUT EXP ====================
     function renderSubTabExpInput(container) {
       container.innerHTML = 
         '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm max-w-xl mx-auto space-y-4">' +
@@ -3125,7 +3547,7 @@
         return;
       }
 
-      // Rumus Tanggal Alert: Tanggal Exp - RH - 10 Hari Spare
+      // Rumus Alert: Tanggal Exp - RH - 10 Hari Spare
       var expDate = parseDateIndo(tglExpStr);
       var alertDate = new Date(expDate.getTime() - (rh + 10) * 24 * 60 * 60 * 1000);
       var today = new Date();
@@ -3153,6 +3575,7 @@
         Swal.fire({ icon: 'success', title: 'Item Berhasil Dicatat', timer: 1200, showConfirmButton: false });
         muatDataSheetLazy('Ceklis_EXP', true, function() {
           gantiTabCeklisExp('RIWAYAT');
+          renderDataBerandaDariCache();
         });
       }, function(err) {
         Swal.close();
@@ -3160,9 +3583,7 @@
       });
     }
 
-    // State Filter Riwayat Ceklis EXP
-    window.currentExpFilterType = 'ALL';
-
+    // ==================== TAB 3: RIWAYAT & ALERT ====================
     function setFilterRiwayatExp(filterType) {
       window.currentExpFilterType = filterType;
       var container = document.getElementById('containerSubTabExp');
@@ -3172,10 +3593,24 @@
     }
 
     function renderSubTabExpRiwayat(container, dataExp) {
+      var isAC = currentSessionUser && (
+        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
+        currentSessionUser.jabatan === 'AC' || 
+        currentSessionUser.nik === '14125034'
+      );
+
+      if (isAC) {
+        renderSubTabExpRiwayatModeAC(container, dataExp);
+      } else {
+        renderSubTabExpRiwayatModeToko(container, dataExp);
+      }
+    }
+
+    // --- RIWAYAT MODE TOKO (STAFF & COS) ---
+    function renderSubTabExpRiwayatModeToko(container, dataExp) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      // Filter hanya data tipe ITEM_EXP milik toko aktif
       var itemList = dataExp.filter(function(d) {
         return d['TIPE_DATA'] === 'ITEM_EXP' && String(d['KODE'] || '').toUpperCase().trim() === myStoreCode;
       });
@@ -3183,7 +3618,6 @@
       var today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Hitung 5 Kategori Resume
       var countTotal = itemList.length;
       var countAkanExp = 0;
       var countBelumEksekusi = 0;
@@ -3208,7 +3642,6 @@
         }
       });
 
-      // Filter Data sesuai Kartu yang Sedang Diklik
       var activeFilter = window.currentExpFilterType || 'ALL';
       var displayedList = itemList.filter(function(item) {
         var isTereksekusi = String(item['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
@@ -3216,39 +3649,34 @@
         if (activeFilter === 'BELUM') return !isTereksekusi;
         if (activeFilter === 'LEWAT_BATAS') return item._isOverdue;
         if (activeFilter === 'TEREKSEKUSI') return isTereksekusi;
-        return true; // ALL
+        return true;
       });
 
       var html = 
-        <!-- 5 KOTAK RESUME FILTERABLE -->
+        // 5 Kotak Resume Filterable
         '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center mb-4">' +
           '<div onclick="setFilterRiwayatExp(\'ALL\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'ALL' ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50') + '">' +
             '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'ALL' ? 'text-slate-300' : 'text-slate-400') + '">Total Input</span>' +
             '<span class="text-base font-black font-mono mt-0.5 block">' + countTotal + '</span>' +
           '</div>' +
-
           '<div onclick="setFilterRiwayatExp(\'AKAN_EXP\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'AKAN_EXP' ? 'bg-amber-600 text-white border-amber-700 shadow-md ring-2 ring-amber-400' : 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100') + '">' +
             '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'AKAN_EXP' ? 'text-amber-200' : 'text-amber-700') + '">Akan Exp (&le;30H)</span>' +
             '<span class="text-base font-black font-mono mt-0.5 block">' + countAkanExp + '</span>' +
           '</div>' +
-
           '<div onclick="setFilterRiwayatExp(\'BELUM\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'BELUM' ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-400' : 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100') + '">' +
             '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'BELUM' ? 'text-blue-200' : 'text-blue-700') + '">Belum Dieksekusi</span>' +
             '<span class="text-base font-black font-mono mt-0.5 block">' + countBelumEksekusi + '</span>' +
           '</div>' +
-
           '<div onclick="setFilterRiwayatExp(\'LEWAT_BATAS\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'LEWAT_BATAS' ? 'bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' : 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100') + '">' +
             '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'LEWAT_BATAS' ? 'text-red-200' : 'text-red-700') + '">Lewat Batas Eksekusi</span>' +
             '<span class="text-base font-black font-mono mt-0.5 block">' + countLewatBatas + '</span>' +
           '</div>' +
-
           '<div onclick="setFilterRiwayatExp(\'TEREKSEKUSI\')" class="p-3 rounded-xl border cursor-pointer transition-all ' + (activeFilter === 'TEREKSEKUSI' ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100') + '">' +
             '<span class="text-[10px] uppercase font-bold block ' + (activeFilter === 'TEREKSEKUSI' ? 'text-emerald-200' : 'text-emerald-700') + '">Tereksekusi</span>' +
             '<span class="text-base font-black font-mono mt-0.5 block">' + countTereksekusi + '</span>' +
           '</div>' +
         '</div>' +
 
-        <!-- TABEL DATA RIWAYAT LENGKAP -->
         '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
           '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
             '<h4 class="text-xs font-black text-slate-800">Daftar Item Expired (' + activeFilter.replace('_', ' ') + ')</h4>' +
@@ -3306,11 +3734,119 @@
       container.innerHTML = html;
     }
 
+    // --- RIWAYAT MODE AC (ACCORDION GROUPING PER TOKO) ---
+    function renderSubTabExpRiwayatModeAC(container, dataExp) {
+      var allItems = dataExp.filter(function(d) { return d['TIPE_DATA'] === 'ITEM_EXP'; });
+      var userCache = localStorage.getItem('kacida_cache_Master_User');
+      var allUsers = userCache ? JSON.parse(userCache).data || [] : [];
+      
+      var storeMap = {};
+      allUsers.forEach(function(u) {
+        var k = String(u['KODE'] || '').toUpperCase().trim();
+        if (k && k !== 'AC') {
+          if (!storeMap[k]) {
+            storeMap[k] = { kode: k, nama: u['NAMA TOKO'] || k, items: [] };
+          }
+        }
+      });
+
+      allItems.forEach(function(it) {
+        var tk = String(it['KODE'] || '').toUpperCase().trim();
+        if (storeMap[tk]) {
+          storeMap[tk].items.push(it);
+        }
+      });
+
+      var storeList = Object.values(storeMap);
+      var totalToko = storeList.length;
+      var totalItem = allItems.length;
+      var totalAkanExp = 0;
+      var totalLewatExp = 0;
+      var totalSelesai = 0;
+
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      allItems.forEach(function(item) {
+        var expD = parseDateIndo(item['TANGGAL_EXP']);
+        var alertD = parseDateIndo(item['TANGGAL_ALERT']);
+        var isTereksekusi = String(item['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
+        var sisaHari = Math.ceil((expD - today) / (1000 * 60 * 60 * 24));
+
+        if (isTereksekusi) {
+          totalSelesai++;
+        } else {
+          if (sisaHari <= 30 && sisaHari >= 0) totalAkanExp++;
+          if (today >= alertD) totalLewatExp++;
+        }
+      });
+
+      var html = 
+        // 5 Kotak Resume AC
+        '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center mb-4">' +
+          '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Total Toko Binaan</span><span class="text-base font-black text-slate-800 font-mono mt-0.5 block">' + totalToko + ' Toko</span></div>' +
+          '<div class="p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-700 font-bold uppercase">Total Item Area</span><span class="text-base font-black text-blue-900 font-mono mt-0.5 block">' + totalItem + '</span></div>' +
+          '<div class="p-3 bg-amber-50 rounded-xl border border-amber-200 shadow-sm"><span class="text-[10px] text-amber-700 font-bold uppercase">Akan Exp (&le;30H)</span><span class="text-base font-black text-amber-900 font-mono mt-0.5 block">' + totalAkanExp + '</span></div>' +
+          '<div class="p-3 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 font-bold uppercase">Lewat Batas Exp</span><span class="text-base font-black text-red-900 font-mono mt-0.5 block">' + totalLewatExp + '</span></div>' +
+          '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-700 font-bold uppercase">Selesai Eksekusi</span><span class="text-base font-black text-emerald-950 font-mono mt-0.5 block">' + totalSelesai + '</span></div>' +
+        '</div>' +
+
+        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Item Expired per Toko Binaan (AC Area)</h4>' +
+        '<div class="space-y-3 pt-1">';
+
+      storeList.forEach(function(s, idx) {
+        var accId = 'accAcExp_' + idx;
+        var unexecutedCount = s.items.filter(function(i) { return String(i['STATUS']).toUpperCase() !== 'TEREKSEKUSI'; }).length;
+
+        html += '<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + s.kode + '</span>' +
+              '<h5 class="text-xs font-extrabold text-slate-800">' + s.nama + '</h5>' +
+            '</div>' +
+            '<div class="flex items-center space-x-3">' +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ' + (unexecutedCount > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700') + '">' + s.items.length + ' Item (' + unexecutedCount + ' Belum)</span>' +
+              '<button type="button" id="btn' + accId + '" class="text-xs font-bold text-brand-primary">SHOW</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                '<th class="p-2 text-left">Nama Item</th><th class="p-2 text-center">Posisi Rak</th><th class="p-2 text-center">Qty</th><th class="p-2 text-center">Tgl Exp</th><th class="p-2 text-center">Status</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+        if (s.items.length === 0) {
+          html += '<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">Belum ada item expired yang dicatat oleh toko ini.</td></tr>';
+        } else {
+          s.items.forEach(function(it) {
+            var isDone = String(it['STATUS']).toUpperCase() === 'TEREKSEKUSI';
+            html += '<tr>' +
+              '<td class="p-2 text-left font-bold text-slate-800">' + it['NAMA_ITEM'] + '</td>' +
+              '<td class="p-2 text-center font-mono text-slate-600">' + (it['POSISI_RAK'] || '-') + '</td>' +
+              '<td class="p-2 text-center font-bold">' + it['QTY_EXP'] + '</td>' +
+              '<td class="p-2 text-center font-mono">' + formatTanggalTampilan(it['TANGGAL_EXP']) + '</td>' +
+              '<td class="p-2 text-center">' +
+                (isDone 
+                  ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Tereksekusi</span>' 
+                  : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">Belum</span>') +
+              '</td>' +
+            '</tr>';
+          });
+        }
+
+        html += '</tbody></table></div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
     // Fungsi Konfirmasi Eksekusi Return Item
     function konfirmasiEksekusiItemExp(itemId, namaItem) {
       Swal.fire({
         title: 'Konfirmasi Eksekusi Return?',
-        html: 'Apakah produk <b>' + namaItem + '</b> sudah selesai diretur / diturunkan dari rak?',
+        html: 'Apakah produk <b>' + namaItem + '</b> sudah selesai diretur / diturunkan dari rak fisik toko?',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#059669',
@@ -3331,7 +3867,6 @@
             Swal.fire({ icon: 'success', title: 'Item Berhasil Dieksekusi', timer: 1200, showConfirmButton: false });
             muatDataSheetLazy('Ceklis_EXP', true, function() {
               setFilterRiwayatExp(window.currentExpFilterType);
-              // Perbarui badge notifikasi
               renderDataBerandaDariCache();
             });
           }, function(err) {

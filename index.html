@@ -2876,15 +2876,12 @@
 
     // ==================== [1] MODUL CEKLIS EXP LENGKAP (STAFF, COS & AC) ====================
     var currentExpRakFilter = 'ALL';
-    var currentExpSearchQuery = '';
     window.currentExpFilterType = 'ALL';
 
     function renderModulCeklisExp(container) {
-      var isAC = currentSessionUser && (
-        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
-        currentSessionUser.jabatan === 'AC' || 
-        currentSessionUser.nik === '14125034'
-      );
+      // isAC MURNI dicek dari JABATAN (Bukan NIK 14125034 agar COS tetap tampil mode toko)
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
       container.innerHTML = renderHeaderModalUniversal(
         'Ceklis Rak & Monitoring Expired', 
@@ -2893,7 +2890,7 @@
         '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50">' +
           '<div class="flex border-b border-slate-200 bg-white text-xs font-bold text-slate-500 px-4 pt-2 space-x-2">' +
             '<button onclick="gantiTabCeklisExp(\'RAK\')" id="tabExpRak" class="py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark">Master Rak</button>' +
-            // Sembunyikan Tab Input Exp untuk Role AC
+            // Sembunyikan Tab Input Exp khusus Role Area Coordinator
             (!isAC ? '<button onclick="gantiTabCeklisExp(\'INPUT\')" id="tabExpInput" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Input Exp</button>' : '') +
             '<button onclick="gantiTabCeklisExp(\'RIWAYAT\')" id="tabExpRiwayat" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Riwayat & Alert</button>' +
           '</div>' +
@@ -2927,11 +2924,8 @@
 
     // ==================== TAB 1: MASTER RAK ====================
     function renderSubTabExpRak(container, dataExp) {
-      var isAC = currentSessionUser && (
-        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
-        currentSessionUser.jabatan === 'AC' || 
-        currentSessionUser.nik === '14125034'
-      );
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
       if (isAC) {
         renderSubTabExpRakModeAC(container, dataExp);
@@ -2940,26 +2934,26 @@
       }
     }
 
-    // --- TAMPILAN MASTER RAK UNTUK TOKO (STAFF & COS) ---
+    // --- TAMPILAN MASTER RAK TOKO (STAFF & COS / NIK 14125034) ---
     function renderSubTabExpRakModeToko(container, dataExp) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
-      var role = currentSessionUser ? currentSessionUser.jabatan : '';
-      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || currentSessionUser.nik === '14125034');
+      var role = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
       var currentMonth = new Date().getMonth();
       var currentYear = new Date().getFullYear();
 
-      // Ambil tugas rak milik toko aktif
+      // Filter tugas rak toko aktif
       var tugasList = dataExp.filter(function(d) {
         return d['TIPE_DATA'] === 'TUGAS_RAK' && String(d['KODE'] || '').toUpperCase().trim() === myStoreCode;
       });
 
-      // Kalkulasi status dan deteksi Reset Awal Bulan otomatis
+      // Hitung status dan deteksi auto-reset awal bulan
       tugasList.forEach(function(item) {
         var rawStatus = String(item['STATUS'] || 'BELUM').toUpperCase().trim();
         var tglKerja = parseDateIndo(item['TANGGAL_PENGERJAAN']);
         
-        // Auto-Reset jika diselesaikan di bulan sebelumnya
+        // Auto reset jika diselesaikan pada bulan sebelumnya
         if (rawStatus === 'APPROVED' && tglKerja && !isNaN(tglKerja.getTime())) {
           if (tglKerja.getMonth() !== currentMonth || tglKerja.getFullYear() !== currentYear) {
             item._computedStatus = 'BELUM';
@@ -2975,34 +2969,20 @@
       var belum = total - sudah;
       var pct = total > 0 ? ((sudah / total) * 100).toFixed(0) : 0;
 
-      // Filter pencarian dan kartu resume
       var filterActive = currentExpRakFilter || 'ALL';
-      var query = (currentExpSearchQuery || '').toLowerCase().trim();
-
-      var filtered = tugasList.filter(function(item) {
-        if (filterActive === 'SUDAH' && item._computedStatus !== 'APPROVED') return false;
-        if (filterActive === 'BELUM' && item._computedStatus === 'APPROVED') return false;
-        if (query) {
-          var matchNo = String(item['NO_RAK'] || '').toLowerCase().indexOf(query) !== -1;
-          var matchNama = String(item['NAMA_RAK'] || '').toLowerCase().indexOf(query) !== -1;
-          var matchUser = String(item['PENANGGUNG_JAWAB_NAMA'] || '').toLowerCase().indexOf(query) !== -1;
-          if (!matchNo && !matchNama && !matchUser) return false;
-        }
-        return true;
-      });
 
       var html = 
         // 3 Kotak Resume Filterable
         '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">' +
-          '<div onclick="setFilterRakToko(\'ALL\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'ALL' ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50') + '">' +
+          '<div id="cardFilterRak_ALL" onclick="setFilterRakToko(\'ALL\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'ALL' ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50') + '">' +
             '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'ALL' ? 'text-slate-300' : 'text-slate-400') + '">TOTAL RAK</span>' +
             '<span class="text-xl font-black font-mono mt-0.5 block">' + total + '</span>' +
           '</div>' +
-          '<div onclick="setFilterRakToko(\'SUDAH\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'SUDAH' ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100') + '">' +
-            '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'SUDAH' ? 'text-emerald-200' : 'text-emerald-700') + '">SUDAH DICEK (APPROVED)</span>' +
+          '<div id="cardFilterRak_SUDAH" onclick="setFilterRakToko(\'SUDAH\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'SUDAH' ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100') + '">' +
+            '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'SUDAH' ? 'text-emerald-200' : 'text-emerald-700') + '">SUDAH DICEK</span>' +
             '<span class="text-xl font-black font-mono mt-0.5 block">' + sudah + '</span>' +
           '</div>' +
-          '<div onclick="setFilterRakToko(\'BELUM\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'BELUM' ? 'bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' : 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100') + '">' +
+          '<div id="cardFilterRak_BELUM" onclick="setFilterRakToko(\'BELUM\')" class="p-3.5 rounded-xl border cursor-pointer transition-all ' + (filterActive === 'BELUM' ? 'bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' : 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100') + '">' +
             '<span class="text-[10px] font-bold block uppercase ' + (filterActive === 'BELUM' ? 'text-red-200' : 'text-red-700') + '">BELUM DICEK</span>' +
             '<span class="text-xl font-black font-mono mt-0.5 block">' + belum + '</span>' +
           '</div>' +
@@ -3012,24 +2992,24 @@
           '</div>' +
         '</div>' +
 
-        // Bar Pencarian & Tombol Tambah Rak
+        // Bar Pencarian Instan (Bebas Masalah Keyboard Menutup) & Tombol Tambah Rak
         '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">' +
           '<div class="relative flex-1 max-w-md">' +
-            '<i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>' +
-            '<input type="text" id="inputSearchRakStaff" oninput="cariRakInstan(this.value)" value="' + currentExpSearchQuery + '" placeholder="Cari nama rak, nomor rak, penanggung jawab..." ' +
+            '<i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>' +
+            '<input type="text" id="inputSearchRakStaff" oninput="filterDomRakInstan(this.value)" placeholder="Ketik cari no rak, nama rak, penanggung jawab..." ' +
                    'class="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary">' +
           '</div>' +
           (isCos ? '<button onclick="bukaModalTambahTugasRak()" class="px-4 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center space-x-1.5"><i class="fa-solid fa-plus"></i><span>Tambah Rak</span></button>' : '') +
         '</div>' +
 
-        // Grid Daftar Rak
-        '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">';
+        // Container Kartu Rak
+        '<div id="wrapperListRakCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">';
 
-      if (filtered.length === 0) {
-        html += '<div class="col-span-full p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Tidak ada rak yang sesuai filter.</div>';
+      if (tugasList.length === 0) {
+        html += '<div id="rakEmptyNotice" class="col-span-full p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Belum ada penugasan rak di toko ini.</div>';
       }
 
-      filtered.forEach(function(item) {
+      tugasList.forEach(function(item) {
         var status = item._computedStatus;
         var isApproved = (status === 'APPROVED');
         var isPending = (status === 'PENDING_APPROVAL');
@@ -3047,7 +3027,10 @@
           badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">Belum</span>';
         }
 
-        html += '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">' +
+        var searchMeta = (item['NO_RAK'] + ' ' + item['NAMA_RAK'] + ' ' + item['PENANGGUNG_JAWAB_NAMA']).toLowerCase();
+
+        html += '<div class="card-rak-item bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3" ' +
+          'data-status="' + status + '" data-search="' + searchMeta + '">' +
           '<div class="flex items-start justify-between">' +
             '<div>' +
               '<span class="text-[10px] font-bold px-2 py-0.5 rounded ' + (isFood ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800') + '">' + (item['CATEGORY'] || 'FOOD') + '</span>' +
@@ -3059,11 +3042,11 @@
 
           '<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">' +
             (item['FOTO_BUKTI_URL_LH3'] 
-              ? '<a href="' + item['FOTO_BUKTI_URL_LH3'] + '" target="_blank" class="text-brand-primary font-bold hover:underline"><i class="fa-solid fa-image mr-1"></i>Foto Bukti</a>' 
+              ? '<button type="button" onclick="bukaPreviewFotoFull(\'' + item['FOTO_BUKTI_URL_LH3'] + '\', \'Foto Rak ' + item['NO_RAK'] + ' - ' + item['NAMA_RAK'] + '\')" class="text-brand-primary font-bold hover:underline flex items-center text-xs"><i class="fa-solid fa-image mr-1"></i>Lihat Foto</button>' 
               : '<span class="text-slate-400 text-[10px]">Tanpa Foto</span>') +
 
             '<div class="flex items-center space-x-1.5">' +
-              // Aksi Approval untuk COS
+              // Aksi Approval untuk COS / NIK 14125034
               (isCos && isPending 
                 ? '<button onclick="aksiPersetujuanCos(\'' + item['ID'] + '\', \'APPROVED\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]">Setujui</button>' +
                   '<button onclick="aksiPersetujuanCos(\'' + item['ID'] + '\', \'DITOLAK\')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[11px]">Tolak</button>'
@@ -3074,7 +3057,7 @@
                 ? '<button onclick="bukaKunciRakOlehCos(\'' + item['ID'] + '\')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-lock-open mr-1"></i>Buka Kunci</button>'
                 : '') +
 
-              // Tombol Kerjakan untuk Staf (Hanya jika Belum atau Ditolak)
+              // Tombol Kerjakan untuk Staf
               (!isApproved && !isPending
                 ? '<button onclick="bukaModalEksekusiSopRak(\'' + item['ID'] + '\')" class="px-3 py-1 bg-brand-primary hover:bg-emerald-700 text-white rounded-lg font-bold text-xs">' + (isDitolak ? 'Kerjakan Ulang' : 'Kerjakan') + '</button>'
                 : '') +
@@ -3085,22 +3068,105 @@
 
       html += '</div>';
       container.innerHTML = html;
+
+      // Jalankan filter awal tanpa merusak input
+      applyFilterAndSearchRakDom();
     }
 
-    function setFilterRakToko(filterType) {
-      currentExpRakFilter = filterType;
-      var container = document.getElementById('containerSubTabExp');
-      muatDataSheetLazy('Ceklis_EXP', false, function(dataExp) {
-        renderSubTabExpRak(container, dataExp);
+    // PENCARIAN INSTAN BEBAS TUTUP KEYBOARD (DOM MANIPULATION ONLY)
+    function filterDomRakInstan(query) {
+      applyFilterAndSearchRakDom();
+    }
+
+    function setFilterRakToko(statusType) {
+      currentExpRakFilter = statusType;
+      // Perbarui style tombol resume
+      ['ALL', 'SUDAH', 'BELUM'].forEach(function(st) {
+        var el = document.getElementById('cardFilterRak_' + st);
+        if (!el) return;
+        if (st === statusType) {
+          el.className = (st === 'SUDAH') 
+            ? 'p-3.5 rounded-xl border cursor-pointer transition-all bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400' 
+            : (st === 'BELUM' 
+              ? 'p-3.5 rounded-xl border cursor-pointer transition-all bg-red-600 text-white border-red-700 shadow-md ring-2 ring-red-400' 
+              : 'p-3.5 rounded-xl border cursor-pointer transition-all bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400');
+        } else {
+          el.className = (st === 'SUDAH') 
+            ? 'p-3.5 rounded-xl border cursor-pointer transition-all bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100' 
+            : (st === 'BELUM' 
+              ? 'p-3.5 rounded-xl border cursor-pointer transition-all bg-red-50 border-red-200 text-red-900 hover:bg-red-100' 
+              : 'p-3.5 rounded-xl border cursor-pointer transition-all bg-white border-slate-200 text-slate-800 hover:bg-slate-50');
+        }
+      });
+      applyFilterAndSearchRakDom();
+    }
+
+    function applyFilterAndSearchRakDom() {
+      var searchInput = document.getElementById('inputSearchRakStaff');
+      var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      var filterStatus = currentExpRakFilter || 'ALL';
+
+      var cards = document.querySelectorAll('.card-rak-item');
+      var visibleCount = 0;
+
+      cards.forEach(function(card) {
+        var cardStatus = card.getAttribute('data-status') || '';
+        var cardMeta = card.getAttribute('data-search') || '';
+
+        var matchStatus = true;
+        if (filterStatus === 'SUDAH' && cardStatus !== 'APPROVED') matchStatus = false;
+        if (filterStatus === 'BELUM' && cardStatus === 'APPROVED') matchStatus = false;
+
+        var matchSearch = true;
+        if (q && cardMeta.indexOf(q) === -1) matchSearch = false;
+
+        if (matchStatus && matchSearch) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
       });
     }
 
-    function cariRakInstan(val) {
-      currentExpSearchQuery = val;
-      var container = document.getElementById('containerSubTabExp');
-      muatDataSheetLazy('Ceklis_EXP', false, function(dataExp) {
-        renderSubTabExpRak(container, dataExp);
-      });
+    // ==================== PREVIEW FOTO FULL SCREEN (DENGAN TOMBOL TUTUP) ====================
+    function bukaPreviewFotoFull(fotoUrl, judul) {
+      if (!fotoUrl) return;
+
+      var existingModal = document.getElementById('modalFotoFullPreview');
+      if (existingModal) existingModal.remove();
+
+      var overlay = document.createElement('div');
+      overlay.id = 'modalFotoFullPreview';
+      overlay.className = 'fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 transition-all duration-200';
+
+      overlay.innerHTML = 
+        '<div class="w-full max-w-4xl flex items-center justify-between text-white pb-3 border-b border-white/20">' +
+          '<div class="flex items-center space-x-2">' +
+            '<i class="fa-solid fa-image text-emerald-400"></i>' +
+            '<h4 class="text-sm md:text-base font-bold truncate max-w-xs md:max-w-md">' + (judul || 'Preview Foto') + '</h4>' +
+          '</div>' +
+          '<button onclick="tutupPreviewFotoFull()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all">' +
+            '<i class="fa-solid fa-xmark text-lg"></i>' +
+          '</button>' +
+        '</div>' +
+
+        '<div class="flex-1 w-full flex items-center justify-center p-2 overflow-hidden">' +
+          '<img src="' + fotoUrl + '" alt="Bukti Foto" class="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/10">' +
+        '</div>' +
+
+        '<div class="w-full max-w-4xl pt-3 border-t border-white/20 flex justify-center">' +
+          '<button onclick="tutupPreviewFotoFull()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-lg transition-all flex items-center space-x-1.5">' +
+            '<i class="fa-solid fa-check"></i><span>Tutup Preview</span>' +
+          '</button>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+    }
+
+    function tutupPreviewFotoFull() {
+      var modal = document.getElementById('modalFotoFullPreview');
+      if (modal) modal.remove();
     }
 
     // --- FUNGSI APPROVAL DAN BUKA KUNCI COS ---
@@ -3447,8 +3513,9 @@
         if (result.isConfirmed) {
           var base64Photo = result.value;
           var cfg = getTokoConfig() || {};
-          var role = currentSessionUser ? currentSessionUser.jabatan : '';
-          var nextStatus = (role === 'CHIEF OF STORE' || role === 'COS') ? 'APPROVED' : 'PENDING_APPROVAL';
+          var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+          var isCos = (userRole === 'CHIEF OF STORE' || userRole === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
+          var nextStatus = isCos ? 'APPROVED' : 'PENDING_APPROVAL';
 
           Swal.fire({
             title: 'Menyimpan Hasil Ceklis...',
@@ -3593,11 +3660,8 @@
     }
 
     function renderSubTabExpRiwayat(container, dataExp) {
-      var isAC = currentSessionUser && (
-        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
-        currentSessionUser.jabatan === 'AC' || 
-        currentSessionUser.nik === '14125034'
-      );
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
       if (isAC) {
         renderSubTabExpRiwayatModeAC(container, dataExp);
@@ -3606,7 +3670,7 @@
       }
     }
 
-    // --- RIWAYAT MODE TOKO (STAFF & COS) ---
+    // --- RIWAYAT MODE TOKO (STAFF & COS / NIK 14125034) ---
     function renderSubTabExpRiwayatModeToko(container, dataExp) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();

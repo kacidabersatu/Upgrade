@@ -5254,69 +5254,646 @@
       salinTeksClip(text, 'Kode Sandi');
     }
 
-    // ==================== [11] MODUL PENAWARAN LANGSUNG ====================
+    // ==================== [11] MODUL PENAWARAN LANGSUNG & LEADERBOARD (USER TOKO & AC) ====================
+    var plActiveStoreData = null;
+
+    // Helper Format Persen Penawaran Langsung (Contoh: 0.7149 -> 71,49%)
+    function formatPersenPl(val) {
+      if (val === null || val === undefined || val === '') return '0,00%';
+      var num = parseAngkaIndo(val);
+      if (Math.abs(num) > 0 && Math.abs(num) <= 2) {
+        num = num * 100;
+      }
+      return num.toFixed(2).replace('.', ',') + '%';
+    }
+
+    // Helper Tanda Perhatian Khusus ACV
+    function getAcvPerhatianBadge(acvPercent) {
+      if (acvPercent >= 95) {
+        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">' +
+          '<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>' + acvPercent.toFixed(2).replace('.', ',') + '%</span>';
+      } else if (acvPercent >= 60) {
+        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">' +
+          '<i class="fa-solid fa-circle-exclamation text-amber-600 mr-1"></i>' + acvPercent.toFixed(2).replace('.', ',') + '%</span>';
+      } else {
+        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-red-100 text-red-900 border border-red-300 animate-pulse">' +
+          '<i class="fa-solid fa-triangle-exclamation text-red-600 mr-1"></i>' + acvPercent.toFixed(2).replace('.', ',') + '%</span>';
+      }
+    }
+
+    // Helper Tampilan Gap (+X atau -X)
+    function getGapBadge(gapVal) {
+      var rounded = Math.abs(Math.round(gapVal)).toLocaleString('id-ID');
+      if (gapVal >= 0) {
+        return '<span class="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">+ ' + rounded + '</span>';
+      } else {
+        return '<span class="px-2 py-0.5 rounded-md text-[11px] font-mono font-black text-red-700 bg-red-100 border border-red-300 shadow-sm">- ' + rounded + '</span>';
+      }
+    }
+
+    // DISPATCHER UTAMA PENAWARAN LANGSUNG
     function renderModulPenawaranLangsung(container) {
-      container.innerHTML = renderHeaderModalUniversal('Penawaran Langsung & Leaderboard', 'Monitoring PSM, PWP, Serba Gratis, APC & Klasemen Toko') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">' +
-            '<div>' +
-              '<h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Scoreboard Performa</h4>' +
-              '<h3 id="plModalStoreName" class="text-base font-extrabold text-slate-800">-</h3>' +
-            '</div>' +
-            '<div class="flex space-x-2 text-center">' +
-              '<div class="px-3.5 py-2 bg-amber-50 rounded-xl border border-amber-200"><span class="text-[10px] text-amber-700 block font-bold">POINT DASHBOARD</span><span id="plModalPointVal" class="text-lg font-black text-amber-900 font-mono">0 Pt</span></div>' +
-              '<div class="px-3.5 py-2 bg-emerald-50 rounded-xl border border-emerald-200"><span class="text-[10px] text-emerald-700 block font-bold">PERINGKAT</span><span id="plModalRankVal" class="text-lg font-black text-emerald-900 font-mono">#0</span></div>' +
-            '</div>' +
-          '</div>' +
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
-          '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
-            '<h4 class="text-xs font-black text-slate-800 pb-2 border-b border-slate-100">Klasemen Relatif Toko (3 Atas & 3 Bawah)</h4>' +
-            '<div id="containerLeaderboardPl" class="space-y-1.5 text-xs"></div>' +
-          '</div>' +
-
-          '<div id="containerTabelLengkapPl"></div>' +
+      container.innerHTML = renderHeaderModalUniversal(
+        'Penawaran Langsung & Leaderboard', 
+        isAC ? 'Monitoring Capaian Area Coordinator & Akordion Toko Binaan' : 'Scorecard Toko, Leaderboard 3 Atas & 3 Bawah & Simulasi Poin'
+      ) +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-5" id="plMainContainerWrapper">' +
+          '<div id="plDynamicContentArea"></div>' +
         '</div>';
 
       muatDataSheetLazy('Penawaran_Langsung', false, function(allPlRows) {
-        var cfg = getTokoConfig() || {};
-        var currentStoreCode = cfg.cleanCode || '';
-
-        var sorted = allPlRows.slice().sort(function(a, b) {
-          return Number(a['RANK'] || 999) - Number(b['RANK'] || 999);
-        });
-
-        var myIndex = -1;
-        for (var i = 0; i < sorted.length; i++) {
-          if (String(sorted[i]['KODE']).toUpperCase().trim() === currentStoreCode) {
-            myIndex = i;
-            break;
-          }
+        if (!allPlRows || allPlRows.length === 0) {
+          document.getElementById('plDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Penawaran Langsung belum tersedia di Spreadsheet.</div>';
+          return;
         }
 
-        if (myIndex !== -1) {
-          var myRow = sorted[myIndex];
-          document.getElementById('plModalStoreName').innerText = myRow['KODE'] + ' - ' + myRow['STORE NAME'];
-          document.getElementById('plModalPointVal').innerText = (myRow['POINT DASHBOARD'] || '0') + ' Pt';
-          document.getElementById('plModalRankVal').innerText = '#' + (myRow['RANK'] || '-');
-
-          var startIdx = Math.max(0, myIndex - 3);
-          var endIdx = Math.min(sorted.length, myIndex + 4);
-          var sliceLeaderboard = sorted.slice(startIdx, endIdx);
-
-          var lHtml = '';
-          sliceLeaderboard.forEach(function(item) {
-            var isSelf = String(item['KODE']).toUpperCase().trim() === currentStoreCode;
-            lHtml += '<div class="p-2.5 rounded-xl flex items-center justify-between ' + (isSelf ? 'bg-emerald-100/80 border-2 border-brand-primary font-black shadow-sm' : 'bg-slate-50 border border-slate-200') + '">' +
-              '<div class="flex items-center space-x-2.5">' +
-                '<span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-mono font-bold ' + (isSelf ? 'bg-brand-primary text-white' : 'bg-slate-200 text-slate-700') + '">#' + item['RANK'] + '</span>' +
-                '<span class="truncate max-w-[170px] sm:max-w-xs">' + item['KODE'] + ' - ' + item['STORE NAME'] + '</span>' +
-              '</div>' +
-              '<span class="font-mono font-bold text-slate-800">' + (item['POINT DASHBOARD'] || '0') + ' Pt</span>' +
-            '</div>';
-          });
-          document.getElementById('containerLeaderboardPl').innerHTML = lHtml;
+        if (isAC) {
+          renderPenawaranLangsungModeAC(allPlRows);
+        } else {
+          renderPenawaranLangsungModeToko(allPlRows);
         }
       });
+    }
+
+    // ==================== 1. TAMPILAN ROLE USER TOKO (CREW, ACOS, COS) ====================
+    function renderPenawaranLangsungModeToko(allPlRows) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Cari baris toko aktif
+      var storeRow = allPlRows.find(function(r) {
+        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      if (!storeRow) storeRow = allPlRows[0];
+      plActiveStoreData = storeRow;
+
+      // Parsing Poin Dashboard
+      var rawPoint = parseAngkaIndo(storeRow['POINT DASHBOARD']);
+      if (Math.abs(rawPoint) > 0 && Math.abs(rawPoint) <= 2) rawPoint *= 100;
+      var pointPercentFormatted = rawPoint.toFixed(2).replace('.', ',') + '%';
+
+      // Warna Dinamis Kartu Poin Dashboard Sesuai Pencapaian
+      var bgPointGradient = 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-emerald-500/20';
+      if (rawPoint < 60) {
+        bgPointGradient = 'bg-gradient-to-br from-red-600 to-rose-700 text-white shadow-red-500/20';
+      } else if (rawPoint < 80) {
+        bgPointGradient = 'bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-orange-500/20';
+      } else if (rawPoint < 100) {
+        bgPointGradient = 'bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 text-slate-900 shadow-yellow-500/20';
+      }
+
+      // Parsing Total ACV
+      var rawTotAcv = parseAngkaIndo(storeRow['TOTAL ACV']);
+      if (Math.abs(rawTotAcv) > 0 && Math.abs(rawTotAcv) <= 2) rawTotAcv *= 100;
+
+      // Hitung Data Indikator Utama
+      var dataIndikator = [
+        {
+          nama: 'PSM (Produk Spesial Mingguan)',
+          target: parseAngkaIndo(storeRow['TARGET PSM']),
+          aktual: parseAngkaIndo(storeRow['AKTUAL PSM']),
+          acv: parseAngkaIndo(storeRow['ACV PSM']),
+        },
+        {
+          nama: 'PWP (Purchase With Purchase)',
+          target: parseAngkaIndo(storeRow['TARGET PWP']),
+          aktual: parseAngkaIndo(storeRow['AKTUAL PWP']),
+          acv: parseAngkaIndo(storeRow['ACV PWP']),
+        },
+        {
+          nama: 'Serba Gratis',
+          target: parseAngkaIndo(storeRow['TARGET SERBA GRATIS']),
+          aktual: parseAngkaIndo(storeRow['AKTUAL SERBA GRATIS']),
+          acv: parseAngkaIndo(storeRow['ACV SERBA GRATIS']),
+        },
+        {
+          nama: 'APC Toko',
+          target: parseAngkaIndo(storeRow['TARGET APC']),
+          aktual: parseAngkaIndo(storeRow['AKTUAL APC']),
+          acv: parseAngkaIndo(storeRow['ACV APC']),
+        }
+      ];
+
+      var totalGapSemua = 0;
+      dataIndikator.forEach(function(item) {
+        item.gap = item.aktual - item.target;
+        totalGapSemua += item.gap;
+        if (Math.abs(item.acv) > 0 && Math.abs(item.acv) <= 2) item.acv *= 100;
+      });
+
+      var container = document.getElementById('plDynamicContentArea');
+      var html = 
+        // --- SCOREBOARD STICKY MELAYANG & CARD RINGKASAN BERWARNA-WARNI ---
+        '<div class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md pb-2">' +
+          '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">' +
+            '<div>' +
+              '<div class="flex items-center space-x-2">' +
+                '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-primary text-white font-mono">' + storeRow['KODE'] + '</span>' +
+                '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">' + storeRow['STORE NAME'] + '</h3>' +
+              '</div>' +
+              '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Penetration Rate & Program Fokus Kasir</p>' +
+            '</div>' +
+
+            // Tombol Simulasi
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="bukaModalSimulasiPl()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95">' +
+                '<i class="fa-solid fa-calculator text-amber-300"></i>' +
+                '<span>Simulasi Poin</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+
+          // 4 Card Ringkasan Gradient Menarik
+          '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border flex flex-col justify-between ' + bgPointGradient + '">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">POINT DASHBOARD</span>' +
+              '<span class="text-2xl font-black font-mono mt-1">' + pointPercentFormatted + '</span>' +
+              '<span class="text-[10px] opacity-80 mt-1 font-medium">Bobot Resmi Ritel</span>' +
+            '</div>' +
+
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-100">PERINGKAT TOKO</span>' +
+              '<span class="text-2xl font-black font-mono mt-1">#' + (storeRow['RANK'] || '-') + '</span>' +
+              '<span class="text-[10px] text-blue-100 mt-1 font-medium">Dari Seluruh Toko</span>' +
+            '</div>' +
+
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-500 via-teal-500 to-amber-500 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-100">TOTAL ACV</span>' +
+              '<span class="text-2xl font-black font-mono mt-1">' + rawTotAcv.toFixed(2).replace('.', ',') + '%</span>' +
+              '<span class="text-[10px] text-emerald-100 mt-1 font-medium">Akumulasi Capaian</span>' +
+            '</div>' +
+
+            '<div class="p-3.5 rounded-2xl shadow-sm border flex flex-col justify-between ' + (totalGapSemua >= 0 ? 'bg-gradient-to-br from-emerald-600 to-teal-800 text-white' : 'bg-gradient-to-br from-red-600 to-rose-800 text-white') + '">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">TOTAL GAP PENETRASI</span>' +
+              '<span class="text-xl font-black font-mono mt-1">' + (totalGapSemua >= 0 ? '+ ' : '- ') + Math.abs(Math.round(totalGapSemua)).toLocaleString('id-ID') + '</span>' +
+              '<span class="text-[10px] opacity-80 mt-1 font-medium">' + (totalGapSemua >= 0 ? 'Surplus Penetrasi' : 'Defisit Penetrasi') + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // --- TABEL UTAMA RITEL (INDIKATOR, TARGET, AKTUAL, ACV, GAP) ---
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Tabel Capaian Penawaran Langsung Toko</h4>' +
+            '<span class="text-[10px] text-slate-400 font-semibold">&ge;95% Hijau | 60-95% Kuning | &lt;60% Merah</span>' +
+          '</div>' +
+
+          '<div class="overflow-x-auto text-xs">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-3 text-left">Indikator Program</th>' +
+                '<th class="p-3 text-center">Target</th>' +
+                '<th class="p-3 text-center">Aktual</th>' +
+                '<th class="p-3 text-center">ACV %</th>' +
+                '<th class="p-3 text-center">Gap Capaian</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      dataIndikator.forEach(function(item) {
+        html += '<tr class="hover:bg-slate-50/80 transition-colors">' +
+          '<td class="p-3 text-left font-bold text-slate-800">' + item.nama + '</td>' +
+          '<td class="p-3 text-center font-mono text-slate-500">' + Math.round(item.target).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center font-mono font-black text-slate-800">' + Math.round(item.aktual).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center">' + getAcvPerhatianBadge(item.acv) + '</td>' +
+          '<td class="p-3 text-center">' + getGapBadge(item.gap) + '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div>' +
+
+        // --- TABEL RINGKASAN KE-2: KLASEMEN RELATIF (3 ATAS & 3 BAWAH) ---
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<div class="flex items-center space-x-2">' +
+              '<i class="fa-solid fa-trophy text-amber-500"></i>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Klasemen Relatif Toko (3 Di Atas & 3 Di Bawah)</h4>' +
+            '</div>' +
+            '<span class="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full font-bold">Highlight Biru: Toko Anda</span>' +
+          '</div>' +
+
+          '<div class="overflow-x-auto text-xs">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-3 text-center">Peringkat</th>' +
+                '<th class="p-3 text-left">Nama Toko</th>' +
+                '<th class="p-3 text-center">ACV PSM</th>' +
+                '<th class="p-3 text-center">ACV PWP</th>' +
+                '<th class="p-3 text-center">ACV Serba Gratis</th>' +
+                '<th class="p-3 text-center">ACV APC</th>' +
+                '<th class="p-3 text-center">Point Dashboard</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      // Urutkan seluruh toko berdasarkan RANK
+      var sortedStores = allPlRows.filter(function(r) {
+        var k = String(r['KODE'] || '').toUpperCase().trim();
+        return k !== 'AC' && k !== 'AREA';
+      }).sort(function(a, b) {
+        return Number(a['RANK'] || 999) - Number(b['RANK'] || 999);
+      });
+
+      var myRankIdx = sortedStores.findIndex(function(s) {
+        return String(s['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      var sliceStart = 0;
+      var sliceEnd = sortedStores.length;
+
+      if (myRankIdx !== -1) {
+        if (myRankIdx === 0) {
+          // Jika Rank 1: hanya tampilkan dirinya + 3 di bawahnya
+          sliceStart = 0;
+          sliceEnd = Math.min(sortedStores.length, 4);
+        } else if (myRankIdx === sortedStores.length - 1) {
+          // Jika Rank Terbawah: hanya tampilkan 3 di atasnya + dirinya
+          sliceStart = Math.max(0, sortedStores.length - 4);
+          sliceEnd = sortedStores.length;
+        } else {
+          // Posisi tengah: 3 di atas dan 3 di bawah
+          sliceStart = Math.max(0, myRankIdx - 3);
+          sliceEnd = Math.min(sortedStores.length, myRankIdx + 4);
+        }
+      }
+
+      var relativeList = sortedStores.slice(sliceStart, sliceEnd);
+
+      relativeList.forEach(function(st) {
+        var isMyStore = (String(st['KODE'] || '').toUpperCase().trim() === myStoreCode);
+        var rowStyle = isMyStore ? 'bg-blue-50/90 font-extrabold ring-2 ring-blue-500 rounded-xl' : 'hover:bg-slate-50/70';
+
+        var psmVal = parseAngkaIndo(st['ACV PSM']);
+        if (Math.abs(psmVal) > 0 && Math.abs(psmVal) <= 2) psmVal *= 100;
+        var pwpVal = parseAngkaIndo(st['ACV PWP']);
+        if (Math.abs(pwpVal) > 0 && Math.abs(pwpVal) <= 2) pwpVal *= 100;
+        var serbaVal = parseAngkaIndo(st['ACV SERBA GRATIS']);
+        if (Math.abs(serbaVal) > 0 && Math.abs(serbaVal) <= 2) serbaVal *= 100;
+        var apcVal = parseAngkaIndo(st['ACV APC']);
+        if (Math.abs(apcVal) > 0 && Math.abs(apcVal) <= 2) apcVal *= 100;
+
+        html += '<tr class="transition-all ' + rowStyle + '">' +
+          '<td class="p-3 text-center font-mono font-bold"><span class="w-6 h-6 rounded-full inline-flex items-center justify-center ' + (isMyStore ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700') + '">#' + st['RANK'] + '</span></td>' +
+          '<td class="p-3 text-left font-bold ' + (isMyStore ? 'text-blue-900' : 'text-slate-800') + '">' + st['KODE'] + ' - ' + st['STORE NAME'] + (isMyStore ? ' <span class="ml-1 text-[10px] text-blue-600 font-extrabold">(Toko Anda)</span>' : '') + '</td>' +
+          '<td class="p-3 text-center font-mono">' + psmVal.toFixed(2).replace('.', ',') + '%</td>' +
+          '<td class="p-3 text-center font-mono">' + pwpVal.toFixed(2).replace('.', ',') + '%</td>' +
+          '<td class="p-3 text-center font-mono">' + serbaVal.toFixed(2).replace('.', ',') + '%</td>' +
+          '<td class="p-3 text-center font-mono">' + apcVal.toFixed(2).replace('.', ',') + '%</td>' +
+          '<td class="p-3 text-center font-mono font-black ' + (isMyStore ? 'text-blue-700' : 'text-emerald-700') + '">' + formatPersenPl(st['POINT DASHBOARD']) + '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div>';
+      container.innerHTML = html;
+    }
+
+    // ==================== 2. TAMPILAN ROLE AC (AREA COORDINATOR) ====================
+    function renderPenawaranLangsungModeAC(allPlRows) {
+      // Baris Area / AC
+      var acRow = allPlRows.find(function(r) {
+        var k = String(r['KODE'] || '').toUpperCase().trim();
+        var n = String(r['STORE NAME'] || '').toUpperCase().trim();
+        return k === 'AC' || n === 'AREA';
+      }) || allPlRows[allPlRows.length - 1];
+
+      plActiveStoreData = acRow;
+
+      var rawPoint = parseAngkaIndo(acRow['POINT DASHBOARD']);
+      if (Math.abs(rawPoint) > 0 && Math.abs(rawPoint) <= 2) rawPoint *= 100;
+
+      var rawTotAcv = parseAngkaIndo(acRow['TOTAL ACV']);
+      if (Math.abs(rawTotAcv) > 0 && Math.abs(rawTotAcv) <= 2) rawTotAcv *= 100;
+
+      var dataIndikatorAC = [
+        { nama: 'PSM (Produk Spesial Mingguan)', target: parseAngkaIndo(acRow['TARGET PSM']), aktual: parseAngkaIndo(acRow['AKTUAL PSM']), acv: parseAngkaIndo(acRow['ACV PSM']) },
+        { nama: 'PWP (Purchase With Purchase)', target: parseAngkaIndo(acRow['TARGET PWP']), aktual: parseAngkaIndo(acRow['AKTUAL PWP']), acv: parseAngkaIndo(acRow['ACV PWP']) },
+        { nama: 'Serba Gratis', target: parseAngkaIndo(acRow['TARGET SERBA GRATIS']), aktual: parseAngkaIndo(acRow['AKTUAL SERBA GRATIS']), acv: parseAngkaIndo(acRow['ACV SERBA GRATIS']) },
+        { nama: 'APC Toko', target: parseAngkaIndo(acRow['TARGET APC']), aktual: parseAngkaIndo(acRow['AKTUAL APC']), acv: parseAngkaIndo(acRow['ACV APC']) }
+      ];
+
+      var totalGapAC = 0;
+      dataIndikatorAC.forEach(function(item) {
+        item.gap = item.aktual - item.target;
+        totalGapAC += item.gap;
+        if (Math.abs(item.acv) > 0 && Math.abs(item.acv) <= 2) item.acv *= 100;
+      });
+
+      var container = document.getElementById('plDynamicContentArea');
+      var html = 
+        // --- SCOREBOARD STICKY AREA ---
+        '<div class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md pb-2">' +
+          '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">' +
+            '<div>' +
+              '<div class="flex items-center space-x-2">' +
+                '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
+                '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI SELURUH TOKO BINAAN</h3>' +
+              '</div>' +
+              '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Penawaran Langsung Tingkat Area Coordinator</p>' +
+            '</div>' +
+
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="bukaModalSimulasiPl()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5">' +
+                '<i class="fa-solid fa-calculator text-amber-300"></i><span>Simulasi Poin Area</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+
+          // Card Ringkasan Area
+          '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">POIN DASHBOARD AREA</span>' +
+              '<span class="text-2xl font-black font-mono mt-1 block">' + rawPoint.toFixed(2).replace('.', ',') + '%</span>' +
+              '<span class="text-[10px] opacity-80 mt-1 font-medium">Rata-rata Terbobot</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-100">TOTAL TOKO BINAAN</span>' +
+              '<span class="text-2xl font-black font-mono mt-1 block">' + (allPlRows.length - 1) + ' Toko</span>' +
+              '<span class="text-[10px] text-blue-100 mt-1 font-medium">Terdaftar di Sheet</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-teal-500 to-emerald-600 text-white">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-100">TOTAL ACV AREA</span>' +
+              '<span class="text-2xl font-black font-mono mt-1 block">' + rawTotAcv.toFixed(2).replace('.', ',') + '%</span>' +
+              '<span class="text-[10px] text-emerald-100 mt-1 font-medium">Akumulasi Capaian</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border text-white ' + (totalGapAC >= 0 ? 'bg-gradient-to-br from-emerald-600 to-teal-800' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">TOTAL GAP AREA</span>' +
+              '<span class="text-xl font-black font-mono mt-1 block">' + (totalGapAC >= 0 ? '+ ' : '- ') + Math.abs(Math.round(totalGapAC)).toLocaleString('id-ID') + '</span>' +
+              '<span class="text-[10px] opacity-80 mt-1 font-medium">Selisih Penetrasi</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // --- TABEL UTAMA BARIS AC ---
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Tabel Konsolidasi Baris Area (AC)</h4>' +
+            '<span class="text-[10px] text-slate-400 font-semibold">&ge;95% Hijau | 60-95% Kuning | &lt;60% Merah</span>' +
+          '</div>' +
+
+          '<div class="overflow-x-auto text-xs">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-3 text-left">Indikator Program</th>' +
+                '<th class="p-3 text-center">Target</th>' +
+                '<th class="p-3 text-center">Aktual</th>' +
+                '<th class="p-3 text-center">ACV %</th>' +
+                '<th class="p-3 text-center">Gap Capaian</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      dataIndikatorAC.forEach(function(item) {
+        html += '<tr>' +
+          '<td class="p-3 text-left font-bold text-slate-800">' + item.nama + '</td>' +
+          '<td class="p-3 text-center font-mono text-slate-500">' + Math.round(item.target).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center font-mono font-black text-slate-800">' + Math.round(item.aktual).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center">' + getAcvPerhatianBadge(item.acv) + '</td>' +
+          '<td class="p-3 text-center">' + getGapBadge(item.gap) + '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div>' +
+
+        // --- AKORDION GROUPED PER NAMA TOKO (KHUSUS AC) ---
+        '<div class="space-y-3">' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Capaian per Toko Binaan (Klik SHOW/HIDE)</h4>';
+
+      var storeListOnly = allPlRows.filter(function(r) {
+        var k = String(r['KODE'] || '').toUpperCase().trim();
+        return k !== 'AC' && k !== 'AREA';
+      }).sort(function(a, b) {
+        return Number(a['RANK'] || 999) - Number(b['RANK'] || 999);
+      });
+
+      storeListOnly.forEach(function(st, idx) {
+        var accId = 'accPlStore_' + idx;
+        var stPsmTgt = parseAngkaIndo(st['TARGET PSM']);
+        var stPsmAct = parseAngkaIndo(st['AKTUAL PSM']);
+        var stPsmAcv = parseAngkaIndo(st['ACV PSM']);
+        if (Math.abs(stPsmAcv) <= 2) stPsmAcv *= 100;
+
+        var stPwpTgt = parseAngkaIndo(st['TARGET PWP']);
+        var stPwpAct = parseAngkaIndo(st['AKTUAL PWP']);
+        var stPwpAcv = parseAngkaIndo(st['ACV PWP']);
+        if (Math.abs(stPwpAcv) <= 2) stPwpAcv *= 100;
+
+        var stSerbaTgt = parseAngkaIndo(st['TARGET SERBA GRATIS']);
+        var stSerbaAct = parseAngkaIndo(st['AKTUAL SERBA GRATIS']);
+        var stSerbaAcv = parseAngkaIndo(st['ACV SERBA GRATIS']);
+        if (Math.abs(stSerbaAcv) <= 2) stSerbaAcv *= 100;
+
+        var stApcTgt = parseAngkaIndo(st['TARGET APC']);
+        var stApcAct = parseAngkaIndo(st['AKTUAL APC']);
+        var stApcAcv = parseAngkaIndo(st['ACV APC']);
+        if (Math.abs(stApcAcv) <= 2) stApcAcv *= 100;
+
+        html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<span class="w-6 h-6 rounded-full inline-flex items-center justify-center bg-slate-200 text-slate-800 text-[11px] font-mono font-bold">#' + st['RANK'] + '</span>' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + st['KODE'] + '</span>' +
+              '<h5 class="text-xs font-extrabold text-slate-800">' + st['STORE NAME'] + '</h5>' +
+            '</div>' +
+            '<div class="flex items-center space-x-3">' +
+              '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-black font-mono bg-emerald-100 text-emerald-800">' + formatPersenPl(st['POINT DASHBOARD']) + '</span>' +
+              '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                '<th class="p-2 text-left">Indikator</th><th class="p-2 text-center">Target</th><th class="p-2 text-center">Aktual</th><th class="p-2 text-center">ACV</th><th class="p-2 text-center">Gap</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">' +
+                '<tr><td class="p-2 text-left font-bold">PSM</td><td class="p-2 text-center font-mono">' + Math.round(stPsmTgt).toLocaleString('id-ID') + '</td><td class="p-2 text-center font-mono font-bold">' + Math.round(stPsmAct).toLocaleString('id-ID') + '</td><td class="p-2 text-center">' + getAcvPerhatianBadge(stPsmAcv) + '</td><td class="p-2 text-center">' + getGapBadge(stPsmAct - stPsmTgt) + '</td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">PWP</td><td class="p-2 text-center font-mono">' + Math.round(stPwpTgt).toLocaleString('id-ID') + '</td><td class="p-2 text-center font-mono font-bold">' + Math.round(stPwpAct).toLocaleString('id-ID') + '</td><td class="p-2 text-center">' + getAcvPerhatianBadge(stPwpAcv) + '</td><td class="p-2 text-center">' + getGapBadge(stPwpAct - stPwpTgt) + '</td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">Serba Gratis</td><td class="p-2 text-center font-mono">' + Math.round(stSerbaTgt).toLocaleString('id-ID') + '</td><td class="p-2 text-center font-mono font-bold">' + Math.round(stSerbaAct).toLocaleString('id-ID') + '</td><td class="p-2 text-center">' + getAcvPerhatianBadge(stSerbaAcv) + '</td><td class="p-2 text-center">' + getGapBadge(stSerbaAct - stSerbaTgt) + '</td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">APC</td><td class="p-2 text-center font-mono">' + Math.round(stApcTgt).toLocaleString('id-ID') + '</td><td class="p-2 text-center font-mono font-bold">' + Math.round(stApcAct).toLocaleString('id-ID') + '</td><td class="p-2 text-center">' + getAcvPerhatianBadge(stApcAcv) + '</td><td class="p-2 text-center">' + getGapBadge(stApcAct - stApcTgt) + '</td></tr>' +
+              '</tbody></table>' +
+          '</div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ==================== 3. MODAL SIMULASI POIN PENAWARAN LANGSUNG (INSTAN & AUTO BOBOT) ====================
+    function bukaModalSimulasiPl() {
+      var existing = document.getElementById('modalSimulasiPenawaranLangsung');
+      if (existing) existing.remove();
+
+      var dataAwal = plActiveStoreData || {};
+
+      var defaultApcTgt = Math.round(parseAngkaIndo(dataAwal['TARGET APC']) || 35000);
+      var defaultApcAct = Math.round(parseAngkaIndo(dataAwal['AKTUAL APC']) || 32000);
+      var defaultPwpTgt = Math.round(parseAngkaIndo(dataAwal['TARGET PWP']) || 350);
+      var defaultPwpAct = Math.round(parseAngkaIndo(dataAwal['AKTUAL PWP']) || 300);
+      var defaultPsmTgt = Math.round(parseAngkaIndo(dataAwal['TARGET PSM']) || 1000);
+      var defaultPsmAct = Math.round(parseAngkaIndo(dataAwal['AKTUAL PSM']) || 800);
+      var defaultSerbaTgt = Math.round(parseAngkaIndo(dataAwal['TARGET SERBA GRATIS']) || 200);
+      var defaultSerbaAct = Math.round(parseAngkaIndo(dataAwal['AKTUAL SERBA GRATIS']) || 150);
+
+      var modal = document.createElement('div');
+      modal.id = 'modalSimulasiPenawaranLangsung';
+      modal.className = 'fixed inset-0 z-[75] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          // Header Modal Simulasi
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-calculator text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Simulasi Poin Penawaran Langsung</h3>' +
+                '<p class="text-[10px] text-emerald-200">Hasil Bobot Otomatis Tanpa Merusak Data Asli</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalSimulasiPl()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          // Body Form Input Simulasi
+          '<div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 text-xs bg-slate-50">' +
+            // Hasil Total Poin Dashboard Simulasi Melayang
+            '<div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-lg flex items-center justify-between">' +
+              '<div>' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 block">HASIL SIMULASI POIN DASHBOARD</span>' +
+                '<h2 id="simPlHasilTotalPoint" class="text-3xl font-black font-mono tracking-tight mt-0.5">0,00%</h2>' +
+                '<span class="text-[10px] text-emerald-100">Jumlah Seluruh Nilai Bobot Program</span>' +
+              '</div>' +
+              '<div class="text-right space-y-1 text-[11px] font-mono text-emerald-100">' +
+                '<div>Bobot APC: <b id="simPlValBobotApc" class="text-white font-black">0,00%</b></div>' +
+                '<div>Bobot PWP: <b id="simPlValBobotPwp" class="text-white font-black">0,00%</b></div>' +
+                '<div>Bobot PSM: <b id="simPlValBobotPsm" class="text-white font-black">0,00%</b></div>' +
+                '<div>Bobot Serba: <b id="simPlValBobotSerba" class="text-white font-black">0,00%</b></div>' +
+              '</div>' +
+            '</div>' +
+
+            // Formulir Input Target & Aktual 4 Indikator
+            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">' +
+              // 1. APC (Bobot 25%)
+              '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">' +
+                '<div class="flex items-center justify-between">' +
+                  '<span class="font-extrabold text-slate-800">1. APC Toko</span>' +
+                  '<span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Bobot Kontribusi 25%</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-3 gap-2">' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Target APC</label><input type="number" id="simInApcTgt" value="' + defaultApcTgt + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-bold text-center"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Aktual APC</label><input type="number" id="simInApcAct" value="' + defaultApcAct + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-black text-center text-slate-800"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">ACV % (Auto)</label><input type="text" id="simOutApcAcv" readonly class="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg font-mono font-extrabold text-center text-brand-dark"></div>' +
+                '</div>' +
+              '</div>' +
+
+              // 2. PWP (Bobot 25%)
+              '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">' +
+                '<div class="flex items-center justify-between">' +
+                  '<span class="font-extrabold text-slate-800">2. PWP (Purchase With Purchase)</span>' +
+                  '<span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Bobot Kontribusi 25%</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-3 gap-2">' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Target PWP</label><input type="number" id="simInPwpTgt" value="' + defaultPwpTgt + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-bold text-center"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Aktual PWP</label><input type="number" id="simInPwpAct" value="' + defaultPwpAct + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-black text-center text-slate-800"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">ACV % (Auto)</label><input type="text" id="simOutPwpAcv" readonly class="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg font-mono font-extrabold text-center text-brand-dark"></div>' +
+                '</div>' +
+              '</div>' +
+
+              // 3. PSM (Bobot 20%)
+              '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">' +
+                '<div class="flex items-center justify-between">' +
+                  '<span class="font-extrabold text-slate-800">3. PSM (Produk Spesial Mingguan)</span>' +
+                  '<span class="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">Bobot Kontribusi 20%</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-3 gap-2">' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Target PSM</label><input type="number" id="simInPsmTgt" value="' + defaultPsmTgt + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-bold text-center"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Aktual PSM</label><input type="number" id="simInPsmAct" value="' + defaultPsmAct + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-black text-center text-slate-800"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">ACV % (Auto)</label><input type="text" id="simOutPsmAcv" readonly class="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg font-mono font-extrabold text-center text-brand-dark"></div>' +
+                '</div>' +
+              '</div>' +
+
+              // 4. Serba Gratis (Bobot 30%)
+              '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">' +
+                '<div class="flex items-center justify-between">' +
+                  '<span class="font-extrabold text-slate-800">4. Serba Gratis</span>' +
+                  '<span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Bobot Kontribusi 30%</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-3 gap-2">' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Target Serba</label><input type="number" id="simInSerbaTgt" value="' + defaultSerbaTgt + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-bold text-center"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">Aktual Serba</label><input type="number" id="simInSerbaAct" value="' + defaultSerbaAct + '" oninput="hitungSimulasiPlOtomatis()" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono font-black text-center text-slate-800"></div>' +
+                  '<div><label class="block text-[10px] text-slate-400 font-bold mb-0.5">ACV % (Auto)</label><input type="text" id="simOutSerbaAcv" readonly class="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg font-mono font-extrabold text-center text-brand-dark"></div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // Footer Modal Simulasi
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-between">' +
+            '<button onclick="resetNilaiSimulasiPl()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-rotate-left"></i><span>Reset Angka</span>' +
+            '</button>' +
+            '<button onclick="tutupModalSimulasiPl()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all">' +
+              'Tutup Simulasi' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+      hitungSimulasiPlOtomatis();
+    }
+
+    function tutupModalSimulasiPl() {
+      var modal = document.getElementById('modalSimulasiPenawaranLangsung');
+      if (modal) modal.remove();
+    }
+
+    // HITUNG SIMULASI POIN SECARA REALTIME & INSTAN
+    function hitungSimulasiPlOtomatis() {
+      // 1. Ambil Input Target & Aktual
+      var apcTgt = Number(document.getElementById('simInApcTgt').value || 1);
+      var apcAct = Number(document.getElementById('simInApcAct').value || 0);
+
+      var pwpTgt = Number(document.getElementById('simInPwpTgt').value || 1);
+      var pwpAct = Number(document.getElementById('simInPwpAct').value || 0);
+
+      var psmTgt = Number(document.getElementById('simInPsmTgt').value || 1);
+      var psmAct = Number(document.getElementById('simInPsmAct').value || 0);
+
+      var serbaTgt = Number(document.getElementById('simInSerbaTgt').value || 1);
+      var serbaAct = Number(document.getElementById('simInSerbaAct').value || 0);
+
+      // 2. Hitung ACV Masing-Masing Indikator
+      var apcAcv = apcTgt > 0 ? (apcAct / apcTgt) * 100 : 0;
+      var pwpAcv = pwpTgt > 0 ? (pwpAct / pwpTgt) * 100 : 0;
+      var psmAcv = psmTgt > 0 ? (psmAct / psmTgt) * 100 : 0;
+      var serbaAcv = serbaTgt > 0 ? (serbaAct / serbaTgt) * 100 : 0;
+
+      document.getElementById('simOutApcAcv').value = apcAcv.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simOutPwpAcv').value = pwpAcv.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simOutPsmAcv').value = psmAcv.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simOutSerbaAcv').value = serbaAcv.toFixed(2).replace('.', ',') + '%';
+
+      // 3. Hitung Nilai Bobot Resmi (APC 25%, PWP 25%, PSM 20%, Serba Gratis 30%)
+      var bobotApcVal = apcAcv * 0.25;
+      var bobotPwpVal = pwpAcv * 0.25;
+      var bobotPsmVal = psmAcv * 0.20;
+      var bobotSerbaVal = serbaAcv * 0.30;
+
+      document.getElementById('simPlValBobotApc').innerText = bobotApcVal.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simPlValBobotPwp').innerText = bobotPwpVal.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simPlValBobotPsm').innerText = bobotPsmVal.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('simPlValBobotSerba').innerText = bobotSerbaVal.toFixed(2).replace('.', ',') + '%';
+
+      // 4. Total Poin Dashboard
+      var totalPointDashboard = bobotApcVal + bobotPwpVal + bobotPsmVal + bobotSerbaVal;
+      document.getElementById('simPlHasilTotalPoint').innerText = totalPointDashboard.toFixed(2).replace('.', ',') + '%';
+    }
+
+    function resetNilaiSimulasiPl() {
+      document.getElementById('simInApcAct').value = 0;
+      document.getElementById('simInPwpAct').value = 0;
+      document.getElementById('simInPsmAct').value = 0;
+      document.getElementById('simInSerbaAct').value = 0;
+      hitungSimulasiPlOtomatis();
     }
 
     // ==================== [12] MODUL REKAP PSM KASIR ====================

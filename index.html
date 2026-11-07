@@ -679,25 +679,29 @@
     }
 
     // ==================== 5. LAZY LOADING ENGINE DENGAN LOGO 0-100% ====================
-    function muatDataSheetLazy(sheetName, forceRefresh, callbackSuccess, callbackError) {
+    // ==================== LAZY LOADING ENGINE (DENGAN MODE SILENT) ====================
+    function muatDataSheetLazy(sheetName, forceRefresh, callbackSuccess, callbackError, isSilent) {
       var cacheKey = 'kacida_cache_' + sheetName;
       var cachedItem = localStorage.getItem(cacheKey);
       var config = getTokoConfig() || {};
       var now = Date.now();
 
+      // Jika cache masih berlaku (< 5 menit) dan tidak dipaksa refresh
       if (!forceRefresh && cachedItem) {
         try {
           var parsed = JSON.parse(cachedItem);
           if (now - parsed.timestamp < APP_CONFIG.CACHE_EXPIRY_MS) {
-            // Render instan tanpa memunculkan overlay loading (0.1 - 0.3 detik)
             if (callbackSuccess) callbackSuccess(parsed.data, true);
             return;
           }
         } catch (e) {}
       }
 
-      // Tampilkan Overlay Loading Berlogo dengan bar progres 0-100%
-      tampilkanOverlayTabLoading(sheetName);
+      // HANYA tampilkan pop-up loading jika BUKAN mode hening (isSilent === false)
+      if (!isSilent) {
+        tampilkanOverlayTabLoading(sheetName);
+        updateTabLoadingProgress(35, 'Mengambil data dari Spreadsheet...');
+      }
 
       var payload = {
         sheetName: sheetName,
@@ -706,24 +710,30 @@
         nik: currentSessionUser ? currentSessionUser.nik : ''
       };
 
-      updateTabLoadingProgress(35, 'Mengambil data dari Spreadsheet...');
-
       kirimBackendRequest('GET_LAZY_SHEET', payload, function(res) {
-        updateTabLoadingProgress(80, 'Memproses struktur data...');
+        if (!isSilent) {
+          updateTabLoadingProgress(80, 'Memproses data...');
+        }
+
         localStorage.setItem(cacheKey, JSON.stringify({
           data: res.data,
           timestamp: now
         }));
 
-        setTimeout(function() {
+        if (!isSilent) {
           updateTabLoadingProgress(100, 'Selesai');
           setTimeout(function() {
             sembunyikanOverlayTabLoading();
             if (callbackSuccess) callbackSuccess(res.data, false);
           }, 150);
-        }, 100);
+        } else {
+          // Jika mode silent, langsung jalankan callback tanpa animasi loading pop-up
+          if (callbackSuccess) callbackSuccess(res.data, false);
+        }
       }, function(err) {
-        sembunyikanOverlayTabLoading();
+        if (!isSilent) {
+          sembunyikanOverlayTabLoading();
+        }
         if (callbackError) callbackError(err);
       });
     }
@@ -1522,48 +1532,54 @@
     }
 
     // ==================== 2. RENDER BERANDA DARI CACHE CEPAT ====================
+    // ==================== RENDER BERANDA DARI CACHE (100% SILENT) ====================
     function renderDataBerandaDariCache() {
       var cfg = getTokoConfig() || {};
-      var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC' || currentSessionUser.nik === '14125034');
+      var isAC = currentSessionUser && (
+        currentSessionUser.jabatan === 'AREA COORDINATOR' || 
+        currentSessionUser.jabatan === 'AC' || 
+        currentSessionUser.nik === '14125034'
+      );
 
-      // 1. Ambil Menu Navigasi
+      // Parameter ke-5 disetel TRUE agar tidak memunculkan pop-up loading di layar
+      // 1. Menu Navigasi
       muatDataSheetLazy('Menu_Navigasi', false, function(menuList) {
         renderGridMenuDinamis(menuList);
-      });
+      }, null, true);
 
-      // 2. Ambil Sales Harian
+      // 2. Sales Harian
       muatDataSheetLazy('Sales_Harian', false, function(salesHarianList) {
         var filteredSales = filterDataBerdasarkanToko(salesHarianList, cfg.cleanCode, isAC);
         renderSalesHarianBeranda(filteredSales);
-      });
+      }, null, true);
 
-      // 3. Ambil IKT
+      // 3. IKT
       muatDataSheetLazy('Ikt', false, function(iktList) {
         var filteredIkt = filterDataBerdasarkanToko(iktList, cfg.cleanCode, isAC);
         renderIktBeranda(filteredIkt);
-      });
+      }, null, true);
 
-      // 4. Ambil Penawaran Langsung
+      // 4. Penawaran Langsung
       muatDataSheetLazy('Penawaran_Langsung', false, function(plList) {
         var filteredPl = filterDataBerdasarkanToko(plList, cfg.cleanCode, isAC);
         renderPenawaranLangsungBeranda(filteredPl);
-      });
+      }, null, true);
 
-      // 5. Ambil Sales YTD / MTD
+      // 5. YTD Sales
       muatDataSheetLazy('YTD_Sales', false, function(ytdList) {
         var filteredYtd = filterDataBerdasarkanToko(ytdList, cfg.cleanCode, isAC);
         renderYtdSalesBeranda(filteredYtd);
-      });
+      }, null, true);
 
-      // 6. Ambil Master User Info Toko
+      // 6. Master User
       muatDataSheetLazy('Master_User', false, function(masterUsers) {
         renderInfoTokoSpesifikasi(masterUsers, cfg.cleanCode);
-      });
+      }, null, true);
 
-      // 7. Ambil Notifikasi
+      // 7. Notifikasi (Hening, tidak memicu pop-up Membuka Notifikasi)
       muatDataSheetLazy('Notifikasi', false, function(notifs) {
         renderNotifikasiLonceng(notifs);
-      });
+      }, null, true);
     }
 
     function filterDataBerdasarkanToko(dataArray, kodeToko, isBypassAC) {
@@ -2481,6 +2497,86 @@
         }
       });
     }
+
+    // ==================== KONTROL TOMBOL BACK HP / ANDROID ====================
+    var lastBackPressTimestamp = 0;
+
+    // Pasang state awal saat masuk Beranda
+    function inisialisasiHistoryState() {
+      window.history.replaceState({ view: 'beranda' }, '');
+    }
+
+    // Setiap kali modal penuh dibuka, dorong state baru
+    function pushModalHistoryState(modalName) {
+      window.history.pushState({ modalOpen: true, modalName: modalName }, '');
+    }
+
+    // Tangani event tombol Back fisik / gesture HP
+    window.addEventListener('popstate', function(event) {
+      // 1. Jika ada Preview Foto Layar Penuh terbuka -> Tutup Preview
+      var modalFoto = document.getElementById('modalFotoFullPreview');
+      if (modalFoto) {
+        modalFoto.remove();
+        return;
+      }
+
+      // 2. Jika ada Modal Universal 17 Menu terbuka -> Tutup Modal Menu
+      var modalUniversal = document.getElementById('universalModalMenuFrame');
+      if (modalUniversal && !modalUniversal.classList.contains('closed')) {
+        tutupModalUniversalMenu();
+        return;
+      }
+
+      // 3. Jika Drawer Notifikasi Lonceng terbuka -> Tutup Drawer
+      var modalNotif = document.getElementById('modalNotifikasiLonceng');
+      if (modalNotif && !modalNotif.classList.contains('hidden')) {
+        tutupPanelNotifikasi();
+        return;
+      }
+
+      // 4. Jika Modal Lihat Semua Menu terbuka -> Tutup Modal
+      var modalAllMenu = document.getElementById('modalViewAllMenu');
+      if (modalAllMenu && !modalAllMenu.classList.contains('hidden')) {
+        tutupModalLihatSemuaMenu();
+        return;
+      }
+
+      // 5. Jika sedang di tab sub-view (Chat AI, Kalender, Profil) -> Kembali ke Beranda
+      var viewBeranda = document.getElementById('viewBeranda');
+      if (viewBeranda && viewBeranda.classList.contains('hidden')) {
+        pindahNavigasiUtama('beranda');
+        window.history.pushState({ view: 'beranda' }, '');
+        return;
+      }
+
+      // 6. Jika sudah di Beranda dan tidak ada modal: Konfirmasi 2x untuk keluar aplikasi
+      var now = Date.now();
+      if (now - lastBackPressTimestamp < 2000) {
+        // Keluar / tutup tab aplikasi
+        window.history.back();
+      } else {
+        lastBackPressTimestamp = now;
+        window.history.pushState({ view: 'beranda' }, '');
+        Swal.mixin({
+          toast: true,
+          position: 'bottom',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: false
+        }).fire({
+          icon: 'info',
+          title: 'Tekan sekali lagi untuk keluar'
+        });
+      }
+    });
+
+    // Panggil saat login sukses / dashboard dibuka
+    var originalBukaDashboard = bukaDashboardUtama;
+    bukaDashboardUtama = function() {
+      originalBukaDashboard();
+      inisialisasiHistoryState();
+    };
+    
       // ==================== 8. HALAMAN KHUSUS NAVBAR (CHAT AI, KALENDER, PROFIL) ====================
     function renderHalamanKhusus(tabTujuan, container) {
       if (tabTujuan === 'chatai') {
@@ -2831,6 +2927,8 @@
 
     // ==================== 9. DISPATCHER MODAL 17 MENU OPERASIONAL ====================
     function bukaModalMenuTerpilih(namaMenu) {
+      // Tambahkan baris ini di dalam fungsi bukaModalMenuTerpilih:
+    pushModalHistoryState(namaMenu);
       var norm = namaMenu.toUpperCase().trim();
       tutupModalLihatSemuaMenu();
 

@@ -5354,7 +5354,7 @@
       renderBarIktCompChart(r, tfRatio * 100);
     }
 
-    // ==================== 2. TAMPILAN IKT ROLE AC (AREA COORDINATOR) ====================
+    // ==================== 2. TAMPILAN IKT ROLE AC (DENGAN KOLOM TARGET LENGKAP) ====================
     function renderMonitoringIktContentAC(allIktRows) {
       // Cari Baris AC / AREA
       var acRow = allIktRows.find(function(item) {
@@ -5432,7 +5432,7 @@
           '<div class="text-right"><span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV Area</span><span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span></div>' +
         '</div>' +
 
-        // Donut & Chart
+        // Donut & Chart Komparasi
         '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
           '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">' +
             '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Time Factor Berjalan</h4>' +
@@ -5445,24 +5445,63 @@
           '</div>' +
         '</div>' +
 
-        // TABEL UTAMA BARIS AC
+        // --- TABEL UTAMA BARIS AC (KOLOM TARGET SEKARANG SUDAH MUNCUL LENGKAP) ---
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
           '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-2 border-b border-slate-100">Tabel Konsolidasi Baris Area (AC)</h4>' +
           '<div class="overflow-x-auto text-xs">' +
             '<table class="w-full text-center divide-y divide-slate-100">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
-                '<th class="p-3 text-left">Indikator</th><th class="p-3 text-center">Aktual</th><th class="p-3 text-center">ACV %</th><th class="p-3 text-center">Status</th>' +
+                '<th class="p-3 text-left">Indikator</th>' +
+                '<th class="p-3 text-center">Target</th>' +
+                '<th class="p-3 text-center">Aktual</th>' +
+                '<th class="p-3 text-center">ACV %</th>' +
+                '<th class="p-3 text-center">Status</th>' +
               '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">' +
-                '<tr><td class="p-3 text-left font-bold">Net Sales</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACTUAL NET SALES'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV SALES']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET SALES'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET SALES'] || 'OK') + '</span></td></tr>' +
-                '<tr><td class="p-3 text-left font-bold">Gross Margin (Rp)</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACT GM RP'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM RP']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM RP'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM RP'] || 'OK') + '</span></td></tr>' +
-                '<tr><td class="p-3 text-left font-bold">Gross Margin (%)</td><td class="p-3 font-mono font-black">' + formatPersenIkt(acRow['ACTUAL GM %']) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM %'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM %'] || 'OK') + '</span></td></tr>' +
-                '<tr><td class="p-3 text-left font-bold">Profit Toko</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACTUAL PROFIT'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PROFIT']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET PROFIT'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET PROFIT'] || 'OK') + '</span></td></tr>' +
-                '<tr><td class="p-3 text-left font-bold">Penawaran Langsung</td><td class="p-3 font-mono font-black">' + formatPersenIkt(acRow['ACTUAL PENAWARAN LANGSUNG'] || acRow['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span></td></tr>' +
+                // 1. Net Sales Area
+                '<tr>' +
+                  '<td class="p-3 text-left font-bold text-slate-800">Net Sales</td>' +
+                  '<td class="p-3 font-mono text-slate-500">' + formatRupiahIkt(acRow['TARGET NET SALES'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-black text-slate-900">' + formatRupiahIkt(acRow['ACTUAL NET SALES'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV SALES']) + '</td>' +
+                  '<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET SALES'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET SALES'] || 'OK') + '</span></td>' +
+                '</tr>' +
+                // 2. Gross Margin Rp Area
+                '<tr>' +
+                  '<td class="p-3 text-left font-bold text-slate-800">Gross Margin (Rp)</td>' +
+                  '<td class="p-3 font-mono text-slate-500">' + formatRupiahIkt(acRow['TARGET GM RP'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-black text-slate-900">' + formatRupiahIkt(acRow['ACT GM RP'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM RP']) + '</td>' +
+                  '<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM RP'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM RP'] || 'OK') + '</span></td>' +
+                '</tr>' +
+                // 3. Gross Margin % Area
+                '<tr>' +
+                  '<td class="p-3 text-left font-bold text-slate-800">Gross Margin (%)</td>' +
+                  '<td class="p-3 font-mono text-slate-500">' + formatPersenIkt(acRow['TARGET GM %']) + '</td>' +
+                  '<td class="p-3 font-mono font-black text-slate-900">' + formatPersenIkt(acRow['ACTUAL GM %']) + '</td>' +
+                  '<td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM']) + '</td>' +
+                  '<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM %'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM %'] || 'OK') + '</span></td>' +
+                '</tr>' +
+                // 4. Profit Area
+                '<tr>' +
+                  '<td class="p-3 text-left font-bold text-slate-800">Profit Toko</td>' +
+                  '<td class="p-3 font-mono text-slate-500">' + formatRupiahIkt(acRow['TARGET PROFIT'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-black text-slate-900">' + formatRupiahIkt(acRow['ACTUAL PROFIT'], true) + '</td>' +
+                  '<td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PROFIT']) + '</td>' +
+                  '<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET PROFIT'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET PROFIT'] || 'OK') + '</span></td>' +
+                '</tr>' +
+                // 5. Penawaran Langsung Area
+                '<tr>' +
+                  '<td class="p-3 text-left font-bold text-slate-800">Penawaran Langsung</td>' +
+                  '<td class="p-3 font-mono text-slate-500">100%</td>' +
+                  '<td class="p-3 font-mono font-black text-slate-900">' + formatPersenIkt(acRow['ACTUAL PENAWARAN LANGSUNG'] || acRow['ACV PENAWARAN LANGSUNG']) + '</td>' +
+                  '<td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PENAWARAN LANGSUNG']) + '</td>' +
+                  '<td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span></td>' +
+                '</tr>' +
               '</tbody></table>' +
           '</div>' +
         '</div>' +
 
-        // AKORDION PER TOKO BINAAN (MENGABAIKAN BARIS KOSONG)
+        // Akordion Toko Binaan (Tetap Dipertahankan Bersih Tanpa Baris Kosong)
         '<div class="space-y-3">' +
           '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian IKT per Toko Binaan (Klik SHOW/HIDE)</h4>';
 

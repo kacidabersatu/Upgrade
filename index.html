@@ -2197,7 +2197,7 @@
       var dataToProcess = storeRows.length > 0 ? storeRows : ytdRows;
 
       // 2. FILTER BULAN BERJALAN (NOVEMBER)
-      var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      var bulanList = ['JANUARI', 'FEBUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
       var targetBulan = bulanList[new Date().getMonth()];
 
       var elLabel = document.getElementById('labelMtdBulanBerjalan');
@@ -2701,7 +2701,7 @@
       var d = new Date();
       var currentYear = d.getFullYear();
       var currentMonth = d.getMonth();
-      var namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      var namaBulan = ['Januari', 'Febuari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
       var firstDay = new Date(currentYear, currentMonth, 1).getDay();
       var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -4782,12 +4782,12 @@
       });
     }
 
-    // --- RENDER UTAMA SALES MTD (FILTER, RESUME, GRAFIK & TABEL) ---
+    // --- RENDER UTAMA SALES MTD (KEBAL BARIS TANGGAL KOSONG) ---
     function renderSalesMtdBody(allYtdRows, isAC) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      var bulanList = ['JANUARI', 'FEBUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
       var currentMonthIdx = new Date().getMonth();
       var defaultBulan = bulanList[currentMonthIdx];
 
@@ -4807,10 +4807,21 @@
         return b === mtdActiveFilterBulan;
       });
 
-      // 3. FILTER RENTANG TANGGAL (Jika dipilih)
-      var finalDataRows = bulanFilteredRows.filter(function(r) {
+      // 3. FILTER TANGGAL VALID (BUANG BARIS KOSONG / STRIP / INVALID)
+      var validDateRows = bulanFilteredRows.filter(function(r) {
+        var rawTgl = String(r['TANGGAL'] || '').trim();
+        // Buang jika tanggal kosong, berupa strip (-), atau null/undefined
+        if (!rawTgl || rawTgl === '-' || rawTgl === 'undefined' || rawTgl === 'null') {
+          return false;
+        }
+        var d = parseDateIndo(rawTgl);
+        // Pastikan tanggal valid
+        return !isNaN(d.getTime()) && d.getTime() > 86400000;
+      });
+
+      // 4. FILTER RENTANG TANGGAL (Jika Dipilih User)
+      var finalDataRows = validDateRows.filter(function(r) {
         var d = parseDateIndo(r['TANGGAL']);
-        if (isNaN(d.getTime())) return true;
         if (mtdActiveDateFrom) {
           var fromD = new Date(mtdActiveDateFrom);
           fromD.setHours(0,0,0,0);
@@ -4824,7 +4835,7 @@
         return true;
       });
 
-      // 4. KONSOLIDASI DATA JIKA ROLE AC (SUM SALES & AVG APC PER TANGGAL)
+      // 5. KONSOLIDASI DATA JIKA ROLE AC (SUM SALES & AVG APC PER TANGGAL)
       var displayDailyList = [];
       if (isAC) {
         var dateMap = {};
@@ -4889,7 +4900,7 @@
         }).sort(function(a, b) { return a.dateObj - b.dateObj; });
       }
 
-      // 5. HITUNG TOTAL RESUME
+      // 6. HITUNG TOTAL RESUME
       var totalSales25 = 0;
       var totalSales26 = 0;
       displayDailyList.forEach(function(d) {
@@ -4900,7 +4911,7 @@
       var totalGrowth = totalSales25 > 0 ? ((totalSales26 - totalSales25) / totalSales25 * 100) : 0;
       var totalGapRupiah = totalSales26 - totalSales25;
 
-      // 6. BUILD HTML TAMPILAN
+      // 7. BUILD HTML TAMPILAN
       var container = document.getElementById('mtdDynamicContentArea');
       var html = 
         // BAR FILTER (BULAN & RENTANG TANGGAL)
@@ -4911,7 +4922,6 @@
               '<p class="text-[11px] text-slate-400">Pilih bulan berjalan atau rentang tanggal spesifik</p>' +
             '</div>' +
             '<div class="flex flex-wrap items-center gap-2">' +
-              // Dropdown Bulan
               '<select id="mtdSelectBulan" onchange="ubahFilterBulanMtd(this.value)" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-dark focus:border-brand-primary">' +
                 '<option value="ALL"' + (mtdActiveFilterBulan === 'ALL' ? ' selected' : '') + '>Semua Bulan (YTD)</option>';
                 bulanList.forEach(function(b) {
@@ -4921,7 +4931,6 @@
             '</div>' +
           '</div>' +
 
-          // Input Rentang Tanggal Dari - Sampai
           '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">' +
             '<div class="flex items-center space-x-2">' +
               '<span class="text-slate-400 font-bold text-[11px] w-12">Dari:</span>' +
@@ -4942,23 +4951,20 @@
           '</div>' +
         '</div>' +
 
-        // 3 KOTAK RESUME BERWARNA GRADIENT MENARIK
+        // 3 KOTAK RESUME BERWARNA GRADIENT
         '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">' +
-          // Total Sales 2025 (Gradient Slate-Indigo)
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between">' +
             '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL SALES 2025</span>' +
             '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales25).toLocaleString('id-ID') + '</span>' +
             '<span class="text-[10px] text-slate-300 mt-1">Tahun Lalu (Periode Filter)</span>' +
           '</div>' +
 
-          // Total Sales 2026 (Gradient Emerald-Teal)
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
             '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">TOTAL SALES 2026</span>' +
             '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales26).toLocaleString('id-ID') + '</span>' +
             '<span class="text-[10px] text-emerald-200 mt-1">Tahun Ini (Periode Filter)</span>' +
           '</div>' +
 
-          // Pertumbuhan Growth (Gradient Dinamis Hijau/Merah)
           '<div class="p-4 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (totalGrowth >= 0 ? 'bg-gradient-to-br from-emerald-500 via-teal-600 to-amber-500' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
             '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">PERTUMBUHAN (GROWTH)</span>' +
             '<span class="text-2xl font-black font-mono tracking-tight mt-1">' + (totalGrowth >= 0 ? '+' : '') + totalGrowth.toFixed(2).replace('.', ',') + '%</span>' +
@@ -4966,7 +4972,7 @@
           '</div>' +
         '</div>' +
 
-        // BAGIAN GRAFIK (TANGGAL BERURUTAN DD/MM & ANGKA BULAT JUTA)
+        // BAGIAN GRAFIK (TANGGAL BERSIH TANPA -/undefined)
         '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
           '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
             '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Tren Komparasi Harian (2025 vs 2026)</h4>' +
@@ -4980,14 +4986,13 @@
           '</div>' +
         '</div>' +
 
-        // TABEL RINCIAN KOMPARASI HARIAN DENGAN 3 TAB FILTER (ALL, GROWTH, DISGROWTH)
+        // TABEL RINCIAN KOMPARASI HARIAN (BERSIH DARI BARIS TANGGAL KOSONG)
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
           '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">' +
             '<div>' +
               '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Rincian Komparasi Penjualan Harian</h4>' +
               '<p class="text-[11px] text-slate-400">Klik pada baris tanggal untuk melihat detail perbandingan</p>' +
             '</div>' +
-            // 3 Tab Filter
             '<div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-bold">' +
               '<button onclick="setSubTabFilterMtd(\'ALL\')" class="px-3 py-1 rounded-lg transition-all ' + (mtdActiveSubTab === 'ALL' ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500 hover:text-slate-800') + '">Semua</button>' +
               '<button onclick="setSubTabFilterMtd(\'GROWTH\')" class="px-3 py-1 rounded-lg transition-all ' + (mtdActiveSubTab === 'GROWTH' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-700') + '">Growth</button>' +
@@ -4995,7 +5000,6 @@
             '</div>' +
           '</div>' +
 
-          // List Tabel
           '<div class="overflow-x-auto text-xs">' +
             '<table class="w-full text-center divide-y divide-slate-100">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
@@ -5022,7 +5026,6 @@
           ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800"><i class="fa-solid fa-arrow-trend-up mr-1 text-emerald-600"></i>+' + row.growth.toFixed(2).replace('.', ',') + '%</span>'
           : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800"><i class="fa-solid fa-arrow-trend-down mr-1 text-red-600"></i>' + row.growth.toFixed(2).replace('.', ',') + '%</span>';
 
-        // Baris dapat diklik untuk membuka detail perbandingan
         html += '<tr onclick="bukaModalDetailPerbandinganHarian(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="hover:bg-emerald-50/60 cursor-pointer transition-colors">' +
           '<td class="p-3 text-left font-mono font-bold text-slate-800 flex items-center space-x-1.5">' +
             '<span>' + row.tglRapi + '</span>' +
@@ -5037,7 +5040,7 @@
 
       html += '</tbody></table></div></div>';
 
-      // 7. JIKA ROLE AC: TAMPILKAN AKORDION GROUPED PER TOKO BINAAN
+      // 8. JIKA ROLE AC: AKORDION GROUPED PER TOKO BINAAN
       if (isAC) {
         html += '<div class="space-y-3 pt-2">' +
           '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko Binaan (AC Area)</h4>';
@@ -5126,11 +5129,12 @@
 
       container.innerHTML = html;
 
-      // 8. RENDER GRAFIK GARIS (TANGGAL BERURUTAN & SKALA JUTAAN BULAT)
+      // Render Grafik Garis (Hanya untuk baris yang valid)
       renderGrafikSalesMtdChart(displayDailyList);
     }
 
-    // --- RENDER GRAFIK CHART.JS MTD ---
+      // 8. RENDER GRAFIK GARIS (TANGGAL BERURUTAN & SKALA JUTAAN BULAT)
+      // --- RENDER GRAFIK CHART.JS MTD TANPA LABEL UNDEFINED ---
     function renderGrafikSalesMtdChart(dailyList) {
       var canvas = document.getElementById('chartModalSalesMtdCanvas');
       if (!canvas) return;
@@ -5142,10 +5146,12 @@
       var data26 = [];
 
       dailyList.forEach(function(d) {
-        var parts = d.tglRapi.split('/');
-        labels.push(parts[0] + '/' + parts[1]); // Format DD/MM
-        data25.push(d['SALES 2025']);
-        data26.push(d['SALES 2026']);
+        if (d.tglRapi && d.tglRapi.indexOf('/') !== -1) {
+          var parts = d.tglRapi.split('/');
+          labels.push(parts[0] + '/' + parts[1]); // Format bersih: DD/MM
+          data25.push(d['SALES 2025']);
+          data26.push(d['SALES 2026']);
+        }
       });
 
       chartMtdModalInstance = new Chart(ctx, {

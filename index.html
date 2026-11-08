@@ -5306,212 +5306,586 @@
       }
     }
 
-    // ==================== MODAL SALES HARIAN & TOLERANSI OPERASIONAL ====================
+    // ==================== [8] MODUL SALES HARIAN & TOLERANSI OPERASIONAL LENGKAP ====================
+    var shActiveDateFrom = '';
+    var shActiveDateTo = '';
+    var lastShDisclaimerAgreedTime = 0;
+    var chartModalSalesHarianInstance = null;
+
     function renderModulSalesHarian(container) {
-      container.innerHTML = renderHeaderModalUniversal('Sales Harian & Toleransi Operasional', 'Monitoring NSB, OOS, Gross Margin & Penanda Akhir Pekan') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          
-          <!-- Kotak Resume Finansial -->
-          '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center" id="boxResumeSalesHarian">' +
-            '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-400 font-bold uppercase">Sales Bulan Lalu</span><span id="shResBulanLalu" class="text-sm font-black text-slate-700 font-mono mt-1">Rp 0</span></div>' +
-            '<div class="p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-blue-700 font-bold uppercase">Total Target</span><span id="shResTarget" class="text-sm font-black text-blue-900 font-mono mt-1">Rp 0</span></div>' +
-            '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-emerald-700 font-bold uppercase">Sales Bulan Ini</span><span id="shResActual" class="text-sm font-black text-emerald-950 font-mono mt-1">Rp 0</span></div>' +
-            '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-500 font-bold uppercase">Total NSB (Rp)</span><span id="shResNsbRp" class="text-sm font-black text-slate-800 font-mono mt-1">Rp 0</span></div>' +
-            '<div class="p-3 rounded-xl border shadow-sm flex flex-col justify-between" id="cardResNsbPct"><span class="text-[10px] font-bold uppercase" id="labelResNsbPct">% NSB (Tol &le; 0.14%)</span><span id="shResNsbPct" class="text-sm font-black font-mono mt-1">0,00%</span></div>' +
-          '</div>' +
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
-          <!-- Grafik Tren Komparasi -->
-          '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">' +
-            '<div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">' +
-              '<h4 class="text-xs font-black text-slate-800">Grafik Komparasi Harian (Aktual vs Target vs Bulan Lalu)</h4>' +
-              '<div class="flex items-center space-x-3 text-[10px] font-semibold text-slate-500">' +
-                '<span class="flex items-center"><span class="w-3 h-1 bg-emerald-600 rounded mr-1"></span> Aktual</span>' +
-                '<span class="flex items-center"><span class="w-3 h-1 bg-blue-500 rounded mr-1 border-dashed"></span> Target</span>' +
-                '<span class="flex items-center"><span class="w-3 h-1 bg-slate-400 rounded mr-1 border-dashed"></span> Bln Lalu</span>' +
-              '</div>' +
-            '</div>' +
-            '<div class="h-52 w-full"><canvas id="chartModalSalesHarianTren"></canvas></div>' +
+      container.innerHTML = renderHeaderModalUniversal(
+        'Sales Harian & Toleransi Operasional', 
+        isAC ? 'Konsolidasi Area & Akordion Toko Binaan (Toleransi NSB & OOS)' : 'Monitoring NSB, OOS, Gross Margin & Penanda Akhir Pekan'
+      ) +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="shMainContainerWrapper">' +
+          '<div id="shDynamicContentArea"></div>' +
+          // Footer Pesan Keamanan Permanen
+          '<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-[10px] text-amber-900 font-medium leading-relaxed mt-4">' +
+            '⚠️ <b>PERHATIAN:</b> Data yang disajikan untuk kebutuhan internal agar memudahkan monitoring. Data Internal Toko & Perusahaan, dilarang menyebarluaskan. Pelanggaran dapat dikenakan sanksi SP s/d PHK.' +
           '</div>' +
-
-          <!-- Tabel Lembar Monitoring -->
-          '<div id="containerTabelSalesHarianModal"></div>' +
         '</div>';
 
-      muatDataSheetLazy('Sales_Harian', false, function(allRows) {
-        var cfg = getTokoConfig() || {};
-        var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      muatDataSheetLazy('Sales_Harian', false, function(allSalesRows, isFromCache) {
+        if (!allSalesRows || allSalesRows.length === 0) {
+          document.getElementById('shDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Sales_Harian belum tersedia di Spreadsheet.</div>';
+          return;
+        }
 
-        var storeRows = allRows.filter(function(r) {
-          return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
-        });
+        var now = Date.now();
+        // Cek sesi cache 5 menit untuk pop-up disclaimer
+        if (!isFromCache || (now - lastShDisclaimerAgreedTime > APP_CONFIG.CACHE_EXPIRY_MS)) {
+          bukaModalDisclaimerIkt(function() {
+            lastShDisclaimerAgreedTime = Date.now();
+            renderSalesHarianBody(allSalesRows, isAC);
+          });
+        } else {
+          renderSalesHarianBody(allSalesRows, isAC);
+        }
+      });
+    }
 
-        var dataToUse = storeRows.length > 0 ? storeRows : allRows;
+    // --- RENDER UTAMA SALES HARIAN (FILTER, RESUME GRADIENT, GRAFIK & TABEL) ---
+    function renderSalesHarianBody(allSalesRows, isAC) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-        var sorted = dataToUse.slice().sort(function(a, b) {
-          return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
-        });
+      // 1. FILTER TOKO MURNI (Jika bukan AC)
+      var storeFilteredRows = isAC ? allSalesRows : allSalesRows.filter(function(r) {
+        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
 
-        var totBulanLalu = 0;
-        var totTarget = 0;
-        var totActual = 0;
-        var totNsbRp = 0;
+      // 2. FILTER TANGGAL VALID (BUANG BARIS KOSONG / STRIP / INVALID)
+      var validDateRows = storeFilteredRows.filter(function(r) {
+        var rawTgl = String(r['TANGGAL'] || '').trim();
+        if (!rawTgl || rawTgl === '-' || rawTgl === 'undefined' || rawTgl === 'null') return false;
+        var d = parseDateIndo(rawTgl);
+        return !isNaN(d.getTime()) && d.getTime() > 86400000;
+      });
 
-        var labels = [];
-        var actSeries = [];
-        var tgtSeries = [];
-        var laluSeries = [];
+      // 3. FILTER RENTANG TANGGAL DARI - SAMPAI
+      var finalDataRows = validDateRows.filter(function(r) {
+        var d = parseDateIndo(r['TANGGAL']);
+        if (shActiveDateFrom) {
+          var fromD = new Date(shActiveDateFrom);
+          fromD.setHours(0,0,0,0);
+          if (d < fromD) return false;
+        }
+        if (shActiveDateTo) {
+          var toD = new Date(shActiveDateTo);
+          toD.setHours(23,59,59,999);
+          if (d > toD) return false;
+        }
+        return true;
+      });
 
-        sorted.forEach(function(r) {
+      // 4. SUSUN DATA HARIAN (KONSOLIDASI AREA JIKA AC / DATA TOKO JIKA USER)
+      var displayDailyList = [];
+      if (isAC) {
+        var dateMap = {};
+        finalDataRows.forEach(function(r) {
+          var tglStr = formatTanggalTampilan(r['TANGGAL']);
+          if (!dateMap[tglStr]) {
+            dateMap[tglStr] = {
+              TANGGAL: r['TANGGAL'],
+              tglRapi: tglStr,
+              dateObj: parseDateIndo(r['TANGGAL']),
+              BULAN_LALU: 0,
+              TARGET: 0,
+              ACTUAL: 0,
+              GAP_TARGET: 0,
+              NSB: 0,
+              gmList: [],
+              oosList: []
+            };
+          }
           var bl = parseAngkaIndo(r['BULAN LALU']);
           var tg = parseAngkaIndo(r['TARGET']);
           var ac = parseAngkaIndo(r['ACTUAL']);
           var nsb = parseAngkaIndo(r['NSB']);
+          var gm = parseAngkaIndo(r['GROSS MARGIN']);
+          if (Math.abs(gm) <= 1 && gm > 0) gm *= 100;
+          var oos = parseAngkaIndo(r['OOS %']);
+          if (Math.abs(oos) <= 1 && oos > 0) oos *= 100;
 
-          totBulanLalu += bl;
-          totTarget += tg;
-          totActual += ac;
-          totNsbRp += nsb;
-
-          labels.push(getFormattedDateLabel(r['TANGGAL']));
-          actSeries.push(ac);
-          tgtSeries.push(tg);
-          laluSeries.push(bl);
+          dateMap[tglStr].BULAN_LALU += bl;
+          dateMap[tglStr].TARGET += tg;
+          dateMap[tglStr].ACTUAL += ac;
+          dateMap[tglStr].GAP_TARGET += (ac - tg);
+          dateMap[tglStr].NSB += nsb;
+          if (gm > 0) dateMap[tglStr].gmList.push(gm);
+          dateMap[tglStr].oosList.push(oos);
         });
 
-        document.getElementById('shResBulanLalu').innerText = 'Rp ' + Math.round(totBulanLalu).toLocaleString('id-ID');
-        document.getElementById('shResTarget').innerText = 'Rp ' + Math.round(totTarget).toLocaleString('id-ID');
-        document.getElementById('shResActual').innerText = 'Rp ' + Math.round(totActual).toLocaleString('id-ID');
-        document.getElementById('shResNsbRp').innerText = formatRupiahNsb(totNsbRp);
+        displayDailyList = Object.values(dateMap).map(function(item) {
+          var avgGm = item.gmList.length > 0 ? (item.gmList.reduce(function(a,b){return a+b;}, 0) / item.gmList.length) : 0;
+          var avgOos = item.oosList.length > 0 ? (item.oosList.reduce(function(a,b){return a+b;}, 0) / item.oosList.length) : 0;
+          var nsbPct = item.ACTUAL > 0 ? ((item.NSB / item.ACTUAL) * 100) : 0;
+          var acvPct = item.TARGET > 0 ? ((item.ACTUAL / item.TARGET) * 100) : 0;
+          return {
+            TANGGAL: item.TANGGAL,
+            tglRapi: item.tglRapi,
+            dateObj: item.dateObj,
+            BULAN_LALU: item.BULAN_LALU,
+            TARGET: item.TARGET,
+            ACTUAL: item.ACTUAL,
+            ACV_PCT: acvPct,
+            GAP_TARGET: item.GAP_TARGET,
+            NSB: item.NSB,
+            NSB_PCT: nsbPct,
+            OOS_PCT: avgOos,
+            GROSS_MARGIN: avgGm
+          };
+        }).sort(function(a, b) { return a.dateObj - b.dateObj; });
 
-        var pctNsbTotal = totActual > 0 ? ((totNsbRp / totActual) * 100) : 0;
-        var elNsbPctCard = document.getElementById('cardResNsbPct');
-        var elNsbPctText = document.getElementById('shResNsbPct');
-        var elNsbLabel = document.getElementById('labelResNsbPct');
+      } else {
+        displayDailyList = finalDataRows.map(function(r) {
+          var bl = parseAngkaIndo(r['BULAN LALU']);
+          var tg = parseAngkaIndo(r['TARGET']);
+          var ac = parseAngkaIndo(r['ACTUAL']);
+          var gap = ac - tg;
+          var nsb = parseAngkaIndo(r['NSB']);
+          var nsbPct = parseAngkaIndo(r['% NSB']);
+          if (Math.abs(nsbPct) <= 1 && nsbPct !== 0) nsbPct *= 100;
+          var oos = parseAngkaIndo(r['OOS %']);
+          if (Math.abs(oos) <= 1 && oos > 0) oos *= 100;
+          var gm = parseAngkaIndo(r['GROSS MARGIN']);
+          if (Math.abs(gm) <= 1 && gm > 0) gm *= 100;
+          var acvPct = tg > 0 ? ((ac / tg) * 100) : 0;
 
-        if (pctNsbTotal > 0.14) {
-          elNsbPctCard.className = 'p-3 bg-red-50 border border-red-300 rounded-xl shadow-sm text-center flex flex-col justify-between badge-pulse-red';
-          elNsbLabel.className = 'text-[10px] font-black text-red-700 uppercase flex items-center justify-center';
-          elNsbLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1 text-red-600"></i> % NSB (OVER)';
-          elNsbPctText.className = 'text-sm font-black text-red-700 font-mono mt-1';
-        } else {
-          elNsbPctCard.className = 'p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm text-center flex flex-col justify-between';
-          elNsbLabel.className = 'text-[10px] font-bold text-emerald-800 uppercase';
-          elNsbPctText.className = 'text-sm font-black text-emerald-950 font-mono mt-1';
-        }
-        elNsbPctText.innerText = pctNsbTotal.toFixed(2).replace('.', ',') + '%';
+          return {
+            TANGGAL: r['TANGGAL'],
+            tglRapi: formatTanggalTampilan(r['TANGGAL']),
+            dateObj: parseDateIndo(r['TANGGAL']),
+            BULAN_LALU: bl,
+            TARGET: tg,
+            ACTUAL: ac,
+            ACV_PCT: acvPct,
+            GAP_TARGET: gap,
+            NSB: nsb,
+            NSB_PCT: nsbPct,
+            OOS_PCT: oos,
+            GROSS_MARGIN: gm
+          };
+        }).sort(function(a, b) { return a.dateObj - b.dateObj; });
+      }
 
-        // Render Chart Modal
-        var canvasChart = document.getElementById('chartModalSalesHarianTren');
-        if (canvasChart) {
-          var ctx = canvasChart.getContext('2d');
-          new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: labels,
-              datasets: [
-                { label: 'Aktual', data: actSeries, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.12)', fill: true, tension: 0.3, pointRadius: 3 },
-                { label: 'Target', data: tgtSeries, borderColor: '#2563eb', borderDash: [4, 4], fill: false, tension: 0.3, pointRadius: 2 },
-                { label: 'Bulan Lalu', data: laluSeries, borderColor: '#94a3b8', borderDash: [2, 2], fill: false, tension: 0.3, pointRadius: 0 }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { ticks: { callback: function(v) { return (v / 1000000).toFixed(0) + 'Jt'; }, font: { size: 10 } } },
-                x: { ticks: { font: { size: 10 } } }
-              }
-            }
-          });
-        }
+      // 5. HITUNG TOTAL RESUME
+      var totBulanLalu = 0;
+      var totTarget = 0;
+      var totActual = 0;
+      var totNsbRp = 0;
 
-        // Render Tabel Lembar Monitoring (Rapi di Tengah & Watermark Bersih)
-        var boxTbl = document.getElementById('containerTabelSalesHarianModal');
-        var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 watermark-bg overflow-hidden relative">' +
-          '<div class="flex items-center justify-between pb-2 border-b border-slate-100 relative z-10">' +
-            '<h4 class="text-xs font-black text-slate-800">Tabel Rincian Harian Toko</h4>' +
-            '<span class="text-[10px] text-slate-500 font-semibold">Toleransi: %NSB &le; 0.14% | OOS &le; 1.00%</span>' +
+      displayDailyList.forEach(function(d) {
+        totBulanLalu += d.BULAN_LALU;
+        totTarget += d.TARGET;
+        totActual += d.ACTUAL;
+        totNsbRp += d.NSB;
+      });
+
+      var acvByTargetTotal = totTarget > 0 ? ((totActual / totTarget) * 100) : 0;
+      var pctNsbTotal = totActual > 0 ? ((totNsbRp / totActual) * 100) : 0;
+      var isTotalNsbOver = Math.abs(pctNsbTotal) >= 0.14 && pctNsbTotal !== 0;
+
+      // 6. BUILD HTML KOMPONEN
+      var container = document.getElementById('shDynamicContentArea');
+      var html = 
+        // --- BAR FILTER RENTANG TANGGAL DARI - SAMPAI ---
+        '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Filter Rentang Tanggal</h4>' +
+              '<p class="text-[11px] text-slate-400">Pilih periode awal dan akhir untuk melihat dinamika sales harian</p>' +
+            '</div>' +
+            '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">' +
+              (isAC ? 'MODE AREA (AC)' : myStoreCode) +
+            '</span>' +
           '</div>' +
+
+          '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="text-slate-400 font-bold text-[11px] w-12">Dari:</span>' +
+              '<input type="date" id="shInputFrom" value="' + shActiveDateFrom + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">' +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="text-slate-400 font-bold text-[11px] w-12">Sampai:</span>' +
+              '<input type="date" id="shInputTo" value="' + shActiveDateTo + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">' +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="terapkanFilterRentangSh()" class="flex-1 py-1.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all">' +
+                '<i class="fa-solid fa-filter mr-1"></i>Terapkan' +
+              '</button>' +
+              '<button onclick="resetFilterRentangSh()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition-all">' +
+                'Reset' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // --- 6 KOTAK RESUME BERWARNA-WARNI GRADIENT + PROGRES BAR ACV BY TARGET ---
+        '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs text-center">' +
+          // 1. Sales Bulan Lalu (Gradient Slate-Indigo)
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Sales Bulan Lalu</span>' +
+            '<span class="text-sm md:text-base font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totBulanLalu).toLocaleString('id-ID') + '</span>' +
+            '<span class="text-[9px] text-slate-300 mt-1">Periode Filter</span>' +
+          '</div>' +
+
+          // 2. Total Target (Gradient Blue)
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Total Target</span>' +
+            '<span class="text-sm md:text-base font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totTarget).toLocaleString('id-ID') + '</span>' +
+            '<span class="text-[9px] text-blue-200 mt-1">Target Berjalan</span>' +
+          '</div>' +
+
+          // 3. Sales Bulan Ini (Gradient Emerald-Teal)
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Sales Bulan Ini</span>' +
+            '<span class="text-sm md:text-base font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totActual).toLocaleString('id-ID') + '</span>' +
+            '<span class="text-[9px] text-emerald-200 mt-1">Realisasi Aktual</span>' +
+          '</div>' +
+
+          // 4. ACV By Target dengan Progres Bar (Gradient Emerald-Amber)
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-teal-600 via-emerald-600 to-amber-500 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-teal-100">ACV BY TARGET</span>' +
+            '<span class="text-base md:text-lg font-black font-mono tracking-tight mt-0.5">' + acvByTargetTotal.toFixed(2).replace('.', ',') + '%</span>' +
+            '<div class="w-full bg-black/20 h-2 rounded-full overflow-hidden p-0.5 my-1">' +
+              '<div class="h-full bg-white rounded-full transition-all duration-300" style="width: ' + Math.min(100, Math.max(0, acvByTargetTotal)) + '%"></div>' +
+            '</div>' +
+            '<span class="text-[9px] text-teal-100">Sales / Target &times; 100</span>' +
+          '</div>' +
+
+          // 5. Total NSB Rp (Gradient Dark Slate)
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total NSB (Rp)</span>' +
+            '<span class="text-sm md:text-base font-black font-mono tracking-tight mt-1">' + formatRupiahNsb(totNsbRp) + '</span>' +
+            '<span class="text-[9px] text-slate-400 mt-1">Selisih Barang</span>' +
+          '</div>' +
+
+          // 6. % NSB Dinamis (Gradient Hijau / Merah Pulsing jika Over)
+          '<div class="p-3.5 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (isTotalNsbOver ? 'bg-gradient-to-br from-red-600 to-rose-800 badge-pulse-red' : 'bg-gradient-to-br from-teal-700 to-emerald-800') + '">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">' + (isTotalNsbOver ? '⚠️ % NSB (OVER)' : '% NSB (Tol &le; 0.14%)') + '</span>' +
+            '<span class="text-base md:text-lg font-black font-mono tracking-tight mt-0.5">' + formatPersenNsb(pctNsbTotal) + '</span>' +
+            '<span class="text-[9px] opacity-80 mt-1">' + (isTotalNsbOver ? 'Melebihi Toleransi' : 'Aman Terkendali') + '</span>' +
+          '</div>' +
+        '</div>' +
+
+        // --- GRAFIK TREN KOMPARASI HARIAN 3 GARIS ---
+        '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Grafik Komparasi Harian (Aktual vs Target vs Bulan Lalu)</h4>' +
+            '<div class="flex items-center space-x-3 text-[10px] font-semibold text-slate-500">' +
+              '<span class="flex items-center"><span class="w-3 h-1 bg-emerald-600 rounded mr-1"></span> Aktual</span>' +
+              '<span class="flex items-center"><span class="w-3 h-1 bg-blue-500 rounded mr-1 border-dashed"></span> Target</span>' +
+              '<span class="flex items-center"><span class="w-3 h-1 bg-slate-400 rounded mr-1 border-dashed"></span> Bln Lalu</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="h-60 w-full">' +
+            '<canvas id="chartModalSalesHarianTren"></canvas>' +
+          '</div>' +
+        '</div>' +
+
+        // --- TABEL RINCIAN HARIAN (WARNA-WARNI PER TANGGAL) ---
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3 watermark-bg overflow-hidden relative">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100 relative z-10">' +
+            '<div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">' + (isAC ? 'Tabel Konsolidasi Harian Seluruh Area' : 'Tabel Rincian Harian Toko') + '</h4>' +
+              '<p class="text-[11px] text-slate-400">Pewarnaan otomatis: Jumat (Biru), Sabtu (Oranye), Minggu (Merah)</p>' +
+            '</div>' +
+            '<span class="text-[10px] text-slate-500 font-semibold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">Toleransi: %NSB &le; 0.14% | OOS &le; 1.00%</span>' +
+          '</div>' +
+
           '<div class="overflow-x-auto text-xs relative z-10">' +
-            '<table class="w-full divide-y divide-slate-100 text-center">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
                 '<th class="p-2.5 text-center sticky-col-left">Tanggal</th>' +
                 '<th class="p-2.5 text-center">Bulan Lalu</th>' +
                 '<th class="p-2.5 text-center">Target</th>' +
-                '<th class="p-2.5 text-center">Actual</th>' +
+                '<th class="p-2.5 text-center">Aktual</th>' +
+                '<th class="p-2.5 text-center">ACV %</th>' +
                 '<th class="p-2.5 text-center">Gap Target</th>' +
                 '<th class="p-2.5 text-center">NSB (Rp)</th>' +
                 '<th class="p-2.5 text-center">% NSB</th>' +
                 '<th class="p-2.5 text-center">OOS %</th>' +
                 '<th class="p-2.5 text-center">GM %</th>' +
-              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+              '</tr></thead><tbody class="divide-y divide-slate-100 font-medium">';
 
-        sorted.forEach(function(row) {
-          var dateObj = parseDateIndo(row['TANGGAL']);
-          var tglTampil = formatTanggalTampilan(dateObj);
-          var dayOfWeek = dateObj.getDay();
+      if (displayDailyList.length === 0) {
+        html += '<tr><td colspan="10" class="p-6 text-center text-slate-400 italic">Tidak ada data harian pada rentang tanggal yang dipilih.</td></tr>';
+      }
 
-          var dayBadge = '';
-          if (dayOfWeek === 5) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-bold">JUM</span>';
-          else if (dayOfWeek === 6) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-bold">SAB</span>';
-          else if (dayOfWeek === 0) dayBadge = '<span class="ml-1 px-1 py-0.2 rounded text-[9px] bg-red-100 text-red-800 font-bold">MIN</span>';
+      displayDailyList.forEach(function(row) {
+        var dayOfWeek = row.dateObj.getDay();
 
-          var act = parseAngkaIndo(row['ACTUAL']);
-          var tgt = parseAngkaIndo(row['TARGET']);
-          var bl = parseAngkaIndo(row['BULAN LALU']);
-          var gap = act - tgt;
-          var nsbRp = parseAngkaIndo(row['NSB']);
+        // Pewarnaan baris menarik sesuai hari
+        var rowBgClass = 'hover:bg-slate-50/80';
+        var dayBadge = '';
+        if (dayOfWeek === 5) {
+          rowBgClass = 'bg-blue-50/40 hover:bg-blue-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-black">JUM</span>';
+        } else if (dayOfWeek === 6) {
+          rowBgClass = 'bg-amber-50/40 hover:bg-amber-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-black">SAB</span>';
+        } else if (dayOfWeek === 0) {
+          rowBgClass = 'bg-red-50/40 hover:bg-red-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-red-100 text-red-800 font-black">MIN</span>';
+        }
 
-          // Format NSB % (Minus tetap minus, plus tanpa tanda)
-          var nsbPctFormatted = formatPersenNsb(row['% NSB']);
-          var nsbPctVal = parseAngkaIndo(row['% NSB']);
-          if (Math.abs(nsbPctVal) <= 1) nsbPctVal *= 100;
+        var isNsbOver = Math.abs(row.NSB_PCT) >= 0.14 && row.NSB_PCT !== 0;
+        var isOosOver = row.OOS_PCT >= 1.0;
 
-          // PENANDA KHUSUS: Jika mencapai/melebihi batas toleransi 0.14% (baik minus misal -0.14%, -0.25%, maupun plus)
-          var isNsbOver = Math.abs(nsbPctVal) >= 0.14 && nsbPctVal !== 0;
+        var gmClass = row.GROSS_MARGIN >= 19 
+          ? 'text-emerald-700 font-black' 
+          : (row.GROSS_MARGIN >= 17 ? 'text-amber-600 font-bold' : 'text-red-600 font-bold');
 
-          // Format OOS %
-          var oosPctFormatted = formatPersenIndo(row['OOS %']);
-          var oosPctVal = parseAngkaIndo(row['OOS %']);
-          if (Math.abs(oosPctVal) <= 1) oosPctVal *= 100;
-          var isOosOver = oosPctVal > 1.0;
+        html += '<tr class="transition-colors ' + rowBgClass + '">' +
+          '<td class="p-2.5 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap text-center align-middle">' + row.tglRapi + dayBadge + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-500 align-middle">Rp ' + Math.round(row.BULAN_LALU).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-600 align-middle">Rp ' + Math.round(row.TARGET).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-black text-slate-900 align-middle">Rp ' + Math.round(row.ACTUAL).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-black text-brand-dark align-middle">' + row.ACV_PCT.toFixed(2).replace('.', ',') + '%</td>' +
+          '<td class="p-2.5 text-center font-mono font-bold align-middle ' + (row.GAP_TARGET >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + 
+            (row.GAP_TARGET >= 0 ? '+' : '') + Math.round(row.GAP_TARGET).toLocaleString('id-ID') + 
+          '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-700 align-middle">' + formatRupiahNsb(row.NSB) + '</td>' +
+          
+          // Kolom % NSB dengan Ikon Peringatan Khusus
+          '<td class="p-2.5 text-center font-mono align-middle ' + (isNsbOver ? 'text-red-600 font-black' : 'text-slate-700') + '">' +
+            formatPersenNsb(row.NSB_PCT) +
+            (isNsbOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] animate-bounce"></i>' : '') +
+          '</td>' +
 
-          // Format GM %
-          var gmPctFormatted = formatPersenIndo(row['GROSS MARGIN']);
-          var gmVal = parseAngkaIndo(row['GROSS MARGIN']);
-          if (Math.abs(gmVal) <= 1) gmVal *= 100;
-          var gmClass = gmVal >= 19 ? 'text-emerald-700 font-bold' : (gmVal >= 17 ? 'text-amber-600 font-bold' : 'text-red-600 font-bold');
+          // Kolom OOS % dengan Ikon Peringatan Khusus
+          '<td class="p-2.5 text-center font-mono align-middle ' + (isOosOver ? 'text-red-600 font-black' : 'text-emerald-700') + '">' +
+            row.OOS_PCT.toFixed(2).replace('.', ',') + '%' +
+            (isOosOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px] animate-bounce"></i>' : '') +
+          '</td>' +
 
-          html += '<tr class="hover:bg-slate-50/80">' +
-            '<td class="p-2.5 sticky-col-left font-mono font-bold text-slate-800 whitespace-nowrap text-center align-middle">' + tglTampil + dayBadge + '</td>' +
-            '<td class="p-2.5 text-center font-mono text-slate-500 align-middle">Rp ' + Math.round(bl).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono text-slate-600 align-middle">Rp ' + Math.round(tgt).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono font-extrabold text-slate-800 align-middle">Rp ' + Math.round(act).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2.5 text-center font-mono font-bold align-middle ' + (gap >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gap >= 0 ? '+' : '') + Math.round(gap).toLocaleString('id-ID') + '</td>' +
-            
-            // Kolom NSB Rp
-            '<td class="p-2.5 text-center font-mono text-slate-700 align-middle">' + formatRupiahNsb(nsbRp) + '</td>' +
-            
-            // Kolom % NSB (Dilengkapi Ikon Segitiga Merah persis seperti OOS jika >= 0.14% atau <= -0.14%)
-            '<td class="p-2.5 text-center font-mono align-middle ' + (isNsbOver ? 'text-red-600 font-black' : 'text-slate-700') + '">' +
-              nsbPctFormatted +
-              (isNsbOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px]"></i>' : '') +
-            '</td>' +
+          // Kolom GM %
+          '<td class="p-2.5 text-center font-mono align-middle ' + gmClass + '">' + row.GROSS_MARGIN.toFixed(2).replace('.', ',') + '%</td>' +
+        '</tr>';
+      });
 
-            // Kolom OOS % (Dilengkapi Ikon Segitiga Merah)
-            '<td class="p-2.5 text-center font-mono align-middle ' + (isOosOver ? 'text-red-600 font-black' : 'text-emerald-700') + '">' +
-              oosPctFormatted +
-              (isOosOver ? '<br><i class="fa-solid fa-triangle-exclamation text-red-600 text-[10px]"></i>' : '') +
-            '</td>' +
+      html += '</tbody></table></div></div>';
 
-            // Kolom GM %
-            '<td class="p-2.5 text-center font-mono align-middle ' + gmClass + '">' + gmPctFormatted + '</td>' +
-          '</tr>';
+      // 7. JIKA ROLE AC: AKORDION GROUPED PER TOKO BINAAN
+      if (isAC) {
+        html += '<div class="space-y-3 pt-2">' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Sales Harian per Toko Binaan (AC Area)</h4>';
+
+        var storeGroupingSh = {};
+        finalDataRows.forEach(function(r) {
+          var k = String(r['KODE'] || '').toUpperCase().trim();
+          var n = String(r['NAMA TOKO'] || '').toUpperCase().trim();
+          if (k && k !== 'AC' && k !== 'AREA') {
+            if (!storeGroupingSh[k]) {
+              storeGroupingSh[k] = {
+                kode: k,
+                nama: n,
+                totBlnLalu: 0,
+                totTgt: 0,
+                totAct: 0,
+                rows: []
+              };
+            }
+            var bl = parseAngkaIndo(r['BULAN LALU']);
+            var tg = parseAngkaIndo(r['TARGET']);
+            var ac = parseAngkaIndo(r['ACTUAL']);
+            var nsb = parseAngkaIndo(r['NSB']);
+            var nsbPct = parseAngkaIndo(r['% NSB']);
+            if (Math.abs(nsbPct) <= 1 && nsbPct !== 0) nsbPct *= 100;
+            var oos = parseAngkaIndo(r['OOS %']);
+            if (Math.abs(oos) <= 1 && oos > 0) oos *= 100;
+            var gm = parseAngkaIndo(r['GROSS MARGIN']);
+            if (Math.abs(gm) <= 1 && gm > 0) gm *= 100;
+            var acvPct = tg > 0 ? ((ac / tg) * 100) : 0;
+
+            storeGroupingSh[k].totBlnLalu += bl;
+            storeGroupingSh[k].totTgt += tg;
+            storeGroupingSh[k].totAct += ac;
+            storeGroupingSh[k].rows.push({
+              TANGGAL: r['TANGGAL'],
+              tglRapi: formatTanggalTampilan(r['TANGGAL']),
+              dateObj: parseDateIndo(r['TANGGAL']),
+              BULAN_LALU: bl,
+              TARGET: tg,
+              ACTUAL: ac,
+              ACV_PCT: acvPct,
+              GAP_TARGET: ac - tg,
+              NSB: nsb,
+              NSB_PCT: nsbPct,
+              OOS_PCT: oos,
+              GROSS_MARGIN: gm
+            });
+          }
         });
 
-        html += '</tbody></table></div></div>';
-        boxTbl.innerHTML = html;
+        var storeListSh = Object.values(storeGroupingSh);
+        storeListSh.forEach(function(st, idx) {
+          var accId = 'accShStore_' + idx;
+          var stAcvTotal = st.totTgt > 0 ? ((st.totAct / st.totTgt) * 100) : 0;
+          var sortedRowsToko = st.rows.sort(function(a,b){ return a.dateObj - b.dateObj; });
+
+          html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
+            '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+              '<div class="flex items-center space-x-2.5">' +
+                '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + st.kode + '</span>' +
+                '<h5 class="text-xs font-extrabold text-slate-800 truncate max-w-[130px] sm:max-w-xs">' + st.nama + '</h5>' +
+              '</div>' +
+              '<div class="flex items-center space-x-2 sm:space-x-3 text-xs font-mono">' +
+                '<span class="hidden md:inline text-slate-500">Lalu: Rp ' + Math.round(st.totBlnLalu).toLocaleString('id-ID') + '</span>' +
+                '<span class="hidden sm:inline text-slate-600">Tgt: Rp ' + Math.round(st.totTgt).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-slate-900 font-black">Act: Rp ' + Math.round(st.totAct).toLocaleString('id-ID') + '</span>' +
+                '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (stAcvTotal >= 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900') + '">' +
+                  stAcvTotal.toFixed(1).replace('.', ',') + '%' +
+                '</span>' +
+                '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+              '</div>' +
+            '</div>' +
+
+            '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+              '<div class="overflow-x-auto">' +
+                '<table class="w-full text-center divide-y divide-slate-100">' +
+                  '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                    '<th class="p-2 text-left">Tanggal</th><th class="p-2">Bln Lalu</th><th class="p-2">Target</th><th class="p-2">Aktual</th><th class="p-2">ACV</th><th class="p-2">Gap</th><th class="p-2">NSB</th><th class="p-2">%NSB</th><th class="p-2">OOS</th><th class="p-2">GM%</th>' +
+                  '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+          sortedRowsToko.forEach(function(rToko) {
+            var isOverNsb = Math.abs(rToko.NSB_PCT) >= 0.14 && rToko.NSB_PCT !== 0;
+            var isOverOos = rToko.OOS_PCT >= 1.0;
+            html += '<tr>' +
+              '<td class="p-2 text-left font-mono font-bold text-slate-700">' + rToko.tglRapi + '</td>' +
+              '<td class="p-2 font-mono text-slate-500">Rp ' + Math.round(rToko.BULAN_LALU).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono text-slate-600">Rp ' + Math.round(rToko.TARGET).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono font-black text-slate-900">Rp ' + Math.round(rToko.ACTUAL).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono font-bold text-brand-dark">' + rToko.ACV_PCT.toFixed(1).replace('.', ',') + '%</td>' +
+              '<td class="p-2 font-mono ' + (rToko.GAP_TARGET >= 0 ? 'text-emerald-700 font-bold' : 'text-red-600 font-bold') + '">' + (rToko.GAP_TARGET >= 0 ? '+' : '') + Math.round(rToko.GAP_TARGET).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono text-slate-700">' + formatRupiahNsb(rToko.NSB) + '</td>' +
+              '<td class="p-2 font-mono ' + (isOverNsb ? 'text-red-600 font-bold' : 'text-slate-600') + '">' + formatPersenNsb(rToko.NSB_PCT) + '</td>' +
+              '<td class="p-2 font-mono ' + (isOverOos ? 'text-red-600 font-bold' : 'text-emerald-700') + '">' + rToko.OOS_PCT.toFixed(2).replace('.', ',') + '%</td>' +
+              '<td class="p-2 font-mono font-bold text-slate-800">' + rToko.GROSS_MARGIN.toFixed(2).replace('.', ',') + '%</td>' +
+            '</tr>';
+          });
+
+          html += '</tbody></table></div></div></div>';
+        });
+
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+
+      // 8. RENDER GRAFIK TREN HARIAN 3 GARIS
+      renderGrafikSalesHarianModal(displayDailyList);
+    }
+
+    // --- RENDER GRAFIK CHART.JS SALES HARIAN ---
+    function renderGrafikSalesHarianModal(dailyList) {
+      var canvas = document.getElementById('chartModalSalesHarianTren');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (chartModalSalesHarianInstance) chartModalSalesHarianInstance.destroy();
+
+      var labels = [];
+      var dataAktual = [];
+      var dataTarget = [];
+      var dataBlnLalu = [];
+
+      dailyList.forEach(function(d) {
+        var parts = d.tglRapi.split('/');
+        labels.push(parts[0] + '/' + parts[1]); // Format DD/MM
+        dataAktual.push(d.ACTUAL);
+        dataTarget.push(d.TARGET);
+        dataBlnLalu.push(d.BULAN_LALU);
       });
+
+      chartModalSalesHarianInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Aktual',
+              data: dataAktual,
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.12)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3
+            },
+            {
+              label: 'Target',
+              data: dataTarget,
+              borderColor: '#2563eb',
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.35,
+              pointRadius: 2
+            },
+            {
+              label: 'Bulan Lalu',
+              data: dataBlnLalu,
+              borderColor: '#94a3b8',
+              borderDash: [2, 2],
+              fill: false,
+              tension: 0.35,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  return c.dataset.label + ': Rp ' + Math.round(c.raw).toLocaleString('id-ID');
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function(v) { return (v / 1000000).toFixed(0) + 'Jt'; },
+                font: { size: 10 }
+              },
+              grid: { color: '#f1f5f9' }
+            },
+            x: {
+              ticks: { font: { size: 10 }, maxRotation: 45 },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // --- HANDLER FILTER RENTANG TANGGAL SALES HARIAN ---
+    function terapkanFilterRentangSh() {
+      shActiveDateFrom = document.getElementById('shInputFrom').value;
+      shActiveDateTo = document.getElementById('shInputTo').value;
+      var cached = localStorage.getItem('kacida_cache_Sales_Harian');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesHarianBody(JSON.parse(cached).data || [], isAC);
+      }
+    }
+
+    function resetFilterRentangSh() {
+      shActiveDateFrom = '';
+      shActiveDateTo = '';
+      document.getElementById('shInputFrom').value = '';
+      document.getElementById('shInputTo').value = '';
+      var cached = localStorage.getItem('kacida_cache_Sales_Harian');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesHarianBody(JSON.parse(cached).data || [], isAC);
+      }
     }
 
     function hapusRowUniversal(namaSheet, rowId, callbackReload) {

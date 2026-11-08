@@ -4740,91 +4740,564 @@
         '<tr><td class="p-2 font-bold">Time Factor vs Capaian</td><td class="p-2 text-right font-mono">' + (timeFactor * 100).toFixed(1) + '%</td><td class="p-2 text-right font-mono font-bold">' + (tgtSales > 0 ? (actSales / tgtSales * 100).toFixed(1) : 0) + '%</td><td class="p-2 text-right font-mono">-</td><td class="p-2 text-center">' + ((tgtSales > 0 && (actSales / tgtSales) >= timeFactor) ? '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">ON TRACK</span>' : '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">PUSH</span>') + '</td></tr>';
     }
 
-    // ==================== [7] MODUL SALES MTD ====================
+    // ==================== [7] MODUL SALES MTD (PERSONIL TOKO & AC LENGKAP) ====================
+    var mtdActiveFilterBulan = 'DEFAULT';
+    var mtdActiveDateFrom = '';
+    var mtdActiveDateTo = '';
+    var mtdActiveSubTab = 'ALL'; // ALL, GROWTH, DISGROWTH
+    var lastMtdDisclaimerAgreedTime = 0;
+    var chartMtdModalInstance = null;
+
     function renderModulSalesMtd(container) {
-      container.innerHTML = renderHeaderModalUniversal('Sales MTD 2025 vs 2026', 'Analisa performa pertumbuhan bulanan & harian toko') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">' +
-            '<div class="p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold block">TOTAL SALES 2025</span><span id="mtdModalSales25" class="text-lg font-black text-slate-700 font-mono">Rp 0</span></div>' +
-            '<div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-800 font-bold block">TOTAL SALES 2026</span><span id="mtdModalSales26" class="text-lg font-black text-emerald-900 font-mono">Rp 0</span></div>' +
-            '<div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-800 font-bold block">PERTUMBUHAN (GROWTH)</span><span id="mtdModalGrowth" class="text-lg font-black text-blue-900 font-mono">+0.00%</span></div>' +
-          '</div>' +
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
-          '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm h-64">' +
-            '<canvas id="chartMtdModalLine"></canvas>' +
+      container.innerHTML = renderHeaderModalUniversal(
+        'Sales MTD 2025 vs 2026', 
+        isAC ? 'Konsolidasi Area & Akordion Toko Binaan (YTD Sales)' : 'Analisa Performa Pertumbuhan Bulanan & Harian Toko'
+      ) +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="mtdMainContainerWrapper">' +
+          '<div id="mtdDynamicContentArea"></div>' +
+          // Footer Pesan Keamanan Permanen
+          '<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-[10px] text-amber-900 font-medium leading-relaxed mt-4">' +
+            '⚠️ <b>PERHATIAN:</b> Data yang disajikan untuk kebutuhan internal agar memudahkan monitoring. Data Internal Toko & Perusahaan, dilarang menyebarluaskan. Pelanggaran dapat dikenakan sanksi SP s/d PHK.' +
           '</div>' +
-
-          '<div id="containerTabelMtdModal"></div>' +
         '</div>';
 
-      muatDataSheetLazy('YTD_Sales', false, function(rows) {
-        var cfg = getTokoConfig() || {};
-        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC' || currentSessionUser.nik === '14125034');
-        var filtered = filterDataBerdasarkanToko(rows, cfg.cleanCode, isAC);
+      muatDataSheetLazy('YTD_Sales', false, function(allYtdRows, isFromCache) {
+        if (!allYtdRows || allYtdRows.length === 0) {
+          document.getElementById('mtdDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data YTD_Sales belum tersedia di Spreadsheet.</div>';
+          return;
+        }
 
-        var sum25 = 0;
-        var sum26 = 0;
-        var labels = [];
-        var data25 = [];
-        var data26 = [];
+        var now = Date.now();
+        if (!isFromCache || (now - lastMtdDisclaimerAgreedTime > APP_CONFIG.CACHE_EXPIRY_MS)) {
+          bukaModalDisclaimerIkt(function() {
+            lastMtdDisclaimerAgreedTime = Date.now();
+            renderSalesMtdBody(allYtdRows, isAC);
+          });
+        } else {
+          renderSalesMtdBody(allYtdRows, isAC);
+        }
+      });
+    }
 
-        filtered.forEach(function(r) {
-          var s25 = Number(r['SALES 2025'] || 0);
-          var s26 = Number(r['SALES 2026'] || 0);
-          sum25 += s25;
-          sum26 += s26;
-          labels.push(String(r['TANGGAL'] || '').substring(0, 5));
-          data25.push(s25);
-          data26.push(s26);
+    // --- RENDER UTAMA SALES MTD (FILTER, RESUME, GRAFIK & TABEL) ---
+    function renderSalesMtdBody(allYtdRows, isAC) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      var currentMonthIdx = new Date().getMonth();
+      var defaultBulan = bulanList[currentMonthIdx];
+
+      if (mtdActiveFilterBulan === 'DEFAULT') {
+        mtdActiveFilterBulan = defaultBulan;
+      }
+
+      // 1. FILTER DATA MURNI TOKO (Jika bukan AC)
+      var storeFilteredRows = isAC ? allYtdRows : allYtdRows.filter(function(r) {
+        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      // 2. FILTER BERDASARKAN BULAN
+      var bulanFilteredRows = storeFilteredRows.filter(function(r) {
+        if (mtdActiveFilterBulan === 'ALL') return true;
+        var b = String(r['BULAN'] || '').toUpperCase().trim();
+        return b === mtdActiveFilterBulan;
+      });
+
+      // 3. FILTER RENTANG TANGGAL (Jika dipilih)
+      var finalDataRows = bulanFilteredRows.filter(function(r) {
+        var d = parseDateIndo(r['TANGGAL']);
+        if (isNaN(d.getTime())) return true;
+        if (mtdActiveDateFrom) {
+          var fromD = new Date(mtdActiveDateFrom);
+          fromD.setHours(0,0,0,0);
+          if (d < fromD) return false;
+        }
+        if (mtdActiveDateTo) {
+          var toD = new Date(mtdActiveDateTo);
+          toD.setHours(23,59,59,999);
+          if (d > toD) return false;
+        }
+        return true;
+      });
+
+      // 4. KONSOLIDASI DATA JIKA ROLE AC (SUM SALES & AVG APC PER TANGGAL)
+      var displayDailyList = [];
+      if (isAC) {
+        var dateMap = {};
+        finalDataRows.forEach(function(r) {
+          var tglStr = formatTanggalTampilan(r['TANGGAL']);
+          if (!dateMap[tglStr]) {
+            dateMap[tglStr] = {
+              TANGGAL: r['TANGGAL'],
+              tglRapi: tglStr,
+              dateObj: parseDateIndo(r['TANGGAL']),
+              SALES_2025: 0,
+              SALES_2026: 0,
+              STD_2025: 0,
+              STD_2026: 0
+            };
+          }
+          dateMap[tglStr].SALES_2025 += parseAngkaIndo(r['SALES 2025']);
+          dateMap[tglStr].SALES_2026 += parseAngkaIndo(r['SALES 2026']);
+          dateMap[tglStr].STD_2025 += parseAngkaIndo(r['STD 2025']);
+          dateMap[tglStr].STD_2026 += parseAngkaIndo(r['STD 2026']);
         });
 
-        document.getElementById('mtdModalSales25').innerText = 'Rp ' + sum25.toLocaleString('id-ID');
-        document.getElementById('mtdModalSales26').innerText = 'Rp ' + sum26.toLocaleString('id-ID');
-        var growth = sum25 > 0 ? ((sum26 - sum25) / sum25 * 100) : 0;
-        document.getElementById('mtdModalGrowth').innerText = (growth >= 0 ? '+' : '') + growth.toFixed(2) + '%';
+        displayDailyList = Object.values(dateMap).map(function(item) {
+          var s25 = item.SALES_2025;
+          var s26 = item.SALES_2026;
+          var std25 = item.STD_2025;
+          var std26 = item.STD_2026;
+          return {
+            TANGGAL: item.TANGGAL,
+            tglRapi: item.tglRapi,
+            dateObj: item.dateObj,
+            'SALES 2025': s25,
+            'SALES 2026': s26,
+            'STD 2025': std25,
+            'STD 2026': std26,
+            'APC 2025': std25 > 0 ? Math.round(s25 / std25) : 0,
+            'APC 2026': std26 > 0 ? Math.round(s26 / std26) : 0,
+            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0
+          };
+        }).sort(function(a, b) { return a.dateObj - b.dateObj; });
 
-        // Render Grafik Garis Ganda MTD
-        var ctx = document.getElementById('chartMtdModalLine').getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              { label: 'Sales 2025', data: data25, borderColor: '#94a3b8', fill: false, tension: 0.3 },
-              { label: 'Sales 2026', data: data26, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.3 }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
+      } else {
+        displayDailyList = finalDataRows.map(function(r) {
+          var s25 = parseAngkaIndo(r['SALES 2025']);
+          var s26 = parseAngkaIndo(r['SALES 2026']);
+          var std25 = parseAngkaIndo(r['STD 2025']);
+          var std26 = parseAngkaIndo(r['STD 2026']);
+          var apc25 = parseAngkaIndo(r['APC 2025']) || (std25 > 0 ? Math.round(s25 / std25) : 0);
+          var apc26 = parseAngkaIndo(r['APC 2026']) || (std26 > 0 ? Math.round(s26 / std26) : 0);
+          return {
+            TANGGAL: r['TANGGAL'],
+            tglRapi: formatTanggalTampilan(r['TANGGAL']),
+            dateObj: parseDateIndo(r['TANGGAL']),
+            'SALES 2025': s25,
+            'SALES 2026': s26,
+            'STD 2025': std25,
+            'STD 2026': std26,
+            'APC 2025': apc25,
+            'APC 2026': apc26,
+            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0
+          };
+        }).sort(function(a, b) { return a.dateObj - b.dateObj; });
+      }
 
-        // Tabel Rincian Harian
-        var boxTbl = document.getElementById('containerTabelMtdModal');
-        var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 pb-2 border-b border-slate-100">Rincian Komparasi Harian</h4>' +
+      // 5. HITUNG TOTAL RESUME
+      var totalSales25 = 0;
+      var totalSales26 = 0;
+      displayDailyList.forEach(function(d) {
+        totalSales25 += d['SALES 2025'];
+        totalSales26 += d['SALES 2026'];
+      });
+
+      var totalGrowth = totalSales25 > 0 ? ((totalSales26 - totalSales25) / totalSales25 * 100) : 0;
+      var totalGapRupiah = totalSales26 - totalSales25;
+
+      // 6. BUILD HTML TAMPILAN
+      var container = document.getElementById('mtdDynamicContentArea');
+      var html = 
+        // BAR FILTER (BULAN & RENTANG TANGGAL)
+        '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex flex-col md:flex-row md:items-center justify-between gap-3">' +
+            '<div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Filter Periode & Rentang Tanggal</h4>' +
+              '<p class="text-[11px] text-slate-400">Pilih bulan berjalan atau rentang tanggal spesifik</p>' +
+            '</div>' +
+            '<div class="flex flex-wrap items-center gap-2">' +
+              // Dropdown Bulan
+              '<select id="mtdSelectBulan" onchange="ubahFilterBulanMtd(this.value)" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-dark focus:border-brand-primary">' +
+                '<option value="ALL"' + (mtdActiveFilterBulan === 'ALL' ? ' selected' : '') + '>Semua Bulan (YTD)</option>';
+                bulanList.forEach(function(b) {
+                  html += '<option value="' + b + '"' + (mtdActiveFilterBulan === b ? ' selected' : '') + '>' + b + '</option>';
+                });
+      html += '</select>' +
+            '</div>' +
+          '</div>' +
+
+          // Input Rentang Tanggal Dari - Sampai
+          '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="text-slate-400 font-bold text-[11px] w-12">Dari:</span>' +
+              '<input type="date" id="mtdInputFrom" value="' + mtdActiveDateFrom + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">' +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="text-slate-400 font-bold text-[11px] w-12">Sampai:</span>' +
+              '<input type="date" id="mtdInputTo" value="' + mtdActiveDateTo + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">' +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="terapkanFilterRentangMtd()" class="flex-1 py-1.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all">' +
+                '<i class="fa-solid fa-filter mr-1"></i>Terapkan' +
+              '</button>' +
+              '<button onclick="resetFilterRentangMtd()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition-all">' +
+                'Reset' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // 3 KOTAK RESUME BERWARNA GRADIENT MENARIK
+        '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">' +
+          // Total Sales 2025 (Gradient Slate-Indigo)
+          '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL SALES 2025</span>' +
+            '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales25).toLocaleString('id-ID') + '</span>' +
+            '<span class="text-[10px] text-slate-300 mt-1">Tahun Lalu (Periode Filter)</span>' +
+          '</div>' +
+
+          // Total Sales 2026 (Gradient Emerald-Teal)
+          '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">TOTAL SALES 2026</span>' +
+            '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales26).toLocaleString('id-ID') + '</span>' +
+            '<span class="text-[10px] text-emerald-200 mt-1">Tahun Ini (Periode Filter)</span>' +
+          '</div>' +
+
+          // Pertumbuhan Growth (Gradient Dinamis Hijau/Merah)
+          '<div class="p-4 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (totalGrowth >= 0 ? 'bg-gradient-to-br from-emerald-500 via-teal-600 to-amber-500' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
+            '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">PERTUMBUHAN (GROWTH)</span>' +
+            '<span class="text-2xl font-black font-mono tracking-tight mt-1">' + (totalGrowth >= 0 ? '+' : '') + totalGrowth.toFixed(2).replace('.', ',') + '%</span>' +
+            '<span class="text-[10px] opacity-90 mt-1 font-mono font-bold">Selisih: ' + (totalGapRupiah >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(totalGapRupiah)).toLocaleString('id-ID') + '</span>' +
+          '</div>' +
+        '</div>' +
+
+        // BAGIAN GRAFIK (TANGGAL BERURUTAN DD/MM & ANGKA BULAT JUTA)
+        '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Tren Komparasi Harian (2025 vs 2026)</h4>' +
+            '<div class="flex items-center space-x-3 text-[10px] font-semibold text-slate-500">' +
+              '<span class="flex items-center"><span class="w-3 h-1 bg-slate-400 rounded mr-1"></span> Sales 2025</span>' +
+              '<span class="flex items-center"><span class="w-3 h-1 bg-emerald-600 rounded mr-1"></span> Sales 2026</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="h-60 w-full">' +
+            '<canvas id="chartModalSalesMtdCanvas"></canvas>' +
+          '</div>' +
+        '</div>' +
+
+        // TABEL RINCIAN KOMPARASI HARIAN DENGAN 3 TAB FILTER (ALL, GROWTH, DISGROWTH)
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">' +
+            '<div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Rincian Komparasi Penjualan Harian</h4>' +
+              '<p class="text-[11px] text-slate-400">Klik pada baris tanggal untuk melihat detail perbandingan</p>' +
+            '</div>' +
+            // 3 Tab Filter
+            '<div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-bold">' +
+              '<button onclick="setSubTabFilterMtd(\'ALL\')" class="px-3 py-1 rounded-lg transition-all ' + (mtdActiveSubTab === 'ALL' ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500 hover:text-slate-800') + '">Semua</button>' +
+              '<button onclick="setSubTabFilterMtd(\'GROWTH\')" class="px-3 py-1 rounded-lg transition-all ' + (mtdActiveSubTab === 'GROWTH' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-700') + '">Growth</button>' +
+              '<button onclick="setSubTabFilterMtd(\'DISGROWTH\')" class="px-3 py-1 rounded-lg transition-all ' + (mtdActiveSubTab === 'DISGROWTH' ? 'bg-red-600 text-white shadow-sm' : 'text-slate-500 hover:text-red-700') + '">Disgrowth</button>' +
+            '</div>' +
+          '</div>' +
+
+          // List Tabel
           '<div class="overflow-x-auto text-xs">' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2">Tanggal</th><th class="p-2 text-right">Sales 2025</th><th class="p-2 text-right">Sales 2026</th><th class="p-2 text-right">Growth %</th><th class="p-2 text-center">Status</th>' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-3 text-left">Tanggal</th>' +
+                '<th class="p-3 text-center">Sales 2026</th>' +
+                '<th class="p-3 text-center">STD 2026</th>' +
+                '<th class="p-3 text-center">APC 2026</th>' +
+                '<th class="p-3 text-center">Status / Pertumbuhan</th>' +
               '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
 
-        filtered.forEach(function(row) {
-          var r25 = Number(row['SALES 2025'] || 0);
-          var r26 = Number(row['SALES 2026'] || 0);
-          var gr = r25 > 0 ? ((r26 - r25) / r25 * 100) : 0;
-          var isGrowth = gr >= 0;
+      var filteredTabRows = displayDailyList.filter(function(row) {
+        if (mtdActiveSubTab === 'GROWTH') return row.growth >= 0;
+        if (mtdActiveSubTab === 'DISGROWTH') return row.growth < 0;
+        return true;
+      });
 
-          html += '<tr>' +
-            '<td class="p-2 font-mono text-slate-600">' + row['TANGGAL'] + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-500">Rp ' + r25.toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold text-slate-800">Rp ' + r26.toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold ' + (isGrowth ? 'text-emerald-700' : 'text-red-600') + '">' + (isGrowth ? '+' : '') + gr.toFixed(2) + '%</td>' +
-            '<td class="p-2 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (isGrowth ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (isGrowth ? 'GROWTH' : 'DISGROWTH') + '</span></td>' +
-          '</tr>';
+      if (filteredTabRows.length === 0) {
+        html += '<tr><td colspan="5" class="p-6 text-center text-slate-400 italic">Tidak ada data transaksi pada kategori ini.</td></tr>';
+      }
+
+      filteredTabRows.forEach(function(row) {
+        var isGrow = row.growth >= 0;
+        var badgeStatus = isGrow 
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800"><i class="fa-solid fa-arrow-trend-up mr-1 text-emerald-600"></i>+' + row.growth.toFixed(2).replace('.', ',') + '%</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800"><i class="fa-solid fa-arrow-trend-down mr-1 text-red-600"></i>' + row.growth.toFixed(2).replace('.', ',') + '%</span>';
+
+        // Baris dapat diklik untuk membuka detail perbandingan
+        html += '<tr onclick="bukaModalDetailPerbandinganHarian(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="hover:bg-emerald-50/60 cursor-pointer transition-colors">' +
+          '<td class="p-3 text-left font-mono font-bold text-slate-800 flex items-center space-x-1.5">' +
+            '<span>' + row.tglRapi + '</span>' +
+            '<i class="fa-solid fa-circle-info text-slate-300 text-[10px]"></i>' +
+          '</td>' +
+          '<td class="p-3 text-center font-mono font-black text-slate-900">Rp ' + Math.round(row['SALES 2026']).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center font-mono text-slate-600">' + Math.round(row['STD 2026']).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center font-mono text-brand-dark font-bold">Rp ' + Math.round(row['APC 2026']).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-3 text-center">' + badgeStatus + '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div>';
+
+      // 7. JIKA ROLE AC: TAMPILKAN AKORDION GROUPED PER TOKO BINAAN
+      if (isAC) {
+        html += '<div class="space-y-3 pt-2">' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko Binaan (AC Area)</h4>';
+
+        var storeGrouping = {};
+        finalDataRows.forEach(function(r) {
+          var k = String(r['KODE'] || '').toUpperCase().trim();
+          var n = String(r['NAMA TOKO'] || '').toUpperCase().trim();
+          if (k && k !== 'AC' && k !== 'AREA') {
+            if (!storeGrouping[k]) {
+              storeGrouping[k] = {
+                kode: k,
+                nama: n,
+                tot25: 0,
+                tot26: 0,
+                rows: []
+              };
+            }
+            var s25 = parseAngkaIndo(r['SALES 2025']);
+            var s26 = parseAngkaIndo(r['SALES 2026']);
+            var std25 = parseAngkaIndo(r['STD 2025']);
+            var std26 = parseAngkaIndo(r['STD 2026']);
+            var apc25 = parseAngkaIndo(r['APC 2025']) || (std25 > 0 ? Math.round(s25 / std25) : 0);
+            var apc26 = parseAngkaIndo(r['APC 2026']) || (std26 > 0 ? Math.round(s26 / std26) : 0);
+
+            storeGrouping[k].tot25 += s25;
+            storeGrouping[k].tot26 += s26;
+            storeGrouping[k].rows.push({
+              TANGGAL: r['TANGGAL'],
+              tglRapi: formatTanggalTampilan(r['TANGGAL']),
+              'SALES 2025': s25,
+              'SALES 2026': s26,
+              'STD 2025': std25,
+              'STD 2026': std26,
+              'APC 2025': apc25,
+              'APC 2026': apc26,
+              growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0
+            });
+          }
         });
 
-        html += '</tbody></table></div></div>';
-        boxTbl.innerHTML = html;
+        var storeListAc = Object.values(storeGrouping);
+        storeListAc.forEach(function(st, idx) {
+          var accId = 'accMtdStore_' + idx;
+          var grToko = st.tot25 > 0 ? ((st.tot26 - st.tot25) / st.tot25 * 100) : 0;
+          var isGrToko = grToko >= 0;
+
+          html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
+            '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+              '<div class="flex items-center space-x-2.5">' +
+                '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + st.kode + '</span>' +
+                '<h5 class="text-xs font-extrabold text-slate-800 truncate max-w-[140px] sm:max-w-xs">' + st.nama + '</h5>' +
+              '</div>' +
+              '<div class="flex items-center space-x-2 sm:space-x-4 text-xs font-mono">' +
+                '<span class="hidden sm:inline text-slate-500">2025: <b>Rp ' + Math.round(st.tot25).toLocaleString('id-ID') + '</b></span>' +
+                '<span class="text-slate-900 font-black">2026: <b>Rp ' + Math.round(st.tot26).toLocaleString('id-ID') + '</b></span>' +
+                '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (isGrToko ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' +
+                  (isGrToko ? '+' : '') + grToko.toFixed(1).replace('.', ',') + '%' +
+                '</span>' +
+                '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+              '</div>' +
+            '</div>' +
+
+            '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+              '<table class="w-full text-center divide-y divide-slate-100">' +
+                '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                  '<th class="p-2 text-left">Tanggal</th><th class="p-2">Sales 2026</th><th class="p-2">STD 2026</th><th class="p-2">APC 2026</th><th class="p-2">Growth</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+          st.rows.forEach(function(rowToko) {
+            var growRow = rowToko.growth >= 0;
+            html += '<tr onclick="bukaModalDetailPerbandinganHarian(' + JSON.stringify(rowToko).replace(/"/g, '&quot;') + ')" class="hover:bg-slate-50 cursor-pointer">' +
+              '<td class="p-2 text-left font-mono font-bold text-slate-700 flex items-center space-x-1"><span>' + rowToko.tglRapi + '</span><i class="fa-solid fa-circle-info text-slate-300 text-[9px]"></i></td>' +
+              '<td class="p-2 font-mono font-black text-slate-900">Rp ' + Math.round(rowToko['SALES 2026']).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono text-slate-600">' + Math.round(rowToko['STD 2026']).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono font-bold text-brand-dark">Rp ' + Math.round(rowToko['APC 2026']).toLocaleString('id-ID') + '</td>' +
+              '<td class="p-2 font-mono font-bold ' + (growRow ? 'text-emerald-700' : 'text-red-600') + '">' + (growRow ? '+' : '') + rowToko.growth.toFixed(1).replace('.', ',') + '%</td>' +
+            '</tr>';
+          });
+
+          html += '</tbody></table></div></div>';
+        });
+
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+
+      // 8. RENDER GRAFIK GARIS (TANGGAL BERURUTAN & SKALA JUTAAN BULAT)
+      renderGrafikSalesMtdChart(displayDailyList);
+    }
+
+    // --- RENDER GRAFIK CHART.JS MTD ---
+    function renderGrafikSalesMtdChart(dailyList) {
+      var canvas = document.getElementById('chartModalSalesMtdCanvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (chartMtdModalInstance) chartMtdModalInstance.destroy();
+
+      var labels = [];
+      var data25 = [];
+      var data26 = [];
+
+      dailyList.forEach(function(d) {
+        var parts = d.tglRapi.split('/');
+        labels.push(parts[0] + '/' + parts[1]); // Format DD/MM
+        data25.push(d['SALES 2025']);
+        data26.push(d['SALES 2026']);
       });
+
+      chartMtdModalInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Sales 2025',
+              data: data25,
+              borderColor: '#94a3b8',
+              backgroundColor: 'transparent',
+              borderDash: [3, 3],
+              tension: 0.3,
+              pointRadius: 2
+            },
+            {
+              label: 'Sales 2026',
+              data: data26,
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.12)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  return c.dataset.label + ': Rp ' + Math.round(c.raw).toLocaleString('id-ID');
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function(v) { return (v / 1000000).toFixed(0) + 'Jt'; },
+                font: { size: 10 }
+              },
+              grid: { color: '#f1f5f9' }
+            },
+            x: {
+              ticks: { font: { size: 10 }, maxRotation: 45 },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // --- MODAL DETAIL PERBANDINGAN TAHUN LALU (SALES, STD, APC) ---
+    function bukaModalDetailPerbandinganHarian(row) {
+      var s25 = row['SALES 2025'];
+      var s26 = row['SALES 2026'];
+      var sGrowth = row.growth;
+      var sGap = s26 - s25;
+
+      var std25 = row['STD 2025'];
+      var std26 = row['STD 2026'];
+      var stdGrowth = std25 > 0 ? ((std26 - std25) / std25 * 100) : 0;
+
+      var apc25 = row['APC 2025'];
+      var apc26 = row['APC 2026'];
+      var apcGrowth = apc25 > 0 ? ((apc26 - apc25) / apc25 * 100) : 0;
+
+      Swal.fire({
+        title: '<div class="text-left"><span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Detail Komparasi Harian</span><h3 class="text-base font-black text-slate-800">' + row.tglRapi + '</h3></div>',
+        html: 
+          '<div class="space-y-3 text-xs text-left my-2">' +
+            // 1. Sales (SPD)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200 space-y-1.5">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-emerald-950">Sales Toko (SPD)</span><span class="font-mono font-bold text-[11px] ' + (sGrowth >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (sGrowth >= 0 ? '+' : '') + sGrowth.toFixed(2).replace('.', ',') + '%</span></div>' +
+              '<div class="grid grid-cols-2 gap-2 text-slate-600 font-mono text-[11px] pt-1 border-t border-emerald-200/60">' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2025:</span><b>Rp ' + Math.round(s25).toLocaleString('id-ID') + '</b></div>' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2026:</span><b class="text-slate-900">Rp ' + Math.round(s26).toLocaleString('id-ID') + '</b></div>' +
+              '</div>' +
+              '<div class="text-[10px] text-slate-500 font-mono">Selisih: <b>' + (sGap >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(sGap)).toLocaleString('id-ID') + '</b></div>' +
+            '</div>' +
+
+            // 2. STD (Struk Transaksi)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 space-y-1.5">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-blue-950">Jumlah Struk (STD)</span><span class="font-mono font-bold text-[11px] ' + (stdGrowth >= 0 ? 'text-blue-700' : 'text-red-600') + '">' + (stdGrowth >= 0 ? '+' : '') + stdGrowth.toFixed(2).replace('.', ',') + '%</span></div>' +
+              '<div class="grid grid-cols-2 gap-2 text-slate-600 font-mono text-[11px] pt-1 border-t border-blue-200/60">' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2025:</span><b>' + Math.round(std25).toLocaleString('id-ID') + ' Struk</b></div>' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2026:</span><b class="text-slate-900">' + Math.round(std26).toLocaleString('id-ID') + ' Struk</b></div>' +
+              '</div>' +
+            '</div>' +
+
+            // 3. APC (Average Purchase Customer)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 space-y-1.5">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-amber-950">Nilai Belanja (APC)</span><span class="font-mono font-bold text-[11px] ' + (apcGrowth >= 0 ? 'text-amber-800' : 'text-red-600') + '">' + (apcGrowth >= 0 ? '+' : '') + apcGrowth.toFixed(2).replace('.', ',') + '%</span></div>' +
+              '<div class="grid grid-cols-2 gap-2 text-slate-600 font-mono text-[11px] pt-1 border-t border-amber-200/60">' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2025:</span><b>Rp ' + Math.round(apc25).toLocaleString('id-ID') + '</b></div>' +
+                '<div><span class="text-slate-400 block text-[10px]">Tahun 2026:</span><b class="text-slate-900">Rp ' + Math.round(apc26).toLocaleString('id-ID') + '</b></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>',
+        confirmButtonText: 'Tutup Detail',
+        confirmButtonColor: '#059669',
+        customClass: {
+          popup: 'rounded-3xl border border-slate-200 p-5 shadow-2xl',
+          confirmButton: 'px-6 py-2.5 text-xs font-black rounded-xl'
+        }
+      });
+    }
+
+    // --- HANDLER AKSI FILTER ---
+    function ubahFilterBulanMtd(bulanVal) {
+      mtdActiveFilterBulan = bulanVal;
+      var cached = localStorage.getItem('kacida_cache_YTD_Sales');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesMtdBody(JSON.parse(cached).data || [], isAC);
+      }
+    }
+
+    function terapkanFilterRentangMtd() {
+      mtdActiveDateFrom = document.getElementById('mtdInputFrom').value;
+      mtdActiveDateTo = document.getElementById('mtdInputTo').value;
+      var cached = localStorage.getItem('kacida_cache_YTD_Sales');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesMtdBody(JSON.parse(cached).data || [], isAC);
+      }
+    }
+
+    function resetFilterRentangMtd() {
+      mtdActiveDateFrom = '';
+      mtdActiveDateTo = '';
+      document.getElementById('mtdInputFrom').value = '';
+      document.getElementById('mtdInputTo').value = '';
+      var cached = localStorage.getItem('kacida_cache_YTD_Sales');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesMtdBody(JSON.parse(cached).data || [], isAC);
+      }
+    }
+
+    function setSubTabFilterMtd(tabName) {
+      mtdActiveSubTab = tabName;
+      var cached = localStorage.getItem('kacida_cache_YTD_Sales');
+      if (cached) {
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        renderSalesMtdBody(JSON.parse(cached).data || [], isAC);
+      }
     }
 
     // ==================== MODAL SALES HARIAN & TOLERANSI OPERASIONAL ====================

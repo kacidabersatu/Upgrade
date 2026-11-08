@@ -4648,31 +4648,62 @@
       });
     }
 
-    // ==================== [6] MODUL SIMULASI IKT (FRONTEND ONLY) ====================
+    // ==================== [6] MODUL SIMULASI IKT (MENU UTAMA DIUPDATE DENGAN DATA TOKO AKTIF) ====================
     function renderModulSimulasiIkt(container) {
+      // Ambil data default toko aktif dari cache IKT
+      var dataStore = iktActiveStoreData || {};
+      if (!dataStore['KODE']) {
+        var cached = localStorage.getItem('kacida_cache_Ikt');
+        if (cached) {
+          try {
+            var rows = JSON.parse(cached).data || [];
+            var cfg = getTokoConfig() || {};
+            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+            dataStore = rows.find(function(item) {
+              return String(item['KODE'] || '').toUpperCase().trim() === myCode;
+            }) || rows[0] || {};
+          } catch(e) {}
+        }
+      }
+
+      var defTargetSales = Math.round(parseAngkaIndo(dataStore['TARGET NET SALES']) || 300000000);
+      var defActualSales = Math.round(parseAngkaIndo(dataStore['ACTUAL NET SALES']) || 200000000);
+      var defTgtGm = parseAngkaIndo(dataStore['TARGET GM %']);
+      if (defTgtGm > 0 && defTgtGm <= 1) defTgtGm *= 100;
+      var defActGm = parseAngkaIndo(dataStore['ACTUAL GM %']);
+      if (defActGm > 0 && defActGm <= 1) defActGm *= 100;
+
+      var defTf = parseAngkaIndo(dataStore['TIME FAKTOR']) || 0.5;
+      if (defTf > 1) defTf /= 100;
+      var defHk = 30;
+      var defJhk = Math.max(1, Math.round(defHk * defTf));
+
       container.innerHTML = renderHeaderModalUniversal('Simulasi IKT & Gross Margin', 'Kalkulator instan oninput tanpa database') +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 text-xs">' +
-            '<h4 class="font-black text-slate-800 pb-2 border-b border-slate-100">Parameter Perhitungan IKT</h4>' +
-            '<div class="grid grid-cols-2 gap-3">' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Hari Kerja (HK)</label><input type="number" id="simHk" value="30" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Jumlah Hari Kerja (JHK)</label><input type="number" id="simJhk" value="15" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
+          '<div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 text-xs">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+              '<h4 class="font-black text-slate-800">Parameter Perhitungan IKT</h4>' +
+              '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">' + (dataStore['KODE'] || 'TOKO') + ' - ' + (dataStore['NAMA TOKO'] || '') + '</span>' +
             '</div>' +
             '<div class="grid grid-cols-2 gap-3">' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Target Net Sales (Rp)</label><input type="number" id="simTargetSales" value="450000000" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Actual Net Sales (Rp)</label><input type="number" id="simActualSales" value="235000000" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Hari Kerja (HK)</label><input type="number" id="simHk" value="' + defHk + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Jumlah Hari Kerja (JHK)</label><input type="number" id="simJhk" value="' + defJhk + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
             '</div>' +
             '<div class="grid grid-cols-2 gap-3">' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Target Margin (%)</label><input type="number" step="0.01" id="simTargetGm" value="18.5" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Actual Margin (%)</label><input type="number" step="0.01" id="simActualGm" value="18.8" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Target Net Sales (Rp)</label><input type="number" id="simTargetSales" value="' + defTargetSales + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold"></div>' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Actual Net Sales (Rp)</label><input type="number" id="simActualSales" value="' + defActualSales + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-slate-800"></div>' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-3">' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Target Margin (%)</label><input type="number" step="0.01" id="simTargetGm" value="' + (defTgtGm || 20.3).toFixed(2) + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+              '<div><label class="block font-bold text-slate-700 mb-1">Actual Margin (%)</label><input type="number" step="0.01" id="simActualGm" value="' + (defActGm || 19.5).toFixed(2) + '" oninput="hitungSimulasiIktRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
             '</div>' +
           '</div>' +
 
-          '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-3 text-xs">' +
+          '<div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-3 text-xs">' +
             '<h4 class="font-black text-slate-800 pb-2 border-b border-slate-100">Hasil Simulasi Real-Time</h4>' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2">Uraian Indikator</th><th class="p-2 text-right">Target s/d JHK</th><th class="p-2 text-right">Realisasi</th><th class="p-2 text-right">Gap</th><th class="p-2 text-center">Status</th>' +
+                '<th class="p-2 text-left">Uraian Indikator</th><th class="p-2">Target s/d JHK</th><th class="p-2">Realisasi</th><th class="p-2">Gap</th><th class="p-2">Status</th>' +
               '</tr></thead>' +
               '<tbody id="tbodySimulasiIkt" class="divide-y divide-slate-50 font-medium"></tbody>' +
             '</table>' +
@@ -5026,140 +5057,646 @@
       });
     }
 
-      // ==================== [9] MODUL MONITORING IKT ====================
-    function renderModulMonitoringIkt(container) {
-      container.innerHTML = renderHeaderModalUniversal('Monitoring IKT Toko', 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div id="iktAgregasiCard" class="p-4 rounded-xl shadow-sm text-xs font-medium border"></div>' +
-          
-          '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
-            '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">' +
-              '<h4 class="text-xs font-bold text-slate-700 mb-2">Time Factor Berjalan</h4>' +
-              '<div class="relative w-28 h-28 flex items-center justify-center">' +
-                '<canvas id="chartTimeFactorDonut"></canvas>' +
-                '<span id="valTfPctCenter" class="absolute text-sm font-black font-mono text-brand-dark">0%</span>' +
-              '</div>' +
-              '<p id="valTfSubText" class="text-[10px] text-slate-400 mt-2">Batas Minimal Pencapaian</p>' +
-            '</div>' +
+      // ==================== [9] MODUL MONITORING IKT TOKO LENGKAP ====================
+    var isIktPrivateHidden = localStorage.getItem('kacida_hide_ikt_private') === 'true';
+    var lastIktDisclaimerAgreedTime = 0;
+    var iktActiveStoreData = null;
 
-            '<div class="md:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">' +
-              '<h4 class="text-xs font-bold text-slate-700 mb-2">Komparasi ACV Indikator vs Time Factor</h4>' +
-              '<div class="h-36 w-full">' +
-                '<canvas id="chartIktBarComp"></canvas>' +
-              '</div>' +
+    // Helper Format Rupiah IKT dengan Proteksi Ikon Mata
+    function formatRupiahIkt(val, isSensitif) {
+      if (isSensitif && isIktPrivateHidden) return 'Rp ••••••••';
+      var num = parseAngkaIndo(val);
+      if (num < 0) return '-Rp ' + Math.abs(Math.round(num)).toLocaleString('id-ID');
+      return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    }
+
+    // Helper Format Persen IKT (0.1932 -> 19,32%)
+    function formatPersenIkt(val) {
+      if (val === null || val === undefined || val === '') return '0,00%';
+      var num = parseAngkaIndo(val);
+      if (Math.abs(num) > 0 && Math.abs(num) <= 2) {
+        num = num * 100;
+      }
+      return num.toFixed(2).replace('.', ',') + '%';
+    }
+
+    // Toggle Sembunyikan Angka Sales & Profit
+    function toggleHideIktPrivate() {
+      isIktPrivateHidden = !isIktPrivateHidden;
+      localStorage.setItem('kacida_hide_ikt_private', isIktPrivateHidden);
+      var icon = document.getElementById('iconMataIkt');
+      if (icon) {
+        icon.className = isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white';
+      }
+      // Re-render isi tanpa panggil backend
+      var cached = localStorage.getItem('kacida_cache_Ikt');
+      if (cached) {
+        var rows = JSON.parse(cached).data || [];
+        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
+        if (isAC) renderMonitoringIktContentAC(rows);
+        else renderMonitoringIktContentToko(rows);
+      }
+    }
+
+    // DISPATCHER UTAMA MONITORING IKT
+    function renderModulMonitoringIkt(container) {
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+
+      container.innerHTML = renderHeaderModalUniversal(
+        'Monitoring IKT Toko', 
+        isAC ? 'Scorecard Area, Agregasi Time Factor & Akordion Toko Binaan' : 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan'
+      ) +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="iktMainContainerWrapper">' +
+          '<div id="iktDynamicContentArea"></div>' +
+          // Footer Pesan Keamanan Permanen
+          '<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-[10px] text-amber-900 font-medium leading-relaxed mt-4">' +
+            '⚠️ <b>PERHATIAN:</b> Data yang disajikan untuk kebutuhan internal agar memudahkan monitoring. Data Internal Toko & Perusahaan, dilarang keras menyebarluaskan. Pelanggaran dapat dikenakan sanksi SP s/d PHK.' +
+          '</div>' +
+        '</div>';
+
+      muatDataSheetLazy('Ikt', false, function(allIktRows, isFromCache) {
+        if (!allIktRows || allIktRows.length === 0) {
+          document.getElementById('iktDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data IKT belum tersedia di Spreadsheet.</div>';
+          return;
+        }
+
+        var now = Date.now();
+        // Cek apakah perlu pop-up disclaimer (Hanya jika cold fetch / lewat 5 menit)
+        if (!isFromCache || (now - lastIktDisclaimerAgreedTime > APP_CONFIG.CACHE_EXPIRY_MS)) {
+          bukaModalDisclaimerIkt(function() {
+            lastIktDisclaimerAgreedTime = Date.now();
+            if (isAC) renderMonitoringIktContentAC(allIktRows);
+            else renderMonitoringIktContentToko(allIktRows);
+          });
+        } else {
+          if (isAC) renderMonitoringIktContentAC(allIktRows);
+          else renderMonitoringIktContentToko(allIktRows);
+        }
+      });
+    }
+
+    // POP-UP PERINGATAN KERAHASIAAN RESMI PERUSAHAAN
+    function bukaModalDisclaimerIkt(onAgreeCallback) {
+      Swal.fire({
+        title: '<div class="text-amber-500 text-3xl mb-1"><i class="fa-solid fa-triangle-exclamation animate-bounce"></i></div><span class="text-base font-black text-slate-800 tracking-wide">PERHATIAN PENTING!</span>',
+        html: 
+          '<div class="text-left text-xs text-slate-700 space-y-2.5 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-2 max-h-[60vh] overflow-y-auto">' +
+            '<p class="font-bold text-slate-800">• Data yang disajikan adalah untuk kebutuhan internal, agar memudahkan monitoring performa dan operasional toko.</p>' +
+            '<p>• Data ini <b>bersifat rahasia</b> milik toko dan perusahaan. Mohon bijak dalam menggunakannya dan <b>Dilarang keras menyebarluaskan, memfoto, merekam, atau membagikan data ini</b> ke pihak manapun, baik di dalam maupun di luar perusahaan, tanpa izin atasan.</p>' +
+            '<p class="p-2.5 bg-red-50 text-red-700 rounded-xl border border-red-200 font-bold">' +
+              '⚠️ Pelanggaran terhadap ketentuan ini dapat dikenakan sanksi sesuai aturan perusahaan, mulai dari Surat Peringatan (SP) sampai dengan Pemutusan Hubungan Kerja (PHK).' +
+            '</p>' +
+            '<p class="text-[11px] text-slate-500 italic">Dengan menekan tombol "Saya Mengerti", Anda menyatakan telah membaca, memahami, dan bersedia mematuhi ketentuan kerahasiaan ini.</p>' +
+          '</div>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: '<i class="fa-solid fa-check-double mr-1.5"></i> Saya Mengerti',
+        confirmButtonColor: '#059669',
+        customClass: {
+          popup: 'rounded-3xl border border-slate-200 p-5 shadow-2xl',
+          confirmButton: 'px-6 py-2.5 text-xs font-black rounded-xl shadow-md'
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && onAgreeCallback) {
+          onAgreeCallback();
+        }
+      });
+    }
+
+    // ==================== 1. TAMPILAN IKT ROLE USER TOKO (CREW, ACOS, COS) ====================
+    function renderMonitoringIktContentToko(allIktRows) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // CARI BARIS TOKO AKTIF DENGAN TEPAT
+      var r = allIktRows.find(function(item) {
+        return String(item['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      if (!r) r = allIktRows[0];
+      iktActiveStoreData = r;
+
+      // Perhitungan Time Factor & Penjualan
+      var tfVal = parseAngkaIndo(r['TIME FAKTOR']) || 0.5;
+      var tfRatio = (tfVal <= 1 && tfVal > 0) ? tfVal : (tfVal / 100);
+      var tfPctFormatted = (tfRatio * 100).toFixed(1).replace('.', ',') + '%';
+
+      var tgtSales = parseAngkaIndo(r['TARGET NET SALES']);
+      var actSales = parseAngkaIndo(r['ACTUAL NET SALES']);
+      var acvSalesNum = tgtSales > 0 ? (actSales / tgtSales * 100) : 0;
+
+      // Capaian vs Time Factor
+      var tfSalesTarget = tgtSales * tfRatio;
+      var selisihTfRp = actSales - tfSalesTarget;
+
+      // Target Bertingkat (MIN 100%, MID 103%, MAX 105%)
+      var kurMin100 = Math.max(0, (tgtSales * 1.00) - actSales);
+      var kurMid103 = Math.max(0, (tgtSales * 1.03) - actSales);
+      var kurMax105 = Math.max(0, (tgtSales * 1.05) - actSales);
+
+      // Proyeksi Akhir Bulan
+      var proyeksiSales = tfRatio > 0 ? Math.round(actSales / tfRatio) : actSales;
+      var proyeksiAcv = tgtSales > 0 ? (proyeksiSales / tgtSales * 100) : 0;
+
+      var container = document.getElementById('iktDynamicContentArea');
+      var html = 
+        // Header Info Toko, Ikon Mata & Tombol Simulasi GM Rp
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-primary text-white font-mono">' + r['KODE'] + '</span>' +
+              '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">' + r['NAMA TOKO'] + '</h3>' +
+            '</div>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Indikator Kinerja Toko (IKT) & Rencana Bisnis</p>' +
+          '</div>' +
+          '<div class="flex items-center space-x-2">' +
+            // Tombol Mata
+            '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm active:scale-95">' +
+              '<i id="iconMataIkt" class="' + (isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white') + '"></i>' +
+              '<span>' + (isIktPrivateHidden ? 'Buka Sensor' : 'Sembunyikan') + '</span>' +
+            '</button>' +
+            // Tombol Simulasi GM Rp
+            '<button onclick="bukaModalSimulasiGmDariIkt()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95">' +
+              '<i class="fa-solid fa-calculator text-amber-300"></i>' +
+              '<span>Simulasi GM Rp</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+
+        // AGREGASI BISNIS CERDAS (TIME FACTOR, MIN 100%, MID 103%, MAX 105%)
+        '<div class="p-4 rounded-2xl shadow-sm border ' + (selisihTfRp >= 0 ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-emerald-200 text-emerald-950' : 'bg-gradient-to-r from-red-50 via-rose-50 to-white border-red-200 text-red-950') + '">' +
+          '<div class="flex items-start space-x-3">' +
+            '<div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg ' + (selisihTfRp >= 0 ? 'bg-emerald-600 text-white shadow-md' : 'bg-red-600 text-white shadow-md') + '">' +
+              '<i class="' + (selisihTfRp >= 0 ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation') + '"></i>' +
+            '</div>' +
+            '<div class="flex-1">' +
+              '<h4 class="text-sm font-black tracking-tight">' +
+                (selisihTfRp >= 0 ? 'AGREGASI BISNIS: SURPLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'AGREGASI BISNIS: DEFISIT Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
+              '</h4>' +
+              '<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">' +
+                (selisihTfRp >= 0 
+                  ? 'Posisi penjualan toko berada di atas target Time Factor. Pertahankan laju ini menuju target MAX 105%!' 
+                  : 'Dibutuhkan tambahan sales minimal <b>Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID') + '</b> untuk mengejar posisi ideal Time Factor (' + tfPctFormatted + ').') +
+              '</p>' +
             '</div>' +
           '</div>' +
 
-          '<div id="containerTabelIndikatorIkt"></div>' +
+          // 3 Kotak Target Capaian MIN, MID, MAX
+          '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-200/60 text-xs">' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200">' +
+              '<span class="text-[10px] text-slate-500 font-bold uppercase block">Target MIN 100%</span>' +
+              '<span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMin100 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMin100).toLocaleString('id-ID')) + '</span>' +
+            '</div>' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200">' +
+              '<span class="text-[10px] text-slate-500 font-bold uppercase block">Target MID 103%</span>' +
+              '<span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMid103 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMid103).toLocaleString('id-ID')) + '</span>' +
+            '</div>' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200">' +
+              '<span class="text-[10px] text-slate-500 font-bold uppercase block">Target MAX 105%</span>' +
+              '<span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMax105 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMax105).toLocaleString('id-ID')) + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // KARTU PROYEKSI SALES AKHIR BULAN
+        '<div class="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-md flex items-center justify-between">' +
+          '<div>' +
+            '<span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PROYEKSI SALES AKHIR BULAN</span>' +
+            '<h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3>' +
+            '<span class="text-[11px] text-indigo-200">Estimasi berdasarkan kecepatan Time Factor (' + tfPctFormatted + ')</span>' +
+          '</div>' +
+          '<div class="text-right">' +
+            '<span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV</span>' +
+            '<span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span>' +
+          '</div>' +
+        '</div>' +
+
+        // DONUT TIME FACTOR & KOMPARASI GRAFIK
+        '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
+          '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">' +
+            '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Time Factor Berjalan</h4>' +
+            '<div class="relative w-28 h-28 flex items-center justify-center my-1">' +
+              '<canvas id="chartTimeFactorDonut"></canvas>' +
+              '<span class="absolute text-sm font-black font-mono text-brand-dark">' + tfPctFormatted + '</span>' +
+            '</div>' +
+            '<p class="text-[10px] text-slate-400 mt-2 font-medium">Batas Minimal Pencapaian Ideal</p>' +
+          '</div>' +
+
+          '<div class="md:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+              '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Komparasi ACV Indikator vs Time Factor</h4>' +
+              '<span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">TF: ' + tfPctFormatted + '</span>' +
+            '</div>' +
+            '<div class="h-36 w-full my-2">' +
+              '<canvas id="chartIktBarComp"></canvas>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // SCORECARD INDIKATOR IKT (WARNA-WARNI GRADIENT SESUAI SHEET)
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Scorecard Indikator IKT Toko</h4>' +
+            '<span class="text-[10px] text-slate-400 font-semibold">Standar Penilaian Kinerja Toko</span>' +
+          '</div>' +
+
+          '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">' +
+            // 1. Net Sales (Gradient Hijau Mint)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-emerald-50 to-teal-50/70 border-emerald-200 shadow-sm space-y-2">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-emerald-950">Net Sales</span><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (r['KET SALES'] === 'OK' ? 'bg-emerald-200 text-emerald-900' : 'bg-red-100 text-red-800') + '">' + (r['KET SALES'] || 'OK') + '</span></div>' +
+              '<div class="space-y-1 font-mono text-[11px]"><div class="flex justify-between text-slate-500"><span>Target:</span><b class="text-slate-700">' + formatRupiahIkt(r['TARGET NET SALES'], true) + '</b></div><div class="flex justify-between text-slate-500"><span>Realisasi:</span><b class="text-slate-900 font-black">' + formatRupiahIkt(r['ACTUAL NET SALES'], true) + '</b></div></div>' +
+              '<div class="pt-2 border-t border-emerald-200/60 flex justify-between items-center font-bold text-emerald-900"><span>ACV Sales</span><span class="text-sm font-black font-mono">' + formatPersenIkt(r['ACV SALES']) + '</span></div>' +
+            '</div>' +
+
+            // 2. Gross Margin Rupiah (Gradient Biru)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-blue-50 to-indigo-50/70 border-blue-200 shadow-sm space-y-2">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-blue-950">Gross Margin (Rp)</span><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (r['KET GM RP'] === 'OK' ? 'bg-blue-200 text-blue-900' : 'bg-red-100 text-red-800') + '">' + (r['KET GM RP'] || 'OK') + '</span></div>' +
+              '<div class="space-y-1 font-mono text-[11px]"><div class="flex justify-between text-slate-500"><span>Target:</span><b class="text-slate-700">' + formatRupiahIkt(r['TARGET GM RP'], true) + '</b></div><div class="flex justify-between text-slate-500"><span>Realisasi:</span><b class="text-slate-900 font-black">' + formatRupiahIkt(r['ACT GM RP'], true) + '</b></div></div>' +
+              '<div class="pt-2 border-t border-blue-200/60 flex justify-between items-center font-bold text-blue-900"><span>ACV GM (Rp)</span><span class="text-sm font-black font-mono">' + formatPersenIkt(r['ACV GM RP']) + '</span></div>' +
+            '</div>' +
+
+            // 3. Gross Margin % (Gradient Kuning Emas)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-amber-50 to-yellow-50/70 border-amber-200 shadow-sm space-y-2">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-amber-950">Gross Margin (%)</span><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (r['KET GM %'] === 'OK' ? 'bg-amber-200 text-amber-900' : 'bg-red-100 text-red-800') + '">' + (r['KET GM %'] || 'OK') + '</span></div>' +
+              '<div class="space-y-1 font-mono text-[11px]"><div class="flex justify-between text-slate-500"><span>Target:</span><b class="text-slate-700">' + formatPersenIkt(r['TARGET GM %']) + '</b></div><div class="flex justify-between text-slate-500"><span>Realisasi:</span><b class="text-slate-900 font-black">' + formatPersenIkt(r['ACTUAL GM %']) + '</b></div></div>' +
+              '<div class="pt-2 border-t border-amber-200/60 flex justify-between items-center font-bold text-amber-900"><span>ACV GM %</span><span class="text-sm font-black font-mono">' + formatPersenIkt(r['ACV GM']) + '</span></div>' +
+            '</div>' +
+
+            // 4. Profit Toko (Gradient Ungu)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-purple-50 to-fuchsia-50/70 border-purple-200 shadow-sm space-y-2">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-purple-950">Net Profit Toko</span><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (r['KET PROFIT'] === 'OK' ? 'bg-purple-200 text-purple-900' : 'bg-red-100 text-red-800') + '">' + (r['KET PROFIT'] || 'OK') + '</span></div>' +
+              '<div class="space-y-1 font-mono text-[11px]"><div class="flex justify-between text-slate-500"><span>Target:</span><b class="text-slate-700">' + formatRupiahIkt(r['TARGET PROFIT'], true) + '</b></div><div class="flex justify-between text-slate-500"><span>Realisasi:</span><b class="text-slate-900 font-black">' + formatRupiahIkt(r['ACTUAL PROFIT'], true) + '</b></div></div>' +
+              '<div class="pt-2 border-t border-purple-200/60 flex justify-between items-center font-bold text-purple-900"><span>ACV Profit</span><span class="text-sm font-black font-mono">' + formatPersenIkt(r['ACV PROFIT']) + '</span></div>' +
+            '</div>' +
+
+            // 5. Penawaran Langsung (Gradient Hijau Zamrud)
+            '<div class="p-3.5 rounded-2xl border bg-gradient-to-br from-teal-50 to-emerald-50/70 border-teal-200 shadow-sm space-y-2">' +
+              '<div class="flex justify-between items-center"><span class="font-extrabold text-teal-950">Penawaran Langsung</span><span class="px-2 py-0.5 rounded text-[10px] font-black bg-teal-200 text-teal-900">OK</span></div>' +
+              '<div class="space-y-1 font-mono text-[11px]"><div class="flex justify-between text-slate-500"><span>Target:</span><b class="text-slate-700">100%</b></div><div class="flex justify-between text-slate-500"><span>Realisasi:</span><b class="text-slate-900 font-black">' + formatPersenIkt(r['ACTUAL PENAWARAN LANGSUNG'] || r['ACV PENAWARAN LANGSUNG']) + '</b></div></div>' +
+              '<div class="pt-2 border-t border-teal-200/60 flex justify-between items-center font-bold text-teal-900"><span>ACV Penawaran</span><span class="text-sm font-black font-mono">' + formatPersenIkt(r['ACV PENAWARAN LANGSUNG']) + '</span></div>' +
+            '</div>' +
+          '</div>' +
+
+          // Kotak Informasi Penjelasan Net Profit Sementara
+          '<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-500 flex items-start space-x-2 mt-3">' +
+            '<i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>' +
+            '<span><b>Catatan Penting:</b> Angka pencapaian Net Profit Toko yang tercantum adalah perkiraan/sementara (*interim*) sebelum perhitungan beban biaya operasional akhir bulan diselesaikan oleh tim Finance.</span>' +
+          '</div>' +
         '</div>';
 
-      muatDataSheetLazy('Ikt', false, function(rows) {
-        var cfg = getTokoConfig() || {};
-        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC' || currentSessionUser.nik === '14125034');
-        var filtered = filterDataBerdasarkanToko(rows, cfg.cleanCode, isAC);
-        if (!filtered || filtered.length === 0) return;
-        var r = filtered[0];
+      container.innerHTML = html;
 
-        var tfVal = parseFloat(r['TIME FAKTOR']) || 0.5;
-        var tfPct = (tfVal <= 1 ? tfVal * 100 : tfVal).toFixed(1);
-        document.getElementById('valTfPctCenter').innerText = tfPct + '%';
+      // Render Donut Time Factor
+      renderDonutTfChart(tfRatio * 100);
 
-        // Render Donut Time Factor
-        var ctxTf = document.getElementById('chartTimeFactorDonut').getContext('2d');
-        new Chart(ctxTf, {
-          type: 'doughnut',
-          data: {
-            datasets: [{
-              data: [parseFloat(tfPct), 100 - parseFloat(tfPct)],
-              backgroundColor: ['#2563eb', '#e2e8f0'],
-              borderWidth: 0
-            }]
-          },
-          options: { cutout: '75%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+      // Render Bar Chart Komparasi
+      renderBarIktCompChart(r, tfRatio * 100);
+    }
 
-        // Hitung Surplus / Minus Agregasi
-        var targetSales = Number(r['TARGET NET SALES'] || 0);
-        var actualSales = Number(r['ACTUAL NET SALES'] || 0);
-        var acvSales = targetSales > 0 ? (actualSales / targetSales) : 0;
-        var selisihRupiah = (acvSales - (parseFloat(tfPct) / 100)) * targetSales;
+    // ==================== 2. TAMPILAN IKT ROLE AC (AREA COORDINATOR) ====================
+    function renderMonitoringIktContentAC(allIktRows) {
+      // Cari Baris AC / AREA
+      var acRow = allIktRows.find(function(item) {
+        var k = String(item['KODE'] || '').toUpperCase().trim();
+        var n = String(item['NAMA TOKO'] || '').toUpperCase().trim();
+        return k === 'AC' || n === 'AREA';
+      }) || allIktRows[allIktRows.length - 1];
 
-        var cardAgregasi = document.getElementById('iktAgregasiCard');
-        if (selisihRupiah >= 0) {
-          cardAgregasi.className = 'p-4 rounded-xl shadow-sm text-xs bg-emerald-50 border border-emerald-200 text-emerald-900';
-          cardAgregasi.innerHTML = '<div class="flex items-center space-x-2"><i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>' +
-            '<div><h5 class="font-extrabold text-sm">Agregasi Bisnis: SURPLUS Rp ' + Math.round(selisihRupiah).toLocaleString('id-ID') + '</h5>' +
-            '<p class="text-[11px] text-emerald-700 mt-0.5">Pencapaian penjualan Anda saat ini berada di atas garis Time Factor. Pertahankan ritme ini hingga tutup buku!</p></div></div>';
-        } else {
-          cardAgregasi.className = 'p-4 rounded-xl shadow-sm text-xs bg-red-50 border border-red-200 text-red-900';
-          cardAgregasi.innerHTML = '<div class="flex items-center space-x-2"><i class="fa-solid fa-triangle-exclamation text-red-600 text-base"></i>' +
-            '<div><h5 class="font-extrabold text-sm">Agregasi Bisnis: DEFISIT Rp ' + Math.abs(Math.round(selisihRupiah)).toLocaleString('id-ID') + '</h5>' +
-            '<p class="text-[11px] text-red-700 mt-0.5">Dibutuhkan tambahan sales minimal Rp ' + Math.abs(Math.round(selisihRupiah)).toLocaleString('id-ID') + ' untuk mengejar posisi ideal Time Factor.</p></div></div>';
-        }
+      iktActiveStoreData = acRow;
 
-        // Render Tabel Indikator IKT
-        var indikators = [
-          { nama: 'Net Sales', tgt: 'Rp ' + Number(r['TARGET NET SALES'] || 0).toLocaleString('id-ID'), act: 'Rp ' + Number(r['ACTUAL NET SALES'] || 0).toLocaleString('id-ID'), acv: r['ACV SALES'], ket: r['KET SALES'] },
-          { nama: 'Gross Margin Rupiah', tgt: 'Rp ' + Number(r['TARGET GM RP'] || 0).toLocaleString('id-ID'), act: 'Rp ' + Number(r['ACT GM RP'] || 0).toLocaleString('id-ID'), acv: r['ACV GM RP'], ket: r['KET GM RP'] },
-          { nama: 'Gross Margin %', tgt: Number(r['TARGET GM %'] || 0).toFixed(2) + '%', act: Number(r['ACTUAL GM %'] || 0).toFixed(2) + '%', acv: r['ACV GM'], ket: r['KET GM %'] },
-          { nama: 'Profit Toko', tgt: 'Rp ' + Number(r['TARGET PROFIT'] || 0).toLocaleString('id-ID'), act: 'Rp ' + Number(r['ACTUAL PROFIT'] || 0).toLocaleString('id-ID'), acv: r['ACV PROFIT'], ket: r['KET PROFIT'] },
-          { nama: 'Penawaran Langsung', tgt: '100%', act: r['ACTUAL PENAWARAN LANGSUNG'] || '-', acv: r['ACV PENAWARAN LANGSUNG'], ket: '-' }
-        ];
+      var tfVal = parseAngkaIndo(acRow['TIME FAKTOR']) || 0.5;
+      var tfRatio = (tfVal <= 1 && tfVal > 0) ? tfVal : (tfVal / 100);
+      var tfPctFormatted = (tfRatio * 100).toFixed(1).replace('.', ',') + '%';
 
-        var labelsBar = [];
-        var dataBar = [];
+      var tgtSales = parseAngkaIndo(acRow['TARGET NET SALES']);
+      var actSales = parseAngkaIndo(acRow['ACTUAL NET SALES']);
+      var tfSalesTarget = tgtSales * tfRatio;
+      var selisihTfRp = actSales - tfSalesTarget;
 
-        var tblHtml = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">' +
-          '<h4 class="text-xs font-black text-slate-800 pb-2 border-b border-slate-100">Scorecard Indikator IKT</h4>' +
+      var kurMin100 = Math.max(0, (tgtSales * 1.00) - actSales);
+      var kurMid103 = Math.max(0, (tgtSales * 1.03) - actSales);
+      var kurMax105 = Math.max(0, (tgtSales * 1.05) - actSales);
+
+      var proyeksiSales = tfRatio > 0 ? Math.round(actSales / tfRatio) : actSales;
+      var proyeksiAcv = tgtSales > 0 ? (proyeksiSales / tgtSales * 100) : 0;
+
+      var container = document.getElementById('iktDynamicContentArea');
+      var html = 
+        // Header AC
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
+              '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI IKT TINGKAT AREA</h3>' +
+            '</div>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko Binaan</p>' +
+          '</div>' +
+          '<div class="flex items-center space-x-2">' +
+            '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm">' +
+              '<i id="iconMataIkt" class="' + (isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white') + '"></i>' +
+              '<span>' + (isIktPrivateHidden ? 'Buka Sensor' : 'Sembunyikan') + '</span>' +
+            '</button>' +
+            '<button onclick="bukaModalSimulasiGmDariIkt()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-calculator text-amber-300"></i>' +
+              '<span>Simulasi GM Rp Area</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+
+        // Agregasi Bisnis Area
+        '<div class="p-4 rounded-2xl shadow-sm border ' + (selisihTfRp >= 0 ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-emerald-200 text-emerald-950' : 'bg-gradient-to-r from-red-50 via-rose-50 to-white border-red-200 text-red-950') + '">' +
+          '<div class="flex items-start space-x-3">' +
+            '<div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg ' + (selisihTfRp >= 0 ? 'bg-emerald-600 text-white shadow-md' : 'bg-red-600 text-white shadow-md') + '">' +
+              '<i class="' + (selisihTfRp >= 0 ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation') + '"></i>' +
+            '</div>' +
+            '<div class="flex-1">' +
+              '<h4 class="text-sm font-black tracking-tight">' +
+                (selisihTfRp >= 0 ? 'AGREGASI AREA: SURPLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'AGREGASI AREA: DEFISIT Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
+              '</h4>' +
+              '<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">' +
+                (selisihTfRp >= 0 ? 'Kinerja total area surplus di atas Time Factor (' + tfPctFormatted + ').' : 'Total area defisit <b>Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID') + '</b> dari garis Time Factor ideal.') +
+              '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-200/60 text-xs">' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200"><span class="text-[10px] text-slate-500 font-bold uppercase block">Target MIN 100%</span><span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMin100 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMin100).toLocaleString('id-ID')) + '</span></div>' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200"><span class="text-[10px] text-slate-500 font-bold uppercase block">Target MID 103%</span><span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMid103 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMid103).toLocaleString('id-ID')) + '</span></div>' +
+            '<div class="p-2.5 bg-white/80 rounded-xl border border-slate-200"><span class="text-[10px] text-slate-500 font-bold uppercase block">Target MAX 105%</span><span class="text-xs font-black text-slate-800 font-mono block mt-0.5">' + (kurMax105 === 0 ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>Tercapai</span>' : 'Kurang Rp ' + Math.round(kurMax105).toLocaleString('id-ID')) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        // Proyeksi Sales Area
+        '<div class="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-md flex items-center justify-between">' +
+          '<div><span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PROYEKSI SALES AREA AKHIR BULAN</span><h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3><span class="text-[11px] text-indigo-200">Kecepatan Time Factor: ' + tfPctFormatted + '</span></div>' +
+          '<div class="text-right"><span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV Area</span><span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span></div>' +
+        '</div>' +
+
+        // Donut & Chart
+        '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
+          '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">' +
+            '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Time Factor Berjalan</h4>' +
+            '<div class="relative w-28 h-28 flex items-center justify-center my-1"><canvas id="chartTimeFactorDonut"></canvas><span class="absolute text-sm font-black font-mono text-brand-dark">' + tfPctFormatted + '</span></div>' +
+            '<p class="text-[10px] text-slate-400 mt-2 font-medium">Batas Minimal Pencapaian Ideal</p>' +
+          '</div>' +
+          '<div class="md:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100"><h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Komparasi ACV Indikator Area vs Time Factor</h4><span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">TF: ' + tfPctFormatted + '</span></div>' +
+            '<div class="h-36 w-full my-2"><canvas id="chartIktBarComp"></canvas></div>' +
+          '</div>' +
+        '</div>' +
+
+        // TABEL UTAMA BARIS AC
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-2 border-b border-slate-100">Tabel Konsolidasi Baris Area (AC)</h4>' +
           '<div class="overflow-x-auto text-xs">' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2">Indikator</th><th class="p-2 text-right">Target</th><th class="p-2 text-right">Realisasi</th><th class="p-2 text-right">ACV %</th><th class="p-2 text-center">Status</th>' +
-              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-3 text-left">Indikator</th><th class="p-3 text-center">Aktual</th><th class="p-3 text-center">ACV %</th><th class="p-3 text-center">Status</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">' +
+                '<tr><td class="p-3 text-left font-bold">Net Sales</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACTUAL NET SALES'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV SALES']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET SALES'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET SALES'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-3 text-left font-bold">Gross Margin (Rp)</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACT GM RP'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM RP']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM RP'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM RP'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-3 text-left font-bold">Gross Margin (%)</td><td class="p-3 font-mono font-black">' + formatPersenIkt(acRow['ACTUAL GM %']) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV GM']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET GM %'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET GM %'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-3 text-left font-bold">Profit Toko</td><td class="p-3 font-mono font-black">' + formatRupiahIkt(acRow['ACTUAL PROFIT'], true) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PROFIT']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (acRow['KET PROFIT'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (acRow['KET PROFIT'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-3 text-left font-bold">Penawaran Langsung</td><td class="p-3 font-mono font-black">' + formatPersenIkt(acRow['ACTUAL PENAWARAN LANGSUNG'] || acRow['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-3 font-mono font-bold text-brand-dark">' + formatPersenIkt(acRow['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span></td></tr>' +
+              '</tbody></table>' +
+          '</div>' +
+        '</div>' +
 
-        indikators.forEach(function(ind) {
-          var acvNum = parseFloat(ind.acv) || 0;
-          var acvPct = (acvNum <= 2 && acvNum > 0 ? acvNum * 100 : acvNum).toFixed(1);
-          labelsBar.push(ind.nama);
-          dataBar.push(parseFloat(acvPct));
+        // AKORDION PER TOKO BINAAN (MENGABAIKAN BARIS KOSONG)
+        '<div class="space-y-3">' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian IKT per Toko Binaan (Klik SHOW/HIDE)</h4>';
 
-          var statusBadge = parseFloat(acvPct) >= parseFloat(tfPct)
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span>'
-            : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">NOK</span>';
-
-          tblHtml += '<tr>' +
-            '<td class="p-2 font-bold text-slate-800">' + ind.nama + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-500">' + ind.tgt + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold text-slate-800">' + ind.act + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold text-brand-dark">' + acvPct + '%</td>' +
-            '<td class="p-2 text-center">' + statusBadge + '</td>' +
-          '</tr>';
-        });
-
-        tblHtml += '</tbody></table></div></div>';
-        document.getElementById('containerTabelIndikatorIkt').innerHTML = tblHtml;
-
-        // Render Bar Chart Komparasi
-        var ctxBar = document.getElementById('chartIktBarComp').getContext('2d');
-        new Chart(ctxBar, {
-          type: 'bar',
-          data: {
-            labels: labelsBar,
-            datasets: [{
-              label: 'ACV %',
-              data: dataBar,
-              backgroundColor: dataBar.map(function(v) { return v >= parseFloat(tfPct) ? '#059669' : '#dc2626'; }),
-              borderRadius: 6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { ticks: { callback: function(v) { return v + '%'; } } } }
-          }
-        });
+      var storeListOnly = allIktRows.filter(function(item) {
+        var k = String(item['KODE'] || '').toUpperCase().trim();
+        var n = String(item['NAMA TOKO'] || '').toUpperCase().trim();
+        return k !== '' && k !== 'AC' && k !== 'AREA' && n !== '';
       });
+
+      storeListOnly.forEach(function(st, idx) {
+        var accId = 'accIktStore_' + idx;
+        var stTf = parseAngkaIndo(st['TIME FAKTOR']) || tfRatio;
+        var stTfRatio = (stTf <= 1 && stTf > 0) ? stTf : (stTf / 100);
+        var stAcvSales = parseAngkaIndo(st['ACV SALES']);
+        if (Math.abs(stAcvSales) <= 2) stAcvSales *= 100;
+        var isAboveTf = (stAcvSales >= (stTfRatio * 100));
+
+        html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">' + st['KODE'] + '</span>' +
+              '<h5 class="text-xs font-extrabold text-slate-800">' + st['NAMA TOKO'] + '</h5>' +
+            '</div>' +
+            '<div class="flex items-center space-x-3">' +
+              '<span class="text-xs font-mono font-bold text-slate-700">ACV: <b>' + stAcvSales.toFixed(1).replace('.', ',') + '%</b></span>' +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (isAboveTf ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' +
+                (isAboveTf ? '<i class="fa-solid fa-arrow-trend-up mr-1"></i>Diatas TF' : '<i class="fa-solid fa-arrow-trend-down mr-1"></i>Dibawah TF') +
+              '</span>' +
+              '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="' + accId + '" class="hidden p-4 border-t border-slate-100 space-y-2 text-xs bg-white">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                '<th class="p-2 text-left">Indikator</th><th class="p-2 text-center">Target</th><th class="p-2 text-center">Aktual</th><th class="p-2 text-center">ACV</th><th class="p-2 text-center">Status</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">' +
+                '<tr><td class="p-2 text-left font-bold">Net Sales</td><td class="p-2 font-mono">' + formatRupiahIkt(st['TARGET NET SALES'], true) + '</td><td class="p-2 font-mono font-black">' + formatRupiahIkt(st['ACTUAL NET SALES'], true) + '</td><td class="p-2 font-mono font-bold text-brand-dark">' + formatPersenIkt(st['ACV SALES']) + '</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (st['KET SALES'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (st['KET SALES'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">GM (Rp)</td><td class="p-2 font-mono">' + formatRupiahIkt(st['TARGET GM RP'], true) + '</td><td class="p-2 font-mono font-black">' + formatRupiahIkt(st['ACT GM RP'], true) + '</td><td class="p-2 font-mono font-bold text-brand-dark">' + formatPersenIkt(st['ACV GM RP']) + '</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (st['KET GM RP'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (st['KET GM RP'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">GM (%)</td><td class="p-2 font-mono">' + formatPersenIkt(st['TARGET GM %']) + '</td><td class="p-2 font-mono font-black">' + formatPersenIkt(st['ACTUAL GM %']) + '</td><td class="p-2 font-mono font-bold text-brand-dark">' + formatPersenIkt(st['ACV GM']) + '</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (st['KET GM %'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (st['KET GM %'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">Profit</td><td class="p-2 font-mono">' + formatRupiahIkt(st['TARGET PROFIT'], true) + '</td><td class="p-2 font-mono font-black">' + formatRupiahIkt(st['ACTUAL PROFIT'], true) + '</td><td class="p-2 font-mono font-bold text-brand-dark">' + formatPersenIkt(st['ACV PROFIT']) + '</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (st['KET PROFIT'] === 'OK' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (st['KET PROFIT'] || 'OK') + '</span></td></tr>' +
+                '<tr><td class="p-2 text-left font-bold">Penawaran</td><td class="p-2 font-mono">100%</td><td class="p-2 font-mono font-black">' + formatPersenIkt(st['ACTUAL PENAWARAN LANGSUNG'] || st['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-2 font-mono font-bold text-brand-dark">' + formatPersenIkt(st['ACV PENAWARAN LANGSUNG']) + '</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OK</span></td></tr>' +
+              '</tbody></table>' +
+          '</div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+      renderDonutTfChart(tfRatio * 100);
+      renderBarIktCompChart(acRow, tfRatio * 100);
+    }
+
+    // Helper Render Chart Donut & Bar IKT
+    function renderDonutTfChart(pct) {
+      var canvas = document.getElementById('chartTimeFactorDonut');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var cap = Math.min(Math.max(pct, 0), 100);
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [cap, 100 - cap],
+            backgroundColor: ['#2563eb', '#e2e8f0'],
+            borderWidth: 0
+          }]
+        },
+        options: { cutout: '76%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderBarIktCompChart(r, tfPct) {
+      var canvas = document.getElementById('chartIktBarComp');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+
+      var parseAcv = function(val) {
+        var num = parseAngkaIndo(val);
+        if (Math.abs(num) <= 2) num *= 100;
+        return num;
+      };
+
+      var dataLabels = ['Net Sales', 'GM Rp', 'GM %', 'Profit', 'Penawaran'];
+      var dataValues = [
+        parseAcv(r['ACV SALES']),
+        parseAcv(r['ACV GM RP']),
+        parseAcv(r['ACV GM']),
+        parseAcv(r['ACV PROFIT']),
+        parseAcv(r['ACV PENAWARAN LANGSUNG'])
+      ];
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: dataLabels,
+          datasets: [{
+            label: 'ACV %',
+            data: dataValues,
+            backgroundColor: dataValues.map(function(v) { return v >= tfPct ? '#059669' : '#dc2626'; }),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { callback: function(v) { return v + '%'; }, font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+            x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ==================== 3. MODAL SIMULASI GM RP (INTEGRASI LANGSUNG DARI IKT) ====================
+    function bukaModalSimulasiGmDariIkt() {
+      var existing = document.getElementById('modalSimulasiGmRpIkt');
+      if (existing) existing.remove();
+
+      var dataStore = iktActiveStoreData || {};
+
+      var defTargetSales = Math.round(parseAngkaIndo(dataStore['TARGET NET SALES']) || 300000000);
+      var defActualSales = Math.round(parseAngkaIndo(dataStore['ACTUAL NET SALES']) || 200000000);
+
+      var defTgtGm = parseAngkaIndo(dataStore['TARGET GM %']);
+      if (defTgtGm > 0 && defTgtGm <= 1) defTgtGm *= 100;
+      var defActGm = parseAngkaIndo(dataStore['ACTUAL GM %']);
+      if (defActGm > 0 && defActGm <= 1) defActGm *= 100;
+
+      var defTf = parseAngkaIndo(dataStore['TIME FAKTOR']) || 0.5;
+      if (defTf > 1) defTf /= 100;
+      var defHk = 30;
+      var defJhk = Math.max(1, Math.round(defHk * defTf));
+
+      var modal = document.createElement('div');
+      modal.id = 'modalSimulasiGmRpIkt';
+      modal.className = 'fixed inset-0 z-[75] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-xl max-h-[92vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-calculator text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Simulasi GM Rupiah & IKT</h3>' +
+                '<p class="text-[10px] text-emerald-200">Kalkulasi Instan Realtime (Data Default dari Toko)</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalSimulasiGmIkt()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 text-xs bg-slate-50">' +
+            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">' +
+              '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] pb-1 border-b border-slate-100">Parameter Input Simulasi</h4>' +
+              '<div class="grid grid-cols-2 gap-3">' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Hari Kerja (HK)</label><input type="number" id="simGmHk" value="' + defHk + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Jumlah HK (JHK)</label><input type="number" id="simGmJhk" value="' + defJhk + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+              '</div>' +
+              '<div class="grid grid-cols-2 gap-3">' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Target Net Sales (Rp)</label><input type="number" id="simGmTargetSales" value="' + defTargetSales + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold"></div>' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Actual Net Sales (Rp)</label><input type="number" id="simGmActualSales" value="' + defActualSales + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-slate-800"></div>' +
+              '</div>' +
+              '<div class="grid grid-cols-2 gap-3">' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Target Margin (%)</label><input type="number" step="0.01" id="simGmTargetGm" value="' + (defTgtGm || 20.3).toFixed(2) + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+                '<div><label class="block font-bold text-slate-700 mb-1">Actual Margin (%)</label><input type="number" step="0.01" id="simGmActualGm" value="' + (defActGm || 19.5).toFixed(2) + '" oninput="hitungSimulasiGmRpRealtime()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-center font-bold"></div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">' +
+              '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] pb-1 border-b border-slate-100">Hasil Analisa Real-Time</h4>' +
+              '<table class="w-full text-center divide-y divide-slate-100">' +
+                '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
+                  '<th class="p-2 text-left">Uraian</th><th class="p-2">Target s/d JHK</th><th class="p-2">Realisasi</th><th class="p-2">Gap</th><th class="p-2">Status</th>' +
+                '</tr></thead><tbody id="tbodySimulasiGmRpIkt" class="divide-y divide-slate-50 font-medium"></tbody>' +
+              '</table>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-between">' +
+            '<button onclick="resetNilaiSimulasiGmRp()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-rotate-left"></i><span>Reset Angka</span>' +
+            '</button>' +
+            '<button onclick="tutupModalSimulasiGmIkt()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all">' +
+              'Kembali ke IKT' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+      hitungSimulasiGmRpRealtime();
+    }
+
+    function tutupModalSimulasiGmIkt() {
+      var modal = document.getElementById('modalSimulasiGmRpIkt');
+      if (modal) modal.remove();
+    }
+
+    function hitungSimulasiGmRpRealtime() {
+      var hk = Number(document.getElementById('simGmHk').value || 1);
+      var jhk = Number(document.getElementById('simGmJhk').value || 1);
+      var tgtSales = Number(document.getElementById('simGmTargetSales').value || 0);
+      var actSales = Number(document.getElementById('simGmActualSales').value || 0);
+      var tgtGm = Number(document.getElementById('simGmTargetGm').value || 0) / 100;
+      var actGm = Number(document.getElementById('simGmActualGm').value || 0) / 100;
+
+      var timeFactor = (jhk / hk);
+      var tgtSalesJhk = timeFactor * tgtSales;
+      var gapSales = actSales - tgtSalesJhk;
+
+      var tgtMarginRp = tgtSales * tgtGm;
+      var actMarginRp = actSales * actGm;
+      var tgtMarginJhk = timeFactor * tgtMarginRp;
+      var gapMarginRp = actMarginRp - tgtMarginJhk;
+
+      var statSales = gapSales >= 0 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OKE</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">NOK</span>';
+      var statMargin = gapMarginRp >= 0 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">OKE</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">NOK</span>';
+
+      var tbody = document.getElementById('tbodySimulasiGmRpIkt');
+      if (!tbody) return;
+      tbody.innerHTML = 
+        '<tr><td class="p-2 text-left font-bold">Net Sales</td><td class="p-2 font-mono">Rp ' + Math.round(tgtSalesJhk).toLocaleString('id-ID') + '</td><td class="p-2 font-mono font-bold">Rp ' + actSales.toLocaleString('id-ID') + '</td><td class="p-2 font-mono ' + (gapSales >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gapSales >= 0 ? '+' : '') + Math.round(gapSales).toLocaleString('id-ID') + '</td><td class="p-2">' + statSales + '</td></tr>' +
+        '<tr><td class="p-2 text-left font-bold">Margin (Rp)</td><td class="p-2 font-mono">Rp ' + Math.round(tgtMarginJhk).toLocaleString('id-ID') + '</td><td class="p-2 font-mono font-bold">Rp ' + Math.round(actMarginRp).toLocaleString('id-ID') + '</td><td class="p-2 font-mono ' + (gapMarginRp >= 0 ? 'text-emerald-700' : 'text-red-600') + '">' + (gapMarginRp >= 0 ? '+' : '') + Math.round(gapMarginRp).toLocaleString('id-ID') + '</td><td class="p-2">' + statMargin + '</td></tr>' +
+        '<tr><td class="p-2 text-left font-bold">Time Factor</td><td class="p-2 font-mono">' + (timeFactor * 100).toFixed(1) + '%</td><td class="p-2 font-mono font-bold">' + (tgtSales > 0 ? (actSales / tgtSales * 100).toFixed(1) : 0) + '%</td><td class="p-2 font-mono">-</td><td class="p-2">' + ((tgtSales > 0 && (actSales / tgtSales) >= timeFactor) ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">ON TRACK</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">PUSH</span>') + '</td></tr>';
+    }
+
+    function resetNilaiSimulasiGmRp() {
+      document.getElementById('simGmActualSales').value = 0;
+      document.getElementById('simGmActualGm').value = 0;
+      hitungSimulasiGmRpRealtime();
     }
 
     // ==================== [10] MODUL KONVERSI NO BON / STRUK ====================

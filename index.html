@@ -398,14 +398,12 @@
       return 'Rp ' + Math.round(num).toLocaleString('id-ID');
     }
 
-    // Helper Khusus Format Persen NSB (Minus tampil -X,XX%, Plus tampil X,XX%)
+    // Helper Khusus Format Persen NSB (Minus tampil -X,XX%, Plus tampil X,XX% tanpa tanda +)
     function formatPersenNsb(val) {
-      if (val === null || val === undefined || val === '') return '0,00%';
-      var num = parseAngkaIndo(val);
-      // Kalikan 100 jika berupa pecahan desimal (antara -1 sampai 1)
-      if (Math.abs(num) > 0 && Math.abs(num) <= 1) {
-        num = num * 100;
-      }
+      if (val === null || val === undefined || val === '' || isNaN(val)) return '0,00%';
+      var num = parseFloat(val);
+      // Jika minus: toFixed(2) otomatis menampilkan tanda minus (contoh: -0,45%)
+      // Jika plus: toFixed(2) otomatis tanpa tanda plus (contoh: 0,26%)
       return num.toFixed(2).replace('.', ',') + '%';
     }
 
@@ -5422,8 +5420,11 @@
         displayDailyList = Object.values(dateMap).map(function(item) {
           var avgGm = item.gmList.length > 0 ? (item.gmList.reduce(function(a,b){return a+b;}, 0) / item.gmList.length) : 0;
           var avgOos = item.oosList.length > 0 ? (item.oosList.reduce(function(a,b){return a+b;}, 0) / item.oosList.length) : 0;
+          
+          // RUMUS PERSEN NSB AREA: (Total NSB / Actual Sales) * 100
           var nsbPct = item.ACTUAL > 0 ? ((item.NSB / item.ACTUAL) * 100) : 0;
           var acvPct = item.TARGET > 0 ? ((item.ACTUAL / item.TARGET) * 100) : 0;
+
           return {
             TANGGAL: item.TANGGAL,
             tglRapi: item.tglRapi,
@@ -5447,8 +5448,10 @@
           var ac = parseAngkaIndo(r['ACTUAL']);
           var gap = ac - tg;
           var nsb = parseAngkaIndo(r['NSB']);
-          var nsbPct = parseAngkaIndo(r['% NSB']);
-          if (Math.abs(nsbPct) <= 1 && nsbPct !== 0) nsbPct *= 100;
+          
+          // RUMUS PERSEN NSB HARIAN TOKO: (NSB Rp / Actual Sales) * 100
+          var nsbPct = ac > 0 ? ((nsb / ac) * 100) : 0;
+
           var oos = parseAngkaIndo(r['OOS %']);
           if (Math.abs(oos) <= 1 && oos > 0) oos *= 100;
           var gm = parseAngkaIndo(r['GROSS MARGIN']);
@@ -5486,6 +5489,8 @@
       });
 
       var acvByTargetTotal = totTarget > 0 ? ((totActual / totTarget) * 100) : 0;
+
+      // RUMUS PERSEN NSB RESUME: (Total NSB Rp / Total Actual Sales) * 100
       var pctNsbTotal = totActual > 0 ? ((totNsbRp / totActual) * 100) : 0;
       var isTotalNsbOver = Math.abs(pctNsbTotal) >= 0.14 && pctNsbTotal !== 0;
 
@@ -5694,7 +5699,9 @@
             var tg = parseAngkaIndo(r['TARGET']);
             var ac = parseAngkaIndo(r['ACTUAL']);
             var nsb = parseAngkaIndo(r['NSB']);
-            var nsbPct = parseAngkaIndo(r['% NSB']);
+            
+            // RUMUS PERSEN NSB TOKO BINAAN AC: (NSB Rp / Actual Sales) * 100
+            var nsbPct = ac > 0 ? ((nsb / ac) * 100) : 0;
             if (Math.abs(nsbPct) <= 1 && nsbPct !== 0) nsbPct *= 100;
             var oos = parseAngkaIndo(r['OOS %']);
             if (Math.abs(oos) <= 1 && oos > 0) oos *= 100;
@@ -5735,7 +5742,7 @@
                 '<h5 class="text-xs font-extrabold text-slate-800 truncate max-w-[130px] sm:max-w-xs">' + st.nama + '</h5>' +
               '</div>' +
               '<div class="flex items-center space-x-2 sm:space-x-3 text-xs font-mono">' +
-                '<span class="hidden md:inline text-slate-500">Lalu: Rp ' + Math.round(st.totBlnLalu).toLocaleString('id-ID') + '</span>' +
+                '<span class="hidden md:inline text-slate-500">Bln Lalu: Rp ' + Math.round(st.totBlnLalu).toLocaleString('id-ID') + '</span>' +
                 '<span class="hidden sm:inline text-slate-600">Tgt: Rp ' + Math.round(st.totTgt).toLocaleString('id-ID') + '</span>' +
                 '<span class="text-slate-900 font-black">Act: Rp ' + Math.round(st.totAct).toLocaleString('id-ID') + '</span>' +
                 '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (stAcvTotal >= 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900') + '">' +

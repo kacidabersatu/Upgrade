@@ -5486,10 +5486,12 @@
                 '<th class="p-3 text-center">Point Dashboard</th>' +
               '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
 
-      // Urutkan seluruh toko berdasarkan RANK
+      // Urutkan toko riil berdasarkan RANK (Hanya toko valid, bukan AC/AREA, dan bukan baris kosong)
       var sortedStores = allPlRows.filter(function(r) {
         var k = String(r['KODE'] || '').toUpperCase().trim();
-        return k !== 'AC' && k !== 'AREA';
+        var n = String(r['STORE NAME'] || '').toUpperCase().trim();
+        var rank = String(r['RANK'] || '').trim();
+        return k !== '' && k !== 'AC' && k !== 'AREA' && n !== '' && rank !== '';
       }).sort(function(a, b) {
         return Number(a['RANK'] || 999) - Number(b['RANK'] || 999);
       });
@@ -5503,15 +5505,15 @@
 
       if (myRankIdx !== -1) {
         if (myRankIdx === 0) {
-          // Jika Rank 1: hanya tampilkan dirinya + 3 di bawahnya
+          // Jika Toko Anda Peringkat #1: tampilkan diri sendiri + 3 toko di bawahnya (#1, #2, #3, #4)
           sliceStart = 0;
           sliceEnd = Math.min(sortedStores.length, 4);
         } else if (myRankIdx === sortedStores.length - 1) {
-          // Jika Rank Terbawah: hanya tampilkan 3 di atasnya + dirinya
+          // Jika Peringkat Terbawah: tampilkan 3 toko di atasnya + diri sendiri
           sliceStart = Math.max(0, sortedStores.length - 4);
           sliceEnd = sortedStores.length;
         } else {
-          // Posisi tengah: 3 di atas dan 3 di bawah
+          // Posisi Tengah: 3 toko di atas, toko sendiri, dan 3 toko di bawah
           sliceStart = Math.max(0, myRankIdx - 3);
           sliceEnd = Math.min(sortedStores.length, myRankIdx + 4);
         }

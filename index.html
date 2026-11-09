@@ -8259,7 +8259,8 @@
                 '<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ' + (isNaik ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300 animate-pulse') + '">' +
                   (isNaik ? '<i class="fa-solid fa-check mr-1"></i>SUDAH NAIK' : '<i class="fa-solid fa-clock mr-1"></i>BELUM NAIK') +
                 '</span>' +
-                '<span class="font-mono font-extrabold text-slate-800 text-xs">Faktur: ' + (item['NO_FAKTUR'] || '-') + '</span>' +
+                '<span class="font-mono font-extrabold text-slate-800 text-xs">Faktur: ' + String(item['NO_FAKTUR'] || '-').replace(/^'/, '')
+ + '</span>' +
               '</div>' +
               '<p class="text-slate-600 text-[11px]"><b>Ket:</b> ' + (item['KET_RETURN'] || '-') + '</p>' +
               '<div class="flex flex-wrap items-center gap-x-3 text-[10px] text-slate-400 font-mono">' +
@@ -8348,7 +8349,8 @@
             '<td class="p-2 text-left font-mono font-bold text-slate-700">' + formatTanggalTampilan(item['TANGGAL']) + '</td>' +
             '<td class="p-2 text-slate-600">' + (item['NAMA_PENGINPUT'] || '-') + '</td>' +
             '<td class="p-2 font-mono text-[11px]">' + (item['NAMA_DRIVER'] || '-') + '<br><span class="text-slate-400">' + (item['NO_FLAT_MOBIL'] || '-') + '</span></td>' +
-            '<td class="p-2 font-mono font-bold text-slate-800">' + (item['NO_FAKTUR'] || '-') + '</td>' +
+            '<td class="p-2 font-mono font-bold text-slate-800">' + String(item['NO_FAKTUR'] || '-').replace(/^'/, '')
+ + '</td>' +
             '<td class="p-2 text-left text-slate-600">' + (item['KET_RETURN'] || '-') + '</td>' +
             '<td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isNaik ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (isNaik ? 'SUDAH NAIK' : 'BELUM NAIK') + '</span></td>' +
             '<td class="p-2">' +

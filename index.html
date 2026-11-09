@@ -1804,8 +1804,31 @@
         }
         return count;
       }
+      
+      // 4. Logika Khusus Sales OPR (Muncul badge jika hari ini BELUM input)
+      if (norm.indexOf('OPR') !== -1 || norm.indexOf('SALES OPR') !== -1) {
+        var oprCache = localStorage.getItem('kacida_cache_Monitoring_Sales_OPR');
+        if (oprCache) {
+          try {
+            var oprItems = JSON.parse(oprCache).data || [];
+            var cfg = getTokoConfig() || {};
+            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+            var todayStr = formatTanggalTampilan(new Date());
 
-      // 4. Notifikasi Umum Sheet Notifikasi
+            var sudahInputOprHariIni = oprItems.some(function(r) {
+              return String(r['KODE'] || '').toUpperCase().trim() === myCode && 
+                     formatTanggalTampilan(r['TANGGAL_INPUT'] || r['TANGGAL']) === todayStr;
+            });
+
+            if (!sudahInputOprHariIni) {
+              count++;
+            }
+          } catch(e) {}
+        }
+        return count;
+      }
+
+      // 5. Notifikasi Umum Sheet Notifikasi
       try {
         var notifCache = localStorage.getItem('kacida_cache_Notifikasi');
         if (!notifCache) return 0;
@@ -2418,7 +2441,33 @@
         } catch (e) {}
       }
 
-      // 4. Render ke DOM Header
+    //5. Injeksi Pengingat Sales OPR Belum Diisi Hari Ini
+      var oprCache = localStorage.getItem('kacida_cache_Monitoring_Sales_OPR');
+      if (oprCache && !isAC) {
+        try {
+          var oprData = JSON.parse(oprCache).data || [];
+          var todayStr = formatTanggalTampilan(new Date());
+
+          var isOprInputtedToday = oprData.some(function(r) {
+            return String(r['KODE'] || '').toUpperCase().trim() === myCode && 
+                   formatTanggalTampilan(r['TANGGAL_INPUT'] || r['TANGGAL']) === todayStr;
+          });
+
+          if (!isOprInputtedToday) {
+            list.unshift({
+              notificationId: 'SYS_OPR_TODAY_REMINDER',
+              sourceMenu: 'MONITORING SALES OPR',
+              title: 'Peringatan Input Sales OPR Toko',
+              message: 'Hari ini belum ada inputan Sales OPR (06:07 / 22:23). Ayo segera input data OPR toko Anda.',
+              priority: 'HIGH',
+              status: 'UNREAD',
+              createdAt: 'Hari Ini'
+            });
+          }
+        } catch (e) {}
+      }
+
+      // 5. Render ke DOM Header
       var unreadCount = list.filter(function(n) { return String(n['status']) === 'UNREAD'; }).length;
 
       if (badge) {
@@ -6008,6 +6057,9 @@
           if (namaSheet === 'Monitoring_KWH') {
             actionKey = 'CRUD_KWH';
           }
+          if (namaSheet === 'Monitoring_Sales_OPR') {
+        actionKey = 'CRUD_SALES_OPR';
+      }
 
           kirimBackendRequest(actionKey, { subAction: 'DELETE', id: rowId }, function() {
             Swal.fire({ icon: 'success', title: 'Data Dihapus', timer: 1000, showConfirmButton: false });
@@ -7594,99 +7646,500 @@
       });
     }
 
-    // ==================== [13] MODUL MONITORING SALES OPR ====================
+    // ==================== [13] MODUL MONITORING SALES OPR LENGKAP ====================
+    var oprActiveTab = '06:07'; // '06:07' atau '22:23'
+    var oprActiveFilterBulan = 'DEFAULT';
+    var oprActiveDateFrom = '';
+    var oprActiveDateTo = '';
+
+    // Helper Hitung Rata-rata Jam Transaksi (Format HH:MM)
+    function hitungRataRataJam(timeArray) {
+      if (!timeArray || timeArray.length === 0) return '-';
+      var totalMinutes = 0;
+      var validCount = 0;
+      timeArray.forEach(function(t) {
+        if (!t) return;
+        var parts = String(t).trim().split(':');
+        if (parts.length >= 2) {
+          var h = parseInt(parts[0], 10);
+          var m = parseInt(parts[1], 10);
+          if (!isNaN(h) && !isNaN(m)) {
+            totalMinutes += (h * 60 + m);
+            validCount++;
+          }
+        }
+      });
+      if (validCount === 0) return '-';
+      var avgMinutes = Math.round(totalMinutes / validCount);
+      var avgH = Math.floor(avgMinutes / 60) % 24;
+      var avgM = avgMinutes % 60;
+      return String(avgH).padStart(2, '0') + ':' + String(avgM).padStart(2, '0');
+    }
+
+    // DISPATCHER UTAMA SALES OPR
     function renderModulMonitoringSalesOpr(container) {
-      container.innerHTML = renderHeaderModalUniversal('Monitoring Sales Operasional (OPR)', '2 Tab Jam: 06:07 dan 22:23 - Validasi Waktu Real-Time') +
-        '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50">' +
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+
+      var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      if (oprActiveFilterBulan === 'DEFAULT') {
+        oprActiveFilterBulan = bulanList[new Date().getMonth()];
+      }
+
+      container.innerHTML = renderHeaderModalUniversal(
+        'Monitoring Sales Operasional (OPR)', 
+        isAC ? 'Dashboard Pengawasan Transaksi Area (06:07 & 22:23)' : '2 Tab Jam: 06:07 dan 22:23 - Validasi Waktu Real-Time'
+      ) +
+        '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">' +
+          // 2 TAB JAM DI ATAS
           '<div class="flex border-b border-slate-200 bg-white text-xs font-bold text-slate-500 px-4 pt-2 space-x-2">' +
-            '<button onclick="gantiTabOpr(\'06:07\')" id="tabOprPagi" class="py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark">Rekap Jam 06:07</button>' +
-            '<button onclick="gantiTabOpr(\'22:23\')" id="tabOprMalam" class="py-2.5 px-4 border-b-2 border-transparent hover:text-brand-dark">Rekap Jam 22:23</button>' +
+            '<button onclick="gantiTabOpr(\'06:07\')" id="tabOprPagi" class="py-2.5 px-4 border-b-2 ' + (oprActiveTab === '06:07' ? 'border-brand-primary text-brand-dark font-extrabold' : 'border-transparent hover:text-brand-dark') + ' flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-sun text-amber-500"></i><span>Rekap Jam 06:07</span>' +
+            '</button>' +
+            '<button onclick="gantiTabOpr(\'22:23\')" id="tabOprMalam" class="py-2.5 px-4 border-b-2 ' + (oprActiveTab === '22:23' ? 'border-brand-primary text-brand-dark font-extrabold' : 'border-transparent hover:text-brand-dark') + ' flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-moon text-indigo-500"></i><span>Rekap Jam 22:23</span>' +
+            '</button>' +
           '</div>' +
+
+          // CONTAINER ISI KONTEN
           '<div id="containerSubTabOpr" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"></div>' +
+
+          // FLOATING BUTTON + (HANYA UNTUK ROLE TOKO)
+          (!isAC ? 
+            '<button onclick="bukaModalInputOpr()" id="btnFabOpr" title="Input Data OPR Jam ' + oprActiveTab + '" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-brand-primary hover:bg-emerald-700 text-white shadow-2xl flex items-center justify-center text-2xl z-30 transition-transform active:scale-95 animate-bounce">' +
+              '<i class="fa-solid fa-plus"></i>' +
+            '</button>' : '') +
         '</div>';
 
-      window.currentTabOpr = '06:07';
-      renderSubTabOprContent('06:07');
+      renderSubTabOprContent();
     }
 
     function gantiTabOpr(tabJam) {
-      window.currentTabOpr = tabJam;
-      var btnP = document.getElementById('tabOprPagi');
-      var btnM = document.getElementById('tabOprMalam');
-      if (tabJam === '06:07') {
-        btnP.className = 'py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold';
-        btnM.className = 'py-2.5 px-4 border-b-2 border-transparent text-slate-500 font-semibold hover:text-brand-dark';
-      } else {
-        btnP.className = 'py-2.5 px-4 border-b-2 border-transparent text-slate-500 font-semibold hover:text-brand-dark';
-        btnM.className = 'py-2.5 px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold';
-      }
-      renderSubTabOprContent(tabJam);
+      oprActiveTab = tabJam;
+      var container = document.getElementById('universalModalMenuFrame');
+      if (container) renderModulMonitoringSalesOpr(container);
     }
 
-    function renderSubTabOprContent(tabJam) {
+    // --- RENDER ISI KONTEN OPR ---
+    function renderSubTabOprContent() {
       var container = document.getElementById('containerSubTabOpr');
-      container.innerHTML = 
-        '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm max-w-xl mx-auto space-y-3 text-xs">' +
-          '<h4 class="font-black text-slate-800 pb-2 border-b border-slate-100">Input Data OPR: Tab Jam ' + tabJam + '</h4>' +
-          '<div class="grid grid-cols-2 gap-3">' +
-            '<div><label class="block font-bold text-slate-700 mb-1">Jam Transaksi (HH:MM)</label><input type="time" id="oprInputJam" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-            '<div><label class="block font-bold text-slate-700 mb-1">Sales (Rp)</label><input type="number" id="oprInputSales" oninput="hitungApcOprOtomatis()" placeholder="0" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-          '</div>' +
-          '<div class="grid grid-cols-3 gap-2">' +
-            '<div><label class="block font-bold text-slate-700 mb-1">STD</label><input type="number" id="oprInputStd" oninput="hitungApcOprOtomatis()" placeholder="0" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-            '<div><label class="block font-bold text-slate-700 mb-1">APC (Otomatis)</label><input type="number" id="oprInputApc" readonly placeholder="0" class="w-full px-2.5 py-2 bg-slate-100 border border-slate-200 rounded-lg font-mono font-bold text-brand-dark"></div>' +
-            '<div><label class="block font-bold text-slate-700 mb-1">Qty E-Trans</label><input type="number" id="oprInputEtrans" placeholder="0" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-          '</div>' +
-          '<button onclick="submitDataOpr()" class="w-full py-2.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all">' +
-            'Simpan Data OPR' +
-          '</button>' +
-        '</div>' +
-        '<div id="containerTabelOprHistory"></div>';
+      if (!container) return;
 
-      muatDataSheetLazy('Monitoring_Sales_OPR', false, function(oprRows) {
-        var filtered = oprRows.filter(function(r) { return r['JAM_TAB'] === tabJam; });
-        var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 pb-2 border-b border-slate-100">Riwayat OPR Jam ' + tabJam + '</h4>' +
-          '<div class="overflow-x-auto text-xs">' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2">Tanggal</th><th class="p-2">Jam</th><th class="p-2 text-right">Sales</th><th class="p-2 text-right">STD</th><th class="p-2 text-right">APC</th><th class="p-2 text-right">E-Trans</th>' +
-              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-        filtered.forEach(function(row) {
-          html += '<tr>' +
-            '<td class="p-2 font-mono text-slate-600">' + row['TANGGAL_INPUT'] + '</td>' +
-            '<td class="p-2 font-mono font-bold text-brand-dark">' + row['JAM_TRANSAKSI'] + '</td>' +
-            '<td class="p-2 text-right font-mono font-bold text-slate-800">Rp ' + Number(row['SALES'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-600">' + row['STD'] + '</td>' +
-            '<td class="p-2 text-right font-mono text-brand-dark font-bold">Rp ' + Number(row['APC'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-mono text-slate-600">' + row['QTY_ETRANS'] + '</td>' +
-          '</tr>';
+      muatDataSheetLazy('Monitoring_Sales_OPR', false, function(allRows) {
+        // 1. Filter Toko (Jika bukan AC)
+        var storeFiltered = isAC ? allRows : allRows.filter(function(r) {
+          return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
         });
 
-        html += '</tbody></table></div></div>';
-        document.getElementById('containerTabelOprHistory').innerHTML = html;
+        // 2. Filter Tab Jam Aktif (06:07 atau 22:23)
+        var tabFiltered = storeFiltered.filter(function(r) {
+          return String(r['JAM_TAB'] || '').trim() === oprActiveTab;
+        });
+
+        // 3. Filter Bulan
+        var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+        var bulanFiltered = tabFiltered.filter(function(r) {
+          if (oprActiveFilterBulan === 'ALL') return true;
+          var d = parseDateIndo(r['TANGGAL_INPUT'] || r['TANGGAL']);
+          if (isNaN(d.getTime())) return true;
+          return bulanList[d.getMonth()] === oprActiveFilterBulan;
+        });
+
+        // 4. Filter Rentang Tanggal
+        var dateFiltered = bulanFiltered.filter(function(r) {
+          var d = parseDateIndo(r['TANGGAL_INPUT'] || r['TANGGAL']);
+          if (isNaN(d.getTime())) return true;
+          if (oprActiveDateFrom) {
+            var fromD = new Date(oprActiveDateFrom);
+            fromD.setHours(0,0,0,0);
+            if (d < fromD) return false;
+          }
+          if (oprActiveDateTo) {
+            var toD = new Date(oprActiveDateTo);
+            toD.setHours(23,59,59,999);
+            if (d > toD) return false;
+          }
+          return true;
+        });
+
+        // 5. Urutkan tanggal terbaru paling atas
+        var sortedRows = dateFiltered.slice().sort(function(a, b) {
+          return parseDateIndo(b['TANGGAL_INPUT'] || b['TANGGAL']) - parseDateIndo(a['TANGGAL_INPUT'] || a['TANGGAL']);
+        });
+
+        var html = 
+          // --- BAR FILTER (BULAN & RENTANG TANGGAL) ---
+          '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">' +
+            '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
+              '<div>' +
+                '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Filter Periode Transaksi OPR</h4>' +
+                '<p class="text-[11px] text-slate-400">Pilih bulan dan rentang tanggal untuk melihat rekapan jam ' + oprActiveTab + '</p>' +
+              '</div>' +
+              '<div class="flex items-center space-x-2">' +
+                '<select id="oprSelectBulan" onchange="ubahFilterBulanOpr(this.value)" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-dark focus:border-brand-primary">' +
+                  '<option value="ALL"' + (oprActiveFilterBulan === 'ALL' ? ' selected' : '') + '>Semua Bulan</option>';
+                  bulanList.forEach(function(b) {
+                    html += '<option value="' + b + '"' + (oprActiveFilterBulan === b ? ' selected' : '') + '>' + b + '</option>';
+                  });
+        html += '</select>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">' +
+              '<div class="flex items-center space-x-2"><span class="text-slate-400 font-bold text-[11px] w-12">Dari:</span><input type="date" id="oprInputFrom" value="' + oprActiveDateFrom + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono"></div>' +
+              '<div class="flex items-center space-x-2"><span class="text-slate-400 font-bold text-[11px] w-12">Sampai:</span><input type="date" id="oprInputTo" value="' + oprActiveDateTo + '" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono"></div>' +
+              '<div class="flex items-center space-x-2">' +
+                '<button onclick="terapkanFilterRentangOpr()" class="flex-1 py-1.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all"><i class="fa-solid fa-filter mr-1"></i>Terapkan</button>' +
+                '<button onclick="resetFilterRentangOpr()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition-all">Reset</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        // --- KOTAK RESUME BERWARNA-WARNI GRADIEN ---
+        if (!isAC) {
+          // RESUME ROLE TOKO (4 KOTAK)
+          var totSales = 0;
+          var totStd = 0;
+          var jamArray = [];
+
+          sortedRows.forEach(function(r) {
+            totSales += parseAngkaIndo(r['SALES']);
+            totStd += parseAngkaIndo(r['STD']);
+            if (r['JAM_TRANSAKSI']) jamArray.push(r['JAM_TRANSAKSI']);
+          });
+
+          var avgApc = totStd > 0 ? Math.round(totSales / totStd) : 0;
+          var avgJam = hitungRataRataJam(jamArray);
+
+          html += 
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center">' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col justify-between">' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider text-amber-100">Rata-rata Jam</span>' +
+                '<span class="text-xl font-black font-mono tracking-tight mt-1">' + avgJam + '</span>' +
+                '<span class="text-[9px] text-amber-100 mt-1">Waktu Transaksi</span>' +
+              '</div>' +
+
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Total Sales</span>' +
+                '<span class="text-lg md:text-xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totSales).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-[9px] text-emerald-200 mt-1">Rekap ' + oprActiveTab + '</span>' +
+              '</div>' +
+
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between">' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Total STD</span>' +
+                '<span class="text-xl font-black font-mono tracking-tight mt-1">' + Math.round(totStd).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-[9px] text-blue-200 mt-1">Struk Transaksi</span>' +
+              '</div>' +
+
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white flex flex-col justify-between">' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider text-purple-200">Average APC</span>' +
+                '<span class="text-lg md:text-xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(avgApc).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-[9px] text-purple-200 mt-1">Sales / STD</span>' +
+              '</div>' +
+            '</div>';
+
+          // TABEL RIWAYAT TOKO
+          html += renderTabelRiwayatOprToko(sortedRows);
+
+        } else {
+          // RESUME KHUSUS ROLE AC (2 TINGKAT KOTAK RESUME)
+          var uniqueStores = {};
+          var totSalesArea = 0;
+          var totStdArea = 0;
+          var jamArrayArea = [];
+
+          sortedRows.forEach(function(r) {
+            uniqueStores[r['KODE']] = true;
+            totSalesArea += parseAngkaIndo(r['SALES']);
+            totStdArea += parseAngkaIndo(r['STD']);
+            if (r['JAM_TRANSAKSI']) jamArrayArea.push(r['JAM_TRANSAKSI']);
+          });
+
+          var allUsers = JSON.parse(localStorage.getItem('kacida_cache_Master_User') || '{}').data || [];
+          var totTokoBinaan = allUsers.filter(function(u){ return u['KODE'] && u['KODE'] !== 'AC'; }).length;
+          var totTokoInput = Object.keys(uniqueStores).length;
+          var avgApcArea = totStdArea > 0 ? Math.round(totSalesArea / totStdArea) : 0;
+          var avgJamArea = hitungRataRataJam(jamArrayArea);
+
+          // Hitung Komparasi 2 Shift (06:07 vs 22:23)
+          var p06 = allRows.filter(function(r){ return String(r['JAM_TAB']).trim() === '06:07'; });
+          var p22 = allRows.filter(function(r){ return String(r['JAM_TAB']).trim() === '22:23'; });
+
+          var stores06 = {}; var sales06 = 0;
+          p06.forEach(function(r){ stores06[r['KODE']] = true; sales06 += parseAngkaIndo(r['SALES']); });
+
+          var stores22 = {}; var sales22 = 0;
+          p22.forEach(function(r){ stores22[r['KODE']] = true; sales22 += parseAngkaIndo(r['SALES']); });
+
+          // Kotak Resume Tingkat 1 (Konsolidasi Area)
+          html += 
+            '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs text-center">' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-xl font-black font-mono mt-1">' + totTokoBinaan + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Area Binaan</span></div>' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-emerald-200 uppercase">Toko Sudah Input</span><span class="text-xl font-black font-mono mt-1">' + totTokoInput + ' Toko</span><span class="text-[9px] text-emerald-200 mt-1">Input ' + oprActiveTab + '</span></div>' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-blue-200 uppercase">Total Sales Area</span><span class="text-base md:text-lg font-black font-mono mt-1">Rp ' + Math.round(totSalesArea).toLocaleString('id-ID') + '</span><span class="text-[9px] text-blue-200 mt-1">Rekap ' + oprActiveTab + '</span></div>' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-purple-200 uppercase">Average STD Area</span><span class="text-xl font-black font-mono mt-1">' + Math.round(totStdArea).toLocaleString('id-ID') + '</span><span class="text-[9px] text-purple-200 mt-1">Rata-rata Transaksi</span></div>' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-teal-700 to-emerald-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-teal-200 uppercase">Average APC Area</span><span class="text-base md:text-lg font-black font-mono mt-1">Rp ' + Math.round(avgApcArea).toLocaleString('id-ID') + '</span><span class="text-[9px] text-teal-200 mt-1">Nilai Belanja</span></div>' +
+              '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-amber-200 uppercase">Rata-rata Jam</span><span class="text-xl font-black font-mono mt-1">' + avgJamArea + '</span><span class="text-[9px] text-amber-200 mt-1">Waktu Transaksi</span></div>' +
+            '</div>' +
+
+            // Kotak Resume Tingkat 2 (Komparasi 2 Shift OPR)
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center pt-1">' +
+              '<div class="p-3 rounded-2xl border bg-amber-50 border-amber-200 text-amber-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-amber-700 block">Toko Jam 06:07</span><span class="text-lg font-black font-mono mt-0.5 block">' + Object.keys(stores06).length + ' Toko</span></div>' +
+              '<div class="p-3 rounded-2xl border bg-indigo-50 border-indigo-200 text-indigo-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-indigo-700 block">Toko Jam 22:23</span><span class="text-lg font-black font-mono mt-0.5 block">' + Object.keys(stores22).length + ' Toko</span></div>' +
+              '<div class="p-3 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-emerald-700 block">Sales Jam 06:07</span><span class="text-sm md:text-base font-black font-mono mt-0.5 block">Rp ' + Math.round(sales06).toLocaleString('id-ID') + '</span></div>' +
+              '<div class="p-3 rounded-2xl border bg-purple-50 border-purple-200 text-purple-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-purple-700 block">Sales Jam 22:23</span><span class="text-sm md:text-base font-black font-mono mt-0.5 block">Rp ' + Math.round(sales22).toLocaleString('id-ID') + '</span></div>' +
+            '</div>';
+
+          // AKORDION TOKO BINAAN (ROLE AC)
+          html += renderAccordionOprPerTokoAC(sortedRows);
+        }
+
+        container.innerHTML = html;
       });
     }
 
-    function hitungApcOprOtomatis() {
-      var sales = Number(document.getElementById('oprInputSales').value || 0);
-      var std = Number(document.getElementById('oprInputStd').value || 0);
-      var apc = (std > 0) ? Math.round(sales / std) : 0;
-      document.getElementById('oprInputApc').value = apc;
+    // --- TABEL RIWAYAT OPR TOKO (WARNA-WARNI HARI & AKSI EDIT/HAPUS) ---
+    function renderTabelRiwayatOprToko(rows) {
+      var html = 
+        '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Riwayat OPR Jam ' + oprActiveTab + '</h4>' +
+            '<span class="text-[10px] text-slate-400 font-semibold font-mono">Total: ' + rows.length + ' Data</span>' +
+          '</div>' +
+          '<div class="overflow-x-auto text-xs">' +
+            '<table class="w-full text-center divide-y divide-slate-100">' +
+              '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                '<th class="p-2.5 text-left">Tanggal</th>' +
+                '<th class="p-2.5 text-center">Jam</th>' +
+                '<th class="p-2.5 text-center">Sales (Rp)</th>' +
+                '<th class="p-2.5 text-center">STD</th>' +
+                '<th class="p-2.5 text-center">APC</th>' +
+                '<th class="p-2.5 text-center">E-Trans</th>' +
+                '<th class="p-2.5 text-center">Aksi</th>' +
+              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      if (rows.length === 0) {
+        html += '<tr><td colspan="7" class="p-6 text-center text-slate-400 italic">Belum ada data inputan OPR pada periode ini. Tekan tombol + untuk mencatat.</td></tr>';
+      }
+
+      rows.forEach(function(row) {
+        var d = parseDateIndo(row['TANGGAL_INPUT'] || row['TANGGAL']);
+        var dayOfWeek = d.getDay();
+
+        // Pewarnaan Menarik Sesuai Hari
+        var rowBgClass = 'hover:bg-slate-50/80';
+        var dayBadge = '';
+        if (dayOfWeek === 5) {
+          rowBgClass = 'bg-blue-50/40 hover:bg-blue-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-black">JUM</span>';
+        } else if (dayOfWeek === 6) {
+          rowBgClass = 'bg-amber-50/40 hover:bg-amber-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-black">SAB</span>';
+        } else if (dayOfWeek === 0) {
+          rowBgClass = 'bg-red-50/40 hover:bg-red-50/70';
+          dayBadge = '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] bg-red-100 text-red-800 font-black">MIN</span>';
+        }
+
+        html += '<tr class="transition-colors ' + rowBgClass + '">' +
+          '<td class="p-2.5 text-left font-mono font-bold text-slate-800 whitespace-nowrap">' + formatTanggalTampilan(row['TANGGAL_INPUT'] || row['TANGGAL']) + dayBadge + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-bold text-brand-dark"><i class="fa-solid fa-clock text-[10px] mr-1 text-slate-400"></i>' + (row['JAM_TRANSAKSI'] || '-') + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-black text-slate-900">Rp ' + Math.round(parseAngkaIndo(row['SALES'])).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-600">' + parseAngkaIndo(row['STD']) + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-bold text-emerald-700">Rp ' + Math.round(parseAngkaIndo(row['APC'])).toLocaleString('id-ID') + '</td>' +
+          '<td class="p-2.5 text-center font-mono text-slate-600">' + (row['QTY_ETRANS'] || 0) + '</td>' +
+          '<td class="p-2.5 text-center space-x-1 whitespace-nowrap">' +
+            '<button onclick="bukaModalEditOpr(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
+            '<button onclick="hapusRowUniversal(\'Monitoring_Sales_OPR\', \'' + row['ID'] + '\', renderSubTabOprContent)" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
+          '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div>';
+      return html;
     }
 
-    function submitDataOpr() {
+    // --- AKORDION OPR GROUPED BY TOKO (ROLE AC) ---
+    function renderAccordionOprPerTokoAC(rows) {
+      var storeGroups = {};
+      rows.forEach(function(r) {
+        var k = String(r['KODE'] || '').toUpperCase().trim();
+        if (!storeGroups[k]) {
+          storeGroups[k] = {
+            kode: k,
+            items: []
+          };
+        }
+        storeGroups[k].items.push(r);
+      });
+
+      var storeList = Object.values(storeGroups);
+      var html = '<div class="space-y-3 pt-2">' +
+        '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian OPR per Toko Binaan (AC Area)</h4>';
+
+      if (storeList.length === 0) {
+        html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Belum ada data inputan OPR area pada periode ini.</div>';
+      }
+
+      storeList.forEach(function(grp, idx) {
+        var accId = 'accOprAcStore_' + idx;
+        var totS = 0;
+        var jamArr = [];
+        grp.items.forEach(function(i) {
+          totS += parseAngkaIndo(i['SALES']);
+          if (i['JAM_TRANSAKSI']) jamArr.push(i['JAM_TRANSAKSI']);
+        });
+
+        var avgJamToko = hitungRataRataJam(jamArr);
+
+        html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-white border border-slate-200 text-slate-800 rounded">' + grp.kode + '</span>' +
+              '<h5 class="text-xs font-black text-slate-800">Toko ' + grp.kode + '</h5>' +
+            '</div>' +
+            '<div class="flex items-center space-x-2 sm:space-x-4 text-xs font-mono">' +
+              '<span class="text-slate-500 hidden sm:inline">Rata Jam: <b>' + avgJamToko + '</b></span>' +
+              '<span class="text-emerald-800 font-bold">Total: Rp ' + Math.round(totS).toLocaleString('id-ID') + '</span>' +
+              '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="' + accId + '" class="hidden p-3.5 border-t border-slate-100 space-y-2 bg-white text-xs">' +
+            '<div class="overflow-x-auto">' +
+              '<table class="w-full text-center divide-y divide-slate-100">' +
+                '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
+                  '<th class="p-2 text-left">Tanggal</th><th class="p-2">Jam</th><th class="p-2">Sales</th><th class="p-2">STD</th><th class="p-2">APC</th><th class="p-2">E-Trans</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+        grp.items.forEach(function(item) {
+          html += '<tr>' +
+            '<td class="p-2 text-left font-mono font-bold text-slate-700">' + formatTanggalTampilan(item['TANGGAL_INPUT'] || item['TANGGAL']) + '</td>' +
+            '<td class="p-2 font-mono font-bold text-brand-dark">' + (item['JAM_TRANSAKSI'] || '-') + '</td>' +
+            '<td class="p-2 font-mono font-bold text-slate-900">Rp ' + Math.round(parseAngkaIndo(item['SALES'])).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2 font-mono text-slate-600">' + parseAngkaIndo(item['STD']) + '</td>' +
+            '<td class="p-2 font-mono font-bold text-emerald-700">Rp ' + Math.round(parseAngkaIndo(item['APC'])).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2 font-mono text-slate-600">' + (item['QTY_ETRANS'] || 0) + '</td>' +
+          '</tr>';
+        });
+
+        html += '</tbody></table></div></div></div>';
+      });
+
+      html += '</div>';
+      return html;
+    }
+
+    // ==================== MODAL FORM INPUT OPR (FAB + MELAYANG) ====================
+    function bukaModalInputOpr() {
+      var existing = document.getElementById('modalFormInputOprWrapper');
+      if (existing) existing.remove();
+
+      var defaultJam = oprActiveTab === '06:07' ? '06:30' : '22:30';
+
+      var modal = document.createElement('div');
+      modal.id = 'modalFormInputOprWrapper';
+      modal.className = 'fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-clock text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Input Data OPR: Jam ' + oprActiveTab + '</h3>' +
+                '<p class="text-[10px] text-emerald-200">Pencatatan Penjualan & Transaksi Toko</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalInputOpr()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="p-4 md:p-5 space-y-3.5 text-xs bg-slate-50">' +
+            '<div class="grid grid-cols-2 gap-3">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Jam Transaksi (HH:MM)</label>' +
+                '<input type="time" id="mOprJam" value="' + defaultJam + '" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-center font-bold text-sm">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Sales (Rp)</label>' +
+                '<input type="number" id="mOprSales" oninput="hitungApcOprOtomatisModal()" placeholder="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono font-bold">' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="grid grid-cols-3 gap-2">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-0.5">STD (Struk)</label>' +
+                '<input type="number" id="mOprStd" oninput="hitungApcOprOtomatisModal()" placeholder="0" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl font-mono text-center font-bold">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-0.5">APC (Auto)</label>' +
+                '<input type="number" id="mOprApc" readonly placeholder="0" class="w-full px-2.5 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono text-center font-extrabold text-brand-dark">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-0.5">Qty E-Trans</label>' +
+                '<input type="number" id="mOprEtrans" value="0" placeholder="0" class="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl font-mono text-center font-bold">' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-end space-x-2">' +
+            '<button onclick="tutupModalInputOpr()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Batal</button>' +
+            '<button onclick="simpanDataOprModal()" class="px-6 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-save"></i><span>Simpan Data OPR</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+    }
+
+    function tutupModalInputOpr() {
+      var modal = document.getElementById('modalFormInputOprWrapper');
+      if (modal) modal.remove();
+    }
+
+    function hitungApcOprOtomatisModal() {
+      var sales = Number(document.getElementById('mOprSales').value || 0);
+      var std = Number(document.getElementById('mOprStd').value || 0);
+      var apc = (std > 0) ? Math.round(sales / std) : 0;
+      document.getElementById('mOprApc').value = apc;
+    }
+
+    function simpanDataOprModal() {
+      var jam = document.getElementById('mOprJam').value || (oprActiveTab === '06:07' ? '06:30' : '22:30');
+      var sales = Number(document.getElementById('mOprSales').value || 0);
+      var std = Number(document.getElementById('mOprStd').value || 0);
+      var apc = Number(document.getElementById('mOprApc').value || 0);
+      var etrans = Number(document.getElementById('mOprEtrans').value || 0);
+
+      if (sales <= 0 || std <= 0) {
+        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Nominal Sales dan Jumlah STD harus diisi lebih dari 0.' });
+        return;
+      }
+
       var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var now = new Date();
+      var tglStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+
       var payload = {
         subAction: 'SAVE',
-        kode: cfg.cleanCode || '',
-        jamTab: window.currentTabOpr || '06:07',
-        jamTransaksi: document.getElementById('oprInputJam').value || '06:30',
-        sales: Number(document.getElementById('oprInputSales').value || 0),
-        std: Number(document.getElementById('oprInputStd').value || 0),
-        apc: Number(document.getElementById('oprInputApc').value || 0),
-        qtyEtrans: Number(document.getElementById('oprInputEtrans').value || 0),
+        kode: myCode,
+        tanggalInput: tglStr,
+        jamTab: oprActiveTab,
+        jamTransaksi: jam,
+        sales: sales,
+        std: std,
+        apc: apc,
+        qtyEtrans: etrans,
         nik: currentSessionUser ? currentSessionUser.nik : '',
         nama: currentSessionUser ? currentSessionUser.nama : ''
       };
@@ -7694,14 +8147,89 @@
       Swal.fire({ title: 'Menyimpan OPR...', didOpen: function() { Swal.showLoading(); } });
       kirimBackendRequest('CRUD_SALES_OPR', payload, function() {
         Swal.close();
+        tutupModalInputOpr();
         Swal.fire({ icon: 'success', title: 'Data OPR Berhasil Dicatat', timer: 1200, showConfirmButton: false });
         muatDataSheetLazy('Monitoring_Sales_OPR', true, function() {
-          renderSubTabOprContent(window.currentTabOpr);
+          renderSubTabOprContent();
+          renderDataBerandaDariCache();
         });
       }, function(err) {
         Swal.close();
-        Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
+        Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });
       });
+    }
+
+    // ==================== MODAL EDIT OPR ====================
+    function bukaModalEditOpr(item) {
+      Swal.fire({
+        title: 'Edit Data OPR',
+        html: 
+          '<div class="text-left text-xs space-y-2.5 text-slate-700 my-2">' +
+            '<div><label class="block font-bold mb-1">Jam Transaksi (HH:MM)</label><input type="time" id="editOprJam" value="' + (item['JAM_TRANSAKSI'] || '06:30') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-center font-bold"></div>' +
+            '<div><label class="block font-bold mb-1">Sales (Rp)</label><input type="number" id="editOprSales" value="' + parseAngkaIndo(item['SALES']) + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold"></div>' +
+            '<div class="grid grid-cols-2 gap-2">' +
+              '<div><label class="block font-bold mb-1">STD (Struk)</label><input type="number" id="editOprStd" value="' + parseAngkaIndo(item['STD']) + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-center font-bold"></div>' +
+              '<div><label class="block font-bold mb-1">Qty E-Trans</label><input type="number" id="editOprEtrans" value="' + (item['QTY_ETRANS'] || 0) + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-center font-bold"></div>' +
+            '</div>' +
+          '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Perubahan',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          var jm = document.getElementById('editOprJam').value;
+          var sls = Number(document.getElementById('editOprSales').value || 0);
+          var st = Number(document.getElementById('editOprStd').value || 0);
+          var et = Number(document.getElementById('editOprEtrans').value || 0);
+          var ap = st > 0 ? Math.round(sls / st) : 0;
+          return {
+            jamTransaksi: jm,
+            sales: sls,
+            std: st,
+            apc: ap,
+            qtyEtrans: et
+          };
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan...', didOpen: function() { Swal.showLoading(); } });
+
+          var payload = res.value;
+          payload.subAction = 'EDIT';
+          payload.id = item['ID'];
+
+          kirimBackendRequest('CRUD_SALES_OPR', payload, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Data OPR Diperbarui', timer: 1000, showConfirmButton: false });
+            muatDataSheetLazy('Monitoring_Sales_OPR', true, function() {
+              renderSubTabOprContent();
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal Edit', text: err.toString() });
+          });
+        }
+      });
+    }
+
+    // --- HANDLER FILTER OPR ---
+    function ubahFilterBulanOpr(val) {
+      oprActiveFilterBulan = val;
+      renderSubTabOprContent();
+    }
+
+    function terapkanFilterRentangOpr() {
+      oprActiveDateFrom = document.getElementById('oprInputFrom').value;
+      oprActiveDateTo = document.getElementById('oprInputTo').value;
+      renderSubTabOprContent();
+    }
+
+    function resetFilterRentangOpr() {
+      oprActiveDateFrom = '';
+      oprActiveDateTo = '';
+      document.getElementById('oprInputFrom').value = '';
+      document.getElementById('oprInputTo').value = '';
+      renderSubTabOprContent();
     }
 
     // ==================== [14] MODUL MONITORING KWH LENGKAP (STAFF, COS & AC) ====================

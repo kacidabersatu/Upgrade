@@ -5999,10 +5999,17 @@
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Ya, Hapus'
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
       }).then(function(res) {
         if (res.isConfirmed) {
-          kirimBackendRequest('CRUD_' + namaSheet.toUpperCase(), { subAction: 'DELETE', id: rowId }, function() {
+          // Petakan nama aksi agar cocok dengan router backend
+          var actionKey = 'CRUD_' + namaSheet.toUpperCase();
+          if (namaSheet === 'Monitoring_KWH') {
+            actionKey = 'CRUD_KWH';
+          }
+
+          kirimBackendRequest(actionKey, { subAction: 'DELETE', id: rowId }, function() {
             Swal.fire({ icon: 'success', title: 'Data Dihapus', timer: 1000, showConfirmButton: false });
             muatDataSheetLazy(namaSheet, true, function() {
               if (callbackReload) callbackReload();
@@ -7753,7 +7760,7 @@
       renderSubTabKwhContent();
     }
 
-    // --- RENDER ISI KONTEN MONITORING KWH ---
+    // --- RENDER ISI KONTEN MONITORING KWH DENGAN VALIDASI SETTING TOKO ---
     function renderSubTabKwhContent() {
       var container = document.getElementById('kwhDynamicContentArea');
       if (!container) return;
@@ -7764,19 +7771,17 @@
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
       muatDataSheetLazy('Monitoring_KWH', false, function(allRows) {
-        // Ambil data setting aktif toko
-        var settingActive = allRows.filter(function(r) {
+        // Ambil data setting aktif toko ini
+        var settingActive = allRows.find(function(r) {
           return r['TIPE_DATA'] === 'SETTING' && 
                  String(r['STATUS']).toUpperCase() === 'AKTIF' && 
                  String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
-        })[0] || { JENIS_KWH: 'PREPAID', TARIF_PER_KWH: 1576 };
+        });
 
-        kwhActiveSettingData = settingActive;
+        kwhActiveSettingData = settingActive || null;
 
-        // Ambil data input
         var inputRows = allRows.filter(function(r) { return r['TIPE_DATA'] === 'INPUT'; });
 
-        // Filter toko jika bukan AC
         var storeFiltered = isAC ? inputRows : inputRows.filter(function(r) {
           return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
         });
@@ -7814,8 +7819,29 @@
 
         var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
 
-        var html = 
-          // --- BAR FILTER (BULAN & RENTANG TANGGAL) ---
+        var html = '';
+
+        // BANNER PERINGATAN JIKA BELUM ADA PERSONIL YANG SETTING
+        if (!isAC && !kwhActiveSettingData) {
+          html += 
+            '<div class="p-4 bg-amber-50 rounded-2xl border border-amber-300 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
+              '<div class="flex items-center space-x-3">' +
+                '<div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg flex-shrink-0">' +
+                  '<i class="fa-solid fa-gear animate-spin"></i>' +
+                '</div>' +
+                '<div>' +
+                  '<h4 class="text-xs font-black text-amber-950 uppercase">Sistem KWH Belum Dikonfigurasi</h4>' +
+                  '<p class="text-[11px] text-amber-800">Harap setting jenis listrik & tarif toko terlebih dahulu sebelum melakukan pencatatan harian.</p>' +
+                '</div>' +
+              '</div>' +
+              '<button onclick="bukaModalSettingKwh()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm whitespace-nowrap">' +
+                '<i class="fa-solid fa-wrench mr-1"></i>Atur Sekarang' +
+              '</button>' +
+            '</div>';
+        }
+
+        // BAR FILTER (BULAN & RENTANG TANGGAL)
+        html += 
           '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">' +
             '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
               '<div>' +
@@ -7842,9 +7868,8 @@
             '</div>' +
           '</div>';
 
-        // --- KOTAK RESUME BERWARNA-WARNI GRADIEN ---
+        // KOTAK RESUME TOKO
         if (!isAC) {
-          // RESUME ROLE TOKO
           var totPakai = 0;
           var totRupiah = 0;
           var countHari = sortedRows.length;
@@ -7857,28 +7882,25 @@
           var avgPakai = countHari > 0 ? (totPakai / countHari) : 0;
           var avgRupiah = countHari > 0 ? (totRupiah / countHari) : 0;
 
-          // Perhitungan Saldo Akhir Rupiah Khusus PREPAID
-          var isPrepaid = (String(settingActive['JENIS_KWH'] || '').toUpperCase().indexOf('PREPAID') !== -1);
-          var tarif = Number(settingActive['TARIF_PER_KWH'] || 1576);
+          var isPrepaid = kwhActiveSettingData && (String(kwhActiveSettingData['JENIS_KWH']).toUpperCase().indexOf('PREPAID') !== -1);
+          var tarif = kwhActiveSettingData ? Number(kwhActiveSettingData['TARIF_PER_KWH'] || 1576) : 1576;
           var kwhAkhirTerakhir = sortedRows.length > 0 ? parseAngkaIndo(sortedRows[0]['KWH_AKHIR']) : 0;
           var saldoAkhirPrepaidRp = kwhAkhirTerakhir * tarif;
 
           html += '<div class="grid grid-cols-2 ' + (isPrepaid ? 'sm:grid-cols-4' : 'sm:grid-cols-3') + ' gap-2.5 text-xs text-center">' +
-            // 1. Rata-rata Pemakaian kWh
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Rata-rata kWh / Hari</span>' +
               '<span class="text-xl font-black font-mono tracking-tight mt-1">' + avgPakai.toFixed(1).replace('.', ',') + ' kWh</span>' +
               '<span class="text-[9px] text-emerald-200 mt-1">' + countHari + ' Hari Pencatatan</span>' +
             '</div>' +
 
-            // 2. Rata-rata Biaya Rupiah
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between">' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Rata-rata Biaya / Hari</span>' +
               '<span class="text-lg md:text-xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(avgRupiah).toLocaleString('id-ID') + '</span>' +
               '<span class="text-[9px] text-blue-200 mt-1">Tarif Rp ' + tarif + '/kWh</span>' +
             '</div>' +
 
-            // 3. Saldo Akhir Token (KHUSUS PREPAID)
+            // KOTAK SALDO AKHIR HANYA MUNCUL JIKA PREPAID
             (isPrepaid ? 
               '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-amber-500 to-yellow-600 text-slate-900 flex flex-col justify-between">' +
                 '<span class="text-[10px] font-black uppercase tracking-wider text-amber-950">Estimasi Saldo Token</span>' +
@@ -7886,7 +7908,6 @@
                 '<span class="text-[9px] text-amber-950 font-bold mt-1">Sisa ' + kwhAkhirTerakhir + ' kWh</span>' +
               '</div>' : '') +
 
-            // 4. Total Pemakaian
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-slate-900 text-white flex flex-col justify-between">' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">Total Biaya Listrik</span>' +
               '<span class="text-lg md:text-xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totRupiah).toLocaleString('id-ID') + '</span>' +
@@ -7894,7 +7915,6 @@
             '</div>' +
           '</div>';
 
-          // --- TABEL RIWAYAT HARIAN TOKO ---
           html += renderTabelKwhToko(sortedRows, avgPakai);
 
         } else {
@@ -7915,7 +7935,6 @@
           var totAreaPakai = 0;
           var totAreaRp = 0;
 
-          // Cek setting jenis KWH seluruh toko
           var settingsMap = {};
           allRows.filter(function(r){ return r['TIPE_DATA'] === 'SETTING' && String(r['STATUS']).toUpperCase() === 'AKTIF'; }).forEach(function(s){
             var sk = String(s['KODE'] || '').toUpperCase().trim();
@@ -7949,7 +7968,6 @@
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-teal-700 to-emerald-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-teal-200 uppercase">Rata-rata Biaya Area</span><span class="text-base font-black font-mono mt-1">Rp ' + Math.round(avgRpArea).toLocaleString('id-ID') + '</span><span class="text-[9px] text-teal-200 mt-1">Biaya per Hari</span></div>' +
           '</div>';
 
-          // --- AKORDION KWH GROUPED BY TOKO (ROLE AC) ---
           html += renderAccordionKwhPerTokoAC(sortedRows, settingsMap);
         }
 
@@ -8085,8 +8103,37 @@
       return html;
     }
 
-    // ==================== MODAL KONFIGURASI KWH (GERIGI) ====================
+    // ==================== MODAL KONFIGURASI KWH (GERIGI DENGAN KONFIRMASI) ====================
     function bukaModalSettingKwh() {
+      // Jika toko sudah pernah disetting, minta konfirmasi setting ulang
+      if (kwhActiveSettingData) {
+        var namaPersonil = kwhActiveSettingData['NAMA'] || 'Personil Toko';
+        var jns = kwhActiveSettingData['JENIS_KWH'] || 'PREPAID';
+        var trf = kwhActiveSettingData['TARIF_PER_KWH'] || 1576;
+
+        Swal.fire({
+          title: 'Konfirmasi Setting Ulang KWH',
+          html: 'Jenis dan tarif listrik sudah disetting oleh personil <b>' + namaPersonil + '</b><br>' +
+                '<span class="text-xs text-slate-500">(' + jns + ' - Rp ' + trf + '/kWh)</span>.<br><br>' +
+                'Yakin ingin setting ulang?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#059669',
+          cancelButtonColor: '#94a3b8',
+          confirmButtonText: 'Ya, Setting Ulang',
+          cancelButtonText: 'Batal'
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            tampilkanFormModalSettingKwh();
+          }
+        });
+      } else {
+        // Jika belum pernah disetting, langsung buka form
+        tampilkanFormModalSettingKwh();
+      }
+    }
+
+    function tampilkanFormModalSettingKwh() {
       var setting = kwhActiveSettingData || { JENIS_KWH: 'PREPAID', TARIF_PER_KWH: 1576 };
 
       Swal.fire({
@@ -8146,13 +8193,32 @@
       });
     }
 
-    // ==================== MODAL FORM INPUT KWH (FAB + & VALIDASI ANTI-INPUT GANDA) ====================
+    // ==================== FORM INPUT KWH (KUNCI JIKA BELUM SETTING & ANTI INPUT GANDA) ====================
     function bukaModalFormInputKwh() {
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
       var todayStr = formatTanggalTampilan(new Date());
 
-      // VALIDASI: Cek apakah hari ini sudah ada inputan KWH
+      // 1. KUNCI INPUT JIKA BELUM DISIKAT/SETTING OLEH SALAH SATU PERSONIL
+      if (!kwhActiveSettingData) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sistem KWH Belum Dikonfigurasi',
+          html: 'Jenis listrik dan tarif per kWh untuk toko <b>' + myCode + '</b> belum disetting oleh personil toko.<br><br>' +
+                'Harap lakukan setting terlebih dahulu melalui tombol <b>Gerigi (⚙️)</b> di pojok kanan atas sebelum mencatat harian.',
+          confirmButtonText: '<i class="fa-solid fa-gear mr-1"></i> Setting Sekarang',
+          confirmButtonColor: '#059669',
+          showCancelButton: true,
+          cancelButtonText: 'Tutup'
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            bukaModalSettingKwh();
+          }
+        });
+        return;
+      }
+
+      // 2. CEK ANTI-INPUT GANDA HARI INI
       var cached = localStorage.getItem('kacida_cache_Monitoring_KWH');
       if (cached) {
         try {
@@ -8180,7 +8246,7 @@
       var existing = document.getElementById('modalFormInputKwhWrapper');
       if (existing) existing.remove();
 
-      var setting = kwhActiveSettingData || { JENIS_KWH: 'PREPAID', TARIF_PER_KWH: 1576 };
+      var setting = kwhActiveSettingData;
       var isPrepaid = (String(setting['JENIS_KWH']).toUpperCase().indexOf('PREPAID') !== -1);
       var tarif = Number(setting['TARIF_PER_KWH'] || 1576);
 

@@ -1782,6 +1782,9 @@
 
       // 3. Logika Khusus Monitoring KWH (Muncul badge jika hari ini BELUM input)
       if (norm.indexOf('KWH') !== -1) {
+        // KHUSUS ROLE AC: JANGAN TAMPILKAN BADGE KARENA AC TIDAK MELAKUKAN INPUT
+        if (isAC) return 0;
+
         var kwhCache = localStorage.getItem('kacida_cache_Monitoring_KWH');
         if (kwhCache) {
           try {
@@ -1796,7 +1799,6 @@
                      formatTanggalTampilan(r['TANGGAL']) === todayStr;
             });
 
-            // Jika belum ada input hari ini, munculkan badge 1
             if (!sudahInputKwhHariIni) {
               count++;
             }
@@ -8697,18 +8699,37 @@
       return html;
     }
 
-    // --- AKORDION KWH GROUPED BY TOKO (ROLE AC) ---
+    // --- AKORDION KWH GROUPED BY TOKO (ROLE AC DENGAN NAMA TOKO ASLI & IKON OVER) ---
     function renderAccordionKwhPerTokoAC(rows, settingsMap) {
+      // 1. Ambil Peta Nama Toko Asli dari Master_User
+      var storeNameMap = {};
+      var masterUserCache = localStorage.getItem('kacida_cache_Master_User');
+      if (masterUserCache) {
+        try {
+          var mUsers = JSON.parse(masterUserCache).data || [];
+          mUsers.forEach(function(u) {
+            var sc = String(u['KODE'] || '').toUpperCase().trim();
+            if (sc && !storeNameMap[sc]) {
+              storeNameMap[sc] = u['NAMA TOKO'] || u['STORE NAME'] || sc;
+            }
+          });
+        } catch(e) {}
+      }
+
+      // 2. Kelompokkan Data per Toko Binaan
       var storeGroups = {};
       rows.forEach(function(r) {
         var k = String(r['KODE'] || '').toUpperCase().trim();
-        if (!storeGroups[k]) {
-          storeGroups[k] = {
-            kode: k,
-            items: []
-          };
+        if (k && k !== 'AC') {
+          if (!storeGroups[k]) {
+            storeGroups[k] = {
+              kode: k,
+              namaToko: storeNameMap[k] || k, // Nama Toko Asli (bukan Toko 2J16)
+              items: []
+            };
+          }
+          storeGroups[k].items.push(r);
         }
-        storeGroups[k].items.push(r);
       });
 
       var storeList = Object.values(storeGroups);
@@ -8722,7 +8743,7 @@
       storeList.forEach(function(grp, idx) {
         var accId = 'accKwhAcStore_' + idx;
         var jns = settingsMap[grp.kode] || (grp.items[0] ? grp.items[0]['JENIS_KWH'] : 'PREPAID');
-        var isPre = (jns.toUpperCase().indexOf('PREPAID') !== -1);
+        var isPre = (String(jns).toUpperCase().indexOf('PREPAID') !== -1);
 
         var totP = 0;
         var totR = 0;
@@ -8732,37 +8753,52 @@
         });
 
         var avgP = grp.items.length > 0 ? (totP / grp.items.length) : 0;
-        var avgR = grp.items.length > 0 ? (totR / grp.items.length) : 0;
 
+        // HEADER AKORDION: Kode Toko + Jenis (Prepaid/Postpaid) + Nama Toko + Rata kWh + Total Rp + SHOW/HIDE
         html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
           '<div class="p-3.5 ' + (isPre ? 'bg-blue-50/50' : 'bg-purple-50/50') + ' flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
-            '<div class="flex items-center space-x-2.5">' +
-              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-white border border-slate-200 text-slate-800 rounded">' + grp.kode + '</span>' +
-              '<span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isPre ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') + '">' + jns + '</span>' +
-              '<h5 class="text-xs font-black text-slate-800">Toko ' + grp.kode + '</h5>' +
+            '<div class="flex items-center space-x-2 overflow-hidden pr-2">' +
+              '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-white border border-slate-200 text-slate-800 rounded shrink-0">' + grp.kode + '</span>' +
+              '<span class="px-2 py-0.5 rounded text-[10px] font-black shrink-0 ' + (isPre ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') + '">' + jns + '</span>' +
+              '<h5 class="text-xs font-black text-slate-800 truncate">' + grp.namaToko + '</h5>' +
             '</div>' +
-            '<div class="flex items-center space-x-2 sm:space-x-4 text-xs font-mono">' +
-              '<span class="text-slate-600 hidden sm:inline">Rata: <b>' + avgP.toFixed(1).replace('.', ',') + ' kWh/h</b></span>' +
-              '<span class="text-emerald-800 font-bold">Rp ' + Math.round(avgR).toLocaleString('id-ID') + '/h</span>' +
+            '<div class="flex items-center space-x-2 sm:space-x-3 text-xs font-mono shrink-0">' +
+              '<span class="text-slate-600 hidden sm:inline"><i class="fa-solid fa-bolt text-[10px] text-amber-500 mr-1"></i>Rata: <b>' + avgP.toFixed(1).replace('.', ',') + ' kWh/h</b></span>' +
+              '<span class="text-emerald-800 font-bold">Total: Rp ' + Math.round(totR).toLocaleString('id-ID') + '</span>' +
               '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
             '</div>' +
           '</div>' +
 
+          // TABEL SHOW KWH: TANGGAL, AWAL, AKHIR, PAKAI, BIAYA, KETERANGAN (DENGAN IKON PENANDA OVER)
           '<div id="' + accId + '" class="hidden p-3.5 border-t border-slate-100 space-y-2 bg-white text-xs">' +
             '<div class="overflow-x-auto">' +
               '<table class="w-full text-center divide-y divide-slate-100">' +
-                '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
-                  '<th class="p-2 text-left">Tanggal</th><th class="p-2">Awal</th><th class="p-2">Akhir</th><th class="p-2">Pakai</th><th class="p-2">Biaya</th><th class="p-2">Keterangan</th>' +
+                '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400"><tr>' +
+                  '<th class="p-2 text-left">Tanggal</th>' +
+                  '<th class="p-2 text-center">KWH Awal</th>' +
+                  '<th class="p-2 text-center">KWH Akhir</th>' +
+                  '<th class="p-2 text-center">Pemakaian</th>' +
+                  '<th class="p-2 text-center">Biaya Listrik</th>' +
+                  '<th class="p-2 text-center">Keterangan</th>' +
                 '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
 
         grp.items.forEach(function(item) {
+          var itemPakai = parseAngkaIndo(item['JUMLAH_PAKAI']);
+          var rawKet = String(item['KETERANGAN'] || '').toUpperCase();
+          var isOver = rawKet.indexOf('OVER') !== -1 || (itemPakai > avgP && avgP > 0);
+
+          // Ikon Penanda Cerdas pada Kolom Keterangan
+          var badgeKeterangan = isOver
+            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800 border border-red-300 animate-pulse inline-flex items-center"><i class="fa-solid fa-triangle-exclamation text-red-600 mr-1"></i>OVER</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>PERTAHANKAN</span>';
+
           html += '<tr>' +
-            '<td class="p-2 text-left font-mono font-bold text-slate-700">' + formatTanggalTampilan(item['TANGGAL']) + '</td>' +
+            '<td class="p-2 text-left font-mono font-bold text-slate-700 whitespace-nowrap">' + formatTanggalTampilan(item['TANGGAL']) + '</td>' +
             '<td class="p-2 font-mono text-slate-600">' + item['KWH_AWAL'] + '</td>' +
             '<td class="p-2 font-mono text-slate-600">' + item['KWH_AKHIR'] + '</td>' +
-            '<td class="p-2 font-mono font-bold text-slate-900">' + parseAngkaIndo(item['JUMLAH_PAKAI']).toFixed(1).replace('.', ',') + ' kWh</td>' +
+            '<td class="p-2 font-mono font-black text-slate-900">' + itemPakai.toFixed(1).replace('.', ',') + ' kWh</td>' +
             '<td class="p-2 font-mono font-bold text-emerald-700">Rp ' + Math.round(parseAngkaIndo(item['RUPIAH'])).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-[10px]">' + (item['KETERANGAN'] || 'PERTAHANKAN') + '</td>' +
+            '<td class="p-2 text-center">' + badgeKeterangan + '</td>' +
           '</tr>';
         });
 

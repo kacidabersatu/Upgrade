@@ -1717,26 +1717,26 @@
       bukaModalMenuTerpilih(item['Nama Menu']);
     }
     
+    // ==================== HITUNG BADGE NOTIFIKASI MENU (UTUH & BEBAS ERROR) ====================
     function hitungBadgeNotifMenu(menuName) {
-      var norm = menuName.toUpperCase().trim();
+      var norm = String(menuName || '').toUpperCase().trim();
       var count = 0;
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+      var isCos = (userRole === 'CHIEF OF STORE' || userRole === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      // 1. Logika Presisi Menu Ceklis EXP
+      // 1. Ceklis EXP
       if (norm.indexOf('CEKLIS EXP') !== -1) {
         var expCache = localStorage.getItem('kacida_cache_Ceklis_EXP');
         if (expCache) {
           try {
             var items = JSON.parse(expCache).data || [];
-            var cfg = getTokoConfig() || {};
-            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
-            var role = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
-            var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-
             items.forEach(function(it) {
               if (String(it['KODE'] || '').toUpperCase().trim() === myCode) {
-                // Item expired yang sudah jatuh tempo retur dan belum dieksekusi
                 if (it['TIPE_DATA'] === 'ITEM_EXP') {
                   var alertD = parseDateIndo(it['TANGGAL_ALERT']);
                   var isDone = String(it['STATUS'] || '').toUpperCase() === 'TEREKSEKUSI';
@@ -1744,15 +1744,10 @@
                     count++;
                   }
                 }
-
-                // Tugas Rak:
                 if (it['TIPE_DATA'] === 'TUGAS_RAK') {
-                  // Jika Akun COS: Hanya hitung yang BUTUH DISETUJUI (Pending Approval)
                   if (isCos && it['STATUS'] === 'PENDING_APPROVAL') {
                     count++;
-                  }
-                  // Jika Akun Staf (Bukan COS): Hanya hitung rak tugas pribadinya yang BELUM selesai
-                  else if (!isCos && String(it['PENANGGUNG_JAWAB_NIK']).trim() === String(currentSessionUser ? currentSessionUser.nik : '').trim()) {
+                  } else if (!isCos && String(it['PENANGGUNG_JAWAB_NIK']).trim() === String(currentSessionUser ? currentSessionUser.nik : '').trim()) {
                     if (it['STATUS'] === 'BELUM' || it['STATUS'] === 'DITOLAK') {
                       count++;
                     }
@@ -1765,7 +1760,27 @@
         return count;
       }
 
-      // 2. Notifikasi Umum Sheet Notifikasi
+      // 2. Catatan Return (Hitung yang BELUM NAIK)
+      if (norm.indexOf('RETURN') !== -1) {
+        var retCache = localStorage.getItem('kacida_cache_Catatan_Return');
+        if (retCache) {
+          try {
+            var retItems = JSON.parse(retCache).data || [];
+            retItems.forEach(function(r) {
+              var storeCode = String(r['KODE'] || '').toUpperCase().trim();
+              if (isAC || storeCode === myCode) {
+                var status = String(r['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase().trim();
+                if (status !== 'SUDAH NAIK') {
+                  count++;
+                }
+              }
+            });
+          } catch (e) {}
+        }
+        return count;
+      }
+
+      // 3. Notifikasi Umum Sheet Notifikasi
       try {
         var notifCache = localStorage.getItem('kacida_cache_Notifikasi');
         if (!notifCache) return 0;
@@ -1781,29 +1796,6 @@
       }
     }
 
-    // 3. Logika Khusus Catatan Return (Hitung yang BELUM NAIK)
-      if (norm.indexOf('RETURN') !== -1 || norm.indexOf('CATATAN RETURN') !== -1) {
-        var retCache = localStorage.getItem('kacida_cache_Catatan_Return');
-        if (retCache) {
-          try {
-            var retItems = JSON.parse(retCache).data || [];
-            var cfg = getTokoConfig() || {};
-            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
-            var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
-
-            retItems.forEach(function(r) {
-              var storeCode = String(r['KODE'] || '').toUpperCase().trim();
-              if (isAC || storeCode === myCode) {
-                var status = String(r['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase().trim();
-                if (status !== 'SUDAH NAIK') {
-                  count++;
-                }
-              }
-            });
-          } catch(e) {}
-        }
-        return count;
-      }
 
     function dapatkanDefault17MenuList() {
       return [
@@ -2270,7 +2262,7 @@
       document.getElementById('infoTanggalGoToko').innerText = formatTanggalTampilan(sample['TANGGAL GO']);
     }
 
-    // ==================== 6. SISTEM NOTIFIKASI LONCENG TERPUSAT ====================
+    // ==================== RENDER NOTIFIKASI LONCENG (UTUH & BEBAS ERROR) ====================
     function renderNotifikasiLonceng(notifList) {
       var badge = document.getElementById('headerBadgeNotif');
       var container = document.getElementById('listNotifikasiContainer');
@@ -2279,12 +2271,13 @@
       var list = Array.isArray(notifList) ? notifList.slice() : [];
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
-      var role = currentSessionUser ? currentSessionUser.jabatan : '';
-      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+      var isCos = (userRole === 'CHIEF OF STORE' || userRole === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
       var today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // 1. INJEKSI PENGINGAT RAK & ALERT EXPIRED
+      // 1. Injeksi Pengingat Ceklis EXP
       var expCache = localStorage.getItem('kacida_cache_Ceklis_EXP');
       if (expCache) {
         try {
@@ -2296,7 +2289,6 @@
                    (d['STATUS'] === 'BELUM' || d['STATUS'] === 'DITOLAK');
           });
 
-          // Pengingat harian personil jika ada rak belum selesai
           if (userTasks.length > 0) {
             list.unshift({
               notificationId: 'SYS_RAK_PENDING_' + userTasks.length,
@@ -2309,7 +2301,6 @@
             });
           }
 
-          // Notifikasi untuk COS jika ada tugas menunggu persetujuan
           if (isCos) {
             var needApproval = expData.filter(function(d) {
               return d['TIPE_DATA'] === 'TUGAS_RAK' && 
@@ -2329,7 +2320,6 @@
             }
           }
 
-          // Notifikasi jika ada item expired masuk waktu return
           var overdueItems = expData.filter(function(d) {
             return d['TIPE_DATA'] === 'ITEM_EXP' && 
                    String(d['KODE']).toUpperCase().trim() === myCode &&
@@ -2350,7 +2340,8 @@
           }
         } catch (e) {}
       }
-      // Injeksi Pengingat Faktur Return Belum Naik
+
+      // 2. Injeksi Pengingat Catatan Return Belum Naik
       var retCache = localStorage.getItem('kacida_cache_Catatan_Return');
       if (retCache) {
         try {
@@ -2375,17 +2366,23 @@
         } catch (e) {}
       }
 
-      // Hitung total belum dibaca
+      // 3. Render ke DOM Header
       var unreadCount = list.filter(function(n) { return String(n['status']) === 'UNREAD'; }).length;
 
-      if (unreadCount > 0) {
-        badge.classList.remove('hidden');
-        badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
-        labelUnread.innerText = unreadCount + ' Notifikasi Baru';
-      } else {
-        badge.classList.add('hidden');
-        labelUnread.innerText = 'Semua notifikasi telah dibaca';
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.classList.remove('hidden');
+          badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
+        } else {
+          badge.classList.add('hidden');
+        }
       }
+
+      if (labelUnread) {
+        labelUnread.innerText = unreadCount > 0 ? (unreadCount + ' Notifikasi Baru') : 'Semua notifikasi telah dibaca';
+      }
+
+      if (!container) return;
 
       if (list.length === 0) {
         container.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">Tidak ada notifikasi saat ini.</div>';

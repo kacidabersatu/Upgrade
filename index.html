@@ -7720,8 +7720,35 @@
       if (container) renderModulMonitoringSalesOpr(container);
     }
 
-    // --- RENDER ISI KONTEN OPR ---
-    function renderSubTabOprContent() {
+    // Helper Normalisasi Jam Tab (Mendukung Teks, Angka, Maupun Date Object dari Google Sheets)
+    function normalizeJamTab(val) {
+      if (!val) return '06:07';
+      var s = String(val).trim();
+      if (s.indexOf('22') !== -1 || s.indexOf('23') !== -1) return '22:23';
+      if (s.indexOf('06') !== -1 || s.indexOf('07') !== -1 || s.indexOf('6:') !== -1) return '06:07';
+      return s.replace(/^'/, '');
+    }
+
+    // Helper Format Tampilan Jam Transaksi (HH:MM)
+    function formatJamTransaksiRapi(jamVal) {
+      if (!jamVal) return '-';
+      var s = String(jamVal).replace(/^'/, '').trim();
+      if (s.indexOf('T') !== -1) {
+        var d = new Date(s);
+        if (!isNaN(d.getTime())) {
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+      }
+      var m = s.match(/\b\d{1,2}:\d{2}\b/);
+      if (m) {
+        var p = m[0].split(':');
+        return String(p[0]).padStart(2, '0') + ':' + p[1];
+      }
+      return s;
+    }
+
+    // --- RENDER ISI KONTEN OPR (KEBAL FORMAT JAM GOOGLE SHEETS & FILTER AKURAT) ---
+    function renderSubTabOprContent(forceRefresh) {
       var container = document.getElementById('containerSubTabOpr');
       if (!container) return;
 
@@ -7730,24 +7757,30 @@
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      muatDataSheetLazy('Monitoring_Sales_OPR', false, function(allRows) {
+      muatDataSheetLazy('Monitoring_Sales_OPR', forceRefresh === true, function(allRows) {
         // 1. Filter Toko (Jika bukan AC)
         var storeFiltered = isAC ? allRows : allRows.filter(function(r) {
           return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
         });
 
-        // 2. Filter Tab Jam Aktif (06:07 atau 22:23)
+        // 2. Filter Tab Jam Aktif (06:07 atau 22:23 dengan Normalisasi Kebal Format)
         var tabFiltered = storeFiltered.filter(function(r) {
-          return String(r['JAM_TAB'] || '').trim() === oprActiveTab;
+          return normalizeJamTab(r['JAM_TAB']) === oprActiveTab;
         });
 
-        // 3. Filter Bulan
+        // 3. Filter Bulan Berjalan
         var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
         var bulanFiltered = tabFiltered.filter(function(r) {
           if (oprActiveFilterBulan === 'ALL') return true;
-          var d = parseDateIndo(r['TANGGAL_INPUT'] || r['TANGGAL']);
-          if (isNaN(d.getTime())) return true;
-          return bulanList[d.getMonth()] === oprActiveFilterBulan;
+          var tglRaw = String(r['TANGGAL_INPUT'] || r['TANGGAL'] || '').replace(/^'/, '').trim();
+          var d = parseDateIndo(tglRaw);
+          if (!isNaN(d.getTime())) {
+            if (bulanList[d.getMonth()] === oprActiveFilterBulan) return true;
+          }
+          // Fallback pencocokan string bulan
+          var bIdx = bulanList.indexOf(oprActiveFilterBulan) + 1;
+          var bPad = String(bIdx).padStart(2, '0');
+          return tglRaw.indexOf('/' + bPad + '/') !== -1 || tglRaw.indexOf('-' + bPad + '-') !== -1;
         });
 
         // 4. Filter Rentang Tanggal
@@ -7810,7 +7843,7 @@
           sortedRows.forEach(function(r) {
             totSales += parseAngkaIndo(r['SALES']);
             totStd += parseAngkaIndo(r['STD']);
-            if (r['JAM_TRANSAKSI']) jamArray.push(r['JAM_TRANSAKSI']);
+            if (r['JAM_TRANSAKSI']) jamArray.push(formatJamTransaksiRapi(r['JAM_TRANSAKSI']));
           });
 
           var avgApc = totStd > 0 ? Math.round(totSales / totStd) : 0;
@@ -7843,11 +7876,11 @@
               '</div>' +
             '</div>';
 
-          // TABEL RIWAYAT TOKO
+          // TABEL RIWAYAT TOKO DENGAN DATA VALID
           html += renderTabelRiwayatOprToko(sortedRows);
 
         } else {
-          // RESUME KHUSUS ROLE AC (2 TINGKAT KOTAK RESUME)
+          // RESUME KHUSUS ROLE AC
           var uniqueStores = {};
           var totSalesArea = 0;
           var totStdArea = 0;
@@ -7857,7 +7890,7 @@
             uniqueStores[r['KODE']] = true;
             totSalesArea += parseAngkaIndo(r['SALES']);
             totStdArea += parseAngkaIndo(r['STD']);
-            if (r['JAM_TRANSAKSI']) jamArrayArea.push(r['JAM_TRANSAKSI']);
+            if (r['JAM_TRANSAKSI']) jamArrayArea.push(formatJamTransaksiRapi(r['JAM_TRANSAKSI']));
           });
 
           var allUsers = JSON.parse(localStorage.getItem('kacida_cache_Master_User') || '{}').data || [];
@@ -7866,9 +7899,8 @@
           var avgApcArea = totStdArea > 0 ? Math.round(totSalesArea / totStdArea) : 0;
           var avgJamArea = hitungRataRataJam(jamArrayArea);
 
-          // Hitung Komparasi 2 Shift (06:07 vs 22:23)
-          var p06 = allRows.filter(function(r){ return String(r['JAM_TAB']).trim() === '06:07'; });
-          var p22 = allRows.filter(function(r){ return String(r['JAM_TAB']).trim() === '22:23'; });
+          var p06 = allRows.filter(function(r){ return normalizeJamTab(r['JAM_TAB']) === '06:07'; });
+          var p22 = allRows.filter(function(r){ return normalizeJamTab(r['JAM_TAB']) === '22:23'; });
 
           var stores06 = {}; var sales06 = 0;
           p06.forEach(function(r){ stores06[r['KODE']] = true; sales06 += parseAngkaIndo(r['SALES']); });
@@ -7876,7 +7908,6 @@
           var stores22 = {}; var sales22 = 0;
           p22.forEach(function(r){ stores22[r['KODE']] = true; sales22 += parseAngkaIndo(r['SALES']); });
 
-          // Kotak Resume Tingkat 1 (Konsolidasi Area)
           html += 
             '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs text-center">' +
               '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-xl font-black font-mono mt-1">' + totTokoBinaan + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Area Binaan</span></div>' +
@@ -7887,7 +7918,6 @@
               '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-amber-200 uppercase">Rata-rata Jam</span><span class="text-xl font-black font-mono mt-1">' + avgJamArea + '</span><span class="text-[9px] text-amber-200 mt-1">Waktu Transaksi</span></div>' +
             '</div>' +
 
-            // Kotak Resume Tingkat 2 (Komparasi 2 Shift OPR)
             '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center pt-1">' +
               '<div class="p-3 rounded-2xl border bg-amber-50 border-amber-200 text-amber-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-amber-700 block">Toko Jam 06:07</span><span class="text-lg font-black font-mono mt-0.5 block">' + Object.keys(stores06).length + ' Toko</span></div>' +
               '<div class="p-3 rounded-2xl border bg-indigo-50 border-indigo-200 text-indigo-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-indigo-700 block">Toko Jam 22:23</span><span class="text-lg font-black font-mono mt-0.5 block">' + Object.keys(stores22).length + ' Toko</span></div>' +
@@ -7895,7 +7925,6 @@
               '<div class="p-3 rounded-2xl border bg-purple-50 border-purple-200 text-purple-950 shadow-sm"><span class="text-[10px] font-bold uppercase text-purple-700 block">Sales Jam 22:23</span><span class="text-sm md:text-base font-black font-mono mt-0.5 block">Rp ' + Math.round(sales22).toLocaleString('id-ID') + '</span></div>' +
             '</div>';
 
-          // AKORDION TOKO BINAAN (ROLE AC)
           html += renderAccordionOprPerTokoAC(sortedRows);
         }
 
@@ -7903,7 +7932,7 @@
       });
     }
 
-    // --- TABEL RIWAYAT OPR TOKO (WARNA-WARNI HARI & AKSI EDIT/HAPUS) ---
+    // --- PERBAIKI TAMPILAN JAM PADA TABEL TOKO ---
     function renderTabelRiwayatOprToko(rows) {
       var html = 
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
@@ -7931,7 +7960,6 @@
         var d = parseDateIndo(row['TANGGAL_INPUT'] || row['TANGGAL']);
         var dayOfWeek = d.getDay();
 
-        // Pewarnaan Menarik Sesuai Hari
         var rowBgClass = 'hover:bg-slate-50/80';
         var dayBadge = '';
         if (dayOfWeek === 5) {
@@ -7947,14 +7975,14 @@
 
         html += '<tr class="transition-colors ' + rowBgClass + '">' +
           '<td class="p-2.5 text-left font-mono font-bold text-slate-800 whitespace-nowrap">' + formatTanggalTampilan(row['TANGGAL_INPUT'] || row['TANGGAL']) + dayBadge + '</td>' +
-          '<td class="p-2.5 text-center font-mono font-bold text-brand-dark"><i class="fa-solid fa-clock text-[10px] mr-1 text-slate-400"></i>' + (row['JAM_TRANSAKSI'] || '-') + '</td>' +
+          '<td class="p-2.5 text-center font-mono font-bold text-brand-dark"><i class="fa-solid fa-clock text-[10px] mr-1 text-slate-400"></i>' + formatJamTransaksiRapi(row['JAM_TRANSAKSI']) + '</td>' +
           '<td class="p-2.5 text-center font-mono font-black text-slate-900">Rp ' + Math.round(parseAngkaIndo(row['SALES'])).toLocaleString('id-ID') + '</td>' +
           '<td class="p-2.5 text-center font-mono text-slate-600">' + parseAngkaIndo(row['STD']) + '</td>' +
           '<td class="p-2.5 text-center font-mono font-bold text-emerald-700">Rp ' + Math.round(parseAngkaIndo(row['APC'])).toLocaleString('id-ID') + '</td>' +
           '<td class="p-2.5 text-center font-mono text-slate-600">' + (row['QTY_ETRANS'] || 0) + '</td>' +
           '<td class="p-2.5 text-center space-x-1 whitespace-nowrap">' +
             '<button onclick="bukaModalEditOpr(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
-            '<button onclick="hapusRowUniversal(\'Monitoring_Sales_OPR\', \'' + row['ID'] + '\', renderSubTabOprContent)" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
+            '<button onclick="hapusRowUniversal(\'Monitoring_Sales_OPR\', \'' + row['ID'] + '\', function(){ renderSubTabOprContent(true); })" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
           '</td>' +
         '</tr>';
       });
@@ -8113,6 +8141,7 @@
       document.getElementById('mOprApc').value = apc;
     }
 
+    // --- PERBAIKI SIMPAN DATA OPR (AGAR LANGSUNG REFRESH & TAMPIL DI TABEL) ---
     function simpanDataOprModal() {
       var jam = document.getElementById('mOprJam').value || (oprActiveTab === '06:07' ? '06:30' : '22:30');
       var sales = Number(document.getElementById('mOprSales').value || 0);
@@ -8149,10 +8178,10 @@
         Swal.close();
         tutupModalInputOpr();
         Swal.fire({ icon: 'success', title: 'Data OPR Berhasil Dicatat', timer: 1200, showConfirmButton: false });
-        muatDataSheetLazy('Monitoring_Sales_OPR', true, function() {
-          renderSubTabOprContent();
-          renderDataBerandaDariCache();
-        });
+        
+        // PENTING: Refresh seketika dengan forceRefresh = true agar data langsung muncul
+        renderSubTabOprContent(true);
+        renderDataBerandaDariCache();
       }, function(err) {
         Swal.close();
         Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });

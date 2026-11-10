@@ -9616,24 +9616,27 @@
       box.innerHTML = html;
     }
 
-    // ==================== 2. TAMPILAN ROLE AC & ADMIN MODE AREA ====================
+    // ==================== 2. TAMPILAN PSM ROLE AC & MODE PANTAU AREA (SELURUH TOKO BINAAN) ====================
     function renderPsmModeArea(container, allPsmRows) {
-      // Ambil data toko & personil dari Master_User
+      // 1. Ambil Seluruh Toko & Personil dari Master_User
       var allUsers = JSON.parse(localStorage.getItem('kacida_cache_Master_User') || '{}').data || [];
       var masterStores = {};
       var totalPersonilMaster = 0;
 
       allUsers.forEach(function(u) {
         var k = String(u['KODE'] || '').toUpperCase().trim();
-        if (k && k !== 'AC') {
-          masterStores[k] = u['NAMA TOKO'] || u['STORE NAME'] || k;
+        // Saring hanya kode toko valid (bukan akun khusus AC)
+        if (k && k !== 'AC' && k !== 'AREA') {
+          if (!masterStores[k]) {
+            masterStores[k] = u['NAMA TOKO'] || u['STORE NAME'] || ('Toko ' + k);
+          }
           totalPersonilMaster++;
         }
       });
 
-      var totalTokoArea = Object.keys(masterStores).length;
+      var totalTokoArea = Object.keys(masterStores).length; // Menghasilkan tepat 19 Toko Binaan
 
-      // Hitung toko & personil yang sudah input
+      // 2. Hitung Toko & Personil yang Sudah Input di Seluruh Area
       var storesInputMap = {};
       var personilInputMap = {};
 
@@ -9647,15 +9650,24 @@
       var countTokoInput = Object.keys(storesInputMap).length;
       var countPersonilInput = Object.keys(personilInputMap).length;
 
-      // Kelompokkan data per toko binaan
+      // 3. Kelompokkan Data: WADAHI SELURUH 19 TOKO BINAAN DARI MASTER_USER
       var storePsmGroups = {};
+      for (var sc in masterStores) {
+        storePsmGroups[sc] = {
+          kode: sc,
+          namaToko: masterStores[sc],
+          users: {}
+        };
+      }
+
+      // Masukkan baris rekapan PSM ke masing-masing toko
       allPsmRows.forEach(function(r) {
         var k = String(r['KODE'] || '').toUpperCase().trim();
         if (k && k !== 'AC') {
           if (!storePsmGroups[k]) {
             storePsmGroups[k] = {
               kode: k,
-              namaToko: masterStores[k] || k,
+              namaToko: masterStores[k] || ('Toko ' + k),
               users: {}
             };
           }
@@ -9671,28 +9683,31 @@
         }
       });
 
-      var storeList = Object.values(storePsmGroups);
+      var storeList = Object.values(storePsmGroups).sort(function(a, b) {
+        return a.kode.localeCompare(b.kode);
+      });
 
       var html = 
-        // 4 KOTAK RESUME AREA GRADIEN WARNA-WARNI
+        // 4 KOTAK RESUME KONSOLIDASI SELURUH AREA
         '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center">' +
-          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-2xl font-black font-mono mt-1 block">' + totalTokoArea + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Area Binaan</span></div>' +
-          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-emerald-200 uppercase">Toko Sudah Input</span><span class="text-2xl font-black font-mono mt-1 block">' + countTokoInput + ' Toko</span><span class="text-[9px] text-emerald-200 mt-1">Progress Input Toko</span></div>' +
-          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-blue-200 uppercase">Total Personil</span><span class="text-2xl font-black font-mono mt-1 block">' + totalPersonilMaster + ' Orang</span><span class="text-[9px] text-blue-200 mt-1">Seluruh Kasir Toko</span></div>' +
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-2xl font-black font-mono mt-1 block">' + totalTokoArea + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Seluruh Toko Binaan</span></div>' +
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-emerald-200 uppercase">Toko Sudah Input</span><span class="text-2xl font-black font-mono mt-1 block">' + countTokoInput + ' Toko</span><span class="text-[9px] text-emerald-200 mt-1">Progress Toko Rekap</span></div>' +
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-blue-200 uppercase">Total Personil</span><span class="text-2xl font-black font-mono mt-1 block">' + totalPersonilMaster + ' Orang</span><span class="text-[9px] text-blue-200 mt-1">Seluruh Personil Area</span></div>' +
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-purple-200 uppercase">Total Personil Input</span><span class="text-2xl font-black font-mono mt-1 block">' + countPersonilInput + ' Orang</span><span class="text-[9px] text-purple-200 mt-1">Kasir Sudah Rekap</span></div>' +
         '</div>' +
 
-        // AKORDION GROUPED BY NAMA TOKO (AC AREA)
+        // AKORDION GROUPED BY SELURUH NAMA TOKO BINAAN
         '<div class="space-y-3 pt-2">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Rekap PSM per Toko Binaan (AC Area)</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Rekap PSM Seluruh Toko Binaan (AC Area)</h4>';
 
       if (storeList.length === 0) {
-        html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Belum ada data rekap PSM kasir yang tercatat di seluruh toko binaan.</div>';
+        html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Data toko binaan belum terdaftar di Master_User.</div>';
       }
 
       storeList.forEach(function(st, idx) {
         var accId = 'accPsmAcStore_' + idx;
         var userArr = Object.values(st.users);
+        var hasInput = userArr.length > 0;
         
         var personilAcv = 0;
         var personilBelum = 0;
@@ -9705,40 +9720,47 @@
 
         html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +
           '<div class="p-3.5 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'' + accId + '\')">' +
-            '<div class="flex items-center space-x-2.5">' +
+            '<div class="flex items-center space-x-2.5 overflow-hidden pr-2">' +
               '<span class="font-mono font-bold text-xs px-2 py-0.5 bg-white border border-slate-200 text-slate-800 rounded shrink-0">' + st.kode + '</span>' +
-              '<h5 class="text-xs font-black text-slate-800">' + st.namaToko + '</h5>' +
+              '<h5 class="text-xs font-black text-slate-800 truncate">' + st.namaToko + '</h5>' +
             '</div>' +
             '<div class="flex items-center space-x-2 sm:space-x-3 text-xs font-mono shrink-0">' +
-              '<span class="text-emerald-700 text-[11px]">Kasir ACV: <b>' + personilAcv + '</b></span>' +
-              '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (personilBelum > 0 ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500') + '">Belum: ' + personilBelum + '</span>' +
+              (hasInput 
+                ? '<span class="text-emerald-700 text-[11px]">Kasir ACV: <b>' + personilAcv + '</b></span>' +
+                  '<span class="px-2 py-0.5 rounded-full text-[10px] font-black ' + (personilBelum > 0 ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500') + '">Belum: ' + personilBelum + '</span>'
+                : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Belum Ada Input</span>') +
               '<button type="button" id="btn' + accId + '" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
             '</div>' +
           '</div>' +
 
           '<div id="' + accId + '" class="hidden p-3.5 border-t border-slate-100 space-y-3 bg-white text-xs">' +
-            '<table class="w-full text-center divide-y divide-slate-100">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400"><tr>' +
-                '<th class="p-2 text-left">Nama Personil</th><th class="p-2 text-left">Nama Item</th><th class="p-2 text-center">Target</th><th class="p-2 text-center">Total Aktual</th><th class="p-2 text-center">ACV %</th><th class="p-2 text-center">Status</th>' +
-              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+            (hasInput 
+              ? '<table class="w-full text-center divide-y divide-slate-100">' +
+                  '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400"><tr>' +
+                    '<th class="p-2 text-left">Nama Personil</th><th class="p-2 text-left">Nama Item</th><th class="p-2 text-center">Target</th><th class="p-2 text-center">Total Aktual</th><th class="p-2 text-center">ACV %</th><th class="p-2 text-center">Status</th>' +
+                  '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">'
+              : '<div class="p-4 text-center text-slate-400 italic">Belum ada kasir dari toko ini yang menyimpan rekap PSM hari ini.</div>');
 
-        userArr.forEach(function(u) {
-          u.items.forEach(function(it, itIdx) {
-            var acvVal = parseAngkaIndo(it['ACV_PERSEN']);
-            var isItmOk = (acvVal >= 100);
+        if (hasInput) {
+          userArr.forEach(function(u) {
+            u.items.forEach(function(it, itIdx) {
+              var acvVal = parseAngkaIndo(it['ACV_PERSEN']);
+              var isItmOk = (acvVal >= 100);
 
-            html += '<tr>' +
-              '<td class="p-2 text-left font-bold text-slate-700">' + (itIdx === 0 ? u.nama : '') + '</td>' +
-              '<td class="p-2 text-left font-semibold text-slate-800">' + (it['NAMA_ITEM_PSM'] || '-') + '</td>' +
-              '<td class="p-2 font-mono text-slate-600">' + parseAngkaIndo(it['TARGET_QTY']) + '</td>' +
-              '<td class="p-2 font-mono font-black text-slate-900">' + parseAngkaIndo(it['ACTUAL_QTY']) + '</td>' +
-              '<td class="p-2 font-mono font-black ' + (isItmOk ? 'text-emerald-700' : 'text-red-600') + '">' + acvVal.toFixed(0) + '%</td>' +
-              '<td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isItmOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (isItmOk ? 'OK' : 'NOK') + '</span></td>' +
-            '</tr>';
+              html += '<tr>' +
+                '<td class="p-2 text-left font-bold text-slate-700">' + (itIdx === 0 ? u.nama : '') + '</td>' +
+                '<td class="p-2 text-left font-semibold text-slate-800">' + (it['NAMA_ITEM_PSM'] || '-') + '</td>' +
+                '<td class="p-2 font-mono text-slate-600">' + parseAngkaIndo(it['TARGET_QTY']) + '</td>' +
+                '<td class="p-2 font-mono font-black text-slate-900">' + parseAngkaIndo(it['ACTUAL_QTY']) + '</td>' +
+                '<td class="p-2 font-mono font-black ' + (isItmOk ? 'text-emerald-700' : 'text-red-600') + '">' + acvVal.toFixed(0) + '%</td>' +
+                '<td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isItmOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (isItmOk ? 'OK' : 'NOK') + '</span></td>' +
+              '</tr>';
+            });
           });
-        });
+          html += '</tbody></table>';
+        }
 
-        html += '</tbody></table></div></div>';
+        html += '</div></div>';
       });
 
       html += '</div>';

@@ -4955,6 +4955,75 @@
       tbgCurrentPage = page;
       renderSubTabTabunganContent();
     }
+    
+    // ==================== FUNGSI RESET SELURUH TABUNGAN PRIBADI ====================
+    function resetSemuaTabunganSaya() {
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      if (!userNik) {
+        Swal.fire({ icon: 'error', title: 'Sesi Tidak Ditemukan', text: 'Silakan login ulang terlebih dahulu.' });
+        return;
+      }
+
+      Swal.fire({
+        title: 'Reset Semua Tabungan Saya?',
+        html: 'Seluruh riwayat mutasi tabungan pribadi Anda (NIK: <b>' + userNik + '</b>) akan <b>dihapus permanen</b> dari database.<br><br>' +
+              '<span class="text-xs text-red-600 font-semibold">Saldo akan kembali menjadi Rp 0. Yakin ingin mengosongkan semua data?</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="fa-solid fa-trash-can mr-1"></i> Ya, Kosongkan Semua',
+        cancelButtonText: 'Batal'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          Swal.fire({ 
+            title: 'Mengosongkan Data...', 
+            text: 'Menghapus seluruh mutasi tabungan dari server...',
+            allowOutsideClick: false,
+            didOpen: function() { Swal.showLoading(); } 
+          });
+
+          kirimBackendRequest('CRUD_TABUNGANKU', {
+            subAction: 'RESET_USER',
+            nik: userNik
+          }, function() {
+            Swal.close();
+
+            // 1. Bersihkan juga data cache lokal NIK ini seketika
+            var cacheKey = 'kacida_cache_Tabunganku';
+            var cached = localStorage.getItem(cacheKey);
+            if (cached) {
+              try {
+                var rows = JSON.parse(cached).data || [];
+                var sisaDataUserLain = rows.filter(function(r) { 
+                  return String(r['NIK'] || '').trim() !== userNik; 
+                });
+                localStorage.setItem(cacheKey, JSON.stringify({ 
+                  data: sisaDataUserLain, 
+                  timestamp: Date.now() 
+                }));
+              } catch(e) {}
+            }
+
+            Swal.fire({ 
+              icon: 'success', 
+              title: 'Data Berhasil Dikosongkan', 
+              text: 'Seluruh riwayat tabungan pribadi Anda telah bersih kembali ke Rp 0.',
+              timer: 1500, 
+              showConfirmButton: false 
+            });
+
+            // 2. KUNCI PERBAIKAN: Panggil renderSubTabTabunganContent agar UI langsung bersih
+            muatDataSheetLazy('Tabunganku', true, function() {
+              renderSubTabTabunganContent();
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal Reset', text: err.toString() });
+          });
+        }
+      });
+    }
 
     // ==================== [4] MODUL KAS AREA LENGKAP ====================
     var kasActiveFilterBulan = 'ALL'; // Default: Semua Bulan

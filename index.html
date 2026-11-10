@@ -9144,7 +9144,7 @@
       hitungSimulasiPlOtomatis();
     }
 
-    // ==================== [12] MODUL REKAP PSM KASIR LENGKAP ====================
+    // ==================== [12] MODUL REKAP PSM KASIR LENGKAP (ANTI-KEYBOARD MENUTUP) ====================
     var psmViewMode = 'PRIBADI'; // 'PRIBADI' atau 'AREA'
     window.myPsmItems = [];
 
@@ -9154,7 +9154,6 @@
       var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var isAdminPic = (userNik === '17060061' || userNik === '14125034');
 
-      // Tentukan view mode default
       if (isAC) {
         psmViewMode = 'AREA';
       } else if (!isAdminPic) {
@@ -9177,7 +9176,6 @@
             '</div>' +
           '</div>' +
           '<div class="flex items-center space-x-2">' +
-            // TOGGLE MODE KHUSUS ADMIN PIC (NIK 17060061 & 14125034)
             (isAdminPic ? 
               '<button onclick="togglePsmAdminView()" class="px-3 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 text-amber-300 text-xs font-bold transition-all shadow-inner flex items-center space-x-1.5 active:scale-95">' +
                 '<i class="fa-solid fa-repeat"></i>' +
@@ -9207,9 +9205,7 @@
       var container = document.getElementById('psmDynamicContentArea');
       if (!container) return;
 
-      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
       var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
-      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
@@ -9222,50 +9218,46 @@
       });
     }
 
-    // ==================== 1. TAMPILAN ROLE USER KASIR TOKO (MODE PRIBADI) ====================
+    // ==================== 1. TAMPILAN MODE PRIBADI KASIR ====================
     function renderPsmModePribadi(container, allPsmRows, myStoreCode, userNik) {
-      // Inisialisasi data item kasir yang sedang login
-      if (!window.myPsmItems || window.myPsmItems.length === 0) {
-        var userSavedRows = allPsmRows.filter(function(r) {
-          return String(r['NIK_KASIR'] || '').trim() === userNik;
-        });
+      // Ambil data yang tersimpan dari database untuk NIK ini
+      var userSavedRows = allPsmRows.filter(function(r) {
+        return String(r['NIK_KASIR'] || '').trim() === userNik;
+      });
 
-        if (userSavedRows.length > 0) {
-          window.myPsmItems = userSavedRows.map(function(r) {
-            var tgt = parseAngkaIndo(r['TARGET_QTY']);
-            var d1 = parseAngkaIndo(r['DAY1']);
-            var d2 = parseAngkaIndo(r['DAY2']);
-            var d3 = parseAngkaIndo(r['DAY3']);
-            var d4 = parseAngkaIndo(r['DAY4']);
-            var d5 = parseAngkaIndo(r['DAY5']);
-            var d6 = parseAngkaIndo(r['DAY6']);
-            var d7 = parseAngkaIndo(r['DAY7']);
-            var d8 = parseAngkaIndo(r['DAY8']);
-            var act = d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8;
-            if (act === 0 && r['ACTUAL_QTY']) act = parseAngkaIndo(r['ACTUAL_QTY']);
-            var acv = tgt > 0 ? (act / tgt * 100) : 0;
-            return {
-              nama: r['NAMA_ITEM_PSM'] || '',
-              tgt: tgt,
-              d1: d1, d2: d2, d3: d3, d4: d4, d5: d5, d6: d6, d7: d7, d8: d8,
-              act: act,
-              acv: acv,
-              status: acv >= 100 ? 'OK' : 'NOK'
-            };
-          });
-        } else {
-          // Data awal jika kasir belum pernah input
-          window.myPsmItems = [
-            { nama: 'Susu UHT 1L', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK' },
-            { nama: 'Minyak Goreng 2L', tgt: 15, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK' },
-            { nama: 'Biskuit Kaleng', tgt: 5, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK' },
-            { nama: 'Kopi Instan Bag', tgt: 12, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK' }
-          ];
-        }
+      if (userSavedRows.length > 0) {
+        window.myPsmItems = userSavedRows.map(function(r) {
+          var tgt = parseAngkaIndo(r['TARGET_QTY']);
+          var d1 = parseAngkaIndo(r['DAY1']);
+          var d2 = parseAngkaIndo(r['DAY2']);
+          var d3 = parseAngkaIndo(r['DAY3']);
+          var d4 = parseAngkaIndo(r['DAY4']);
+          var d5 = parseAngkaIndo(r['DAY5']);
+          var d6 = parseAngkaIndo(r['DAY6']);
+          var d7 = parseAngkaIndo(r['DAY7']);
+          var d8 = parseAngkaIndo(r['DAY8']);
+          var act = d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8;
+          if (act === 0 && r['ACTUAL_QTY']) act = parseAngkaIndo(r['ACTUAL_QTY']);
+          var acv = tgt > 0 ? (act / tgt * 100) : 0;
+          return {
+            nama: r['NAMA_ITEM_PSM'] || '',
+            tgt: tgt,
+            d1: d1, d2: d2, d3: d3, d4: d4, d5: d5, d6: d6, d7: d7, d8: d8,
+            act: act,
+            acv: acv,
+            status: acv >= 100 ? 'OK' : 'NOK',
+            isExample: false
+          };
+        });
+      } else {
+        // HANYA TAMPILKAN 1 CONTOH AWAL JIKA BELUM ADA DATA TERSIMPAN
+        window.myPsmItems = [
+          { nama: 'Contoh: Susu UHT 1L', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK', isExample: true }
+        ];
       }
 
       var html = 
-        // 3 KOTAK RESUME PRIBADI BERWARNA GRADIEN
+        // 3 KOTAK RESUME PRIBADI
         '<div id="psmResumeBoxPribadi" class="grid grid-cols-3 gap-2.5 text-xs text-center"></div>' +
 
         // KOTAK DIAGNOSA FOKUS PENJUALAN
@@ -9285,12 +9277,12 @@
                 '<i class="fa-solid fa-plus"></i><span>Tambah Item</span>' +
               '</button>' +
               '<button type="button" onclick="resetSemuaInputPsm()" class="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center space-x-1">' +
-                '<i class="fa-solid fa-rotate-left"></i><span>Reset Angka</span>' +
+                '<i class="fa-solid fa-rotate-left"></i><span>Reset Data</span>' +
               '</button>' +
             '</div>' +
           '</div>' +
 
-          // TABEL DENGAN KOLOM TARGET DIBEKUKAN (STICKY) & DAY 1 s/d DAY 8
+          // TABEL INPUT DENGAN KOLOM TARGET DIBEKUKAN (STICKY)
           '<div class="overflow-x-auto text-xs relative">' +
             '<table class="w-full text-center divide-y divide-slate-100">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
@@ -9326,9 +9318,94 @@
       renderAccordionRekanSatuToko(allPsmRows, myStoreCode, userNik);
     }
 
-    // --- RENDER BARIS INPUT PER-DAY KASIR DENGAN TARGET DIBEKUKAN ---
+    // --- RENDER AWAL TABEL TANPA MERENDER ULANG KETIKA MENGETIK ---
     function renderTabelPsmKasirInternal() {
       var tbody = document.getElementById('tbodyRekapPsmKasir');
+      var list = window.myPsmItems || [];
+
+      var html = '';
+      list.forEach(function(item, idx) {
+        var actTotal = (item.d1 || 0) + (item.d2 || 0) + (item.d3 || 0) + (item.d4 || 0) + 
+                       (item.d5 || 0) + (item.d6 || 0) + (item.d7 || 0) + (item.d8 || 0);
+        item.act = actTotal;
+        item.acv = item.tgt > 0 ? ((actTotal / item.tgt) * 100) : 0;
+        item.status = item.acv >= 100 ? 'OK' : 'NOK';
+        var isOk = (item.status === 'OK');
+
+        html += '<tr class="hover:bg-slate-50/80" id="psm_row_' + idx + '">' +
+          '<td class="p-2 font-mono text-slate-500 text-center">' + (idx + 1) + '</td>' +
+          // Input Nama Item (Tanpa re-render agar keyboard tidak menutup)
+          '<td class="p-2 text-left"><input type="text" id="psm_in_nama_' + idx + '" value="' + item.nama + '" oninput="updateLiveNamaPsm(' + idx + ', this.value)" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-xs ' + (item.isExample ? 'text-slate-400 italic' : 'text-slate-800') + '"></td>' +
+          
+          // Kolom Target Dibekukan (Sticky Left)
+          '<td class="p-2 text-center sticky left-0 bg-white z-10 border-r border-slate-200 shadow-sm"><input type="number" min="1" value="' + item.tgt + '" oninput="updateLiveAngkaPsm(' + idx + ', \'tgt\', this.value)" class="w-14 px-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-center font-mono font-bold text-xs"></td>' +
+
+          // Kolom Day 1 s/d Day 8 (Update DOM Langsung: Keyboard Stay Open!)
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d1 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d1\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d2 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d2\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d3 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d3\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d4 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d4\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d5 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d5\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d6 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d6\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d7 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d7\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+          '<td class="p-1"><input type="number" min="0" value="' + (item.d8 || 0) + '" oninput="updateLiveAngkaPsm(' + idx + ', \'d8\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
+
+          // Total Aktual, ACV, Status (Update Teks Langsung)
+          '<td class="p-2 text-center font-mono font-black text-slate-900 bg-emerald-50/70" id="psm_cell_act_' + idx + '">' + actTotal + '</td>' +
+          '<td class="p-2 text-center font-mono font-black ' + (isOk ? 'text-emerald-700' : 'text-red-600') + '" id="psm_cell_acv_' + idx + '">' + item.acv.toFixed(0) + '%</td>' +
+          '<td class="p-2 text-center" id="psm_cell_stat_' + idx + '"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + item.status + '</span></td>' +
+          '<td class="p-2 text-center"><button onclick="hapusBarisItemPsm(' + idx + ')" class="text-slate-300 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
+        '</tr>';
+      });
+
+      if (tbody) tbody.innerHTML = html;
+      updateLiveResumeDanDiagnosa();
+    }
+
+    // --- UPDATE DOM LANGSUNG KETIKA MENGETIK: KEYBOARD TETAP TERBUKA & FOCUS AMAN ---
+    function updateLiveAngkaPsm(idx, field, val) {
+      if (!window.myPsmItems[idx]) return;
+      window.myPsmItems[idx][field] = Number(val || 0);
+
+      var item = window.myPsmItems[idx];
+      var actTotal = (item.d1 || 0) + (item.d2 || 0) + (item.d3 || 0) + (item.d4 || 0) + 
+                     (item.d5 || 0) + (item.d6 || 0) + (item.d7 || 0) + (item.d8 || 0);
+      item.act = actTotal;
+      item.acv = item.tgt > 0 ? ((actTotal / item.tgt) * 100) : 0;
+      item.status = item.acv >= 100 ? 'OK' : 'NOK';
+      var isOk = (item.status === 'OK');
+
+      // Update hanya teks cell di baris tersebut tanpa merender ulang input
+      var cellAct = document.getElementById('psm_cell_act_' + idx);
+      var cellAcv = document.getElementById('psm_cell_acv_' + idx);
+      var cellStat = document.getElementById('psm_cell_stat_' + idx);
+
+      if (cellAct) cellAct.innerText = actTotal;
+      if (cellAcv) {
+        cellAcv.innerText = item.acv.toFixed(0) + '%';
+        cellAcv.className = 'p-2 text-center font-mono font-black ' + (isOk ? 'text-emerald-700' : 'text-red-600');
+      }
+      if (cellStat) {
+        cellStat.innerHTML = '<span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + item.status + '</span>';
+      }
+
+      updateLiveResumeDanDiagnosa();
+    }
+
+    function updateLiveNamaPsm(idx, val) {
+      if (!window.myPsmItems[idx]) return;
+      window.myPsmItems[idx].nama = String(val || '').trim();
+      window.myPsmItems[idx].isExample = false; // Tandai bukan lagi contoh jika diedit
+      
+      var inputEl = document.getElementById('psm_in_nama_' + idx);
+      if (inputEl) {
+        inputEl.className = 'w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-xs text-slate-800';
+      }
+      updateLiveResumeDanDiagnosa();
+    }
+
+    // Helper Update Resume Card & Diagnosa Cepat
+    function updateLiveResumeDanDiagnosa() {
       var resumeBox = document.getElementById('psmResumeBoxPribadi');
       var diagnosa = document.getElementById('psmDiagnosaCard');
       var list = window.myPsmItems || [];
@@ -9338,50 +9415,17 @@
       var totBelumAcv = 0;
       var defisitList = [];
 
-      var html = '';
-      list.forEach(function(item, idx) {
-        var actTotal = (item.d1 || 0) + (item.d2 || 0) + (item.d3 || 0) + (item.d4 || 0) + 
-                       (item.d5 || 0) + (item.d6 || 0) + (item.d7 || 0) + (item.d8 || 0);
-        item.act = actTotal;
-        item.acv = item.tgt > 0 ? ((actTotal / item.tgt) * 100) : 0;
-        item.status = item.acv >= 100 ? 'OK' : 'NOK';
-
-        var isOk = (item.status === 'OK');
-        if (isOk) {
+      list.forEach(function(item) {
+        if (item.status === 'OK') {
           totAcv++;
         } else {
           totBelumAcv++;
-          defisitList.push('<b>' + item.nama + '</b> kurang ' + (item.tgt - actTotal) + ' pcs lagi untuk ACV (' + item.acv.toFixed(0) + '%)');
+          if (item.nama && item.nama.toLowerCase().indexOf('contoh:') === -1) {
+            defisitList.push('<b>' + item.nama + '</b> kurang ' + (item.tgt - (item.act || 0)) + ' pcs lagi untuk ACV (' + item.acv.toFixed(0) + '%)');
+          }
         }
-
-        html += '<tr class="hover:bg-slate-50/80">' +
-          '<td class="p-2 font-mono text-slate-500 text-center">' + (idx + 1) + '</td>' +
-          '<td class="p-2 text-left"><input type="text" value="' + item.nama + '" onchange="ubahNamaItemPsm(' + idx + ', this.value)" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-xs"></td>' +
-          
-          // Kolom Target Dibekukan (Sticky Left di Mobile)
-          '<td class="p-2 text-center sticky left-0 bg-white z-10 border-r border-slate-200 shadow-sm"><input type="number" min="1" value="' + item.tgt + '" oninput="ubahAngkaPsm(' + idx + ', \'tgt\', this.value)" class="w-14 px-1 py-1 bg-slate-50 border border-slate-200 rounded-lg text-center font-mono font-bold text-xs"></td>' +
-
-          // Kolom Day 1 s/d Day 8
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d1 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d1\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d2 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d2\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d3 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d3\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d4 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d4\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d5 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d5\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d6 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d6\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d7 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d7\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-          '<td class="p-1"><input type="number" min="0" value="' + (item.d8 || 0) + '" oninput="ubahAngkaPsm(' + idx + ', \'d8\', this.value)" class="w-10 px-1 py-1 bg-white border border-slate-200 rounded text-center font-mono text-xs"></td>' +
-
-          // Total Aktual (Otomatis Dihitung)
-          '<td class="p-2 text-center font-mono font-black text-slate-900 bg-emerald-50/70">' + actTotal + '</td>' +
-          '<td class="p-2 text-center font-mono font-black ' + (isOk ? 'text-emerald-700' : 'text-red-600') + '">' + item.acv.toFixed(0) + '%</td>' +
-          '<td class="p-2 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + item.status + '</span></td>' +
-          '<td class="p-2 text-center"><button onclick="hapusBarisItemPsm(' + idx + ')" class="text-slate-300 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
-        '</tr>';
       });
 
-      if (tbody) tbody.innerHTML = html;
-
-      // Update 3 Kotak Resume Pribadi
       if (resumeBox) {
         resumeBox.innerHTML = 
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold uppercase text-slate-300">Total Item</span><span class="text-2xl font-black font-mono mt-0.5 block">' + totItem + '</span><span class="text-[9px] text-slate-300">Fokus PSM</span></div>' +
@@ -9389,7 +9433,6 @@
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-red-600 to-rose-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold uppercase text-red-200">Item Belum ACV</span><span class="text-2xl font-black font-mono mt-0.5 block ' + (totBelumAcv > 0 ? 'animate-pulse' : '') + '">' + totBelumAcv + '</span><span class="text-[9px] text-red-200">Perlu Digenjot</span></div>';
       }
 
-      // Update Kotak Diagnosa Fokus Penjualan
       if (diagnosa) {
         if (defisitList.length > 0) {
           diagnosa.className = 'p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs space-y-1.5 shadow-sm text-left';
@@ -9403,47 +9446,39 @@
       }
     }
 
-    function ubahAngkaPsm(idx, field, val) {
-      if (!window.myPsmItems[idx]) return;
-      window.myPsmItems[idx][field] = Number(val || 0);
-      renderTabelPsmKasirInternal();
-    }
-
-    function ubahNamaItemPsm(idx, val) {
-      if (!window.myPsmItems[idx]) return;
-      window.myPsmItems[idx].nama = String(val || '').trim();
-    }
-
     function tambahItemBarisPsm() {
       if (!window.myPsmItems) window.myPsmItems = [];
       if (window.myPsmItems.length >= 30) {
         Swal.fire({ icon: 'warning', title: 'Batas Maksimal', text: 'Maksimal 30 item PSM kasir.' });
         return;
       }
-      window.myPsmItems.push({ nama: 'Item Baru', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK' });
+      window.myPsmItems.push({ nama: '', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK', isExample: false });
       renderTabelPsmKasirInternal();
     }
 
     function hapusBarisItemPsm(idx) {
-      if (window.myPsmItems.length <= 1) return;
-      window.myPsmItems.splice(idx, 1);
+      if (window.myPsmItems.length <= 1) {
+        window.myPsmItems = [{ nama: '', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK', isExample: false }];
+      } else {
+        window.myPsmItems.splice(idx, 1);
+      }
       renderTabelPsmKasirInternal();
     }
 
+    // RESET TOTAL MENGOSONGKAN SELURUH DATA
     function resetSemuaInputPsm() {
       Swal.fire({
-        title: 'Reset Seluruh Angka Penjualan?',
-        text: 'Seluruh inputan Day 1 s/d Day 8 akan dikembalikan ke 0. Nama produk dan target tetap aman.',
+        title: 'Kosongkan Seluruh Data?',
+        text: 'Formulir akan dikosongkan dan kembali ke 1 baris kosong bersih.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Ya, Reset Angka'
+        confirmButtonText: 'Ya, Kosongkan'
       }).then(function(res) {
         if (res.isConfirmed) {
-          window.myPsmItems.forEach(function(i) {
-            i.d1 = 0; i.d2 = 0; i.d3 = 0; i.d4 = 0; i.d5 = 0; i.d6 = 0; i.d7 = 0; i.d8 = 0;
-            i.act = 0; i.acv = 0; i.status = 'NOK';
-          });
+          window.myPsmItems = [
+            { nama: '', tgt: 10, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, act: 0, acv: 0, status: 'NOK', isExample: false }
+          ];
           renderTabelPsmKasirInternal();
         }
       });
@@ -9453,7 +9488,24 @@
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      var itemsToSave = (window.myPsmItems || []).map(function(item, idx) {
+      // Saring hanya item riil (abaikan jika masih contoh bawaan / nama kosong)
+      var validItems = (window.myPsmItems || []).filter(function(item) {
+        var n = String(item.nama || '').trim();
+        if (!n) return false;
+        if (item.isExample && n.toLowerCase().indexOf('contoh:') !== -1) return false;
+        return true;
+      });
+
+      if (validItems.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Item Masih Kosong',
+          text: 'Silakan isi nama item produk riil toko atau klik "+ Tambah Item" sebelum menyimpan.'
+        });
+        return;
+      }
+
+      var itemsToSave = validItems.map(function(item, idx) {
         var actTotal = (item.d1 || 0) + (item.d2 || 0) + (item.d3 || 0) + (item.d4 || 0) + 
                        (item.d5 || 0) + (item.d6 || 0) + (item.d7 || 0) + (item.d8 || 0);
         var acv = item.tgt > 0 ? (actTotal / item.tgt * 100) : 0;
@@ -9491,7 +9543,7 @@
       });
     }
 
-    // --- AKORDION REKAN PERSONIL SATU TOKO (DI BAWAH TOMBOL SIMPAN) ---
+    // --- AKORDION REKAN SATU TOKO (BERSIH DARI DUPLIKAT) ---
     function renderAccordionRekanSatuToko(allPsmRows, myStoreCode, myNik) {
       var box = document.getElementById('containerAccordionPsmRekanToko');
       if (!box) return;
@@ -9500,7 +9552,6 @@
         return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
       });
 
-      // Kelompokkan per personil
       var userMap = {};
       storeRows.forEach(function(r) {
         var nikK = String(r['NIK_KASIR'] || '').trim();

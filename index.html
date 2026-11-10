@@ -4372,181 +4372,588 @@
       });
     }
 
-    // ==================== [3] MODUL TABUNGANKU (ISOLASI NIK) ====================
+    // ==================== [3] MODUL TABUNGANKU (PRIBADI & LENGKAP) ====================
+    var tbgActiveFilterBulan = 'ALL'; // Default: Semua Bulan
+    var tbgCurrentPage = 1;
+    var tbgPageSize = 40; // Tampilkan 40 Baris Pertama
+    var chartDonutTabunganInstance = null;
+
     function renderModulTabunganku(container) {
-      container.innerHTML = renderHeaderModalUniversal('Tabunganku - Rekap Finansial Pribadi', 'Isolasi mutlak NIK pribadi - Menabung terarah & analisa efisiensi') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">' +
-            '<div class="p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 block font-bold">TOTAL SALDO</span><span id="tbgSaldoAkhir" class="text-xl font-black text-brand-dark font-mono">Rp 0</span></div>' +
-            '<div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-700 block font-bold">TOTAL SETOR</span><span id="tbgTotalSetor" class="text-lg font-black text-emerald-800 font-mono">Rp 0</span></div>' +
-            '<div class="p-3.5 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 block font-bold">TOTAL PENARIKAN</span><span id="tbgTotalTarik" class="text-lg font-black text-red-800 font-mono">Rp 0</span></div>' +
-            '<div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-700 block font-bold">PROGRESS TARGET</span><span id="tbgProgressPct" class="text-lg font-black text-blue-800 font-mono">0%</span></div>' +
-          '</div>' +
-
-          '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
-            '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 text-xs">' +
-              '<h4 class="font-extrabold text-slate-800 pb-2 border-b border-slate-100">Catat Mutasi Tabungan</h4>' +
-              '<div class="flex space-x-2">' +
-                '<button type="button" onclick="setJenisTabungan(\'SETOR\')" id="btnTbgSetor" class="flex-1 py-2 rounded-lg bg-brand-primary text-white font-extrabold">SETOR (+)</button>' +
-                '<button type="button" onclick="setJenisTabungan(\'TARIK\')" id="btnTbgTarik" class="flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-extrabold">TARIK (-)</button>' +
-              '</div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Nominal (Rp)</label><input type="number" id="tbgInputJumlah" placeholder="0" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono"></div>' +
-              '<div><label class="block font-bold text-slate-700 mb-1">Keterangan / Sumber Dana</label><input type="text" id="tbgInputKet" placeholder="Gaji bulanan, insentif, dll" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"></div>' +
-              '<button onclick="submitMutasiTabungan()" class="w-full py-2.5 bg-brand-primary hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all">' +
-                'Simpan Mutasi' +
-              '</button>' +
-            '</div>' +
-
-            '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between text-xs space-y-2">' +
-              '<div>' +
-                '<h4 class="font-extrabold text-slate-800 pb-2 border-b border-slate-100">Analisa Efisiensi Keuangan Pribadi</h4>' +
-                '<div id="tbgAnalisaBox" class="mt-2 text-slate-600 leading-relaxed space-y-1.5">' +
-                  '<p>• Alokasikan minimal 10% gaji untuk tabungan darurat.</p>' +
-                  '<p>• Hemat pengeluaran jajan/kopi 20rb/hari = hemat 600rb/bulan.</p>' +
-                  '<p>• Bawa bekal makanan dari rumah hemat rata-rata 450rb/bulan.</p>' +
-                '</div>' +
-              '</div>' +
-              '<button onclick="resetSemuaTabunganSaya()" class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg transition-all">' +
-                '<i class="fa-solid fa-trash mr-1"></i> Reset Data Tabungan Saya' +
-              '</button>' +
+      container.innerHTML = 
+        '<div class="h-16 px-4 md:px-6 bg-emerald-900 text-white flex items-center justify-between shadow-md flex-shrink-0">' +
+          '<div class="flex items-center space-x-3">' +
+            '<button onclick="tutupModalUniversalMenu()" class="w-9 h-9 rounded-xl bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center transition-all">' +
+              '<i class="fa-solid fa-arrow-left text-sm"></i>' +
+            '</button>' +
+            '<div>' +
+              '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Tabunganku – Rekap Finansial Pribadi</h3>' +
+              '<p class="text-[10px] text-emerald-200">Isolasi Mutlak NIK Pribadi – Menabung Terarah & Analisa Efisiensi</p>' +
             '</div>' +
           '</div>' +
+          '<div class="flex items-center space-x-2">' +
+            // IKON GERIGI UNTUK SETTING TARGET TABUNGAN
+            '<button onclick="bukaModalSettingTargetTabungan()" title="Setting Target Impian Tabungan" class="w-9 h-9 rounded-xl bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center transition-all text-amber-300 shadow-inner">' +
+              '<i class="fa-solid fa-gear text-sm"></i>' +
+            '</button>' +
+            '<button onclick="tutupModalUniversalMenu()" class="text-emerald-300 hover:text-white p-2">' +
+              '<i class="fa-solid fa-xmark text-lg"></i>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
 
-          '<div id="containerTabelRiwayatTabungan"></div>' +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4 relative" id="tbgMainContainerWrapper">' +
+          '<div id="tbgDynamicContentArea" class="space-y-4 max-w-5xl mx-auto w-full"></div>' +
+
+          // FLOATING ACTION BUTTON (FAB +) DI POJOK KANAN BAWAH
+          '<button onclick="bukaModalInputTabungan()" id="btnFabTabungan" title="Catat Mutasi Tabungan" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-brand-primary hover:bg-emerald-700 text-white shadow-2xl flex items-center justify-center text-2xl z-30 transition-transform active:scale-95 animate-bounce">' +
+            '<i class="fa-solid fa-plus"></i>' +
+          '</button>' +
         '</div>';
 
-      window.currentJenisTabungan = 'SETOR';
-      muatDataTabunganku();
+      renderSubTabTabunganContent();
     }
 
-    function setJenisTabungan(jenis) {
-      window.currentJenisTabungan = jenis;
-      var btnS = document.getElementById('btnTbgSetor');
-      var btnT = document.getElementById('btnTbgTarik');
-      if (jenis === 'SETOR') {
-        btnS.className = 'flex-1 py-2 rounded-lg bg-brand-primary text-white font-extrabold';
-        btnT.className = 'flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-extrabold';
-      } else {
-        btnS.className = 'flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-extrabold';
-        btnT.className = 'flex-1 py-2 rounded-lg bg-red-600 text-white font-extrabold';
-      }
-    }
+    // --- RENDER ISI KONTEN TABUNGANKU ---
+    function renderSubTabTabunganContent() {
+      var container = document.getElementById('tbgDynamicContentArea');
+      if (!container) return;
 
-    function muatDataTabunganku() {
-      muatDataSheetLazy('Tabunganku', false, function(rows) {
-        var saldo = 0;
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+
+      muatDataSheetLazy('Tabunganku', false, function(allTbgRows) {
+        var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+
+        // 1. FILTER NIK PRIBADI (ISOLASI MUTLAK)
+        var myRows = allTbgRows.filter(function(r) {
+          return String(r['NIK'] || '').trim() === userNik;
+        });
+
+        // 2. FILTER BULAN (DEFAULT: SEMUA BULAN)
+        var filteredRows = myRows.filter(function(r) {
+          if (tbgActiveFilterBulan === 'ALL') return true;
+          var d = parseDateIndo(r['TANGGAL']);
+          if (isNaN(d.getTime())) return true;
+          return bulanList[d.getMonth()] === tbgActiveFilterBulan;
+        });
+
+        // 3. URUTKAN TANGGAL TERBARU PALING ATAS
+        var sortedRows = filteredRows.slice().sort(function(a, b) {
+          return parseDateIndo(b['TANGGAL']) - parseDateIndo(a['TANGGAL']);
+        });
+
+        // 4. HITUNG RESUME SALDO DARI SELURUH TRANSAKSI PRIBADI
         var totalSetor = 0;
         var totalTarik = 0;
 
-        rows.forEach(function(r) {
-          var jlh = Number(r['JUMLAH'] || 0);
-          if (r['TIPE'] === 'SETOR') {
-            saldo += jlh;
+        myRows.forEach(function(r) {
+          var t = String(r['TIPE'] || '').toUpperCase().trim();
+          var jlh = parseAngkaIndo(r['JUMLAH']);
+          if (t === 'SETOR' || t === 'PEMASUKAN') {
             totalSetor += jlh;
-          } else {
-            saldo -= jlh;
+          } else if (t === 'TARIK' || t === 'PENGELUARAN') {
             totalTarik += jlh;
           }
         });
 
-        window.currentSaldoTabungan = saldo;
-        document.getElementById('tbgSaldoAkhir').innerText = 'Rp ' + saldo.toLocaleString('id-ID');
-        document.getElementById('tbgTotalSetor').innerText = 'Rp ' + totalSetor.toLocaleString('id-ID');
-        document.getElementById('tbgTotalTarik').innerText = 'Rp ' + totalTarik.toLocaleString('id-ID');
+        var totalSaldo = totalSetor - totalTarik;
 
-        var boxTabel = document.getElementById('containerTabelRiwayatTabungan');
-        var html = '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 pb-2 border-b border-slate-100">Riwayat Mutasi Tabungan Pribadi</h4>' +
-          '<div class="overflow-x-auto text-xs">' +
-            '<table class="w-full text-left divide-y divide-slate-100">' +
-              '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr>' +
-                '<th class="p-2">Tanggal</th><th class="p-2">Tipe</th><th class="p-2 text-right">Jumlah</th><th class="p-2 text-right">Saldo Sesudah</th><th class="p-2">Keterangan</th><th class="p-2 text-center">Aksi</th>' +
-              '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+        // Ambil data target dari LocalStorage
+        var targetKey = 'kacida_target_tabungan_' + userNik;
+        var targetData = null;
+        try {
+          targetData = JSON.parse(localStorage.getItem(targetKey) || 'null');
+        } catch(e) {}
 
-        rows.forEach(function(row) {
-          var isSetor = row['TIPE'] === 'SETOR';
-          html += '<tr>' +
-            '<td class="p-2 font-mono text-slate-500">' + row['TANGGAL'] + '</td>' +
-            '<td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (isSetor ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + row['TIPE'] + '</span></td>' +
-            '<td class="p-2 text-right font-bold font-mono ' + (isSetor ? 'text-emerald-700' : 'text-red-600') + '">Rp ' + Number(row['JUMLAH'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-right font-bold text-slate-800 font-mono">Rp ' + Number(row['SALDO_SESUDAH'] || 0).toLocaleString('id-ID') + '</td>' +
-            '<td class="p-2 text-slate-600">' + (row['KETERANGAN'] || '-') + '</td>' +
-            '<td class="p-2 text-center"><button onclick="hapusRowUniversal(\'Tabunganku\', \'' + row['ID'] + '\', muatDataTabunganku)" class="text-slate-300 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
+        var targetNama = targetData && targetData.namaTarget ? targetData.namaTarget : '';
+        var targetRp = targetData && targetData.targetRp ? Number(targetData.targetRp) : 0;
+        var progressTargetPct = targetRp > 0 ? ((totalSaldo / targetRp) * 100) : 0;
+
+        var html = 
+          // --- BAR FILTER BULAN (DEFAULT: SEMUA BULAN) ---
+          '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
+            '<div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Filter Periode Tabungan</h4>' +
+              '<p class="text-[11px] text-slate-400">Pilih bulan mutasi atau tampilkan seluruh tabungan</p>' +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<select id="tbgSelectBulan" onchange="ubahFilterBulanTabungan(this.value)" class="px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-dark focus:border-brand-primary">' +
+                '<option value="ALL"' + (tbgActiveFilterBulan === 'ALL' ? ' selected' : '') + '>Semua Bulan (Default)</option>';
+                bulanList.forEach(function(b) {
+                  html += '<option value="' + b + '"' + (tbgActiveFilterBulan === b ? ' selected' : '') + '>' + b + '</option>';
+                });
+        html += '</select>' +
+            '</div>' +
+          '</div>' +
+
+          // --- 4 KOTAK RESUME BERWARNA GRADIEN + PROGRES BAR ANIMASI TARGET ---
+          '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs text-center">' +
+            // 1. Total Saldo
+            '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Total Saldo Tabungan</span>' +
+              '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSaldo).toLocaleString('id-ID') + '</span>' +
+              '<span class="text-[10px] text-emerald-200 mt-1">Dana Tersimpan Aman</span>' +
+            '</div>' +
+
+            // 2. Total Pemasukan (Setor)
+            '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Total Pemasukan</span>' +
+              '<span class="text-xl md:text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSetor).toLocaleString('id-ID') + '</span>' +
+              '<span class="text-[10px] text-blue-200 mt-1">Akumulasi Setoran (+)</span>' +
+            '</div>' +
+
+            // 3. Total Pengeluaran (Tarik)
+            '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-red-600 to-rose-800 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-red-200">Total Penarikan</span>' +
+              '<span class="text-xl md:text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalTarik).toLocaleString('id-ID') + '</span>' +
+              '<span class="text-[10px] text-red-200 mt-1">Pengeluaran Kas (-)</span>' +
+            '</div>' +
+
+            // 4. Progress Target
+            '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col justify-between">' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-amber-100">Progress Target</span>' +
+              '<span class="text-xl md:text-2xl font-black font-mono tracking-tight mt-0.5">' + progressTargetPct.toFixed(1).replace('.', ',') + '%</span>' +
+              '<div class="w-full bg-black/20 h-2.5 rounded-full overflow-hidden p-0.5 my-1">' +
+                '<div class="h-full bg-white rounded-full transition-all duration-700 ease-out" style="width: ' + Math.min(100, Math.max(0, progressTargetPct)) + '%"></div>' +
+              '</div>' +
+              '<span class="text-[10px] text-amber-100 font-bold truncate">' + (targetNama ? targetNama : 'Belum Ada Target') + '</span>' +
+            '</div>' +
+          '</div>' +
+
+          // --- ANALISA EFISIENSI KEUANGAN PRIBADI CERDAS & DONUT CHART ---
+          '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
+            // 1. Donut Chart Setor vs Tarik
+            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-between">' +
+              '<div class="w-full text-left pb-2 border-b border-slate-100">' +
+                '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Rasio Mutasi Tabungan</h4>' +
+                '<p class="text-[10px] text-slate-400">Pemasukan vs Penarikan</p>' +
+              '</div>' +
+              '<div class="relative w-36 h-36 my-2 flex items-center justify-center">' +
+                '<canvas id="chartDonutSetorTarikTabungan"></canvas>' +
+              '</div>' +
+              '<div class="w-full grid grid-cols-2 gap-1 text-[10px] text-center font-mono font-bold pt-1">' +
+                '<div class="text-emerald-700">Setor<br>Rp ' + Math.round(totalSetor/1000) + 'k</div>' +
+                '<div class="text-red-700">Tarik<br>Rp ' + Math.round(totalTarik/1000) + 'k</div>' +
+              '</div>' +
+            '</div>' +
+
+            // 2. Card Analisa Cerdas & Penyemangat Target
+            '<div class="md:col-span-2 bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">' +
+              '<div>' +
+                '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
+                  '<div class="w-7 h-7 rounded-lg bg-emerald-100 text-brand-primary flex items-center justify-center text-xs animate-bounce">' +
+                    '<i class="fa-solid fa-piggy-bank"></i>' +
+                  '</div>' +
+                  '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Analisa Efisiensi & Progres Target</h4>' +
+                '</div>' +
+
+                // Konten Analisa Dinamis
+                '<div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">';
+
+        if (targetRp <= 0) {
+          html += 
+            '<div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 flex items-start space-x-2.5">' +
+              '<i class="fa-solid fa-lightbulb text-amber-600 text-base mt-0.5"></i>' +
+              '<div>' +
+                '<p class="font-bold">Anda belum punya target yang harus dicapai!</p>' +
+                '<p class="text-[11px] text-amber-800 mt-0.5">Ayo lakukan setting target impian via tombol <b>Gerigi (⚙️)</b> di pojok kanan atas agar menabung lebih semangat dan terarah.</p>' +
+              '</div>' +
+            '</div>';
+        } else {
+          var sisaKurang = Math.max(0, targetRp - totalSaldo);
+          var pesanMotivasi = '';
+          if (progressTargetPct >= 100) {
+            pesanMotivasi = '🎉 <b>LUAR BIASA! Target impian "' + targetNama + '" Anda telah TERCAPAI 100%!</b> Pertahankan kebiasaan menabung yang hebat ini.';
+          } else if (progressTargetPct >= 75) {
+            pesanMotivasi = '🔥 <b>Hampir tercapai!</b> Sisa kekurangan tinggal <b>Rp ' + Math.round(sisaKurang).toLocaleString('id-ID') + '</b> lagi untuk impian "' + targetNama + '". Sedikit lagi!';
+          } else if (progressTargetPct >= 25) {
+            pesanMotivasi = '💪 <b>Sudah setengah jalan!</b> Konsistensi adalah kunci. Kumpulkan <b>Rp ' + Math.round(sisaKurang).toLocaleString('id-ID') + '</b> lagi untuk mewujudkannya.';
+          } else {
+            pesanMotivasi = '🌱 <b>Awal yang baik!</b> Setiap rupiah sangat berarti. Terus menabung rutin untuk mencapai target <b>Rp ' + Math.round(targetRp).toLocaleString('id-ID') + '</b>.';
+          }
+
+          html += 
+            '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-950">' +
+              '<p class="font-semibold text-xs">' + pesanMotivasi + '</p>' +
+            '</div>';
+        }
+
+        // Peringatan jika rasio tarik melebihi 30%
+        if (totalSetor > 0 && totalTarik > (totalSetor * 0.3)) {
+          html += 
+            '<p class="text-[11px] text-red-600 font-semibold flex items-center">' +
+              '<i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs animate-pulse"></i>' +
+              'Penarikan Anda sudah mencapai ' + ((totalTarik/totalSetor)*100).toFixed(1) + '% dari setoran. Kurangi pengeluaran konsumtif agar saldo tidak cepat habis.' +
+            '</p>';
+        } else {
+          html += '<p class="text-[11px] text-slate-500">• Alokasikan minimal 10% gaji untuk dana darurat & tabungan jangka panjang.</p>';
+        }
+
+        html += 
+                '</div>' +
+              '</div>' +
+
+              // Tombol Reset Tabungan
+              '<div class="pt-2 border-t border-slate-100 flex justify-end">' +
+                '<button onclick="resetSemuaTabunganSaya()" class="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5">' +
+                  '<i class="fa-solid fa-trash-can text-xs"></i><span>Reset Data Tabungan Saya</span>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // --- TABEL RIWAYAT MUTASI DENGAN PAGINATION (40 BARIS PERTAMA) ---
+          '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Riwayat Mutasi Tabungan Pribadi</h4>' +
+              '<span class="text-[10px] text-slate-400 font-mono font-bold">Total: ' + sortedRows.length + ' Transaksi</span>' +
+            '</div>' +
+
+            '<div class="overflow-x-auto text-xs">' +
+              '<table class="w-full text-center divide-y divide-slate-100">' +
+                '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+                  '<th class="p-2.5 text-left">Tanggal</th>' +
+                  '<th class="p-2.5 text-center">Tipe</th>' +
+                  '<th class="p-2.5 text-center">Jumlah (Rp)</th>' +
+                  '<th class="p-2.5 text-center">Saldo Sesudah</th>' +
+                  '<th class="p-2.5 text-left">Keterangan / Sumber</th>' +
+                  '<th class="p-2.5 text-center">Aksi</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+        if (sortedRows.length === 0) {
+          html += '<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">Belum ada riwayat mutasi tabungan pada periode ini. Tekan tombol + untuk menabung.</td></tr>';
+        }
+
+        // Kalkulasi Pagination (40 Baris per Halaman)
+        var totalPages = Math.max(1, Math.ceil(sortedRows.length / tbgPageSize));
+        if (tbgCurrentPage > totalPages) tbgCurrentPage = totalPages;
+        var startIdx = (tbgCurrentPage - 1) * tbgPageSize;
+        var endIdx = startIdx + tbgPageSize;
+        var pageRows = sortedRows.slice(startIdx, endIdx);
+
+        pageRows.forEach(function(row) {
+          var t = String(row['TIPE'] || '').toUpperCase().trim();
+          var isSetor = (t === 'SETOR' || t === 'PEMASUKAN');
+          var badgeTipe = isSetor
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">SETOR (+)</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-red-100 text-red-800 border border-red-300">TARIK (-)</span>';
+
+          html += '<tr class="hover:bg-slate-50/80 transition-colors">' +
+            '<td class="p-2.5 text-left font-mono font-bold text-slate-800 whitespace-nowrap">' + formatTanggalTampilan(row['TANGGAL']) + '</td>' +
+            '<td class="p-2.5 text-center">' + badgeTipe + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-black ' + (isSetor ? 'text-emerald-700' : 'text-red-600') + '">' + (isSetor ? '+ ' : '- ') + 'Rp ' + Math.round(parseAngkaIndo(row['JUMLAH'])).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-bold text-slate-900">Rp ' + Math.round(parseAngkaIndo(row['SALDO_SESUDAH'])).toLocaleString('id-ID') + '</td>' +
+            '<td class="p-2.5 text-left text-slate-600">' + (row['KETERANGAN'] || '-') + '</td>' +
+            '<td class="p-2.5 text-center space-x-1 whitespace-nowrap">' +
+              '<button onclick="bukaModalEditTabungan(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
+              '<button onclick="hapusRowUniversal(\'Tabunganku\', \'' + row['ID'] + '\', renderSubTabTabunganContent)" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
+            '</td>' +
           '</tr>';
         });
 
-        html += '</tbody></table></div></div>';
-        boxTabel.innerHTML = html;
+        html += '</tbody></table></div>';
+
+        // Navigasi Pagination
+        if (sortedRows.length > tbgPageSize) {
+          html += 
+            '<div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">' +
+              '<span class="text-slate-400 font-mono text-[11px]">Halaman <b>' + tbgCurrentPage + '</b> dari <b>' + totalPages + '</b> (' + (startIdx + 1) + '-' + Math.min(endIdx, sortedRows.length) + ' dari ' + sortedRows.length + ' data)</span>' +
+              '<div class="flex space-x-1.5">' +
+                '<button onclick="gantiHalamanTabungan(' + (tbgCurrentPage - 1) + ')" ' + (tbgCurrentPage <= 1 ? 'disabled class="px-3 py-1 bg-slate-100 text-slate-300 rounded-lg cursor-not-allowed"' : 'class="px-3 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-bold shadow-sm"') + '>Sebelumnya</button>' +
+                '<button onclick="gantiHalamanTabungan(' + (tbgCurrentPage + 1) + ')" ' + (tbgCurrentPage >= totalPages ? 'disabled class="px-3 py-1 bg-slate-100 text-slate-300 rounded-lg cursor-not-allowed"' : 'class="px-3 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-bold shadow-sm"') + '>Berikutnya</button>' +
+              '</div>' +
+            '</div>';
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Render Donut Chart Setor vs Tarik
+        renderDonutTabungan(totalSetor, totalTarik);
       });
     }
 
-    function submitMutasiTabungan() {
-      var jlh = Number(document.getElementById('tbgInputJumlah').value || 0);
-      var ket = document.getElementById('tbgInputKet').value.trim();
-      var jenis = window.currentJenisTabungan || 'SETOR';
+    // --- RENDER DONUT CHART TABUNGAN ---
+    function renderDonutTabungan(setor, tarik) {
+      var canvas = document.getElementById('chartDonutSetorTarikTabungan');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (chartDonutTabunganInstance) chartDonutTabunganInstance.destroy();
+
+      chartDonutTabunganInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Setor', 'Tarik'],
+          datasets: [{
+            data: [setor, tarik],
+            backgroundColor: ['#059669', '#dc2626'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '72%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // ==================== MODAL SETTING TARGET (GERIGI POJOK KANAN ATAS) ====================
+    function bukaModalSettingTargetTabungan() {
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var targetKey = 'kacida_target_tabungan_' + userNik;
+      var existingData = null;
+      try {
+        existingData = JSON.parse(localStorage.getItem(targetKey) || 'null');
+      } catch(e) {}
+
+      var defNama = existingData ? existingData.namaTarget : '';
+      var defRp = existingData ? existingData.targetRp : '';
+
+      Swal.fire({
+        title: 'Setting Target Impian Tabungan',
+        html: 
+          '<div class="text-left text-xs space-y-3 text-slate-700 my-2">' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nama Target / Impian</label>' +
+              '<input type="text" id="swalTargetNama" value="' + defNama + '" placeholder="Contoh: Beli Motor, Liburan Akhir Tahun" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs">' +
+            '</div>' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nominal Target (Rp)</label>' +
+              '<input type="number" id="swalTargetRp" value="' + defRp + '" placeholder="Contoh: 15000000" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-center text-sm">' +
+            '</div>' +
+            '<p class="text-[11px] text-slate-400">Target ini akan menghitung persentase ketercapaian dari total saldo tabungan pribadi Anda.</p>' +
+          '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Target',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          var nama = document.getElementById('swalTargetNama').value.trim();
+          var rp = Number(document.getElementById('swalTargetRp').value || 0);
+
+          if (!nama || rp <= 0) {
+            Swal.showValidationMessage('Nama target dan nominal target harus diisi dengan benar');
+            return false;
+          }
+          return { namaTarget: nama, targetRp: rp };
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          localStorage.setItem(targetKey, JSON.stringify(res.value));
+          Swal.fire({ icon: 'success', title: 'Target Tabungan Disimpan', timer: 1200, showConfirmButton: false });
+          renderSubTabTabunganContent();
+        }
+      });
+    }
+
+    // ==================== MODAL FORM INPUT MUTASI TABUNGAN (FAB + MELAYANG) ====================
+    function bukaModalInputTabungan() {
+      var existing = document.getElementById('modalFormInputTabunganWrapper');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'modalFormInputTabunganWrapper';
+      modal.className = 'fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-piggy-bank text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Catat Mutasi Tabungan Pribadi</h3>' +
+                '<p class="text-[10px] text-emerald-200">Isolasi Data NIK ' + (currentSessionUser ? currentSessionUser.nik : '') + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalInputTabungan()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="p-4 md:p-5 space-y-3.5 text-xs bg-slate-50">' +
+            // Pilihan Tipe (Pemasukan / Pengeluaran)
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Jenis Mutasi</label>' +
+              '<select id="mTbgTipe" onchange="updateWarnaTipeTabungan(this.value)" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-black text-xs text-emerald-800">' +
+                '<option value="SETOR">SETOR (+) - Menambah Saldo Tabungan</option>' +
+                '<option value="TARIK">TARIK (-) - Menarik Uang Tabungan</option>' +
+              '</select>' +
+            '</div>' +
+
+            '<div id="bannerPeringatanTarikTbg" class="hidden p-2.5 bg-red-50 text-red-700 border border-red-200 rounded-xl text-[11px] font-bold flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-triangle-exclamation"></i>' +
+              '<span>Perhatian: Penarikan akan mengurangi saldo tabungan pribadi Anda.</span>' +
+            '</div>' +
+
+            // Nominal
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nominal (Rp)</label>' +
+              '<input type="number" id="mTbgJumlah" placeholder="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono font-black text-sm text-slate-900">' +
+            '</div>' +
+
+            // Keterangan / Sumber
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Keterangan / Sumber Dana</label>' +
+              '<input type="text" id="mTbgKet" placeholder="Contoh: Gaji bulanan, bonus insentif, sisa belanja" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs">' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-end space-x-2">' +
+            '<button onclick="tutupModalInputTabungan()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Batal</button>' +
+            '<button onclick="simpanMutasiTabunganBaru()" class="px-6 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5"><i class="fa-solid fa-save"></i><span>Simpan Mutasi</span></button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+    }
+
+    function tutupModalInputTabungan() {
+      var modal = document.getElementById('modalFormInputTabunganWrapper');
+      if (modal) modal.remove();
+    }
+
+    function updateWarnaTipeTabungan(tipeVal) {
+      var sel = document.getElementById('mTbgTipe');
+      var banner = document.getElementById('bannerPeringatanTarikTbg');
+      if (tipeVal === 'TARIK') {
+        sel.className = 'w-full px-3 py-2 bg-red-50 border border-red-300 rounded-xl font-black text-xs text-red-700';
+        banner.classList.remove('hidden');
+      } else {
+        sel.className = 'w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-black text-xs text-emerald-800';
+        banner.classList.add('hidden');
+      }
+    }
+
+    function simpanMutasiTabunganBaru() {
+      var tipe = document.getElementById('mTbgTipe').value;
+      var jlh = Number(document.getElementById('mTbgJumlah').value || 0);
+      var ket = document.getElementById('mTbgKet').value.trim();
 
       if (jlh <= 0) {
-        Swal.fire({ icon: 'warning', title: 'Nominal Tidak Valid', text: 'Masukkan nominal lebih dari Rp 0.' });
+        Swal.fire({ icon: 'warning', title: 'Nominal Kosong', text: 'Masukkan nominal tabungan lebih dari Rp 0.' });
         return;
       }
 
-      var saldoSebelum = window.currentSaldoTabungan || 0;
-      if (jenis === 'TARIK' && jlh > saldoSebelum) {
-        Swal.fire({ icon: 'error', title: 'Saldo Tidak Cukup', text: 'Saldo tabungan Anda saat ini Rp ' + saldoSebelum.toLocaleString('id-ID') });
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+
+      // Hitung Saldo Sebelum dari Cache
+      var saldoSebelum = 0;
+      var cached = localStorage.getItem('kacida_cache_Tabunganku');
+      if (cached) {
+        try {
+          var rows = JSON.parse(cached).data || [];
+          var myRows = rows.filter(function(r) { return String(r['NIK'] || '').trim() === userNik; });
+          var st = 0; var tr = 0;
+          myRows.forEach(function(r) {
+            var tp = String(r['TIPE'] || '').toUpperCase().trim();
+            var amt = parseAngkaIndo(r['JUMLAH']);
+            if (tp === 'SETOR' || tp === 'PEMASUKAN') st += amt;
+            else if (tp === 'TARIK' || tp === 'PENGELUARAN') tr += amt;
+          });
+          saldoSebelum = st - tr;
+        } catch(e) {}
+      }
+
+      if (tipe === 'TARIK' && jlh > saldoSebelum) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Saldo Tabungan Tidak Cukup',
+          html: 'Saldo tabungan Anda saat ini hanya <b>Rp ' + Math.round(saldoSebelum).toLocaleString('id-ID') + '</b>.<br>Penarikan tidak boleh melebihi saldo.',
+          confirmButtonColor: '#059669'
+        });
         return;
       }
 
-      var saldoSesudah = jenis === 'SETOR' ? (saldoSebelum + jlh) : (saldoSebelum - jlh);
+      var saldoSesudah = (tipe === 'SETOR') ? (saldoSebelum + jlh) : (saldoSebelum - jlh);
       var cfg = getTokoConfig() || {};
+
+      Swal.fire({ title: 'Menyimpan Mutasi...', didOpen: function() { Swal.showLoading(); } });
 
       var payload = {
         subAction: 'SAVE_TRANSAKSI',
-        nik: currentSessionUser ? currentSessionUser.nik : '',
+        nik: userNik,
         nama: currentSessionUser ? currentSessionUser.nama : '',
-        kode: cfg.cleanCode || '',
-        tipe: jenis,
+        kode: (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim(),
+        tipe: tipe,
         jumlah: jlh,
         saldoSebelum: saldoSebelum,
         saldoSesudah: saldoSesudah,
         keterangan: ket
       };
 
-      Swal.fire({ title: 'Menyimpan Mutasi...', didOpen: function() { Swal.showLoading(); } });
       kirimBackendRequest('CRUD_TABUNGANKU', payload, function() {
         Swal.close();
-        Swal.fire({ icon: 'success', title: 'Mutasi Berhasil', timer: 1200, showConfirmButton: false });
+        tutupModalInputTabungan();
+        Swal.fire({ icon: 'success', title: 'Mutasi Tabungan Berhasil Disimpan', timer: 1200, showConfirmButton: false });
         muatDataSheetLazy('Tabunganku', true, function() {
-          muatDataTabunganku();
+          renderSubTabTabunganContent();
         });
       }, function(err) {
         Swal.close();
-        Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
+        Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });
       });
     }
 
-    function resetSemuaTabunganSaya() {
+    // ==================== MODAL EDIT TABUNGAN ====================
+    function bukaModalEditTabungan(item) {
       Swal.fire({
-        title: 'Reset Semua Tabungan Saya?',
-        text: 'Seluruh riwayat tabungan Anda akan dihapus permanen!',
-        icon: 'warning',
+        title: 'Edit Mutasi Tabungan',
+        html: 
+          '<div class="text-left text-xs space-y-2.5 text-slate-700 my-2">' +
+            '<div>' +
+              '<label class="block font-bold mb-1">Nominal (Rp)</label>' +
+              '<input type="number" id="editTbgJlh" value="' + parseAngkaIndo(item['JUMLAH']) + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold text-center">' +
+            '</div>' +
+            '<div>' +
+              '<label class="block font-bold mb-1">Keterangan / Sumber Dana</label>' +
+              '<input type="text" id="editTbgKet" value="' + (item['KETERANGAN'] || '') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' +
+            '</div>' +
+          '</div>',
         showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Ya, Reset Semua'
+        confirmButtonText: 'Simpan Perubahan',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          return {
+            jumlah: Number(document.getElementById('editTbgJlh').value || 0),
+            keterangan: document.getElementById('editTbgKet').value.trim()
+          };
+        }
       }).then(function(res) {
-        if (res.isConfirmed) {
-          kirimBackendRequest('CRUD_TABUNGANKU', {
-            subAction: 'RESET_USER',
-            nik: currentSessionUser ? currentSessionUser.nik : ''
-          }, function() {
-            Swal.fire({ icon: 'success', title: 'Tabungan Berhasil Direset', timer: 1200, showConfirmButton: false });
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan...', didOpen: function() { Swal.showLoading(); } });
+
+          var payload = res.value;
+          payload.subAction = 'EDIT';
+          payload.id = item['ID'];
+
+          kirimBackendRequest('CRUD_TABUNGANKU', payload, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Data Diperbarui', timer: 1000, showConfirmButton: false });
             muatDataSheetLazy('Tabunganku', true, function() {
-              muatDataTabunganku();
+              renderSubTabTabunganContent();
             });
           }, function(err) {
-            Swal.fire({ icon: 'error', title: 'Gagal Reset', text: err.toString() });
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal Edit', text: err.toString() });
           });
         }
       });
+    }
+
+    // --- HANDLER FILTER BULAN & PAGINATION TABUNGAN ---
+    function ubahFilterBulanTabungan(val) {
+      tbgActiveFilterBulan = val;
+      tbgCurrentPage = 1;
+      renderSubTabTabunganContent();
+    }
+
+    function gantiHalamanTabungan(page) {
+      tbgCurrentPage = page;
+      renderSubTabTabunganContent();
     }
 
     // ==================== [4] MODUL KAS AREA LENGKAP ====================

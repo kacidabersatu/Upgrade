@@ -5223,8 +5223,8 @@
       renderSubTabKasContent();
     }
 
-    // ==================== [5] MODUL DONASI AREA LENGKAP ====================
-    var donActiveFilterBulan = 'ALL'; // Default: Semua Bulan
+    // ==================== [5] MODUL DONASI AREA (LAYOUT DESKTOP & MOBILE RAPI) ====================
+    var donActiveFilterBulan = 'ALL';
     var chartDonutDonasiInstance = null;
     var chartBarDonasiInstance = null;
 
@@ -5252,8 +5252,8 @@
           '</div>' +
         '</div>' +
 
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4 relative" id="donMainContainerWrapper">' +
-          '<div id="donDynamicContentArea"></div>' +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 relative" id="donMainContainerWrapper">' +
+          '<div id="donDynamicContentArea" class="space-y-4 max-w-6xl mx-auto w-full"></div>' +
 
           // FLOATING ACTION BUTTON (FAB +) HANYA UNTUK ADMIN
           (isAdminDonasi ? 
@@ -5265,7 +5265,7 @@
       renderSubTabDonasiContent();
     }
 
-    // --- RENDER ISI KONTEN DONASI AREA ---
+    // --- RENDER ISI KONTEN DONASI AREA DENGAN STRUKTUR BERSIH & RAPI ---
     function renderSubTabDonasiContent() {
       var container = document.getElementById('donDynamicContentArea');
       if (!container) return;
@@ -5318,9 +5318,10 @@
         var saldoSaatIni = totMasuk - totKeluar;
         var pctKeluarVsMasuk = totMasuk > 0 ? ((totKeluar / totMasuk) * 100) : 0;
 
+        // KUNCI PERBAIKAN: Setiap seksi memiliki tag pembuka dan penutup </div> yang mandiri
         var html = 
-          // --- BANNER REKENING RESMI DENGAN IKON ANIMASI MENARIK ---
-          '<div class="bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-950 rounded-2xl p-5 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-emerald-700/50 relative overflow-hidden">' +
+          // ==================== SEKSI 1: BANNER REKENING RESMI ====================
+          '<div class="w-full bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-950 rounded-2xl p-5 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-emerald-700/50 relative overflow-hidden">' +
             '<div class="flex items-center space-x-3.5 relative z-10">' +
               '<div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-300 text-2xl shadow-inner border border-white/20 flex-shrink-0 animate-pulse">' +
                 '<i class="fa-solid fa-hand-holding-heart"></i>' +
@@ -5336,15 +5337,15 @@
                 '</div>' +
               '</div>' +
             '</div>' +
-            // Ganti bagian 3 tombol salin banner donasi menjadi:
             '<div class="flex flex-wrap gap-2 text-xs font-bold relative z-10">' +
               '<button type="button" onclick="salinPresetDonasi(\'REK\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-copy"></i><span>Salin Rekening</span></button>' +
               '<button type="button" onclick="salinPresetDonasi(\'NAMA\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-user"></i><span>Salin Nama</span></button>' +
               '<button type="button" onclick="salinPresetDonasi(\'ALL\')" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-solid fa-check-double"></i><span>Salin Lengkap</span></button>' +
             '</div>' +
+          '</div>' + // <-- Penutup banner yang benar
 
-          // --- BAR FILTER BULAN (DEFAULT: SEMUA BULAN) ---
-          '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
+          // ==================== SEKSI 2: BAR FILTER BULAN ====================
+          '<div class="w-full bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
             '<div>' +
               '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Filter Periode Donasi</h4>' +
               '<p class="text-[11px] text-slate-400">Pilih bulan pembukuan donasi atau tampilkan akumulasi tahunan</p>' +
@@ -5359,8 +5360,8 @@
             '</div>' +
           '</div>' +
 
-          // --- KOTAK RESUME TINGKAT 1 (PEMASUKAN & RASIO PENGELUARAN) ---
-          '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-center">' +
+          // ==================== SEKSI 3: KOTAK RESUME TINGKAT 1 ====================
+          '<div class="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-center">' +
             '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Saldo Donasi Tersedia</span>' +
               '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(saldoSaatIni).toLocaleString('id-ID') + '</span>' +
@@ -5381,8 +5382,8 @@
             '</div>' +
           '</div>' +
 
-          // --- KOTAK RESUME TINGKAT 2 (5 PROGRAM PENYALURAN PENGELUARAN) ---
-          '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-xs text-center">' +
+          // ==================== SEKSI 4: KOTAK RESUME TINGKAT 2 (5 PROGRAM) ====================
+          '<div class="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-xs text-center">' +
             '<div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-400 font-bold uppercase">Bantuan Sesama</span><span class="text-xs md:text-sm font-black font-mono text-slate-800 mt-1">Rp ' + Math.round(pSesama).toLocaleString('id-ID') + '</span></div>' +
             '<div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-400 font-bold uppercase">Anak Yatim</span><span class="text-xs md:text-sm font-black font-mono text-slate-800 mt-1">Rp ' + Math.round(pYatim).toLocaleString('id-ID') + '</span></div>' +
             '<div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"><span class="text-[10px] text-slate-400 font-bold uppercase">Sumbangan Masjid</span><span class="text-xs md:text-sm font-black font-mono text-slate-800 mt-1">Rp ' + Math.round(pMasjid).toLocaleString('id-ID') + '</span></div>' +
@@ -5390,8 +5391,8 @@
             '<div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1"><span class="text-[10px] text-slate-400 font-bold uppercase">Lain-Lain</span><span class="text-xs md:text-sm font-black font-mono text-slate-800 mt-1">Rp ' + Math.round(pLain).toLocaleString('id-ID') + '</span></div>' +
           '</div>' +
 
-          // --- 2 VISUALISASI GRAFIK: DONUT PENGELUARAN & BAR CHART ARUS BULANAN ---
-          '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
+          // ==================== SEKSI 5: DUA GRAFIK VISUAL ====================
+          '<div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">' +
             // 1. Donut Chart Pengeluaran vs Sisa Saldo
             '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-between">' +
               '<div class="w-full text-left pb-2 border-b border-slate-100">' +
@@ -5404,7 +5405,7 @@
               '<div id="legendDonutDonasi" class="w-full grid grid-cols-2 gap-1 text-[9px] text-center font-mono font-bold pt-1"></div>' +
             '</div>' +
 
-            // 2. Bar Chart 2 Batang per Bulan (Masuk vs Keluar)
+            // 2. Bar Chart 2 Batang per Bulan
             '<div class="md:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">' +
               '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
                 '<div>' +
@@ -5422,8 +5423,8 @@
             '</div>' +
           '</div>' +
 
-          // --- TABEL TRANSPARANSI DONASI TIM ---
-          '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
+          // ==================== SEKSI 6: TABEL TRANSPARANSI DONASI TIM ====================
+          '<div class="w-full bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
             '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
               '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Transparansi Penyaluran Donasi Tim</h4>' +
               '<span class="text-[10px] text-slate-400 font-mono font-bold">Total: ' + sortedRows.length + ' Data</span>' +
@@ -5461,14 +5462,14 @@
             '<td class="p-2.5 text-center font-mono font-black ' + (isPlus ? 'text-emerald-700' : 'text-red-600') + '">' + (isPlus ? '+ ' : '- ') + 'Rp ' + Math.round(parseAngkaIndo(row['JUMLAH'])).toLocaleString('id-ID') + '</td>' +
             '<td class="p-2.5 text-center font-mono font-extrabold text-slate-900">Rp ' + Math.round(parseAngkaIndo(row['SALDO_SESUDAH'])).toLocaleString('id-ID') + '</td>' +
             
-            // Kolom Bukti dengan Pengecekan Cerdas
+            // Kolom Bukti
             '<td class="p-2.5 text-center">' +
               (buktiUrl && buktiUrl.length > 5
                 ? '<button onclick="bukaPreviewFotoFull(\'' + buktiUrl + '\', \'Bukti Donasi: ' + (row['PROGRAM'] || 'Penyaluran') + '\')" class="px-2.5 py-1 bg-emerald-50 text-brand-primary border border-emerald-200 rounded-lg font-bold text-[11px] hover:bg-emerald-100 shadow-sm"><i class="fa-solid fa-image mr-1"></i>Lihat</button>'
                 : '<button onclick="Swal.fire({icon: \'info\', title: \'Bukti Tidak Tersedia\', text: \'Transaksi donasi ini tidak menyertakan foto dokumentasi fisik.\', confirmButtonColor: \'#059669\'})" class="px-2.5 py-1 bg-slate-100 text-slate-400 rounded-lg font-bold text-[11px] hover:bg-slate-200">Lihat</button>') +
             '</td>' +
 
-            // Kolom Aksi (Hanya Muncul untuk Admin)
+            // Kolom Aksi Khusus Admin
             (isAdminDonasi 
               ? '<td class="p-2.5 text-center space-x-1 whitespace-nowrap">' +
                   '<button onclick="bukaModalEditDonasi(' + JSON.stringify(row).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
@@ -5480,7 +5481,7 @@
         html += '</tbody></table></div></div>';
         container.innerHTML = html;
 
-        // Render Donut & Bar Chart Donasi
+        // Render Grafik Donut & Bar Chart
         renderGrafikDonasiVisual(allDonRows);
       });
     }

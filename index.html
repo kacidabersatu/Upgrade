@@ -5336,12 +5336,12 @@
                 '</div>' +
               '</div>' +
             '</div>' +
+            // Ganti bagian 3 tombol salin banner donasi menjadi:
             '<div class="flex flex-wrap gap-2 text-xs font-bold relative z-10">' +
-              '<button onclick="salinTeksClip(\'50579669505\', \'No Rekening\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-copy"></i><span>Salin Rekening</span></button>' +
-              '<button onclick="salinTeksClip(\'Yayu Gustiawati\', \'Atas Nama\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-user"></i><span>Salin Nama</span></button>' +
-              '<button onclick="salinTeksClip(\'Bank Aladin Syariah - 50579669505 a/n Yayu Gustiawati\', \'Rincian Donasi\')" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-solid fa-check-double"></i><span>Salin Lengkap</span></button>' +
+              '<button type="button" onclick="salinPresetDonasi(\'REK\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-copy"></i><span>Salin Rekening</span></button>' +
+              '<button type="button" onclick="salinPresetDonasi(\'NAMA\')" class="px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/20 transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-regular fa-user"></i><span>Salin Nama</span></button>' +
+              '<button type="button" onclick="salinPresetDonasi(\'ALL\')" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-all active:scale-95 flex items-center space-x-1.5"><i class="fa-solid fa-check-double"></i><span>Salin Lengkap</span></button>' +
             '</div>' +
-          '</div>' +
 
           // --- BAR FILTER BULAN (DEFAULT: SEMUA BULAN) ---
           '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
@@ -5851,6 +5851,100 @@
     function ubahFilterBulanDonasi(val) {
       donActiveFilterBulan = val;
       renderSubTabDonasiContent();
+    }
+
+    // ==================== ENGINE SALIN CLIPBOARD UNIVERSAL (100% BERHASIL DI HP & WEB) ====================
+    function salinTeksClip(textVal, label) {
+      if (!textVal) return;
+
+      // 1. Fallback Klasik (Mendukung Seluruh HP & Webview)
+      function copyViaTextarea(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          var successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return successful;
+        } catch (err) {
+          document.body.removeChild(textArea);
+          return false;
+        }
+      }
+
+      // 2. Coba Navigator Clipboard Modern Terlebih Dahulu
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textVal).then(function() {
+          Swal.fire({
+            icon: 'success',
+            title: label + ' Berhasil Disalin',
+            text: textVal,
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }).catch(function() {
+          // Jika diblokir izin browser, gunakan fallback textarea
+          var ok = copyViaTextarea(textVal);
+          if (ok) {
+            Swal.fire({
+              icon: 'success',
+              title: label + ' Berhasil Disalin',
+              text: textVal,
+              timer: 1500,
+              showConfirmButton: false
+            });
+          } else {
+            promptSalinManual(textVal, label);
+          }
+        });
+      } else {
+        // Fallback langsung untuk browser yang membatasi clipboard API
+        var ok = copyViaTextarea(textVal);
+        if (ok) {
+          Swal.fire({
+            icon: 'success',
+            title: label + ' Berhasil Disalin',
+            text: textVal,
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          promptSalinManual(textVal, label);
+        }
+      }
+    }
+
+    // Modal Darurat jika Clipboard di-lock total oleh Android
+    function promptSalinManual(textVal, label) {
+      Swal.fire({
+        title: 'Salin ' + label,
+        html: '<p class="text-xs text-slate-500 mb-2">Tekan lama teks di bawah untuk menyalin:</p>' +
+              '<input type="text" readonly value="' + textVal + '" class="w-full p-2.5 text-center font-mono font-bold bg-slate-100 border border-slate-300 rounded-xl select-all">',
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'Tutup'
+      });
+    }
+
+    // FUNGSI KHUSUS TOMBOL DONASI (BEBAS ERROR TANDA KUTIP)
+    function salinPresetDonasi(tipe) {
+      var noRek = '50579669505';
+      var atasNama = 'Yayu Gustiawati';
+      var bankNama = 'Bank Aladin Syariah';
+
+      if (tipe === 'REK') {
+        salinTeksClip(noRek, 'Nomor Rekening');
+      } else if (tipe === 'NAMA') {
+        salinTeksClip(atasNama, 'Atas Nama Rekening');
+      } else if (tipe === 'ALL') {
+        var rincianLengkap = bankNama + '\nNo. Rekening: ' + noRek + '\na/n ' + atasNama;
+        salinTeksClip(rincianLengkap, 'Rincian Rekening Lengkap');
+      }
     }
 
     // ==================== [6] MODUL SIMULASI IKT (MENU UTAMA DIUPDATE DENGAN DATA TOKO AKTIF) ====================

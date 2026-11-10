@@ -6547,6 +6547,7 @@
       }
     }
 
+    // ==================== FUNGSI HAPUS UNIVERSAL (DENGAN IDENTITAS NIK & ROLE LENGKAP) ====================
     function hapusRowUniversal(namaSheet, rowId, callbackReload) {
       Swal.fire({
         title: 'Hapus Data Ini?',
@@ -6558,17 +6559,25 @@
         cancelButtonText: 'Batal'
       }).then(function(res) {
         if (res.isConfirmed) {
-          // Petakan nama aksi agar cocok dengan router backend
+          // Petakan nama aksi backend
           var actionKey = 'CRUD_' + namaSheet.toUpperCase();
           if (namaSheet === 'Monitoring_KWH') {
             actionKey = 'CRUD_KWH';
           }
           if (namaSheet === 'Monitoring_Sales_OPR') {
-        actionKey = 'CRUD_SALES_OPR';
-      }
+            actionKey = 'CRUD_SALES_OPR';
+          }
 
-          kirimBackendRequest(actionKey, { subAction: 'DELETE', id: rowId }, function() {
-            Swal.fire({ icon: 'success', title: 'Data Dihapus', timer: 1000, showConfirmButton: false });
+          // KUNCI PERBAIKAN: Sertakan NIK dan Role user login agar lolos validasi keamanan admin
+          var payloadDel = {
+            subAction: 'DELETE',
+            id: rowId,
+            nik: currentSessionUser ? String(currentSessionUser.nik || '').trim() : '',
+            role: currentSessionUser ? String(currentSessionUser.jabatan || '').trim() : ''
+          };
+
+          kirimBackendRequest(actionKey, payloadDel, function() {
+            Swal.fire({ icon: 'success', title: 'Data Berhasil Dihapus', timer: 1000, showConfirmButton: false });
             muatDataSheetLazy(namaSheet, true, function() {
               if (callbackReload) callbackReload();
             });

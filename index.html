@@ -3391,7 +3391,6 @@
       muatDataSheetLazy('Log_Aktivitas', false, function(logs) {
         var pwaUsers = logs.filter(function(l){ return String(l['ISTAL_PWA']).toUpperCase() === 'YA'; });
         
-        // Ambil riwayat terbaru per NIK
         var dedup = {};
         pwaUsers.forEach(function(l){
           var nik = String(l['NIK'] || '').trim();
@@ -3401,29 +3400,34 @@
         var list = Object.values(dedup);
         var rowsHtml = '';
         list.forEach(function(item, idx) {
-          rowsHtml += '<tr class="hover:bg-slate-50">' +
-            '<td class="p-2 text-center font-mono">' + (idx + 1) + '</td>' +
-            '<td class="p-2 text-left font-bold text-slate-800">' + (item['NAMA'] || '-') + '<br><span class="text-[10px] text-slate-400 font-mono">' + item['NIK'] + '</span></td>' +
-            '<td class="p-2 text-center font-mono font-bold text-brand-dark">' + (item['KODE'] || '-') + '</td>' +
-            '<td class="p-2 text-center font-mono font-black text-blue-700">' + (item['TYPE DEVICE'] || 'MOBILE') + '</td>' +
-            '<td class="p-2 text-center font-mono text-[10px] text-slate-500">' + (item['TIMESTAMP'] || '-') + '</td>' +
+          rowsHtml += '<tr class="hover:bg-slate-50 transition-colors">' +
+            '<td class="p-2.5 text-center font-mono whitespace-nowrap">' + (idx + 1) + '</td>' +
+            '<td class="p-2.5 text-left font-bold text-slate-800 whitespace-nowrap">' + (item['NAMA'] || '-') + '<br><span class="text-[10px] text-slate-400 font-mono">' + item['NIK'] + '</span></td>' +
+            '<td class="p-2.5 text-center font-mono font-black text-emerald-800 whitespace-nowrap">' + (item['KODE'] || '-') + '</td>' +
+            '<td class="p-2.5 text-center font-mono font-bold text-blue-700 whitespace-nowrap">' + (item['TYPE DEVICE'] || 'MOBILE') + '</td>' +
+            // Format Waktu Sesi Rapi (Bukan ISO String)
+            '<td class="p-2.5 text-center font-mono text-[11px] text-slate-600 whitespace-nowrap">' + formatDateTimeTampilan(item['TIMESTAMP']) + '</td>' +
           '</tr>';
         });
 
         Swal.fire({
           title: 'Daftar Perangkat Terinstall PWA (' + list.length + ' Device)',
           html: 
-            '<div class="overflow-x-auto max-h-[60vh] text-xs text-left my-2 border border-slate-200 rounded-xl">' +
+            '<div class="overflow-x-auto max-h-[60vh] text-xs text-left my-2 border border-slate-200 rounded-2xl">' +
               '<table class="w-full text-center divide-y divide-slate-200">' +
-                '<thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600"><tr>' +
-                  '<th class="p-2">No</th><th class="p-2 text-left">Nama Personil</th><th class="p-2">Toko</th><th class="p-2">Tipe Device</th><th class="p-2">Waktu Sesi</th>' +
+                '<thead class="bg-slate-100 text-[10px] uppercase font-extrabold text-slate-600"><tr>' +
+                  '<th class="p-2.5 whitespace-nowrap text-center">No</th>' +
+                  '<th class="p-2.5 whitespace-nowrap text-left">Nama Personil</th>' +
+                  '<th class="p-2.5 whitespace-nowrap text-center">Toko</th>' +
+                  '<th class="p-2.5 whitespace-nowrap text-center">Tipe Device</th>' +
+                  '<th class="p-2.5 whitespace-nowrap text-center">Waktu Sesi</th>' +
                 '</tr></thead><tbody class="divide-y divide-slate-100 font-medium">' +
                   (rowsHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Belum ada data instalasi PWA di log.</td></tr>') +
                 '</tbody></table>' +
             '</div>',
           confirmButtonColor: '#059669',
           confirmButtonText: 'Tutup Rincian',
-          customClass: { popup: 'rounded-3xl max-w-2xl w-full p-4' }
+          customClass: { popup: 'rounded-3xl max-w-2xl w-full p-4 md:p-6' }
         });
       });
     }
@@ -3486,36 +3490,91 @@
       }
     }
 
+    // ==================== SMART FORMATTER LIVE SUPER ADMIN ====================
+    function formatLiveAdminCell(headerName, val) {
+      if (val === null || val === undefined || val === '') return '-';
+
+      var h = String(headerName || '').toUpperCase().trim();
+      var s = String(val).replace(/^'/, '').trim();
+
+      // 1. FORMAT TANGGAL & WAKTU (Jika header memuat kata TANGGAL, TIMESTAMP, CREATED, atau berupa string ISO)
+      if (h.indexOf('TANGGAL') !== -1 || h.indexOf('TIMESTAMP') !== -1 || h.indexOf('CREATED') !== -1 || 
+          h.indexOf('DIPERBARUI') !== -1 || h.indexOf('WAKTU') !== -1 || /^\d{4}-\d{2}-\d{2}T/.test(s)) {
+        return formatDateTimeTampilan(s);
+      }
+
+      // 2. FORMAT PERSENTASE (Jika header memuat %, ACV, GROWTH, OOS, PERSEN, atau MARGIN)
+      if (h.indexOf('%') !== -1 || h.indexOf('ACV') !== -1 || h.indexOf('GROWTH') !== -1 || 
+          h.indexOf('OOS') !== -1 || h.indexOf('PERSEN') !== -1 || h.indexOf('MARGIN %') !== -1) {
+        var numPersen = parseAngkaIndo(s);
+        if (Math.abs(numPersen) > 0 && Math.abs(numPersen) <= 2) {
+          numPersen *= 100;
+        }
+        return numPersen.toFixed(2).replace('.', ',') + '%';
+      }
+
+      // 3. FORMAT RUPIAH (Jika header memuat PROFIT, SALES, TARGET, ACTUAL, RUPIAH, BIAYA, BUKTI_RP, NOMINAL, SALDO, KAS, TARIF)
+      // Tapi kecualikan kolom yang berupa QTY, STD, BARIS, NO, NIK
+      if ((h.indexOf('PROFIT') !== -1 || h.indexOf('SALES') !== -1 || h.indexOf('TARGET') !== -1 || 
+           h.indexOf('ACTUAL') !== -1 || h.indexOf('RUPIAH') !== -1 || h.indexOf('BIAYA') !== -1 || 
+           h.indexOf('NOMINAL') !== -1 || h.indexOf('SALDO') !== -1 || h.indexOf('TARIF') !== -1 || 
+           h.indexOf('BULAN LALU') !== -1) && 
+           (h.indexOf('QTY') === -1 && h.indexOf('STD') === -1 && h.indexOf('BARIS') === -1 && h.indexOf('%') === -1)) {
+        
+        var numRp = parseAngkaIndo(s);
+        if (isNaN(numRp)) return s;
+        if (numRp < 0) {
+          return '-Rp ' + Math.abs(Math.round(numRp)).toLocaleString('id-ID');
+        }
+        return 'Rp ' + Math.round(numRp).toLocaleString('id-ID');
+      }
+
+      // 4. FORMAT ANGKA KUANTITAS (STD, QTY, JUMLAH LOGIN, RANK)
+      if (h.indexOf('STD') !== -1 || h.indexOf('QTY') !== -1 || h.indexOf('LOGIN') !== -1 || h.indexOf('RANK') !== -1) {
+        var numQty = parseAngkaIndo(s);
+        return isNaN(numQty) ? s : Math.round(numQty).toLocaleString('id-ID');
+      }
+
+      // 5. Default Teks Biasa (Nama, Kode, Keterangan, dll)
+      return s;
+    }
+
     function renderTableLiveSuperAdmin(sheetName, accId, headers, rows) {
       var box = document.getElementById(accId);
       if (!box) return;
 
       var html = 
         '<div class="flex items-center justify-between pb-2 border-b border-white/10">' +
-          '<span class="text-slate-300 font-bold font-mono">Total: ' + rows.length + ' Baris</span>' +
+          '<span class="text-slate-300 font-bold font-mono text-xs">Total: ' + rows.length + ' Baris</span>' +
           '<button onclick="bukaModalAdminTambahBaris(\'' + sheetName + '\', ' + JSON.stringify(headers).replace(/"/g, '&quot;') + ', \'' + accId + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow-sm flex items-center space-x-1">' +
             '<i class="fa-solid fa-plus"></i><span>Tambah Data</span>' +
           '</button>' +
         '</div>' +
-        '<div class="overflow-x-auto max-h-72">' +
-          '<table class="w-full text-left divide-y divide-white/10">' +
-            '<thead class="bg-white/10 text-[9px] uppercase font-bold text-slate-300 tracking-wider"><tr>';
+        '<div class="overflow-x-auto max-h-80 border border-white/10 rounded-xl mt-2">' +
+          '<table class="w-full text-center divide-y divide-white/10">' +
+            '<thead class="bg-white/10 text-[9px] uppercase font-extrabold text-indigo-200 tracking-wider"><tr>';
 
-      headers.forEach(function(h) { html += '<th class="p-2 whitespace-nowrap">' + h + '</th>'; });
-      html += '<th class="p-2 text-center">Aksi</th></tr></thead><tbody class="divide-y divide-white/5 font-mono text-[10px]">';
+      headers.forEach(function(h) { 
+        html += '<th class="p-2.5 whitespace-nowrap text-center">' + h + '</th>'; 
+      });
+      html += '<th class="p-2.5 text-center whitespace-nowrap">Aksi</th></tr></thead><tbody class="divide-y divide-white/5 font-mono text-[10px]">';
 
       if (rows.length === 0) {
-        html += '<tr><td colspan="' + (headers.length + 1) + '" class="p-4 text-center text-slate-500 italic">Sheet masih kosong.</td></tr>';
+        html += '<tr><td colspan="' + (headers.length + 1) + '" class="p-4 text-center text-slate-400 italic">Sheet masih kosong.</td></tr>';
       }
 
       rows.forEach(function(r) {
-        html += '<tr class="hover:bg-white/5">';
-        r.data.forEach(function(val) {
-          html += '<td class="p-2 whitespace-nowrap text-slate-300 max-w-xs truncate">' + val + '</td>';
+        html += '<tr class="hover:bg-white/5 transition-colors">';
+        r.data.forEach(function(val, cIdx) {
+          var headerName = headers[cIdx] || '';
+          var formattedVal = formatLiveAdminCell(headerName, val);
+          
+          html += '<td class="p-2 whitespace-nowrap text-slate-200 max-w-xs truncate text-center">' + formattedVal + '</td>';
         });
+
         html += '<td class="p-2 text-center whitespace-nowrap space-x-1">' +
-          '<button onclick="bukaModalAdminEditBaris(\'' + sheetName + '\', ' + r._rowIndex + ', ' + JSON.stringify(headers).replace(/"/g, '&quot;') + ', ' + JSON.stringify(r.data).replace(/"/g, '&quot;') + ', \'' + accId + '\')" class="p-1 text-blue-400 hover:text-blue-300" title="Edit Baris"><i class="fa-solid fa-pen-to-square"></i></button>' +
-          '<button onclick="hapusBarisLiveSuperAdmin(\'' + sheetName + '\', ' + r._rowIndex + ', \'' + accId + '\')" class="p-1 text-red-400 hover:text-red-300" title="Hapus Baris"><i class="fa-solid fa-trash"></i></button>' +
+          '<button onclick="bukaModalAdminEditBaris(\'' + sheetName + '\', ' + r._rowIndex + ', ' + JSON.stringify(headers).replace(/"/g, '&quot;') + ', ' + JSON.stringify(r.data).replace(/"/g, '&quot;') + ', \'' + accId + '\')" class="p-1 text-blue-400 hover:text-blue-300 transition-colors" title="Edit Baris"><i class="fa-solid fa-pen-to-square"></i></button>' +
+          '<button onclick="hapusBarisLiveSuperAdmin(\'' + sheetName + '\', ' + r._rowIndex + ', \'' + accId + '\')" class="p-1 text-red-400 hover:text-red-300 transition-colors" title="Hapus Baris"><i class="fa-solid fa-trash"></i></button>' +
         '</td></tr>';
       });
 

@@ -451,6 +451,10 @@
 
     // ==================== 2. SPLASH SCREEN LIFECYCLE ====================
     window.addEventListener('DOMContentLoaded', function() {
+      // 1. Terapkan tema pilihan pengguna sejak detik pertama dibuka
+      terapkanTemaAplikasi(localStorage.getItem('kacida_app_theme') || 'DEFAULT');
+
+      // 2. Jalankan lifecycle aplikasi
       inisialisasiSplashScreen();
       muatConfigTokoTersimpan();
       cekSesiLoginTersimpan();
@@ -3184,12 +3188,9 @@
 
       container.innerHTML = html;
 
-      // Render struktur personil dengan foto thumbnail
+      // Render struktur personil dengan foto
       muatDataSheetLazy('Master_User', false, function(users) {
         renderTabelPersonilDenganFoto(users, cfg.cleanCode || currentSessionUser.kodeToko);
-        if (isSuperAdmin) {
-          renderSuperAdminPanelContent(users);
-        }
       });
     }
 
@@ -3250,205 +3251,6 @@
     function tutupModalSuperAdminPanel() {
       var modal = document.getElementById('modalSuperAdminFullPanel');
       if (modal) modal.remove();
-    }
-
-    // --- UPLOAD FOTO PROFIL LH3 BY NIK LOGIC ---
-    function tanganiUploadFotoProfil(input) {
-      if (!input.files || !input.files[0] || !currentSessionUser) return;
-      var file = input.files[0];
-      var reader = new FileReader();
-
-      reader.onload = function(e) {
-        var base64 = e.target.result;
-        Swal.fire({
-          title: 'Memperbarui Foto Profil...',
-          html: 'Mengunggah ke Google Drive & memperbarui data berdasarkan <b>NIK: ' + currentSessionUser.nik + '</b>',
-          allowOutsideClick: false,
-          didOpen: function() { Swal.showLoading(); }
-        });
-
-        var payload = {
-          nik: currentSessionUser.nik,
-          kodeToko: currentSessionUser.kodeToko || 'STORE',
-          base64Data: base64,
-          useDefault: false
-        };
-
-        kirimBackendRequest('UPDATE_FOTO_PROFIL', payload, function(res) {
-          Swal.close();
-          currentSessionUser.fotoProfilUrl = res.fotoProfilUrl;
-          localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
-
-          // Perbarui UI secara langsung tanpa re-login
-          var elP = document.getElementById('profilViewAvatar');
-          var elH = document.getElementById('headerUserAvatar');
-          var elS = document.getElementById('sidebarUserAvatar');
-          var elHr = document.getElementById('heroUserAvatar');
-
-          if (elP) elP.src = res.fotoProfilUrl;
-          if (elH) elH.src = res.fotoProfilUrl;
-          if (elS) elS.src = res.fotoProfilUrl;
-          if (elHr) elHr.src = res.fotoProfilUrl;
-
-          Swal.fire({ icon: 'success', title: 'Foto Profil Diperbarui', timer: 1500, showConfirmButton: false });
-        }, function(err) {
-          Swal.close();
-          Swal.fire({ icon: 'error', title: 'Gagal Upload Foto', text: err.toString() });
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function resetFotoProfilKeDefault() {
-      if (!currentSessionUser) return;
-      Swal.fire({
-        title: 'Kembalikan Foto Default?',
-        text: 'URL foto di Master_User akan dikosongkan dan menampilkan avatar default.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#059669',
-        confirmButtonText: 'Ya, Reset'
-      }).then(function(res) {
-        if (res.isConfirmed) {
-          kirimBackendRequest('UPDATE_FOTO_PROFIL', {
-            nik: currentSessionUser.nik,
-            kodeToko: currentSessionUser.kodeToko || 'STORE',
-            useDefault: true
-          }, function() {
-            var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
-            currentSessionUser.fotoProfilUrl = '';
-            localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
-
-            var elP = document.getElementById('profilViewAvatar');
-            var elH = document.getElementById('headerUserAvatar');
-            var elS = document.getElementById('sidebarUserAvatar');
-            var elHr = document.getElementById('heroUserAvatar');
-
-            if (elP) elP.src = defaultAvatar;
-            if (elH) elH.src = defaultAvatar;
-            if (elS) elS.src = defaultAvatar;
-            if (elHr) elHr.src = defaultAvatar;
-
-            Swal.fire({ icon: 'success', title: 'Foto Dikembalikan ke Default', timer: 1200, showConfirmButton: false });
-          }, function(err) {
-            Swal.fire({ icon: 'error', title: 'Gagal Reset', text: err.toString() });
-          });
-        }
-      });
-    }
-
-    // --- RENDER TABEL PERSONIL DENGAN FOTO PROFIL BISA DI-ZOOM IN ---
-    function renderTabelPersonilDenganFoto(users, kodeToko) {
-      var box = document.getElementById('containerTabelStrukturPersonil');
-      if (!box) return;
-
-      var storeUsers = users.filter(function(u) {
-        return String(u['KODE']).toUpperCase().trim() === kodeToko;
-      });
-
-      var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
-
-      var tbl = '<table class="w-full text-center divide-y divide-slate-100">' +
-        '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
-          '<th class="p-2.5 text-center w-12">Foto</th>' +
-          '<th class="p-2.5 text-center w-24">NIK</th>' +
-          '<th class="p-2.5 text-left">Nama Personil</th>' +
-          '<th class="p-2.5 text-center">Jabatan</th>' +
-          '<th class="p-2.5 text-center">Jam Opr</th>' +
-        '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
-
-      storeUsers.forEach(function(u) {
-        var fUrl = String(u['FOTO PROFIL (Url)'] || u['FOTO'] || '').trim();
-        if (fUrl.length < 5) fUrl = defaultAvatar;
-
-        tbl += '<tr class="hover:bg-slate-50/80 transition-colors">' +
-          '<td class="p-2 text-center">' +
-            '<img src="' + fUrl + '" alt="Foto" onclick="bukaPreviewFotoFull(\'' + fUrl + '\', \'' + u['NAMA'] + '\')" ' +
-                 'class="w-8 h-8 rounded-full object-cover border border-emerald-300 mx-auto shadow-sm cursor-pointer hover:scale-125 transition-transform">' +
-          '</td>' +
-          '<td class="p-2.5 font-mono text-slate-600 font-bold">' + u['NIK'] + '</td>' +
-          '<td class="p-2.5 text-left font-extrabold text-slate-900">' + u['NAMA'] + '</td>' +
-          '<td class="p-2.5 font-bold text-emerald-800">' + u['JABATAN'] + '</td>' +
-          '<td class="p-2.5 text-slate-500 font-mono">' + (u['JAM OPR'] || '07:00-22:00') + '</td>' +
-        '</tr>';
-      });
-
-      tbl += '</tbody></table>';
-      box.innerHTML = tbl;
-    }
-
-    // --- RENDER AKORDION TENTANG APLIKASI, PANDUAN FITUR & FAQ LENGKAP ---
-    function renderInformasiDanPanduanAplikasi() {
-      return '<div class="space-y-3 pt-2">' +
-        // 1. TENTANG APLIKASI
-        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
-          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoTentang\')">' +
-            '<div class="flex items-center space-x-2.5">' +
-              '<div class="w-8 h-8 rounded-xl bg-emerald-100 text-brand-primary flex items-center justify-center text-sm">' +
-                '<i class="fa-solid fa-circle-info"></i>' +
-              '</div>' +
-              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">1. Tentang Aplikasi</h4>' +
-            '</div>' +
-            '<button type="button" id="btnaccInfoTentang" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
-          '</div>' +
-          '<div id="accInfoTentang" class="hidden p-5 border-t border-slate-100 space-y-2 text-xs text-slate-700 leading-relaxed bg-white">' +
-            '<p class="font-bold text-slate-900">Aplikasi Monitoring - Kacida Bersatu</p>' +
-            '<p>Dirancang khusus untuk memantau kinerja dan pekerjaan operasional Toko dalam 1 aplikasi terpadu. Semua fitur dibagi ke dalam Tab Menu agar mudah dibuka dari Navbar Bawah dan Menu Operasional. Seluruh data bersumber langsung dari Internal.</p>' +
-            '<div class="p-3 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-[11px] font-semibold mt-2">' +
-              '<b>Catatan Penting:</b> Data yang ditampilkan di aplikasi ini adalah Data Internal. Hanya untuk keperluan monitoring internal Toko, dan tidak untuk disebarkan ke luar tanpa izin atasan.' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        // 2. PANDUAN PENGGUNAAN APLIKASI
-        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
-          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoPanduan\')">' +
-            '<div class="flex items-center space-x-2.5">' +
-              '<div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">' +
-                '<i class="fa-solid fa-book-open"></i>' +
-              '</div>' +
-              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">2. Panduan Penggunaan Fitur</h4>' +
-            '</div>' +
-            '<button type="button" id="btnaccInfoPanduan" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
-          '</div>' +
-          '<div id="accInfoPanduan" class="hidden p-5 border-t border-slate-100 space-y-2.5 text-xs text-slate-700 leading-relaxed bg-white">' +
-            '<p>• <b>A. Tab Beranda:</b> Halaman utama untuk melihat ringkasan kinerja toko secara cepat (Sales H-1, IKT, Penawaran Langsung, Grafik Tren).</p>' +
-            '<p>• <b>B. Tab Chat AI:</b> Untuk bertanya seputar aplikasi, cara pakai fitur, dan analisa performa seperti SALES, IKT, MTD. Ketik pertanyaanmu, AI akan menjawab secara solutif.</p>' +
-            '<p>• <b>C. Tab Kalender:</b> Untuk melihat jadwal, tanggal penting, jadwal piket, dan agenda operasional toko.</p>' +
-            '<p>• <b>D. Tab Profil:</b> Untuk melihat Data Penugasan Personil, Perangkat & Status Aktif, dan Struktur Personil Toko Aktif.</p>' +
-            '<p>• <b>E. Tab Menu Operasional:</b> Pintasan kerja harian: Rekap PSM Kasir, Monitoring Sales OPR, Ceklis EXP, Donasi Area, Sales MTD, Monitoring IKT, Catatan Return, Serah Terima, Tabunganku, Kas Area, Simulasi IKT, Sales Harian, Konversi No Bon/Struk, Penawaran Langsung. Tap salah satu untuk membuka fiturnya. Tap <code>Lihat Semua</code> untuk melihat semua direktori menu.</p>' +
-          '</div>' +
-        '</div>' +
-
-        // 3. FAQ PERTANYAAN POPULER
-        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
-          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoFaq\')">' +
-            '<div class="flex items-center space-x-2.5">' +
-              '<div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm">' +
-                '<i class="fa-solid fa-circle-question"></i>' +
-              '</div>' +
-              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">3. FAQ - Pertanyaan</h4>' +
-            '</div>' +
-            '<button type="button" id="btnaccInfoFaq" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
-          '</div>' +
-          '<div id="accInfoFaq" class="hidden p-5 border-t border-slate-100 space-y-3 text-xs text-slate-700 leading-relaxed bg-white">' +
-            '<div><b class="text-slate-900 block">• Tab apa yang harus dibuka pertama?</b><span class="text-slate-500">Tab Beranda, karena merupakan ringkasan utama performa toko Anda.</span></div>' +
-            '<div><b class="text-slate-900 block">• Chat AI bisa jawab apa saja?</b><span class="text-slate-500">Hanya seputar aplikasi dan operasional toko ritel. Untuk masalah koreksi data spreadsheet, tetap hubungi Admin.</span></div>' +
-            '<div><b class="text-slate-900 block">• Kenapa Kalender kosong?</b><span class="text-slate-500">Karena belum ada agenda kerja atau kegiatan promo yang di-input.</span></div>' +
-            '<div><b class="text-slate-900 block">• Kenapa di Profil ada Token / Hak Akses?</b><span class="text-slate-500">Itu untuk informasi sistem dan keamanan akun. Jangan dibagikan ke orang lain / di-screenshot ke luar.</span></div>' +
-            '<div><b class="text-slate-900 block">• Kenapa menu di Tab Menu Operasional kepotong?</b><span class="text-slate-500">Karena menunya banyak. Scroll ke bawah atau tap <code>Lihat Semua</code>.</span></div>' +
-            '<div><b class="text-slate-900 block">• Kenapa angka di salah satu Tab Menu masih 0 / loading?</b><span class="text-slate-500">Data masih diambil dari spreadsheet. Tunggu 5-10 detik lalu Refresh dengan tarik layar ke bawah atau klik ikon Sync di layar Beranda atas.</span></div>' +
-          '</div>' +
-        '</div>' +
-
-        // FOOTER DIRECT WHATSAPP ADMIN (NOMOR DISEMBUNYIKAN)
-        '<div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-100 text-center text-xs text-slate-600">' +
-          'Info lebih detail silakan Hubungi ' +
-          '<a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20aplikasi" target="_blank" class="font-extrabold text-brand-primary hover:underline inline-flex items-center space-x-1">' +
-            '<i class="fa-brands fa-whatsapp text-emerald-600"></i><span>Admin</span>' +
-          '</a>.' +
-        '</div>' +
-      '</div>';
     }
 
     // ==================== 4. KOTAK RESUME & DETAIL LIST LENGKAP ====================
@@ -3814,6 +3616,205 @@
           });
         }
       });
+    }
+
+    // --- UPLOAD FOTO PROFIL LH3 BY NIK LOGIC ---
+    function tanganiUploadFotoProfil(input) {
+      if (!input.files || !input.files[0] || !currentSessionUser) return;
+      var file = input.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        var base64 = e.target.result;
+        Swal.fire({
+          title: 'Memperbarui Foto Profil...',
+          html: 'Mengunggah ke Google Drive & memperbarui data berdasarkan <b>NIK: ' + currentSessionUser.nik + '</b>',
+          allowOutsideClick: false,
+          didOpen: function() { Swal.showLoading(); }
+        });
+
+        var payload = {
+          nik: currentSessionUser.nik,
+          kodeToko: currentSessionUser.kodeToko || 'STORE',
+          base64Data: base64,
+          useDefault: false
+        };
+
+        kirimBackendRequest('UPDATE_FOTO_PROFIL', payload, function(res) {
+          Swal.close();
+          currentSessionUser.fotoProfilUrl = res.fotoProfilUrl;
+          localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
+
+          // Perbarui UI secara langsung tanpa re-login
+          var elP = document.getElementById('profilViewAvatar');
+          var elH = document.getElementById('headerUserAvatar');
+          var elS = document.getElementById('sidebarUserAvatar');
+          var elHr = document.getElementById('heroUserAvatar');
+
+          if (elP) elP.src = res.fotoProfilUrl;
+          if (elH) elH.src = res.fotoProfilUrl;
+          if (elS) elS.src = res.fotoProfilUrl;
+          if (elHr) elHr.src = res.fotoProfilUrl;
+
+          Swal.fire({ icon: 'success', title: 'Foto Profil Diperbarui', timer: 1500, showConfirmButton: false });
+        }, function(err) {
+          Swal.close();
+          Swal.fire({ icon: 'error', title: 'Gagal Upload Foto', text: err.toString() });
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetFotoProfilKeDefault() {
+      if (!currentSessionUser) return;
+      Swal.fire({
+        title: 'Kembalikan Foto Default?',
+        text: 'URL foto di Master_User akan dikosongkan dan menampilkan avatar default.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'Ya, Reset'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          kirimBackendRequest('UPDATE_FOTO_PROFIL', {
+            nik: currentSessionUser.nik,
+            kodeToko: currentSessionUser.kodeToko || 'STORE',
+            useDefault: true
+          }, function() {
+            var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
+            currentSessionUser.fotoProfilUrl = '';
+            localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
+
+            var elP = document.getElementById('profilViewAvatar');
+            var elH = document.getElementById('headerUserAvatar');
+            var elS = document.getElementById('sidebarUserAvatar');
+            var elHr = document.getElementById('heroUserAvatar');
+
+            if (elP) elP.src = defaultAvatar;
+            if (elH) elH.src = defaultAvatar;
+            if (elS) elS.src = defaultAvatar;
+            if (elHr) elHr.src = defaultAvatar;
+
+            Swal.fire({ icon: 'success', title: 'Foto Dikembalikan ke Default', timer: 1200, showConfirmButton: false });
+          }, function(err) {
+            Swal.fire({ icon: 'error', title: 'Gagal Reset', text: err.toString() });
+          });
+        }
+      });
+    }
+
+    // --- RENDER TABEL PERSONIL DENGAN FOTO PROFIL BISA DI-ZOOM IN ---
+    function renderTabelPersonilDenganFoto(users, kodeToko) {
+      var box = document.getElementById('containerTabelStrukturPersonil');
+      if (!box) return;
+
+      var storeUsers = users.filter(function(u) {
+        return String(u['KODE']).toUpperCase().trim() === kodeToko;
+      });
+
+      var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
+
+      var tbl = '<table class="w-full text-center divide-y divide-slate-100">' +
+        '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+          '<th class="p-2.5 text-center w-12">Foto</th>' +
+          '<th class="p-2.5 text-center w-24">NIK</th>' +
+          '<th class="p-2.5 text-left">Nama Personil</th>' +
+          '<th class="p-2.5 text-center">Jabatan</th>' +
+          '<th class="p-2.5 text-center">Jam Opr</th>' +
+        '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      storeUsers.forEach(function(u) {
+        var fUrl = String(u['FOTO PROFIL (Url)'] || u['FOTO'] || '').trim();
+        if (fUrl.length < 5) fUrl = defaultAvatar;
+
+        tbl += '<tr class="hover:bg-slate-50/80 transition-colors">' +
+          '<td class="p-2 text-center">' +
+            '<img src="' + fUrl + '" alt="Foto" onclick="bukaPreviewFotoFull(\'' + fUrl + '\', \'' + u['NAMA'] + '\')" ' +
+                 'class="w-8 h-8 rounded-full object-cover border border-emerald-300 mx-auto shadow-sm cursor-pointer hover:scale-125 transition-transform">' +
+          '</td>' +
+          '<td class="p-2.5 font-mono text-slate-600 font-bold">' + u['NIK'] + '</td>' +
+          '<td class="p-2.5 text-left font-extrabold text-slate-900">' + u['NAMA'] + '</td>' +
+          '<td class="p-2.5 font-bold text-emerald-800">' + u['JABATAN'] + '</td>' +
+          '<td class="p-2.5 text-slate-500 font-mono">' + (u['JAM OPR'] || '07:00-22:00') + '</td>' +
+        '</tr>';
+      });
+
+      tbl += '</tbody></table>';
+      box.innerHTML = tbl;
+    }
+
+    // --- RENDER AKORDION TENTANG APLIKASI, PANDUAN FITUR & FAQ LENGKAP ---
+    function renderInformasiDanPanduanAplikasi() {
+      return '<div class="space-y-3 pt-2">' +
+        // 1. TENTANG APLIKASI
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoTentang\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-emerald-100 text-brand-primary flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-circle-info"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">1. Tentang Aplikasi</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoTentang" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoTentang" class="hidden p-5 border-t border-slate-100 space-y-2 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<p class="font-bold text-slate-900">Aplikasi Monitoring - Kacida Bersatu</p>' +
+            '<p>Dirancang khusus untuk memantau kinerja dan pekerjaan operasional Toko dalam 1 aplikasi terpadu. Semua fitur dibagi ke dalam Tab Menu agar mudah dibuka dari Navbar Bawah dan Menu Operasional. Seluruh data bersumber langsung dari Internal.</p>' +
+            '<div class="p-3 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-[11px] font-semibold mt-2">' +
+              '<b>Catatan Penting:</b> Data yang ditampilkan di aplikasi ini adalah Data Internal. Hanya untuk keperluan monitoring internal Toko, dan tidak untuk disebarkan ke luar tanpa izin atasan.' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // 2. PANDUAN PENGGUNAAN APLIKASI
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoPanduan\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-book-open"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">2. Panduan Penggunaan Fitur</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoPanduan" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoPanduan" class="hidden p-5 border-t border-slate-100 space-y-2.5 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<p>• <b>A. Tab Beranda:</b> Halaman utama untuk melihat ringkasan kinerja toko secara cepat (Sales H-1, IKT, Penawaran Langsung, Grafik Tren).</p>' +
+            '<p>• <b>B. Tab Chat AI:</b> Untuk bertanya seputar aplikasi, cara pakai fitur, dan analisa performa seperti SALES, IKT, MTD. Ketik pertanyaanmu, AI akan menjawab secara solutif.</p>' +
+            '<p>• <b>C. Tab Kalender:</b> Untuk melihat jadwal, tanggal penting, jadwal piket, dan agenda operasional toko.</p>' +
+            '<p>• <b>D. Tab Profil:</b> Untuk melihat Data Penugasan Personil, Perangkat & Status Aktif, dan Struktur Personil Toko Aktif.</p>' +
+            '<p>• <b>E. Tab Menu Operasional:</b> Pintasan kerja harian: Rekap PSM Kasir, Monitoring Sales OPR, Ceklis EXP, Donasi Area, Sales MTD, Monitoring IKT, Catatan Return, Serah Terima, Tabunganku, Kas Area, Simulasi IKT, Sales Harian, Konversi No Bon/Struk, Penawaran Langsung. Tap salah satu untuk membuka fiturnya. Tap <code>Lihat Semua</code> untuk melihat semua direktori menu.</p>' +
+          '</div>' +
+        '</div>' +
+
+        // 3. FAQ PERTANYAAN POPULER
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoFaq\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-circle-question"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">3. FAQ - Pertanyaan</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoFaq" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoFaq" class="hidden p-5 border-t border-slate-100 space-y-3 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<div><b class="text-slate-900 block">• Tab apa yang harus dibuka pertama?</b><span class="text-slate-500">Tab Beranda, karena merupakan ringkasan utama performa toko Anda.</span></div>' +
+            '<div><b class="text-slate-900 block">• Chat AI bisa jawab apa saja?</b><span class="text-slate-500">Hanya seputar aplikasi dan operasional toko ritel. Untuk masalah koreksi data spreadsheet, tetap hubungi Admin.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa Kalender kosong?</b><span class="text-slate-500">Karena belum ada agenda kerja atau kegiatan promo yang di-input.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa di Profil ada Token / Hak Akses?</b><span class="text-slate-500">Itu untuk informasi sistem dan keamanan akun. Jangan dibagikan ke orang lain / di-screenshot ke luar.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa menu di Tab Menu Operasional kepotong?</b><span class="text-slate-500">Karena menunya banyak. Scroll ke bawah atau tap <code>Lihat Semua</code>.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa angka di salah satu Tab Menu masih 0 / loading?</b><span class="text-slate-500">Data masih diambil dari spreadsheet. Tunggu 5-10 detik lalu Refresh dengan tarik layar ke bawah atau klik ikon Sync di layar Beranda atas.</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        // FOOTER DIRECT WHATSAPP ADMIN (NOMOR DISEMBUNYIKAN)
+        '<div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-100 text-center text-xs text-slate-600">' +
+          'Info lebih detail silakan Hubungi ' +
+          '<a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20aplikasi" target="_blank" class="font-extrabold text-brand-primary hover:underline inline-flex items-center space-x-1">' +
+            '<i class="fa-brands fa-whatsapp text-emerald-600"></i><span>Admin</span>' +
+          '</a>.' +
+        '</div>' +
+      '</div>';
     }
 
     // ==================== 9. DISPATCHER MODAL 17 MENU OPERASIONAL ====================

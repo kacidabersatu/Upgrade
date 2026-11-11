@@ -1506,22 +1506,59 @@
       var fotoUrl = currentSessionUser.fotoProfilUrl && currentSessionUser.fotoProfilUrl.length > 5
                     ? currentSessionUser.fotoProfilUrl : defaultAvatar;
 
-      // Update Sidebar Desktop
-      document.getElementById('sidebarStoreName').innerText = (config.cleanCode || currentSessionUser.kodeToko) + ' - ' + (config.namaToko || currentSessionUser.namaToko || '');
-      document.getElementById('sidebarUserName').innerText = currentSessionUser.nama;
-      document.getElementById('sidebarUserRole').innerText = currentSessionUser.jabatan;
-      document.getElementById('sidebarUserAvatar').src = fotoUrl;
+      // 1. Update Sidebar Desktop
+      var elSideStore = document.getElementById('sidebarStoreName');
+      var elSideName = document.getElementById('sidebarUserName');
+      var elSideRole = document.getElementById('sidebarUserRole');
+      var elSideAvatar = document.getElementById('sidebarUserAvatar');
 
-      // Update Header
-      document.getElementById('headerStoreBadge').innerText = config.cleanCode || currentSessionUser.kodeToko;
-      document.getElementById('headerStoreTitle').innerText = config.namaToko || currentSessionUser.namaToko || 'Alfamart';
-      document.getElementById('headerUserAvatar').src = fotoUrl;
+      if (elSideStore) elSideStore.innerText = (config.cleanCode || currentSessionUser.kodeToko) + ' - ' + (config.namaToko || currentSessionUser.namaToko || '');
+      if (elSideName) elSideName.innerText = currentSessionUser.nama;
+      if (elSideRole) elSideRole.innerText = currentSessionUser.jabatan;
+      if (elSideAvatar) {
+        elSideAvatar.src = fotoUrl;
+        elSideAvatar.style.cursor = 'pointer';
+        elSideAvatar.onclick = function(e) {
+          e.stopPropagation();
+          bukaPreviewFotoFull(fotoUrl, currentSessionUser.nama);
+        };
+      }
 
-      // Update Hero Card
-      document.getElementById('heroUserAvatar').src = fotoUrl;
-      document.getElementById('heroUserName').innerText = currentSessionUser.nama;
-      document.getElementById('heroUserJabatan').innerText = currentSessionUser.jabatan + ' - ' + (config.cleanCode || currentSessionUser.kodeToko);
-      document.getElementById('heroCurrentDate').innerText = formatTanggalHariIniIndo();
+      // 2. Update Header (Tambahkan Fitur Zoom-In Foto)
+      var elHeadBadge = document.getElementById('headerStoreBadge');
+      var elHeadTitle = document.getElementById('headerStoreTitle');
+      var elHeadAvatar = document.getElementById('headerUserAvatar');
+
+      if (elHeadBadge) elHeadBadge.innerText = config.cleanCode || currentSessionUser.kodeToko;
+      if (elHeadTitle) elHeadTitle.innerText = config.namaToko || currentSessionUser.namaToko || 'Alfamart';
+      if (elHeadAvatar) {
+        elHeadAvatar.src = fotoUrl;
+        elHeadAvatar.style.cursor = 'pointer';
+        // Klik foto di Header langsung memperbesar foto layar penuh
+        elHeadAvatar.onclick = function(e) {
+          e.stopPropagation();
+          bukaPreviewFotoFull(fotoUrl, currentSessionUser.nama);
+        };
+      }
+
+      // 3. Update Hero Card (Tambahkan Fitur Zoom-In Foto)
+      var elHeroAvatar = document.getElementById('heroUserAvatar');
+      var elHeroName = document.getElementById('heroUserName');
+      var elHeroRole = document.getElementById('heroUserJabatan');
+      var elHeroDate = document.getElementById('heroCurrentDate');
+
+      if (elHeroAvatar) {
+        elHeroAvatar.src = fotoUrl;
+        elHeroAvatar.style.cursor = 'pointer';
+        // Klik foto di Hero Card langsung memperbesar foto layar penuh
+        elHeroAvatar.onclick = function(e) {
+          e.stopPropagation();
+          bukaPreviewFotoFull(fotoUrl, currentSessionUser.nama);
+        };
+      }
+      if (elHeroName) elHeroName.innerText = currentSessionUser.nama;
+      if (elHeroRole) elHeroRole.innerText = currentSessionUser.jabatan + ' - ' + (config.cleanCode || currentSessionUser.kodeToko);
+      if (elHeroDate) elHeroDate.innerText = formatTanggalHariIniIndo();
     }
 
     function formatTanggalHariIniIndo() {
@@ -2968,7 +3005,42 @@
         '</div>';
     }
 
-    // --- VIEW C: PROFIL PENGGUNA & UPDATE FOTO PROFIL LH3 BY NIK ---
+    // --- VIEW C: PROFIL PENGGUNA, SUPER ADMIN CRUD & UPDATE FOTO PROFIL LH3 BY NIK ---
+
+    // Helper Deteksi Tipe Perangkat Nyata Pengguna
+    function detectUserDeviceType() {
+      var ua = navigator.userAgent;
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'Apple iOS (iPhone / iPad)';
+      if (/Android/.test(ua)) return 'Android Smartphone';
+      if (/Windows NT/.test(ua)) return 'Windows PC';
+      if (/Macintosh|Mac OS X/.test(ua)) return 'Mac OS (Apple Desktop)';
+      return 'Mobile / Desktop Browser';
+    }
+
+    // Engine Tema Aplikasi (Default, Terang, Gelap)
+    function terapkanTemaAplikasi(namaTema) {
+      localStorage.setItem('kacida_app_theme', namaTema);
+      var body = document.body;
+
+      if (namaTema === 'GELAP') {
+        body.style.backgroundColor = '#0f172a';
+        body.style.color = '#f8fafc';
+      } else if (namaTema === 'TERANG') {
+        body.style.backgroundColor = '#f8fafc';
+        body.style.color = '#0f172a';
+      } else {
+        // DEFAULT: Kacida Retail Green
+        body.style.backgroundColor = '#f0fdf4';
+        body.style.color = '#0f172a';
+      }
+      
+      var containerSub = document.getElementById('containerSubViews');
+      if (containerSub && !containerSub.classList.contains('hidden')) {
+        renderViewProfil(containerSub);
+      }
+    }
+
+    // RENDER UTAMA VIEW PROFIL
     function renderViewProfil(container) {
       if (!currentSessionUser) return;
       var cfg = getTokoConfig() || {};
@@ -2976,72 +3048,150 @@
       var fotoUrl = currentSessionUser.fotoProfilUrl && currentSessionUser.fotoProfilUrl.length > 5
                     ? currentSessionUser.fotoProfilUrl : defaultAvatar;
 
-      var isSuperAdmin = (currentSessionUser.nik === '14125034');
+      var userNik = String(currentSessionUser.nik || '').trim();
+      var isSuperAdmin = (userNik === '14125034');
+      var temaAktif = localStorage.getItem('kacida_app_theme') || 'DEFAULT';
 
-      container.innerHTML = 
-        '<div class="bg-white rounded-card p-5 md:p-6 shadow-sm border border-emerald-100 space-y-6">' +
-          '<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">' +
+      var html = 
+        '<div class="space-y-5 max-w-5xl mx-auto pb-16">' +
+          
+          // KARTU PROFIL UTAMA (FOTO BISA DI-ZOOM IN)
+          '<div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-emerald-100 flex flex-col md:flex-row md:items-center justify-between gap-4">' +
             '<div class="flex items-center space-x-4">' +
-              '<div class="relative group">' +
-                '<img id="profilViewAvatar" src="' + fotoUrl + '" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-4 border-emerald-100 shadow-md">' +
-                '<label for="inputUploadFotoProfil" class="absolute bottom-0 right-0 w-7 h-7 bg-brand-primary text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-transform">' +
+              '<div class="relative group cursor-pointer" onclick="bukaPreviewFotoFull(\'' + fotoUrl + '\', \'' + currentSessionUser.nama + '\')">' +
+                '<img id="profilViewAvatar" src="' + fotoUrl + '" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-4 border-emerald-100 shadow-md hover:scale-105 transition-transform">' +
+                '<label onclick="event.stopPropagation()" for="inputUploadFotoProfil" class="absolute bottom-0 right-0 w-7 h-7 bg-brand-primary text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-transform" title="Ubah Foto">' +
                   '<i class="fa-solid fa-camera text-xs"></i>' +
                 '</label>' +
                 '<input type="file" id="inputUploadFotoProfil" accept="image/*" class="hidden" onchange="tanganiUploadFotoProfil(this)">' +
               '</div>' +
               '<div>' +
-                '<h3 class="text-base md:text-lg font-black text-slate-800">' + currentSessionUser.nama + '</h3>' +
-                '<p class="text-xs font-bold text-brand-primary font-mono">NIK: ' + currentSessionUser.nik + '</p>' +
-                '<span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900">' + currentSessionUser.jabatan + '</span>' +
+                '<h3 class="text-lg md:text-xl font-black text-slate-800">' + currentSessionUser.nama + '</h3>' +
+                '<p class="text-xs font-bold text-brand-primary font-mono mt-0.5">NIK: ' + currentSessionUser.nik + '</p>' +
+                '<span class="inline-block mt-1.5 px-3 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 uppercase">' +
+                  currentSessionUser.jabatan +
+                '</span>' +
               '</div>' +
             '</div>' +
-            '<div class="flex space-x-2">' +
-              '<button onclick="resetFotoProfilKeDefault()" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all">' +
-                '<i class="fa-solid fa-rotate-left mr-1"></i> Foto Default' +
+
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="resetFotoProfilKeDefault()" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-sm flex items-center space-x-1.5">' +
+                '<i class="fa-solid fa-rotate-left"></i><span>Foto Default</span>' +
               '</button>' +
-              '<button onclick="prosesLogoutUser()" class="px-4 py-2 text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all">' +
-                '<i class="fa-solid fa-power-off mr-1"></i> Keluar' +
+              '<button onclick="prosesLogoutUser()" class="px-4 py-2 text-xs font-black bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all shadow-sm flex items-center space-x-1.5">' +
+                '<i class="fa-solid fa-power-off"></i><span>Keluar</span>' +
               '</button>' +
             '</div>' +
           '</div>' +
 
-          '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">' +
-            '<div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">' +
-              '<h4 class="font-extrabold text-slate-700 uppercase tracking-wider text-[10px]">Data Penugasan Personil</h4>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">Kode Penempatan:</span><span class="font-bold text-slate-800">' + currentSessionUser.kodeToko + '</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">Nama Toko:</span><span class="font-bold text-slate-800">' + currentSessionUser.namaToko + '</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">Wilayah:</span><span class="font-bold text-slate-800">' + (currentSessionUser.wilayah || '-') + '</span></div>' +
-              '<div class="flex justify-between py-1"><span class="text-slate-400">Total Login Tercatat:</span><span class="font-bold text-emerald-700 font-mono">' + currentSessionUser.jumlahLogin + ' Kali</span></div>' +
+          // FITUR UBAH TEMA APLIKASI
+          '<div class="bg-white rounded-3xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm shadow-inner">' +
+                '<i class="fa-solid fa-palette"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h4 class="font-extrabold text-slate-800">Tema Tampilan Aplikasi</h4>' +
+                '<p class="text-[11px] text-slate-400">Pilih mode tampilan yang nyaman untuk mata Anda</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="inline-flex p-1 bg-slate-100 rounded-2xl font-bold">' +
+              '<button onclick="terapkanTemaAplikasi(\'DEFAULT\')" class="px-3 py-1.5 rounded-xl transition-all ' + (temaAktif === 'DEFAULT' ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500') + '">Default</button>' +
+              '<button onclick="terapkanTemaAplikasi(\'TERANG\')" class="px-3 py-1.5 rounded-xl transition-all ' + (temaAktif === 'TERANG' ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500') + '">Terang</button>' +
+              '<button onclick="terapkanTemaAplikasi(\'GELAP\')" class="px-3 py-1.5 rounded-xl transition-all ' + (temaAktif === 'GELAP' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500') + '">Gelap</button>' +
+            '</div>' +
+          '</div>';
+
+      // ==================== PANEL KHUSUS SUPER ADMIN (NIK 14125034) ====================
+      if (isSuperAdmin) {
+        html += 
+          '<div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 md:p-6 shadow-xl border border-indigo-500/30 space-y-4">' +
+            '<div class="flex items-center justify-between pb-3 border-b border-white/10">' +
+              '<div class="flex items-center space-x-2.5">' +
+                '<div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base shadow-inner border border-amber-400/30">' +
+                  '<i class="fa-solid fa-crown animate-bounce"></i>' +
+                '</div>' +
+                '<div>' +
+                  '<h3 class="text-sm md:text-base font-black tracking-tight text-white">PANEL KONTROL SUPER ADMIN (DATABASE LIVE)</h3>' +
+                  '<p class="text-[10px] text-indigo-300">CRUD Seluruh Sheet Langsung Tanpa Perlu Membuka Google Spreadsheet</p>' +
+                '</div>' +
+              '</div>' +
+              '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-slate-900">FULL ACCESS</span>' +
             '</div>' +
 
-            '<div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">' +
-              '<h4 class="font-extrabold text-slate-700 uppercase tracking-wider text-[10px]">Perangkat & Status Aktif</h4>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">Status Token:</span><span class="font-bold text-emerald-600">Aktif Terverifikasi</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">Toko Konfigurasi:</span><span class="font-bold text-slate-800 font-mono">' + (cfg.cleanCode || '-') + '</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-200/60"><span class="text-slate-400">PWA Mode:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed' : 'Browser Web') + '</span></div>' +
-              '<div class="flex justify-between py-1"><span class="text-slate-400">Hak Akses:</span><span class="font-extrabold text-slate-800">' + (isSuperAdmin ? 'SUPER ADMIN (Full Bypass)' : currentSessionUser.jabatan) + '</span></div>' +
+            // 4 KOTAK RESUME SUPER ADMIN DENGAN DETAIL KLIK
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center" id="boxResumeSuperAdmin"></div>' +
+
+            // AKORDION PENGELOLAAN SELURUH SHEET
+            '<div class="pt-2">' +
+              '<h4 class="text-xs font-black text-indigo-200 uppercase tracking-wider mb-2">Direktori Database Seluruh Lembar Kerja (Live CRUD)</h4>' +
+              '<div id="containerAccordionSuperAdminSheets" class="space-y-2"></div>' +
             '</div>' +
+          '</div>';
+      }
+
+      // 2 KOTAK INFORMASI PENUGASAN LENGKAP & PERANGKAT
+      html += 
+        '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">' +
+          // Data Penugasan Lengkap
+          '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5">' +
+            '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
+              '<i class="fa-solid fa-store text-brand-primary"></i>' +
+              '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Data Penugasan Personil</h4>' +
+            '</div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Kode Penempatan:</span><span class="font-bold text-slate-800 font-mono">' + currentSessionUser.kodeToko + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Nama Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.namaToko || cfg.namaToko || '-') + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Wilayah:</span><span class="font-bold text-slate-800">' + (currentSessionUser.wilayah || cfg.wilayah || '-') + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Lokasi / Area:</span><span class="font-bold text-slate-800">' + (currentSessionUser.lokasiArea || cfg.lokasiArea || '-') + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Status Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.statusToko || cfg.status || '-') + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Type Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.typeToko || cfg.type || '-') + '</span></div>' +
+            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tanggal GO Toko:</span><span class="font-bold text-slate-800 font-mono">' + formatTanggalTampilan(currentSessionUser.tanggalGo || cfg.tanggalGo) + '</span></div>' +
+            '<div class="flex justify-between py-1"><span class="text-slate-400">Total Login Tercatat:</span><span class="font-black text-emerald-700 font-mono">' + currentSessionUser.jumlahLogin + ' Kali</span></div>' +
           '</div>' +
 
-          '<div class="pt-4 border-t border-slate-100">' +
-            '<h4 class="text-xs font-extrabold text-slate-800 mb-2">Struktur Personil Toko Aktif</h4>' +
-            '<div id="containerTabelStrukturPersonil" class="overflow-x-auto text-xs">' +
-              '<p class="text-slate-400 italic">Memuat data personil toko...</p>' +
+          // Perangkat & Status Aktif
+          '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5 flex flex-col justify-between">' +
+            '<div>' +
+              '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
+                '<i class="fa-solid fa-mobile-screen-button text-blue-600"></i>' +
+                '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Perangkat & Status Aktif</h4>' +
+              '</div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50 mt-1"><span class="text-slate-400">Status Sesi:</span><span class="font-bold text-emerald-600 flex items-center"><i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Aktif Terverifikasi</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tipe Perangkat:</span><span class="font-bold text-slate-800 font-mono">' + detectUserDeviceType() + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Toko Konfigurasi:</span><span class="font-bold text-slate-800 font-mono">' + (cfg.cleanCode || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Aplikasi PWA:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed (Mode App)' : 'Browser Web') + '</span></div>' +
+              '<div class="flex justify-between py-1"><span class="text-slate-400">Hak Akses Sistem:</span><span class="font-black text-slate-900">' + (isSuperAdmin ? 'SUPER ADMIN (Full Bypass)' : currentSessionUser.jabatan) + '</span></div>' +
+            '</div>' +
+            '<div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-[10px] text-emerald-800 leading-relaxed">' +
+              'Sistem KACIDA BERSATU terenkripsi untuk keamanan operasional dan privasi data performa retail toko.' +
             '</div>' +
           '</div>' +
-        '</div>';
+        '</div>' +
 
+        // STRUKTUR PERSONIL TOKO AKTIF DENGAN FOTO PROFIL BISA DI-ZOOM
+        '<div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 space-y-3">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<div class="flex items-center space-x-2">' +
+              '<i class="fa-solid fa-users text-brand-primary"></i>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Struktur Personil Toko Aktif</h4>' +
+            '</div>' +
+            '<span class="text-[10px] text-slate-400 font-medium">Ketuk foto untuk zoom preview</span>' +
+          '</div>' +
+          '<div id="containerTabelStrukturPersonil" class="overflow-x-auto text-xs"></div>' +
+        '</div>' +
+
+        // AKORDION PANDUAN PENGGUNAAN, TENTANG APLIKASI & FAQ
+        renderInformasiDanPanduanAplikasi() +
+      '</div>';
+
+      container.innerHTML = html;
+
+      // Render struktur personil dengan foto thumbnail
       muatDataSheetLazy('Master_User', false, function(users) {
-        var storeUsers = users.filter(function(u) {
-          return String(u['KODE']).toUpperCase().trim() === (cfg.cleanCode || currentSessionUser.kodeToko);
-        });
-        var tbl = '<table class="w-full text-left divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">' +
-          '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500"><tr><th class="p-2.5">NIK</th><th class="p-2.5">Nama Personil</th><th class="p-2.5">Jabatan</th><th class="p-2.5">Jam Opr</th></tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
-        storeUsers.forEach(function(u) {
-          tbl += '<tr><td class="p-2.5 font-mono text-slate-600">' + u['NIK'] + '</td><td class="p-2.5 font-bold text-slate-800">' + u['NAMA'] + '</td><td class="p-2.5 text-emerald-800">' + u['JABATAN'] + '</td><td class="p-2.5 text-slate-500">' + (u['JAM OPR'] || '-') + '</td></tr>';
-        });
-        tbl += '</tbody></table>';
-        document.getElementById('containerTabelStrukturPersonil').innerHTML = tbl;
+        renderTabelPersonilDenganFoto(users, cfg.cleanCode || currentSessionUser.kodeToko);
+        if (isSuperAdmin) {
+          renderSuperAdminPanelContent(users);
+        }
       });
     }
 
@@ -3073,10 +3223,15 @@
           localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
 
           // Perbarui UI secara langsung tanpa re-login
-          document.getElementById('profilViewAvatar').src = res.fotoProfilUrl;
-          document.getElementById('headerUserAvatar').src = res.fotoProfilUrl;
-          document.getElementById('sidebarUserAvatar').src = res.fotoProfilUrl;
-          document.getElementById('heroUserAvatar').src = res.fotoProfilUrl;
+          var elP = document.getElementById('profilViewAvatar');
+          var elH = document.getElementById('headerUserAvatar');
+          var elS = document.getElementById('sidebarUserAvatar');
+          var elHr = document.getElementById('heroUserAvatar');
+
+          if (elP) elP.src = res.fotoProfilUrl;
+          if (elH) elH.src = res.fotoProfilUrl;
+          if (elS) elS.src = res.fotoProfilUrl;
+          if (elHr) elHr.src = res.fotoProfilUrl;
 
           Swal.fire({ icon: 'success', title: 'Foto Profil Diperbarui', timer: 1500, showConfirmButton: false });
         }, function(err) {
@@ -3106,13 +3261,370 @@
             var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
             currentSessionUser.fotoProfilUrl = '';
             localStorage.setItem('user_login', JSON.stringify(currentSessionUser));
-            document.getElementById('profilViewAvatar').src = defaultAvatar;
-            document.getElementById('headerUserAvatar').src = defaultAvatar;
-            document.getElementById('sidebarUserAvatar').src = defaultAvatar;
-            document.getElementById('heroUserAvatar').src = defaultAvatar;
+
+            var elP = document.getElementById('profilViewAvatar');
+            var elH = document.getElementById('headerUserAvatar');
+            var elS = document.getElementById('sidebarUserAvatar');
+            var elHr = document.getElementById('heroUserAvatar');
+
+            if (elP) elP.src = defaultAvatar;
+            if (elH) elH.src = defaultAvatar;
+            if (elS) elS.src = defaultAvatar;
+            if (elHr) elHr.src = defaultAvatar;
+
             Swal.fire({ icon: 'success', title: 'Foto Dikembalikan ke Default', timer: 1200, showConfirmButton: false });
           }, function(err) {
             Swal.fire({ icon: 'error', title: 'Gagal Reset', text: err.toString() });
+          });
+        }
+      });
+    }
+
+    // --- RENDER TABEL PERSONIL DENGAN FOTO PROFIL BISA DI-ZOOM IN ---
+    function renderTabelPersonilDenganFoto(users, kodeToko) {
+      var box = document.getElementById('containerTabelStrukturPersonil');
+      if (!box) return;
+
+      var storeUsers = users.filter(function(u) {
+        return String(u['KODE']).toUpperCase().trim() === kodeToko;
+      });
+
+      var defaultAvatar = 'https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-';
+
+      var tbl = '<table class="w-full text-center divide-y divide-slate-100">' +
+        '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
+          '<th class="p-2.5 text-center w-12">Foto</th>' +
+          '<th class="p-2.5 text-center w-24">NIK</th>' +
+          '<th class="p-2.5 text-left">Nama Personil</th>' +
+          '<th class="p-2.5 text-center">Jabatan</th>' +
+          '<th class="p-2.5 text-center">Jam Opr</th>' +
+        '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
+
+      storeUsers.forEach(function(u) {
+        var fUrl = String(u['FOTO PROFIL (Url)'] || u['FOTO'] || '').trim();
+        if (fUrl.length < 5) fUrl = defaultAvatar;
+
+        tbl += '<tr class="hover:bg-slate-50/80 transition-colors">' +
+          '<td class="p-2 text-center">' +
+            '<img src="' + fUrl + '" alt="Foto" onclick="bukaPreviewFotoFull(\'' + fUrl + '\', \'' + u['NAMA'] + '\')" ' +
+                 'class="w-8 h-8 rounded-full object-cover border border-emerald-300 mx-auto shadow-sm cursor-pointer hover:scale-125 transition-transform">' +
+          '</td>' +
+          '<td class="p-2.5 font-mono text-slate-600 font-bold">' + u['NIK'] + '</td>' +
+          '<td class="p-2.5 text-left font-extrabold text-slate-900">' + u['NAMA'] + '</td>' +
+          '<td class="p-2.5 font-bold text-emerald-800">' + u['JABATAN'] + '</td>' +
+          '<td class="p-2.5 text-slate-500 font-mono">' + (u['JAM OPR'] || '07:00-22:00') + '</td>' +
+        '</tr>';
+      });
+
+      tbl += '</tbody></table>';
+      box.innerHTML = tbl;
+    }
+
+    // --- RENDER AKORDION TENTANG APLIKASI, PANDUAN FITUR & FAQ LENGKAP ---
+    function renderInformasiDanPanduanAplikasi() {
+      return '<div class="space-y-3 pt-2">' +
+        // 1. TENTANG APLIKASI
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoTentang\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-emerald-100 text-brand-primary flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-circle-info"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">1. Tentang Aplikasi</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoTentang" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoTentang" class="hidden p-5 border-t border-slate-100 space-y-2 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<p class="font-bold text-slate-900">Aplikasi Monitoring - Kacida Bersatu</p>' +
+            '<p>Dirancang khusus untuk memantau kinerja dan pekerjaan operasional Toko dalam 1 aplikasi terpadu. Semua fitur dibagi ke dalam Tab Menu agar mudah dibuka dari Navbar Bawah dan Menu Operasional. Seluruh data bersumber langsung dari Internal.</p>' +
+            '<div class="p-3 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-[11px] font-semibold mt-2">' +
+              '<b>Catatan Penting:</b> Data yang ditampilkan di aplikasi ini adalah Data Internal. Hanya untuk keperluan monitoring internal Toko, dan tidak untuk disebarkan ke luar tanpa izin atasan.' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // 2. PANDUAN PENGGUNAAN APLIKASI
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoPanduan\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-book-open"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">2. Panduan Penggunaan Fitur</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoPanduan" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoPanduan" class="hidden p-5 border-t border-slate-100 space-y-2.5 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<p>• <b>A. Tab Beranda:</b> Halaman utama untuk melihat ringkasan kinerja toko secara cepat (Sales H-1, IKT, Penawaran Langsung, Grafik Tren).</p>' +
+            '<p>• <b>B. Tab Chat AI:</b> Untuk bertanya seputar aplikasi, cara pakai fitur, dan analisa performa seperti SALES, IKT, MTD. Ketik pertanyaanmu, AI akan menjawab secara solutif.</p>' +
+            '<p>• <b>C. Tab Kalender:</b> Untuk melihat jadwal, tanggal penting, jadwal piket, dan agenda operasional toko.</p>' +
+            '<p>• <b>D. Tab Profil:</b> Untuk melihat Data Penugasan Personil, Perangkat & Status Aktif, dan Struktur Personil Toko Aktif.</p>' +
+            '<p>• <b>E. Tab Menu Operasional:</b> Pintasan kerja harian: Rekap PSM Kasir, Monitoring Sales OPR, Ceklis EXP, Donasi Area, Sales MTD, Monitoring IKT, Catatan Return, Serah Terima, Tabunganku, Kas Area, Simulasi IKT, Sales Harian, Konversi No Bon/Struk, Penawaran Langsung. Tap salah satu untuk membuka fiturnya. Tap <code>Lihat Semua</code> untuk melihat semua direktori menu.</p>' +
+          '</div>' +
+        '</div>' +
+
+        // 3. FAQ PERTANYAAN POPULER
+        '<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">' +
+          '<div class="p-4 bg-slate-50 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleAccordionAc(\'accInfoFaq\')">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm">' +
+                '<i class="fa-solid fa-circle-question"></i>' +
+              '</div>' +
+              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">3. FAQ - Pertanyaan</h4>' +
+            '</div>' +
+            '<button type="button" id="btnaccInfoFaq" class="text-xs font-extrabold text-brand-primary">SHOW</button>' +
+          '</div>' +
+          '<div id="accInfoFaq" class="hidden p-5 border-t border-slate-100 space-y-3 text-xs text-slate-700 leading-relaxed bg-white">' +
+            '<div><b class="text-slate-900 block">• Tab apa yang harus dibuka pertama?</b><span class="text-slate-500">Tab Beranda, karena merupakan ringkasan utama performa toko Anda.</span></div>' +
+            '<div><b class="text-slate-900 block">• Chat AI bisa jawab apa saja?</b><span class="text-slate-500">Hanya seputar aplikasi dan operasional toko ritel. Untuk masalah koreksi data spreadsheet, tetap hubungi Admin.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa Kalender kosong?</b><span class="text-slate-500">Karena belum ada agenda kerja atau kegiatan promo yang di-input.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa di Profil ada Token / Hak Akses?</b><span class="text-slate-500">Itu untuk informasi sistem dan keamanan akun. Jangan dibagikan ke orang lain / di-screenshot ke luar.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa menu di Tab Menu Operasional kepotong?</b><span class="text-slate-500">Karena menunya banyak. Scroll ke bawah atau tap <code>Lihat Semua</code>.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa angka di salah satu Tab Menu masih 0 / loading?</b><span class="text-slate-500">Data masih diambil dari spreadsheet. Tunggu 5-10 detik lalu Refresh dengan tarik layar ke bawah atau klik ikon Sync di layar Beranda atas.</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        // FOOTER DIRECT WHATSAPP ADMIN (NOMOR DISEMBUNYIKAN)
+        '<div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-100 text-center text-xs text-slate-600">' +
+          'Info lebih detail silakan Hubungi ' +
+          '<a href="https://wa.me/6285862719780?text=Halo%20Admin%20Kacida%20Bersatu,%20saya%20butuh%20bantuan%20aplikasi" target="_blank" class="font-extrabold text-brand-primary hover:underline inline-flex items-center space-x-1">' +
+            '<i class="fa-brands fa-whatsapp text-emerald-600"></i><span>Admin</span>' +
+          '</a>.' +
+        '</div>' +
+      '</div>';
+    }
+
+    // ==================== PANEL LIVE CRUD SUPER ADMIN (NIK 14125034) ====================
+    function renderSuperAdminPanelContent(users) {
+      var boxResume = document.getElementById('boxResumeSuperAdmin');
+      var containerSheets = document.getElementById('containerAccordionSuperAdminSheets');
+      if (!boxResume || !containerSheets) return;
+
+      var totalKaryawan = users.filter(function(u){ return u['KODE'] && u['KODE'] !== 'AC'; }).length;
+      var totalLogin = 0;
+      users.forEach(function(u){ totalLogin += Number(u['JUMLAH LOGIN'] || 0); });
+
+      // Hitung PWA Terinstall dari Log
+      var logCache = JSON.parse(localStorage.getItem('kacida_cache_Log_Aktivitas') || '{}').data || [];
+      var pwaCount = logCache.filter(function(l){ return String(l['ISTAL_PWA']).toUpperCase() === 'YA'; }).length;
+      var onlineNow = navigator.onLine ? 1 : 0;
+
+      // 4 Kotak Resume Super Admin
+      boxResume.innerHTML = 
+        '<div onclick="detailResumeAdmin(\'Total Karyawan Terdaftar\', \'' + totalKaryawan + ' Personil di Seluruh Toko Binaan\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
+          '<span class="text-[9px] font-bold text-slate-300 uppercase block">Total Karyawan</span>' +
+          '<span class="text-xl font-black font-mono mt-0.5 block">' + totalKaryawan + '</span>' +
+          '<span class="text-[8px] text-indigo-300">Master User</span>' +
+        '</div>' +
+        '<div onclick="detailResumeAdmin(\'Status Online Sistem\', \'Koneksi backend tersambung normal\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
+          '<span class="text-[9px] font-bold text-emerald-300 uppercase block">User Online</span>' +
+          '<span class="text-xl font-black font-mono mt-0.5 block text-emerald-400">' + (onlineNow > 0 ? 'Aktif' : 'Offline') + '</span>' +
+          '<span class="text-[8px] text-emerald-300">Koneksi Backend</span>' +
+        '</div>' +
+        '<div onclick="detailResumeAdmin(\'PWA Terinstall\', \'' + pwaCount + ' Perangkat terdeteksi menggunakan mode Standalone App\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
+          '<span class="text-[9px] font-bold text-blue-300 uppercase block">Install PWA</span>' +
+          '<span class="text-xl font-black font-mono mt-0.5 block text-blue-300">' + (pwaCount > 0 ? pwaCount : '1') + ' Dev</span>' +
+          '<span class="text-[8px] text-blue-300">Mode Standalone</span>' +
+        '</div>' +
+        '<div onclick="detailResumeAdmin(\'Total Login Tercatat\', \'' + totalLogin + ' Total login personil terakumulasi di Master_User\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
+          '<span class="text-[9px] font-bold text-amber-300 uppercase block">Total Login</span>' +
+          '<span class="text-xl font-black font-mono mt-0.5 block text-amber-300">' + totalLogin + '</span>' +
+          '<span class="text-[8px] text-amber-300">Akumulasi Personil</span>' +
+        '</div>';
+
+      // Daftar 16 Sheet Database Ritel
+      var sheetList = [
+        'Master_User', 'Sales_Harian', 'Ikt', 'Penawaran_Langsung', 'YTD_Sales', 
+        'Ceklis_EXP', 'Serah_Terima', 'Catatan_Return', 'Monitoring_Sales_OPR', 
+        'Monitoring_KWH', 'Kas_Area', 'Donasi_Area', 'Tabunganku', 'Rekap_PSM_Kasir', 
+        'Pengumuman', 'Log_Aktivitas'
+      ];
+
+      var htmlSheets = '';
+      sheetList.forEach(function(sh, idx) {
+        var accId = 'accSuperSheet_' + idx;
+        htmlSheets += 
+          '<div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden text-xs">' +
+            '<div class="p-3 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors" onclick="toggleSuperAdminSheetAccordion(\'' + sh + '\', \'' + accId + '\')">' +
+              '<div class="flex items-center space-x-2">' +
+                '<i class="fa-solid fa-table text-indigo-400"></i>' +
+                '<span class="font-bold text-white font-mono">' + sh + '</span>' +
+              '</div>' +
+              '<div class="flex items-center space-x-2">' +
+                '<button type="button" id="btn' + accId + '" class="text-[11px] font-black text-amber-400 hover:underline">SHOW</button>' +
+              '</div>' +
+            '</div>' +
+            '<div id="' + accId + '" class="hidden p-3 bg-slate-900 border-t border-white/10 space-y-2.5 overflow-x-auto text-[11px]">' +
+              '<div class="text-slate-400 italic">Memuat data live sheet ' + sh + '...</div>' +
+            '</div>' +
+          '</div>';
+      });
+
+      containerSheets.innerHTML = htmlSheets;
+    }
+
+    function detailResumeAdmin(judul, info) {
+      Swal.fire({
+        title: judul,
+        html: '<p class="text-xs text-slate-600 font-bold">' + info + '</p>',
+        icon: 'info',
+        confirmButtonColor: '#059669'
+      });
+    }
+
+    // Toggle Buka/Tutup Sheet & Tarik Data Live Super Admin
+    function toggleSuperAdminSheetAccordion(sheetName, accId) {
+      var box = document.getElementById(accId);
+      var btn = document.getElementById('btn' + accId);
+      if (!box || !btn) return;
+
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        btn.innerText = 'HIDE';
+        // Muat Data Live Sheet
+        kirimBackendRequest('SUPER_ADMIN_GET_SHEET', {
+          sheetName: sheetName,
+          nik: '14125034'
+        }, function(res) {
+          renderTableLiveSuperAdmin(sheetName, accId, res.headers, res.rows);
+        }, function(err) {
+          box.innerHTML = '<div class="text-red-400 font-mono text-[10px]">Gagal memuat: ' + err.toString() + '</div>';
+        });
+      } else {
+        box.classList.add('hidden');
+        btn.innerText = 'SHOW';
+      }
+    }
+
+    function renderTableLiveSuperAdmin(sheetName, accId, headers, rows) {
+      var box = document.getElementById(accId);
+      if (!box) return;
+
+      var html = 
+        '<div class="flex items-center justify-between pb-2 border-b border-white/10">' +
+          '<span class="text-slate-300 font-bold font-mono">Total: ' + rows.length + ' Baris</span>' +
+          '<button onclick="bukaModalAdminTambahBaris(\'' + sheetName + '\', ' + JSON.stringify(headers).replace(/"/g, '&quot;') + ', \'' + accId + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow-sm flex items-center space-x-1">' +
+            '<i class="fa-solid fa-plus"></i><span>Tambah Data</span>' +
+          '</button>' +
+        '</div>' +
+        '<div class="overflow-x-auto max-h-72">' +
+          '<table class="w-full text-left divide-y divide-white/10">' +
+            '<thead class="bg-white/10 text-[9px] uppercase font-bold text-slate-300 tracking-wider"><tr>';
+
+      headers.forEach(function(h) { html += '<th class="p-2 whitespace-nowrap">' + h + '</th>'; });
+      html += '<th class="p-2 text-center">Aksi</th></tr></thead><tbody class="divide-y divide-white/5 font-mono text-[10px]">';
+
+      if (rows.length === 0) {
+        html += '<tr><td colspan="' + (headers.length + 1) + '" class="p-4 text-center text-slate-500 italic">Sheet masih kosong.</td></tr>';
+      }
+
+      rows.forEach(function(r) {
+        html += '<tr class="hover:bg-white/5">';
+        r.data.forEach(function(val) {
+          html += '<td class="p-2 whitespace-nowrap text-slate-300 max-w-xs truncate">' + val + '</td>';
+        });
+        html += '<td class="p-2 text-center whitespace-nowrap space-x-1">' +
+          '<button onclick="bukaModalAdminEditBaris(\'' + sheetName + '\', ' + r._rowIndex + ', ' + JSON.stringify(headers).replace(/"/g, '&quot;') + ', ' + JSON.stringify(r.data).replace(/"/g, '&quot;') + ', \'' + accId + '\')" class="p-1 text-blue-400 hover:text-blue-300" title="Edit Baris"><i class="fa-solid fa-pen-to-square"></i></button>' +
+          '<button onclick="hapusBarisLiveSuperAdmin(\'' + sheetName + '\', ' + r._rowIndex + ', \'' + accId + '\')" class="p-1 text-red-400 hover:text-red-300" title="Hapus Baris"><i class="fa-solid fa-trash"></i></button>' +
+        '</td></tr>';
+      });
+
+      html += '</tbody></table></div>';
+      box.innerHTML = html;
+    }
+
+    // Modal Tambah Baris Dinamis Super Admin
+    function bukaModalAdminTambahBaris(sheetName, headers, accId) {
+      var inputsHtml = '<div class="space-y-2 max-h-80 overflow-y-auto text-left text-xs">';
+      headers.forEach(function(h, idx) {
+        inputsHtml += '<div><label class="block font-bold text-slate-700 mb-0.5">' + h + '</label><input type="text" id="adminInCol_' + idx + '" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-mono text-xs"></div>';
+      });
+      inputsHtml += '</div>';
+
+      Swal.fire({
+        title: 'Tambah Baris: ' + sheetName,
+        html: inputsHtml,
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Baris',
+        confirmButtonColor: '#059669',
+        preConfirm: function() {
+          var rowData = [];
+          headers.forEach(function(h, idx) {
+            rowData.push(document.getElementById('adminInCol_' + idx).value);
+          });
+          return rowData;
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); } });
+          kirimBackendRequest('SUPER_ADMIN_SAVE_ROW', {
+            sheetName: sheetName,
+            rowData: res.value,
+            nik: '14125034'
+          }, function() {
+            Swal.close();
+            toggleSuperAdminSheetAccordion(sheetName, accId);
+            toggleSuperAdminSheetAccordion(sheetName, accId);
+          });
+        }
+      });
+    }
+
+    // Modal Edit Baris Dinamis Super Admin
+    function bukaModalAdminEditBaris(sheetName, rowIndex, headers, currentData, accId) {
+      var inputsHtml = '<div class="space-y-2 max-h-80 overflow-y-auto text-left text-xs">';
+      headers.forEach(function(h, idx) {
+        inputsHtml += '<div><label class="block font-bold text-slate-700 mb-0.5">' + h + '</label><input type="text" id="adminEditCol_' + idx + '" value="' + (currentData[idx] || '') + '" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-mono text-xs"></div>';
+      });
+      inputsHtml += '</div>';
+
+      Swal.fire({
+        title: 'Edit Baris ' + rowIndex + ': ' + sheetName,
+        html: inputsHtml,
+        showCancelButton: true,
+        confirmButtonText: 'Perbarui Baris',
+        confirmButtonColor: '#059669',
+        preConfirm: function() {
+          var rowData = [];
+          headers.forEach(function(h, idx) {
+            rowData.push(document.getElementById('adminEditCol_' + idx).value);
+          });
+          return rowData;
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); } });
+          kirimBackendRequest('SUPER_ADMIN_SAVE_ROW', {
+            sheetName: sheetName,
+            rowIndex: rowIndex,
+            rowData: res.value,
+            nik: '14125034'
+          }, function() {
+            Swal.close();
+            toggleSuperAdminSheetAccordion(sheetName, accId);
+            toggleSuperAdminSheetAccordion(sheetName, accId);
+          });
+        }
+      });
+    }
+
+    function hapusBarisLiveSuperAdmin(sheetName, rowIndex, accId) {
+      Swal.fire({
+        title: 'Hapus Baris ' + rowIndex + '?',
+        text: 'Data pada sheet ' + sheetName + ' akan dihapus permanen dari spreadsheet.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Ya, Hapus'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          kirimBackendRequest('SUPER_ADMIN_DELETE_ROW', {
+            sheetName: sheetName,
+            rowIndex: rowIndex,
+            nik: '14125034'
+          }, function() {
+            toggleSuperAdminSheetAccordion(sheetName, accId);
+            toggleSuperAdminSheetAccordion(sheetName, accId);
           });
         }
       });
@@ -3519,7 +4031,7 @@
       });
     }
 
-    // ==================== PREVIEW FOTO FULL SCREEN (DENGAN TOMBOL TUTUP) ====================
+    // ==================== PREVIEW FOTO FULL SCREEN (KETUK MANA SAJA UNTUK TUTUP) ====================
     function bukaPreviewFotoFull(fotoUrl, judul) {
       if (!fotoUrl) return;
 
@@ -3528,27 +4040,17 @@
 
       var overlay = document.createElement('div');
       overlay.id = 'modalFotoFullPreview';
-      overlay.className = 'fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 transition-all duration-200';
+      overlay.className = 'fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer transition-all duration-200 select-none';
+      // Ketuk di mana saja pada overlay untuk langsung menutup
+      overlay.onclick = function() { tutupPreviewFotoFull(); };
 
       overlay.innerHTML = 
-        '<div class="w-full max-w-4xl flex items-center justify-between text-white pb-3 border-b border-white/20">' +
-          '<div class="flex items-center space-x-2">' +
-            '<i class="fa-solid fa-image text-emerald-400"></i>' +
-            '<h4 class="text-sm md:text-base font-bold truncate max-w-xs md:max-w-md">' + (judul || 'Preview Foto') + '</h4>' +
+        '<div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center pointer-events-none">' +
+          '<img src="' + fotoUrl + '" alt="Foto Preview" class="max-h-[82vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl border border-white/20">' +
+          '<div class="mt-3 text-center">' +
+            '<p class="text-xs md:text-sm font-black text-white drop-shadow">' + (judul || 'Foto Profil') + '</p>' +
+            '<span class="text-[10px] text-emerald-300 font-semibold tracking-wider uppercase mt-0.5 block">Ketuk di mana saja untuk menutup</span>' +
           '</div>' +
-          '<button onclick="tutupPreviewFotoFull()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all">' +
-            '<i class="fa-solid fa-xmark text-lg"></i>' +
-          '</button>' +
-        '</div>' +
-
-        '<div class="flex-1 w-full flex items-center justify-center p-2 overflow-hidden">' +
-          '<img src="' + fotoUrl + '" alt="Bukti Foto" class="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/10">' +
-        '</div>' +
-
-        '<div class="w-full max-w-4xl pt-3 border-t border-white/20 flex justify-center">' +
-          '<button onclick="tutupPreviewFotoFull()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-lg transition-all flex items-center space-x-1.5">' +
-            '<i class="fa-solid fa-check"></i><span>Tutup Preview</span>' +
-          '</button>' +
         '</div>';
 
       document.body.appendChild(overlay);

@@ -3005,7 +3005,7 @@
         '</div>';
     }
 
-    // --- VIEW C: PROFIL PENGGUNA, SUPER ADMIN CRUD & UPDATE FOTO PROFIL LH3 BY NIK ---
+    // ==================== VIEW C: PROFIL PENGGUNA & SUPER ADMIN MANAGER ====================
 
     // Helper Deteksi Tipe Perangkat Nyata Pengguna
     function detectUserDeviceType() {
@@ -3017,30 +3017,53 @@
       return 'Mobile / Desktop Browser';
     }
 
-    // Engine Tema Aplikasi (Default, Terang, Gelap)
+    // ==================== 1. ENGINE TEMA APLIKASI (INSTAN AKTIF KE SELURUH ELEMEN) ====================
     function terapkanTemaAplikasi(namaTema) {
       localStorage.setItem('kacida_app_theme', namaTema);
+
+      var styleTag = document.getElementById('kacidaDynamicThemeStyle');
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'kacidaDynamicThemeStyle';
+        document.head.appendChild(styleTag);
+      }
+
       var body = document.body;
 
       if (namaTema === 'GELAP') {
-        body.style.backgroundColor = '#0f172a';
-        body.style.color = '#f8fafc';
+        body.classList.add('theme-dark');
+        body.classList.remove('theme-light');
+        styleTag.innerHTML = 
+          'body.theme-dark { background-color: #0b1329 !important; color: #f8fafc !important; }' +
+          'body.theme-dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }' +
+          'body.theme-dark .bg-slate-50 { background-color: #0f172a !important; color: #cbd5e1 !important; border-color: #334155 !important; }' +
+          'body.theme-dark .bg-slate-100 { background-color: #1e293b !important; color: #f1f5f9 !important; }' +
+          'body.theme-dark .text-slate-800, body.theme-dark .text-slate-900, body.theme-dark .text-slate-700 { color: #f8fafc !important; }' +
+          'body.theme-dark .text-slate-600, body.theme-dark .text-slate-500 { color: #94a3b8 !important; }' +
+          'body.theme-dark .border-slate-100, body.theme-dark .border-slate-200 { border-color: #334155 !important; }' +
+          'body.theme-dark header, body.theme-dark nav, body.theme-dark aside { background-color: #0f172a !important; border-color: #1e293b !important; }';
       } else if (namaTema === 'TERANG') {
-        body.style.backgroundColor = '#f8fafc';
-        body.style.color = '#0f172a';
+        body.classList.add('theme-light');
+        body.classList.remove('theme-dark');
+        styleTag.innerHTML = 
+          'body.theme-light { background-color: #f8fafc !important; color: #0f172a !important; }' +
+          'body.theme-light .bg-white { background-color: #ffffff !important; border-color: #e2e8f0 !important; }';
       } else {
         // DEFAULT: Kacida Retail Green
+        body.classList.remove('theme-dark');
+        body.classList.remove('theme-light');
+        styleTag.innerHTML = '';
         body.style.backgroundColor = '#f0fdf4';
-        body.style.color = '#0f172a';
       }
-      
+
+      // Re-render profil agar tombol tema aktif terpilih
       var containerSub = document.getElementById('containerSubViews');
       if (containerSub && !containerSub.classList.contains('hidden')) {
         renderViewProfil(containerSub);
       }
     }
 
-    // RENDER UTAMA VIEW PROFIL
+    // ==================== 2. RENDER VIEW PROFIL ====================
     function renderViewProfil(container) {
       if (!currentSessionUser) return;
       var cfg = getTokoConfig() || {};
@@ -3055,7 +3078,7 @@
       var html = 
         '<div class="space-y-5 max-w-5xl mx-auto pb-16">' +
           
-          // KARTU PROFIL UTAMA (FOTO BISA DI-ZOOM IN)
+          // KARTU PROFIL UTAMA (FOTO BISA DI-ZOOM IN & ADA TOGGLE SUPER ADMIN)
           '<div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-emerald-100 flex flex-col md:flex-row md:items-center justify-between gap-4">' +
             '<div class="flex items-center space-x-4">' +
               '<div class="relative group cursor-pointer" onclick="bukaPreviewFotoFull(\'' + fotoUrl + '\', \'' + currentSessionUser.nama + '\')">' +
@@ -3074,7 +3097,13 @@
               '</div>' +
             '</div>' +
 
-            '<div class="flex items-center space-x-2">' +
+            '<div class="flex flex-wrap items-center gap-2">' +
+              // TOMBOL TOGGLE KHUSUS SUPER ADMIN (NIK 14125034) DI KOTAK PROFIL
+              (isSuperAdmin ? 
+                '<button onclick="bukaModalSuperAdminPanel()" class="px-3.5 py-2 text-xs font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 rounded-xl transition-all shadow-md flex items-center space-x-1.5 active:scale-95 animate-pulse">' +
+                  '<i class="fa-solid fa-crown"></i><span>Panel Super Admin</span>' +
+                '</button>' : '') +
+
               '<button onclick="resetFotoProfilKeDefault()" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-sm flex items-center space-x-1.5">' +
                 '<i class="fa-solid fa-rotate-left"></i><span>Foto Default</span>' +
               '</button>' +
@@ -3100,89 +3129,58 @@
               '<button onclick="terapkanTemaAplikasi(\'TERANG\')" class="px-3 py-1.5 rounded-xl transition-all ' + (temaAktif === 'TERANG' ? 'bg-white text-brand-dark shadow-sm' : 'text-slate-500') + '">Terang</button>' +
               '<button onclick="terapkanTemaAplikasi(\'GELAP\')" class="px-3 py-1.5 rounded-xl transition-all ' + (temaAktif === 'GELAP' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500') + '">Gelap</button>' +
             '</div>' +
-          '</div>';
-
-      // ==================== PANEL KHUSUS SUPER ADMIN (NIK 14125034) ====================
-      if (isSuperAdmin) {
-        html += 
-          '<div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 md:p-6 shadow-xl border border-indigo-500/30 space-y-4">' +
-            '<div class="flex items-center justify-between pb-3 border-b border-white/10">' +
-              '<div class="flex items-center space-x-2.5">' +
-                '<div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base shadow-inner border border-amber-400/30">' +
-                  '<i class="fa-solid fa-crown animate-bounce"></i>' +
-                '</div>' +
-                '<div>' +
-                  '<h3 class="text-sm md:text-base font-black tracking-tight text-white">PANEL KONTROL SUPER ADMIN (DATABASE LIVE)</h3>' +
-                  '<p class="text-[10px] text-indigo-300">CRUD Seluruh Sheet Langsung Tanpa Perlu Membuka Google Spreadsheet</p>' +
-                '</div>' +
-              '</div>' +
-              '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-slate-900">FULL ACCESS</span>' +
-            '</div>' +
-
-            // 4 KOTAK RESUME SUPER ADMIN DENGAN DETAIL KLIK
-            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center" id="boxResumeSuperAdmin"></div>' +
-
-            // AKORDION PENGELOLAAN SELURUH SHEET
-            '<div class="pt-2">' +
-              '<h4 class="text-xs font-black text-indigo-200 uppercase tracking-wider mb-2">Direktori Database Seluruh Lembar Kerja (Live CRUD)</h4>' +
-              '<div id="containerAccordionSuperAdminSheets" class="space-y-2"></div>' +
-            '</div>' +
-          '</div>';
-      }
-
-      // 2 KOTAK INFORMASI PENUGASAN LENGKAP & PERANGKAT
-      html += 
-        '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">' +
-          // Data Penugasan Lengkap
-          '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5">' +
-            '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
-              '<i class="fa-solid fa-store text-brand-primary"></i>' +
-              '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Data Penugasan Personil</h4>' +
-            '</div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Kode Penempatan:</span><span class="font-bold text-slate-800 font-mono">' + currentSessionUser.kodeToko + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Nama Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.namaToko || cfg.namaToko || '-') + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Wilayah:</span><span class="font-bold text-slate-800">' + (currentSessionUser.wilayah || cfg.wilayah || '-') + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Lokasi / Area:</span><span class="font-bold text-slate-800">' + (currentSessionUser.lokasiArea || cfg.lokasiArea || '-') + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Status Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.statusToko || cfg.status || '-') + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Type Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.typeToko || cfg.type || '-') + '</span></div>' +
-            '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tanggal GO Toko:</span><span class="font-bold text-slate-800 font-mono">' + formatTanggalTampilan(currentSessionUser.tanggalGo || cfg.tanggalGo) + '</span></div>' +
-            '<div class="flex justify-between py-1"><span class="text-slate-400">Total Login Tercatat:</span><span class="font-black text-emerald-700 font-mono">' + currentSessionUser.jumlahLogin + ' Kali</span></div>' +
           '</div>' +
 
-          // Perangkat & Status Aktif
-          '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5 flex flex-col justify-between">' +
-            '<div>' +
+          // 2 KOTAK INFORMASI PENUGASAN LENGKAP & PERANGKAT
+          '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">' +
+            '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5">' +
               '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
-                '<i class="fa-solid fa-mobile-screen-button text-blue-600"></i>' +
-                '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Perangkat & Status Aktif</h4>' +
+                '<i class="fa-solid fa-store text-brand-primary"></i>' +
+                '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Data Penugasan Personil</h4>' +
               '</div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-50 mt-1"><span class="text-slate-400">Status Sesi:</span><span class="font-bold text-emerald-600 flex items-center"><i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Aktif Terverifikasi</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tipe Perangkat:</span><span class="font-bold text-slate-800 font-mono">' + detectUserDeviceType() + '</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Toko Konfigurasi:</span><span class="font-bold text-slate-800 font-mono">' + (cfg.cleanCode || '-') + '</span></div>' +
-              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Aplikasi PWA:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed (Mode App)' : 'Browser Web') + '</span></div>' +
-              '<div class="flex justify-between py-1"><span class="text-slate-400">Hak Akses Sistem:</span><span class="font-black text-slate-900">' + (isSuperAdmin ? 'SUPER ADMIN (Full Bypass)' : currentSessionUser.jabatan) + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Kode Penempatan:</span><span class="font-bold text-slate-800 font-mono">' + currentSessionUser.kodeToko + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Nama Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.namaToko || cfg.namaToko || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Wilayah:</span><span class="font-bold text-slate-800">' + (currentSessionUser.wilayah || cfg.wilayah || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Lokasi / Area:</span><span class="font-bold text-slate-800">' + (currentSessionUser.lokasiArea || cfg.lokasiArea || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Status Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.statusToko || cfg.status || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Type Toko:</span><span class="font-bold text-slate-800">' + (currentSessionUser.typeToko || cfg.type || '-') + '</span></div>' +
+              '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tanggal GO Toko:</span><span class="font-bold text-slate-800 font-mono">' + formatTanggalTampilan(currentSessionUser.tanggalGo || cfg.tanggalGo) + '</span></div>' +
+              '<div class="flex justify-between py-1"><span class="text-slate-400">Total Login Tercatat:</span><span class="font-black text-emerald-700 font-mono">' + currentSessionUser.jumlahLogin + ' Kali</span></div>' +
             '</div>' +
-            '<div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-[10px] text-emerald-800 leading-relaxed">' +
-              'Sistem KACIDA BERSATU terenkripsi untuk keamanan operasional dan privasi data performa retail toko.' +
+
+            '<div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2.5 flex flex-col justify-between">' +
+              '<div>' +
+                '<div class="flex items-center space-x-2 pb-2 border-b border-slate-100">' +
+                  '<i class="fa-solid fa-mobile-screen-button text-blue-600"></i>' +
+                  '<h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Perangkat & Status Aktif</h4>' +
+                '</div>' +
+                '<div class="flex justify-between py-1 border-b border-slate-50 mt-1"><span class="text-slate-400">Status Sesi:</span><span class="font-bold text-emerald-600 flex items-center"><i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Aktif Terverifikasi</span></div>' +
+                '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tipe Perangkat:</span><span class="font-bold text-slate-800 font-mono">' + detectUserDeviceType() + '</span></div>' +
+                '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Toko Konfigurasi:</span><span class="font-bold text-slate-800 font-mono">' + (cfg.cleanCode || '-') + '</span></div>' +
+                '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Aplikasi PWA:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed (Mode App)' : 'Browser Web') + '</span></div>' +
+                '<div class="flex justify-between py-1"><span class="text-slate-400">Hak Akses Sistem:</span><span class="font-black text-slate-900">' + (isSuperAdmin ? 'SUPER ADMIN (Full Bypass)' : currentSessionUser.jabatan) + '</span></div>' +
+              '</div>' +
+              '<div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-[10px] text-emerald-800 leading-relaxed">' +
+                'Sistem KACIDA BERSATU terenkripsi untuk keamanan operasional dan privasi data performa retail toko.' +
+              '</div>' +
             '</div>' +
           '</div>' +
-        '</div>' +
 
-        // STRUKTUR PERSONIL TOKO AKTIF DENGAN FOTO PROFIL BISA DI-ZOOM
-        '<div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 space-y-3">' +
-          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
-            '<div class="flex items-center space-x-2">' +
-              '<i class="fa-solid fa-users text-brand-primary"></i>' +
-              '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Struktur Personil Toko Aktif</h4>' +
+          // STRUKTUR PERSONIL TOKO AKTIF
+          '<div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 space-y-3">' +
+            '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+              '<div class="flex items-center space-x-2">' +
+                '<i class="fa-solid fa-users text-brand-primary"></i>' +
+                '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Struktur Personil Toko Aktif</h4>' +
+              '</div>' +
+              '<span class="text-[10px] text-slate-400 font-medium">Ketuk foto untuk zoom preview</span>' +
             '</div>' +
-            '<span class="text-[10px] text-slate-400 font-medium">Ketuk foto untuk zoom preview</span>' +
+            '<div id="containerTabelStrukturPersonil" class="overflow-x-auto text-xs"></div>' +
           '</div>' +
-          '<div id="containerTabelStrukturPersonil" class="overflow-x-auto text-xs"></div>' +
-        '</div>' +
 
-        // AKORDION PANDUAN PENGGUNAAN, TENTANG APLIKASI & FAQ
-        renderInformasiDanPanduanAplikasi() +
-      '</div>';
+          // AKORDION PANDUAN PENGGUNAAN, TENTANG APLIKASI & FAQ
+          renderInformasiDanPanduanAplikasi() +
+        '</div>';
 
       container.innerHTML = html;
 
@@ -3193,6 +3191,65 @@
           renderSuperAdminPanelContent(users);
         }
       });
+    }
+
+    // ==================== 3. MODAL POPUP PANEL KONTROL SUPER ADMIN (TOGGLE) ====================
+    function bukaModalSuperAdminPanel() {
+      var existing = document.getElementById('modalSuperAdminFullPanel');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'modalSuperAdminFullPanel';
+      modal.className = 'fixed inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 md:p-5 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl w-full max-w-4xl max-h-[92vh] shadow-2xl border border-indigo-500/30 flex flex-col overflow-hidden">' +
+          // Header Modal Admin
+          '<div class="p-4 md:p-5 border-b border-white/10 flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg shadow-inner border border-amber-400/30 animate-bounce">' +
+                '<i class="fa-solid fa-crown"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight text-white">PANEL KONTROL SUPER ADMIN (DATABASE LIVE)</h3>' +
+                '<p class="text-[10px] text-indigo-300">Live CRUD 16 Sheet Spreadsheet & Monitoring Personil Lengkap</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalSuperAdminPanel()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          // Body Modal Admin
+          '<div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4">' +
+            // 4 KOTAK RESUME DENGAN KLIK DETAIL TABEL LENGKAP
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center" id="boxResumeSuperAdmin"></div>' +
+
+            // AKORDION PENGELOLAAN SELURUH SHEET
+            '<div class="pt-2">' +
+              '<h4 class="text-xs font-black text-indigo-200 uppercase tracking-wider mb-2">Direktori Database Seluruh Lembar Kerja (Live CRUD)</h4>' +
+              '<div id="containerAccordionSuperAdminSheets" class="space-y-2"></div>' +
+            '</div>' +
+          '</div>' +
+
+          // Footer
+          '<div class="p-3.5 bg-black/40 border-t border-white/10 flex justify-end">' +
+            '<button onclick="tutupModalSuperAdminPanel()" class="px-5 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-black transition-all">' +
+              'Tutup Panel' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+
+      muatDataSheetLazy('Master_User', false, function(users) {
+        renderSuperAdminPanelContent(users);
+      });
+    }
+
+    function tutupModalSuperAdminPanel() {
+      var modal = document.getElementById('modalSuperAdminFullPanel');
+      if (modal) modal.remove();
     }
 
     // --- UPLOAD FOTO PROFIL LH3 BY NIK LOGIC ---
@@ -3394,45 +3451,49 @@
       '</div>';
     }
 
-    // ==================== PANEL LIVE CRUD SUPER ADMIN (NIK 14125034) ====================
+    // ==================== 4. KOTAK RESUME & DETAIL LIST LENGKAP ====================
     function renderSuperAdminPanelContent(users) {
       var boxResume = document.getElementById('boxResumeSuperAdmin');
       var containerSheets = document.getElementById('containerAccordionSuperAdminSheets');
       if (!boxResume || !containerSheets) return;
 
-      var totalKaryawan = users.filter(function(u){ return u['KODE'] && u['KODE'] !== 'AC'; }).length;
-      var totalLogin = 0;
-      users.forEach(function(u){ totalLogin += Number(u['JUMLAH LOGIN'] || 0); });
+      var validUsers = users.filter(function(u){ return u['KODE'] && u['KODE'] !== 'AC'; });
+      var totalKaryawan = validUsers.length;
 
-      // Hitung PWA Terinstall dari Log
       var logCache = JSON.parse(localStorage.getItem('kacida_cache_Log_Aktivitas') || '{}').data || [];
-      var pwaCount = logCache.filter(function(l){ return String(l['ISTAL_PWA']).toUpperCase() === 'YA'; }).length;
+      var pwaLogs = logCache.filter(function(l){ return String(l['ISTAL_PWA']).toUpperCase() === 'YA'; });
+
+      // Hitung personil yang sudah pernah login
+      var usersLogged = validUsers.filter(function(u){ return Number(u['JUMLAH LOGIN'] || 0) > 0; });
       var onlineNow = navigator.onLine ? 1 : 0;
 
-      // 4 Kotak Resume Super Admin
+      // 4 Kotak Resume Berwarna Gradien
       boxResume.innerHTML = 
-        '<div onclick="detailResumeAdmin(\'Total Karyawan Terdaftar\', \'' + totalKaryawan + ' Personil di Seluruh Toko Binaan\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
-          '<span class="text-[9px] font-bold text-slate-300 uppercase block">Total Karyawan</span>' +
-          '<span class="text-xl font-black font-mono mt-0.5 block">' + totalKaryawan + '</span>' +
-          '<span class="text-[8px] text-indigo-300">Master User</span>' +
+        '<div onclick="bukaDetailListKaryawan()" class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-800 to-slate-800 hover:from-indigo-700 hover:to-slate-700 border border-indigo-400/30 cursor-pointer transition-all shadow-md group">' +
+          '<div class="flex items-center justify-between"><span class="text-[9px] font-bold text-slate-300 uppercase">Total Karyawan</span><i class="fa-solid fa-list-check text-xs text-indigo-300 group-hover:scale-125 transition-transform"></i></div>' +
+          '<span class="text-2xl font-black font-mono mt-1 block text-white">' + totalKaryawan + '</span>' +
+          '<span class="text-[9px] text-indigo-200 underline">Klik Lihat Rincian &raquo;</span>' +
         '</div>' +
-        '<div onclick="detailResumeAdmin(\'Status Online Sistem\', \'Koneksi backend tersambung normal\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
-          '<span class="text-[9px] font-bold text-emerald-300 uppercase block">User Online</span>' +
-          '<span class="text-xl font-black font-mono mt-0.5 block text-emerald-400">' + (onlineNow > 0 ? 'Aktif' : 'Offline') + '</span>' +
-          '<span class="text-[8px] text-emerald-300">Koneksi Backend</span>' +
+
+        '<div onclick="bukaDetailListUserOnline()" class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-800 to-slate-800 hover:from-emerald-700 hover:to-slate-700 border border-emerald-400/30 cursor-pointer transition-all shadow-md group">' +
+          '<div class="flex items-center justify-between"><span class="text-[9px] font-bold text-emerald-300 uppercase">User Online</span><i class="fa-solid fa-signal text-xs text-emerald-300 group-hover:scale-125 transition-transform"></i></div>' +
+          '<span class="text-2xl font-black font-mono mt-1 block text-emerald-400">' + (onlineNow > 0 ? '1 Aktif' : '0') + '</span>' +
+          '<span class="text-[9px] text-emerald-200 underline">Klik Cek Sesi &raquo;</span>' +
         '</div>' +
-        '<div onclick="detailResumeAdmin(\'PWA Terinstall\', \'' + pwaCount + ' Perangkat terdeteksi menggunakan mode Standalone App\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
-          '<span class="text-[9px] font-bold text-blue-300 uppercase block">Install PWA</span>' +
-          '<span class="text-xl font-black font-mono mt-0.5 block text-blue-300">' + (pwaCount > 0 ? pwaCount : '1') + ' Dev</span>' +
-          '<span class="text-[8px] text-blue-300">Mode Standalone</span>' +
+
+        '<div onclick="bukaDetailListInstallPwa()" class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-800 to-slate-800 hover:from-blue-700 hover:to-slate-700 border border-blue-400/30 cursor-pointer transition-all shadow-md group">' +
+          '<div class="flex items-center justify-between"><span class="text-[9px] font-bold text-blue-300 uppercase">Install PWA</span><i class="fa-solid fa-mobile-screen text-xs text-blue-300 group-hover:scale-125 transition-transform"></i></div>' +
+          '<span class="text-2xl font-black font-mono mt-1 block text-blue-300">' + pwaLogs.length + ' Dev</span>' +
+          '<span class="text-[9px] text-blue-200 underline">Klik Cek Device &raquo;</span>' +
         '</div>' +
-        '<div onclick="detailResumeAdmin(\'Total Login Tercatat\', \'' + totalLogin + ' Total login personil terakumulasi di Master_User\')" class="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-all">' +
-          '<span class="text-[9px] font-bold text-amber-300 uppercase block">Total Login</span>' +
-          '<span class="text-xl font-black font-mono mt-0.5 block text-amber-300">' + totalLogin + '</span>' +
-          '<span class="text-[8px] text-amber-300">Akumulasi Personil</span>' +
+
+        '<div onclick="bukaDetailListTotalLogin()" class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-700 to-slate-800 hover:from-amber-600 hover:to-slate-700 border border-amber-400/30 cursor-pointer transition-all shadow-md group">' +
+          '<div class="flex items-center justify-between"><span class="text-[9px] font-bold text-amber-300 uppercase">Total Login</span><i class="fa-solid fa-users text-xs text-amber-300 group-hover:scale-125 transition-transform"></i></div>' +
+          '<span class="text-2xl font-black font-mono mt-1 block text-amber-300">' + usersLogged.length + ' Orang</span>' +
+          '<span class="text-[9px] text-amber-200 underline">Klik Rekap Login &raquo;</span>' +
         '</div>';
 
-      // Daftar 16 Sheet Database Ritel
+      // Render 16 Sheet Database
       var sheetList = [
         'Master_User', 'Sales_Harian', 'Ikt', 'Penawaran_Langsung', 'YTD_Sales', 
         'Ceklis_EXP', 'Serah_Terima', 'Catatan_Return', 'Monitoring_Sales_OPR', 
@@ -3463,12 +3524,140 @@
       containerSheets.innerHTML = htmlSheets;
     }
 
-    function detailResumeAdmin(judul, info) {
+    // --- POPUP 1: DETAIL TOTAL KARYAWAN (NAMA & DATA TOKO) ---
+    function bukaDetailListKaryawan() {
+      muatDataSheetLazy('Master_User', false, function(users) {
+        var valid = users.filter(function(u){ return u['KODE'] && u['KODE'] !== 'AC'; });
+        
+        var rowsHtml = '';
+        valid.forEach(function(u, idx) {
+          rowsHtml += '<tr class="hover:bg-slate-50">' +
+            '<td class="p-2 text-center font-mono">' + (idx + 1) + '</td>' +
+            '<td class="p-2 text-center font-mono font-bold">' + u['NIK'] + '</td>' +
+            '<td class="p-2 text-left font-extrabold text-slate-800">' + u['NAMA'] + '</td>' +
+            '<td class="p-2 text-center font-bold text-emerald-800">' + u['JABATAN'] + '</td>' +
+            '<td class="p-2 text-left font-mono">' + u['KODE'] + ' - ' + (u['NAMA TOKO'] || '-') + '</td>' +
+          '</tr>';
+        });
+
+        Swal.fire({
+          title: 'Daftar Seluruh Personil Toko (' + valid.length + ' Orang)',
+          html: 
+            '<div class="overflow-x-auto max-h-[60vh] text-xs text-left my-2 border border-slate-200 rounded-xl">' +
+              '<table class="w-full text-center divide-y divide-slate-200">' +
+                '<thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600"><tr>' +
+                  '<th class="p-2">No</th><th class="p-2">NIK</th><th class="p-2 text-left">Nama Personil</th><th class="p-2">Jabatan</th><th class="p-2 text-left">Toko</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-100 font-medium">' +
+                  rowsHtml +
+                '</tbody></table>' +
+            '</div>',
+          confirmButtonColor: '#059669',
+          confirmButtonText: 'Tutup Rincian',
+          customClass: { popup: 'rounded-3xl max-w-3xl w-full p-4' }
+        });
+      });
+    }
+
+    // --- POPUP 2: DETAIL USER ONLINE (NAMA & TOKO) ---
+    function bukaDetailListUserOnline() {
       Swal.fire({
-        title: judul,
-        html: '<p class="text-xs text-slate-600 font-bold">' + info + '</p>',
-        icon: 'info',
-        confirmButtonColor: '#059669'
+        title: 'Status User Online Saat Ini',
+        html: 
+          '<div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-left space-y-2">' +
+            '<div class="flex items-center space-x-2 font-black text-emerald-900">' +
+              '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>' +
+              '<span>Sesi Pengguna Sedang Aktif:</span>' +
+            '</div>' +
+            '<div class="p-3 bg-white rounded-xl border border-emerald-100 flex items-center justify-between">' +
+              '<div>' +
+                '<h4 class="font-black text-slate-800 text-sm">' + (currentSessionUser ? currentSessionUser.nama : 'User') + '</h4>' +
+                '<p class="text-[11px] font-mono text-slate-500">NIK: ' + (currentSessionUser ? currentSessionUser.nik : '-') + ' (' + (currentSessionUser ? currentSessionUser.jabatan : '-') + ')</p>' +
+                '<span class="text-[10px] font-bold text-emerald-700 font-mono">Toko: ' + (currentSessionUser ? currentSessionUser.kodeToko : '-') + ' - ' + (currentSessionUser ? currentSessionUser.namaToko : '') + '</span>' +
+              '</div>' +
+              '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono">ONLINE</span>' +
+            '</div>' +
+            '<p class="text-[10px] text-slate-400 italic">Koneksi backend Google Apps Script tersambung secara real-time.</p>' +
+          '</div>',
+        confirmButtonColor: '#059669',
+        confirmButtonText: 'Tutup',
+        customClass: { popup: 'rounded-3xl max-w-lg w-full p-4' }
+      });
+    }
+
+    // --- POPUP 3: DETAIL PWA TERINSTALL (NAMA, TOKO & TIPE DEVICE) ---
+    function bukaDetailListInstallPwa() {
+      muatDataSheetLazy('Log_Aktivitas', false, function(logs) {
+        var pwaUsers = logs.filter(function(l){ return String(l['ISTAL_PWA']).toUpperCase() === 'YA'; });
+        
+        // Ambil riwayat terbaru per NIK
+        var dedup = {};
+        pwaUsers.forEach(function(l){
+          var nik = String(l['NIK'] || '').trim();
+          if (nik && !dedup[nik]) dedup[nik] = l;
+        });
+
+        var list = Object.values(dedup);
+        var rowsHtml = '';
+        list.forEach(function(item, idx) {
+          rowsHtml += '<tr class="hover:bg-slate-50">' +
+            '<td class="p-2 text-center font-mono">' + (idx + 1) + '</td>' +
+            '<td class="p-2 text-left font-bold text-slate-800">' + (item['NAMA'] || '-') + '<br><span class="text-[10px] text-slate-400 font-mono">' + item['NIK'] + '</span></td>' +
+            '<td class="p-2 text-center font-mono font-bold text-brand-dark">' + (item['KODE'] || '-') + '</td>' +
+            '<td class="p-2 text-center font-mono font-black text-blue-700">' + (item['TYPE DEVICE'] || 'MOBILE') + '</td>' +
+            '<td class="p-2 text-center font-mono text-[10px] text-slate-500">' + (item['TIMESTAMP'] || '-') + '</td>' +
+          '</tr>';
+        });
+
+        Swal.fire({
+          title: 'Daftar Perangkat Terinstall PWA (' + list.length + ' Device)',
+          html: 
+            '<div class="overflow-x-auto max-h-[60vh] text-xs text-left my-2 border border-slate-200 rounded-xl">' +
+              '<table class="w-full text-center divide-y divide-slate-200">' +
+                '<thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600"><tr>' +
+                  '<th class="p-2">No</th><th class="p-2 text-left">Nama Personil</th><th class="p-2">Toko</th><th class="p-2">Tipe Device</th><th class="p-2">Waktu Sesi</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-100 font-medium">' +
+                  (rowsHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Belum ada data instalasi PWA di log.</td></tr>') +
+                '</tbody></table>' +
+            '</div>',
+          confirmButtonColor: '#059669',
+          confirmButtonText: 'Tutup Rincian',
+          customClass: { popup: 'rounded-3xl max-w-2xl w-full p-4' }
+        });
+      });
+    }
+
+    // --- POPUP 4: DETAIL TOTAL LOGIN (DAFTAR PERSONIL YANG SUDAH LOGIN) ---
+    function bukaDetailListTotalLogin() {
+      muatDataSheetLazy('Master_User', false, function(users) {
+        var logged = users.filter(function(u){ return Number(u['JUMLAH LOGIN'] || 0) > 0; })
+                          .sort(function(a,b){ return Number(b['JUMLAH LOGIN']) - Number(a['JUMLAH LOGIN']); });
+
+        var rowsHtml = '';
+        logged.forEach(function(u, idx) {
+          rowsHtml += '<tr class="hover:bg-slate-50">' +
+            '<td class="p-2 text-center font-mono font-bold">#' + (idx + 1) + '</td>' +
+            '<td class="p-2 text-left font-bold text-slate-800">' + u['NAMA'] + '<br><span class="text-[10px] text-slate-400 font-mono">NIK: ' + u['NIK'] + '</span></td>' +
+            '<td class="p-2 text-center font-mono font-bold text-emerald-800">' + u['KODE'] + '</td>' +
+            '<td class="p-2 text-center font-bold text-slate-600">' + u['JABATAN'] + '</td>' +
+            '<td class="p-2 text-center font-mono font-black text-amber-700 bg-amber-50">' + u['JUMLAH LOGIN'] + ' Kali</td>' +
+          '</tr>';
+        });
+
+        Swal.fire({
+          title: 'Rekap Login Personil (' + logged.length + ' Orang Pernah Login)',
+          html: 
+            '<div class="overflow-x-auto max-h-[60vh] text-xs text-left my-2 border border-slate-200 rounded-xl">' +
+              '<table class="w-full text-center divide-y divide-slate-200">' +
+                '<thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600"><tr>' +
+                  '<th class="p-2">Rank</th><th class="p-2 text-left">Nama Personil</th><th class="p-2">Toko</th><th class="p-2">Jabatan</th><th class="p-2">Frekuensi Login</th>' +
+                '</tr></thead><tbody class="divide-y divide-slate-100 font-medium">' +
+                  rowsHtml +
+                '</tbody></table>' +
+            '</div>',
+          confirmButtonColor: '#059669',
+          confirmButtonText: 'Tutup Rincian',
+          customClass: { popup: 'rounded-3xl max-w-2xl w-full p-4' }
+        });
       });
     }
 
@@ -3481,7 +3670,6 @@
       if (box.classList.contains('hidden')) {
         box.classList.remove('hidden');
         btn.innerText = 'HIDE';
-        // Muat Data Live Sheet
         kirimBackendRequest('SUPER_ADMIN_GET_SHEET', {
           sheetName: sheetName,
           nik: '14125034'
@@ -3533,7 +3721,6 @@
       box.innerHTML = html;
     }
 
-    // Modal Tambah Baris Dinamis Super Admin
     function bukaModalAdminTambahBaris(sheetName, headers, accId) {
       var inputsHtml = '<div class="space-y-2 max-h-80 overflow-y-auto text-left text-xs">';
       headers.forEach(function(h, idx) {
@@ -3570,7 +3757,6 @@
       });
     }
 
-    // Modal Edit Baris Dinamis Super Admin
     function bukaModalAdminEditBaris(sheetName, rowIndex, headers, currentData, accId) {
       var inputsHtml = '<div class="space-y-2 max-h-80 overflow-y-auto text-left text-xs">';
       headers.forEach(function(h, idx) {

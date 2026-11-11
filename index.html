@@ -1576,7 +1576,7 @@
         renderInfoTokoSpesifikasi(masterUsers, cfg.cleanCode);
       }, null, true);
 
-      // Di dalam fungsi renderDataBerandaDariCache(), tambahkan baris ini:
+      // 6. PENGUMUMAN
       muatDataSheetLazy('Pengumuman', false, function() {
         renderMarqueePengumumanBeranda();
       }, null, true);
@@ -12139,6 +12139,56 @@
     }
 
     // ==================== [17] MODUL PENGUMUMAN MANAJEMEN LENGKAP ====================
+    // Helper Pencocokan NIK yang Kebal terhadap Angka Nol di Depan (03070582 == 3070582)
+    function isSameNikUser(nik1, nik2) {
+      if (!nik1 || !nik2) return false;
+      var s1 = String(nik1).trim().replace(/^0+/, '');
+      var s2 = String(nik2).trim().replace(/^0+/, '');
+      return s1 === s2;
+    }
+
+    // Helper Parser Tanggal & Jam Universal (Kebal Format ISO dengan Spasi)
+    function parseDateTimeUniversal(val) {
+      if (!val) return null;
+      var s = String(val).replace(/^'/, '').trim().replace(' ', 'T');
+      var d = new Date(s);
+      if (!isNaN(d.getTime())) return d;
+      return parseDateIndo(s);
+    }
+
+    // Helper Format Tampilan Tanggal & Jam Rapi (DD/MM/YYYY HH:MM)
+    function formatDateTimeTampilan(val) {
+      if (!val) return 'Tidak terbatas';
+      var d = parseDateTimeUniversal(val);
+      if (!d || isNaN(d.getTime())) return String(val);
+      var day = String(d.getDate()).padStart(2, '0');
+      var mon = String(d.getMonth() + 1).padStart(2, '0');
+      var yr = d.getFullYear();
+      var hr = String(d.getHours()).padStart(2, '0');
+      var min = String(d.getMinutes()).padStart(2, '0');
+      return day + '/' + mon + '/' + yr + ' ' + hr + ':' + min;
+    }
+
+    // Helper Pembuat Warna Gradien Unik Berdasarkan Nama Penginput
+    function getGradientByPenginput(namaPenginput) {
+      var palettes = [
+        'bg-gradient-to-br from-blue-50 via-indigo-50 to-white border-blue-300 text-blue-950',
+        'bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-emerald-300 text-emerald-950',
+        'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-white border-purple-300 text-purple-950',
+        'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-300 text-amber-950',
+        'bg-gradient-to-br from-rose-50 via-pink-50 to-white border-rose-300 text-rose-950',
+        'bg-gradient-to-br from-cyan-50 via-sky-50 to-white border-cyan-300 text-cyan-950'
+      ];
+      if (!namaPenginput) return palettes[0];
+      var hash = 0;
+      for (var i = 0; i < namaPenginput.length; i++) {
+        hash = namaPenginput.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      var idx = Math.abs(hash) % palettes.length;
+      return palettes[idx];
+    }
+
+    // DISPATCHER UTAMA MODUL PENGUMUMAN
     function renderModulPengumuman(container) {
       var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
       var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
@@ -12164,7 +12214,7 @@
       renderListPengumumanCards(canCreate);
     }
 
-    // --- RENDER DAFTAR KARTU PENGUMUMAN ---
+    // --- RENDER DAFTAR KARTU PENGUMUMAN DENGAN GRADIEN NAMA PEMBUAT ---
     function renderListPengumumanCards(canCreate) {
       var box = document.getElementById('containerListPengumuman');
       if (!box) return;
@@ -12173,6 +12223,7 @@
       var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var isAdmin = (userNik === '14125034');
 
       muatDataSheetLazy('Pengumuman', false, function(annRows) {
@@ -12189,10 +12240,9 @@
         var targetRows = annRows.filter(function(ann) {
           var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
           var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
-          var dariNik = String(ann['DARI_NIK'] || '').trim();
 
-          // Pembuat selalu bisa melihat pengumumannya sendiri
-          if (dariNik === userNik || isAdmin) return true;
+          // KUNCI PERBAIKAN: Pembuat selalu bisa melihat pengumumannya sendiri (kebal nol hilang)
+          if (isSameNikUser(ann['DARI_NIK'], userNik) || isAdmin || isAC) return true;
 
           var matchToko = (tgKode === 'ALL' || tgKode === myCode);
           var matchJab = (tgJab === 'ALL' || tgJab === userRole || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
@@ -12200,7 +12250,7 @@
           return matchToko && matchJab;
         });
 
-        // Tandai seluruh pengumuman sasaran sebagai telah dibaca
+        // Tandai sebagai telah dibaca
         targetRows.forEach(function(ann) {
           if (readIds.indexOf(ann['ID']) === -1) {
             readIds.push(ann['ID']);
@@ -12208,63 +12258,59 @@
         });
         localStorage.setItem(readKey, JSON.stringify(readIds));
 
-        // Perbarui badge angka lonceng dan menu seketika
-        renderDataBerandaDariCache();
-
         if (targetRows.length === 0) {
           box.innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Tidak ada pengumuman yang ditujukan untuk toko dan jabatan Anda saat ini.</div>';
           return;
         }
 
-        // Urutkan pengumuman terbaru di paling atas
         var sortedAnn = targetRows.slice().reverse();
-
         var html = '';
+
         sortedAnn.forEach(function(ann) {
-          var isPembuat = (String(ann['DARI_NIK'] || '').trim() === userNik || isAdmin);
-          var tglMulai = ann['TGL_MULAI'] || ann['CREATED_AT'];
-          var tglSelesai = ann['TGL_SELESAI'] || '';
+          // KUNCI PERBAIKAN: Tombol edit & hapus muncul untuk user AC atau pembuatnya
+          var isPembuat = isSameNikUser(ann['DARI_NIK'], userNik) || isAdmin;
+          var dEnd = parseDateTimeUniversal(ann['TGL_SELESAI']);
           
           var isExpired = false;
-          if (tglSelesai) {
-            var dEnd = new Date(tglSelesai);
-            if (!isNaN(dEnd.getTime()) && now > dEnd) {
-              isExpired = true;
-            }
+          if (dEnd && now > dEnd) {
+            isExpired = true;
           }
 
           var badgeStatusAktif = isExpired
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Berakhir</span>'
-            : '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 animate-pulse"><i class="fa-solid fa-circle-check mr-1"></i>Aktif</span>';
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Berakhir</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse"><i class="fa-solid fa-circle-check mr-1"></i>Aktif</span>';
 
-          html += '<div class="p-4 md:p-5 bg-white rounded-2xl border ' + (isExpired ? 'border-slate-200 opacity-80' : 'border-emerald-200 shadow-sm') + ' space-y-3 transition-all">' +
+          // AMBIL WARNA GRADIEN DINAMIS SESUAI NAMA PENGINPUT
+          var cardGradientClass = getGradientByPenginput(ann['DARI_NAMA']);
+
+          html += '<div class="p-4 md:p-5 rounded-2xl border shadow-sm space-y-3 transition-all ' + cardGradientClass + ' ' + (isExpired ? 'opacity-75' : '') + '">' +
             '<div class="flex items-start justify-between gap-2">' +
               '<div>' +
-                '<div class="flex flex-wrap items-center gap-1.5 mb-1">' +
+                '<div class="flex flex-wrap items-center gap-1.5 mb-1.5">' +
                   badgeStatusAktif +
-                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 font-mono">Toko: ' + (ann['TARGET_KODE'] || 'ALL') + '</span>' +
-                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">Jabatan: ' + (ann['TARGET_JABATAN'] || 'ALL') + '</span>' +
+                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/80 text-blue-700 border border-blue-200 font-mono">Toko: ' + (ann['TARGET_KODE'] || 'ALL') + '</span>' +
+                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/80 text-purple-700 border border-purple-200">Jabatan: ' + (ann['TARGET_JABATAN'] || 'ALL') + '</span>' +
                 '</div>' +
-                '<h4 class="text-sm font-black text-slate-800 tracking-tight">' + ann['JUDUL'] + '</h4>' +
+                '<h4 class="text-sm font-black text-slate-900 tracking-tight">' + ann['JUDUL'] + '</h4>' +
               '</div>' +
 
-              // Tombol Edit & Hapus Khusus Pembuat
+              // Tombol Edit & Hapus (Muncul untuk Pak Amed / Pembuat)
               (isPembuat ? 
-                '<div class="flex items-center space-x-1 shrink-0">' +
-                  '<button onclick="bukaModalEditPengumuman(' + JSON.stringify(ann).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit Pengumuman"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
-                  '<button onclick="hapusRowUniversal(\'Pengumuman\', \'' + ann['ID'] + '\', function(){ renderListPengumumanCards(' + canCreate + '); })" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
+                '<div class="flex items-center space-x-1 shrink-0 bg-white/80 p-1 rounded-xl border border-slate-200 shadow-sm">' +
+                  '<button onclick="bukaModalEditPengumuman(' + JSON.stringify(ann).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit Pengumuman"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
+                  '<button onclick="hapusRowUniversal(\'Pengumuman\', \'' + ann['ID'] + '\', function(){ renderListPengumumanCards(' + canCreate + '); })" class="p-1.5 text-slate-500 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
                 '</div>' : '') +
             '</div>' +
 
             // Isi Pengumuman
-            '<div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed whitespace-pre-line font-medium">' +
+            '<div class="p-3 bg-white/90 rounded-xl border border-white/60 text-xs text-slate-800 leading-relaxed whitespace-pre-line font-medium shadow-sm">' +
               ann['ISI'] +
             '</div>' +
 
-            // Rincian Pembuat & Deadline
-            '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-100">' +
-              '<span>Oleh: <b class="text-slate-700">' + ann['DARI_NAMA'] + '</b> (' + ann['DARI_NIK'] + ')</span>' +
-              '<span>Masa Berlaku: <b class="text-slate-700">' + (tglSelesai ? tglSelesai.replace('T', ' ') : 'Tidak terbatas') + '</b></span>' +
+            // Rincian Pembuat & Deadline Tanggal Rapi
+            '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-500 font-mono pt-1 border-t border-black/10">' +
+              '<span>Oleh: <b class="text-slate-800">' + ann['DARI_NAMA'] + '</b> (' + ann['DARI_NIK'] + ')</span>' +
+              '<span>Masa Berlaku: <b class="text-slate-800">' + formatDateTimeTampilan(ann['TGL_SELESAI']) + '</b></span>' +
             '</div>' +
           '</div>';
         });
@@ -12273,15 +12319,26 @@
       });
     }
 
-    // ==================== RUNNING TEXT / MARQUEE DI BERANDA ====================
+    // ==================== RUNNING TEXT / MARQUEE DI BERANDA (AUTO-MOUNT & PARSER AKURAT) ====================
     function renderMarqueePengumumanBeranda() {
+      // Pasang otomatis elemen jika belum ada di HTML
       var container = document.getElementById('containerMarqueeBeranda');
-      if (!container) return;
+      if (!container) {
+        var viewBeranda = document.getElementById('viewBeranda');
+        if (viewBeranda) {
+          container = document.createElement('div');
+          container.id = 'containerMarqueeBeranda';
+          container.className = 'hidden';
+          viewBeranda.insertBefore(container, viewBeranda.firstElementChild);
+        } else {
+          return;
+        }
+      }
 
       var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
-      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var now = new Date();
 
       var cached = localStorage.getItem('kacida_cache_Pengumuman');
@@ -12296,20 +12353,17 @@
           var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
           var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
 
-          var matchToko = (tgKode === 'ALL' || tgKode === myCode);
-          var matchJab = (tgJab === 'ALL' || tgJab === userRole || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
+          var matchToko = (tgKode === 'ALL' || tgKode === myCode || isAC);
+          var matchJab = (tgJab === 'ALL' || tgJab === userRole || isAC || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
 
           if (!matchToko || !matchJab) return false;
 
-          // Periksa apakah waktu saat ini berada dalam rentang deadline
-          if (ann['TGL_SELESAI']) {
-            var dEnd = new Date(ann['TGL_SELESAI']);
-            if (!isNaN(dEnd.getTime()) && now > dEnd) return false;
-          }
-          if (ann['TGL_MULAI']) {
-            var dStart = new Date(ann['TGL_MULAI']);
-            if (!isNaN(dStart.getTime()) && now < dStart) return false;
-          }
+          // Periksa masa aktif deadline
+          var dEnd = parseDateTimeUniversal(ann['TGL_SELESAI']);
+          if (dEnd && now > dEnd) return false;
+
+          var dStart = parseDateTimeUniversal(ann['TGL_MULAI']);
+          if (dStart && now < dStart) return false;
 
           return true;
         });
@@ -12320,16 +12374,16 @@
           return;
         }
 
-        // Susun teks pengumuman yang berjalan
+        // Susun teks pengumuman
         var teksBerjalan = activeAnn.map(function(a) {
-          var sisaDeadline = a['TGL_SELESAI'] ? ' (Batas: ' + a['TGL_SELESAI'].replace('T', ' ') + ')' : '';
+          var sisaDeadline = a['TGL_SELESAI'] ? ' (Batas: ' + formatDateTimeTampilan(a['TGL_SELESAI']) + ')' : '';
           return '📢 [' + a['JUDUL'] + ']: ' + a['ISI'].replace(/\n/g, ' ') + sisaDeadline;
-        }).join(' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ');
+        }).join(' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ');
 
         container.className = 'w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-2.5 shadow-md border border-amber-400 flex items-center space-x-2.5 overflow-hidden cursor-pointer';
         container.onclick = function() { bukaModalMenuTerpilih('PENGUMUMAN'); };
 
-        // MARQUEE BERGERAK DARI KIRI KE KANAN SESUAI PERMINTAAN (direction="right")
+        // MARQUEE BERGERAK DARI KIRI KE KANAN SESUAI PERMINTAAN
         container.innerHTML = 
           '<div class="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-800/80 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-inner">' +
             '<i class="fa-solid fa-bullhorn animate-pulse text-amber-200"></i>' +

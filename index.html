@@ -1035,6 +1035,8 @@
 
         <!-- ==================== VIEW 1: BERANDA ==================== -->
         <section id="viewBeranda" class="space-y-6">
+          <!-- WADAH RUNNING TEXT / MARQUEE PENGUMUMAN MANAJEMEN -->
+          <div id="containerMarqueeBeranda" class="hidden"></div>
 
           <!-- 1. HERO CARD PERSONIL (TRANSPARAN KACA ELEGAN + ICON MATA) -->
           <div class="relative w-full rounded-card overflow-hidden shadow-xl border border-white/20 text-white p-5 md:p-6 flex flex-col justify-between min-h-[185px] bg-cover bg-center"
@@ -1574,6 +1576,11 @@
         renderInfoTokoSpesifikasi(masterUsers, cfg.cleanCode);
       }, null, true);
 
+      // Di dalam fungsi renderDataBerandaDariCache(), tambahkan baris ini:
+      muatDataSheetLazy('Pengumuman', false, function() {
+        renderMarqueePengumumanBeranda();
+      }, null, true);
+
       // 7. Notifikasi (Hening, tidak memicu pop-up Membuka Notifikasi)
       muatDataSheetLazy('Notifikasi', false, function(notifs) {
         renderNotifikasiLonceng(notifs);
@@ -1832,8 +1839,45 @@
         }
         return count;
       }
+      
+      // 5. Logika Khusus Menu Pengumuman (Muncul badge jika ada pengumuman baru yang belum dibaca)
+      if (norm.indexOf('PENGUMUMAN') !== -1) {
+        var annCache = localStorage.getItem('kacida_cache_Pengumuman');
+        if (annCache) {
+          try {
+            var allAnn = JSON.parse(annCache).data || [];
+            var cfg = getTokoConfig() || {};
+            var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+            var readKey = 'kacida_read_announcements_' + (currentSessionUser ? currentSessionUser.nik : '');
+            var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+            var now = new Date();
 
-      // 5. Notifikasi Umum Sheet Notifikasi
+            allAnn.forEach(function(ann) {
+              var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
+              var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
+
+              var matchToko = (tgKode === 'ALL' || tgKode === myCode);
+              var matchJab = (tgJab === 'ALL' || tgJab === userRole || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
+
+              if (matchToko && matchJab) {
+                // Cek masa berlaku deadline
+                var isStillActive = true;
+                if (ann['TGL_SELESAI']) {
+                  var dEnd = new Date(ann['TGL_SELESAI']);
+                  if (!isNaN(dEnd.getTime()) && now > dEnd) isStillActive = false;
+                }
+                // Jika masih aktif dan belum pernah dibaca
+                if (isStillActive && readIds.indexOf(ann['ID']) === -1) {
+                  count++;
+                }
+              }
+            });
+          } catch(e) {}
+        }
+        return count;
+      }
+
+      // 6. Notifikasi Umum Sheet Notifikasi
       try {
         var notifCache = localStorage.getItem('kacida_cache_Notifikasi');
         if (!notifCache) return 0;
@@ -12094,35 +12138,401 @@
       renderSubTabReturnContent();
     }
 
-    // ==================== [17] MODUL PENGUMUMAN ====================
+    // ==================== [17] MODUL PENGUMUMAN MANAJEMEN LENGKAP ====================
     function renderModulPengumuman(container) {
-      container.innerHTML = renderHeaderModalUniversal('Pengumuman Manajemen Toko', 'Distribusi Informasi Operasional ke Seluruh Pengguna') +
-        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
-          '<div id="containerListPengumuman" class="max-w-2xl mx-auto space-y-3"></div>' +
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var isCos = (userRole === 'CHIEF OF STORE' || userRole === 'COS');
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+      var isAdmin = (userNik === '14125034' || userNik === '17060061' || userNik === '22050361');
+      var canCreate = (isCos || isAC || isAdmin);
+
+      container.innerHTML = renderHeaderModalUniversal(
+        'Pengumuman Manajemen Toko', 
+        canCreate ? 'Distribusi Informasi Operasional, Target & Pengumuman Area' : 'Pemberitahuan & Arahan Manajemen'
+      ) +
+        '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 relative" id="annMainContainerWrapper">' +
+          '<div id="containerListPengumuman" class="max-w-3xl mx-auto space-y-3.5 pb-16"></div>' +
+
+          // FLOATING BUTTON (+) HANYA UNTUK ROLE COS, AC, DAN ADMIN
+          (canCreate ? 
+            '<button onclick="bukaModalInputPengumuman()" id="btnFabPengumuman" title="Buat Pengumuman Baru" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-brand-primary hover:bg-emerald-700 text-white shadow-2xl flex items-center justify-center text-2xl z-30 transition-transform active:scale-95 animate-bounce">' +
+              '<i class="fa-solid fa-plus"></i>' +
+            '</button>' : '') +
         '</div>';
 
+      renderListPengumumanCards(canCreate);
+    }
+
+    // --- RENDER DAFTAR KARTU PENGUMUMAN ---
+    function renderListPengumumanCards(canCreate) {
+      var box = document.getElementById('containerListPengumuman');
+      if (!box) return;
+
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var isAdmin = (userNik === '14125034');
+
       muatDataSheetLazy('Pengumuman', false, function(annRows) {
-        var box = document.getElementById('containerListPengumuman');
         if (!annRows || annRows.length === 0) {
-          box.innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Belum ada pengumuman baru dari manajemen.</div>';
+          box.innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Belum ada pengumuman baru dari manajemen.</div>';
           return;
         }
 
+        var now = new Date();
+        var readKey = 'kacida_read_announcements_' + userNik;
+        var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+
+        // Saring pengumuman yang sesuai sasaran toko dan jabatan pengguna
+        var targetRows = annRows.filter(function(ann) {
+          var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
+          var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
+          var dariNik = String(ann['DARI_NIK'] || '').trim();
+
+          // Pembuat selalu bisa melihat pengumumannya sendiri
+          if (dariNik === userNik || isAdmin) return true;
+
+          var matchToko = (tgKode === 'ALL' || tgKode === myCode);
+          var matchJab = (tgJab === 'ALL' || tgJab === userRole || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
+
+          return matchToko && matchJab;
+        });
+
+        // Tandai seluruh pengumuman sasaran sebagai telah dibaca
+        targetRows.forEach(function(ann) {
+          if (readIds.indexOf(ann['ID']) === -1) {
+            readIds.push(ann['ID']);
+          }
+        });
+        localStorage.setItem(readKey, JSON.stringify(readIds));
+
+        // Perbarui badge angka lonceng dan menu seketika
+        renderDataBerandaDariCache();
+
+        if (targetRows.length === 0) {
+          box.innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Tidak ada pengumuman yang ditujukan untuk toko dan jabatan Anda saat ini.</div>';
+          return;
+        }
+
+        // Urutkan pengumuman terbaru di paling atas
+        var sortedAnn = targetRows.slice().reverse();
+
         var html = '';
-        annRows.forEach(function(ann) {
-          html += '<div class="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1.5">' +
-            '<div class="flex items-center justify-between">' +
-              '<h4 class="text-sm font-extrabold text-slate-800">' + ann['JUDUL'] + '</h4>' +
-              '<span class="text-[10px] font-mono text-slate-400">' + ann['CREATED_AT'] + '</span>' +
+        sortedAnn.forEach(function(ann) {
+          var isPembuat = (String(ann['DARI_NIK'] || '').trim() === userNik || isAdmin);
+          var tglMulai = ann['TGL_MULAI'] || ann['CREATED_AT'];
+          var tglSelesai = ann['TGL_SELESAI'] || '';
+          
+          var isExpired = false;
+          if (tglSelesai) {
+            var dEnd = new Date(tglSelesai);
+            if (!isNaN(dEnd.getTime()) && now > dEnd) {
+              isExpired = true;
+            }
+          }
+
+          var badgeStatusAktif = isExpired
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Berakhir</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 animate-pulse"><i class="fa-solid fa-circle-check mr-1"></i>Aktif</span>';
+
+          html += '<div class="p-4 md:p-5 bg-white rounded-2xl border ' + (isExpired ? 'border-slate-200 opacity-80' : 'border-emerald-200 shadow-sm') + ' space-y-3 transition-all">' +
+            '<div class="flex items-start justify-between gap-2">' +
+              '<div>' +
+                '<div class="flex flex-wrap items-center gap-1.5 mb-1">' +
+                  badgeStatusAktif +
+                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 font-mono">Toko: ' + (ann['TARGET_KODE'] || 'ALL') + '</span>' +
+                  '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">Jabatan: ' + (ann['TARGET_JABATAN'] || 'ALL') + '</span>' +
+                '</div>' +
+                '<h4 class="text-sm font-black text-slate-800 tracking-tight">' + ann['JUDUL'] + '</h4>' +
+              '</div>' +
+
+              // Tombol Edit & Hapus Khusus Pembuat
+              (isPembuat ? 
+                '<div class="flex items-center space-x-1 shrink-0">' +
+                  '<button onclick="bukaModalEditPengumuman(' + JSON.stringify(ann).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit Pengumuman"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
+                  '<button onclick="hapusRowUniversal(\'Pengumuman\', \'' + ann['ID'] + '\', function(){ renderListPengumumanCards(' + canCreate + '); })" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
+                '</div>' : '') +
             '</div>' +
-            '<p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">' + ann['ISI'] + '</p>' +
-            '<div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">' +
-              '<span>Oleh: <b class="text-brand-dark">' + ann['DARI_NAMA'] + '</b></span>' +
-              '<span>Target: <b class="font-mono text-emerald-800">' + ann['TARGET_KODE'] + '</b></span>' +
+
+            // Isi Pengumuman
+            '<div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed whitespace-pre-line font-medium">' +
+              ann['ISI'] +
+            '</div>' +
+
+            // Rincian Pembuat & Deadline
+            '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-100">' +
+              '<span>Oleh: <b class="text-slate-700">' + ann['DARI_NAMA'] + '</b> (' + ann['DARI_NIK'] + ')</span>' +
+              '<span>Masa Berlaku: <b class="text-slate-700">' + (tglSelesai ? tglSelesai.replace('T', ' ') : 'Tidak terbatas') + '</b></span>' +
             '</div>' +
           '</div>';
         });
+
         box.innerHTML = html;
+      });
+    }
+
+    // ==================== RUNNING TEXT / MARQUEE DI BERANDA ====================
+    function renderMarqueePengumumanBeranda() {
+      var container = document.getElementById('containerMarqueeBeranda');
+      if (!container) return;
+
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+      var now = new Date();
+
+      var cached = localStorage.getItem('kacida_cache_Pengumuman');
+      if (!cached) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      try {
+        var allAnn = JSON.parse(cached).data || [];
+        var activeAnn = allAnn.filter(function(ann) {
+          var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
+          var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
+
+          var matchToko = (tgKode === 'ALL' || tgKode === myCode);
+          var matchJab = (tgJab === 'ALL' || tgJab === userRole || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
+
+          if (!matchToko || !matchJab) return false;
+
+          // Periksa apakah waktu saat ini berada dalam rentang deadline
+          if (ann['TGL_SELESAI']) {
+            var dEnd = new Date(ann['TGL_SELESAI']);
+            if (!isNaN(dEnd.getTime()) && now > dEnd) return false;
+          }
+          if (ann['TGL_MULAI']) {
+            var dStart = new Date(ann['TGL_MULAI']);
+            if (!isNaN(dStart.getTime()) && now < dStart) return false;
+          }
+
+          return true;
+        });
+
+        if (activeAnn.length === 0) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          return;
+        }
+
+        // Susun teks pengumuman yang berjalan
+        var teksBerjalan = activeAnn.map(function(a) {
+          var sisaDeadline = a['TGL_SELESAI'] ? ' (Batas: ' + a['TGL_SELESAI'].replace('T', ' ') + ')' : '';
+          return '📢 [' + a['JUDUL'] + ']: ' + a['ISI'].replace(/\n/g, ' ') + sisaDeadline;
+        }).join(' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ');
+
+        container.className = 'w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-2.5 shadow-md border border-amber-400 flex items-center space-x-2.5 overflow-hidden cursor-pointer';
+        container.onclick = function() { bukaModalMenuTerpilih('PENGUMUMAN'); };
+
+        // MARQUEE BERGERAK DARI KIRI KE KANAN SESUAI PERMINTAAN (direction="right")
+        container.innerHTML = 
+          '<div class="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-800/80 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-inner">' +
+            '<i class="fa-solid fa-bullhorn animate-pulse text-amber-200"></i>' +
+            '<span>PENGUMUMAN</span>' +
+          '</div>' +
+          '<div class="flex-1 overflow-hidden">' +
+            '<marquee direction="right" scrollamount="6" class="font-bold text-xs text-white tracking-wide">' +
+              teksBerjalan +
+            '</marquee>' +
+          '</div>';
+
+        container.classList.remove('hidden');
+
+      } catch (e) {
+        container.classList.add('hidden');
+      }
+    }
+
+    // ==================== MODAL BUAT PENGUMUMAN BARU (FAB +) ====================
+    function bukaModalInputPengumuman() {
+      var existing = document.getElementById('modalInputPengumumanWrapper');
+      if (existing) existing.remove();
+
+      // Ambil daftar seluruh toko dari Master_User
+      var allUsers = JSON.parse(localStorage.getItem('kacida_cache_Master_User') || '{}').data || [];
+      var storeMap = {};
+      allUsers.forEach(function(u) {
+        var k = String(u['KODE'] || '').toUpperCase().trim();
+        if (k && k !== 'AC') {
+          storeMap[k] = u['NAMA TOKO'] || u['STORE NAME'] || k;
+        }
+      });
+
+      var optionsToko = '<option value="ALL">Semua Toko (ALL)</option>';
+      for (var sk in storeMap) {
+        optionsToko += '<option value="' + sk + '">' + sk + ' - ' + storeMap[sk] + '</option>';
+      }
+
+      var modal = document.createElement('div');
+      modal.id = 'modalInputPengumumanWrapper';
+      modal.className = 'fixed inset-0 z-[75] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
+
+      var now = new Date();
+      var nowIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      
+      // Default batas deadline 3 hari ke depan
+      var endDefault = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000) - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-xl max-h-[92vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-bullhorn text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Buat Pengumuman Baru</h3>' +
+                '<p class="text-[10px] text-emerald-200">Distribusi Arahan Toko & Penayangan Marquee Beranda</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalInputPengumuman()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="p-4 md:p-5 space-y-3.5 text-xs bg-slate-50 overflow-y-auto flex-1">' +
+            '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Toko Sasaran</label>' +
+                '<select id="mAnnToko" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-800">' +
+                  optionsToko +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Jabatan Sasaran</label>' +
+                '<select id="mAnnJabatan" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-800">' +
+                  '<option value="ALL">Semua Jabatan (ALL)</option>' +
+                  '<option value="CREW">CREW</option>' +
+                  '<option value="ACOS">ACOS (Assistant Chief)</option>' +
+                  '<option value="COS">COS (Chief Of Store)</option>' +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Mulai Tayang (Tanggal & Jam)</label>' +
+                '<input type="datetime-local" id="mAnnMulai" value="' + nowIso + '" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs font-bold">' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Batas Selesai / Deadline (Tanggal & Jam)</label>' +
+                '<input type="datetime-local" id="mAnnSelesai" value="' + endDefault + '" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs font-bold">' +
+              '</div>' +
+            '</div>' +
+
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Judul Pengumuman</label>' +
+              '<input type="text" id="mAnnJudul" placeholder="Contoh: Fokus Penjualan PSM / SOP Kebersihan Rak" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs">' +
+            '</div>' +
+
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Isi Pesan / Instruksi Pengumuman</label>' +
+              '<textarea id="mAnnIsi" rows="4" placeholder="Tuliskan isi instruksi secara jelas..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"></textarea>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-end space-x-2">' +
+            '<button onclick="tutupModalInputPengumuman()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Batal</button>' +
+            '<button onclick="simpanPengumumanBaru()" class="px-6 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5"><i class="fa-solid fa-paper-plane"></i><span>Kirim & Publikasikan</span></button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+    }
+
+    function tutupModalInputPengumuman() {
+      var modal = document.getElementById('modalInputPengumumanWrapper');
+      if (modal) modal.remove();
+    }
+
+    function simpanPengumumanBaru() {
+      var toko = document.getElementById('mAnnToko').value;
+      var jabatan = document.getElementById('mAnnJabatan').value;
+      var tglMulai = document.getElementById('mAnnMulai').value;
+      var tglSelesai = document.getElementById('mAnnSelesai').value;
+      var judul = document.getElementById('mAnnJudul').value.trim();
+      var isi = document.getElementById('mAnnIsi').value.trim();
+
+      if (!judul || !isi) {
+        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Judul dan isi pengumuman wajib diisi.' });
+        return;
+      }
+
+      Swal.fire({ title: 'Mempublikasikan Pengumuman...', didOpen: function() { Swal.showLoading(); } });
+
+      var payload = {
+        subAction: 'CREATE',
+        judul: judul,
+        isi: isi,
+        dariNik: currentSessionUser ? currentSessionUser.nik : '',
+        dariNama: currentSessionUser ? currentSessionUser.nama : 'Manajemen',
+        targetKode: toko,
+        targetJabatan: jabatan,
+        tglMulai: tglMulai,
+        tglSelesai: tglSelesai
+      };
+
+      kirimBackendRequest('CRUD_PENGUMUMAN', payload, function() {
+        Swal.close();
+        tutupModalInputPengumuman();
+        Swal.fire({ icon: 'success', title: 'Pengumuman Diterbitkan', text: 'Running text marquee langsung aktif di Beranda penerima.', timer: 1500, showConfirmButton: false });
+        
+        muatDataSheetLazy('Pengumuman', true, function() {
+          renderListPengumumanCards(true);
+          renderMarqueePengumumanBeranda();
+        });
+      }, function(err) {
+        Swal.close();
+        Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });
+      });
+    }
+
+    // ==================== MODAL EDIT PENGUMUMAN (KHUSUS PEMBUAT) ====================
+    function bukaModalEditPengumuman(ann) {
+      Swal.fire({
+        title: 'Edit Pengumuman',
+        html: 
+          '<div class="text-left text-xs space-y-2.5 text-slate-700 my-2">' +
+            '<div><label class="block font-bold mb-1">Judul Pengumuman</label><input type="text" id="editAnnJudul" value="' + ann['JUDUL'] + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold"></div>' +
+            '<div><label class="block font-bold mb-1">Batas Selesai / Deadline</label><input type="datetime-local" id="editAnnSelesai" value="' + (ann['TGL_SELESAI'] || '') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold"></div>' +
+            '<div><label class="block font-bold mb-1">Isi Pengumuman</label><textarea id="editAnnIsi" rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' + ann['ISI'] + '</textarea></div>' +
+          '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Perubahan',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          return {
+            judul: document.getElementById('editAnnJudul').value.trim(),
+            tglSelesai: document.getElementById('editAnnSelesai').value,
+            isi: document.getElementById('editAnnIsi').value.trim()
+          };
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan...', didOpen: function() { Swal.showLoading(); } });
+
+          var payload = res.value;
+          payload.subAction = 'EDIT';
+          payload.id = ann['ID'];
+
+          kirimBackendRequest('CRUD_PENGUMUMAN', payload, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Pengumuman Diperbarui', timer: 1200, showConfirmButton: false });
+            muatDataSheetLazy('Pengumuman', true, function() {
+              renderListPengumumanCards(true);
+              renderMarqueePengumumanBeranda();
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal Edit', text: err.toString() });
+          });
+        }
       });
     }
 

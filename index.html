@@ -151,7 +151,7 @@
       <!-- Logo Animasi Bounce Tanpa Latar Belakang -->
       <img src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-" alt="Logo" class="w-16 h-16 object-contain mb-3 animate-bounce">
       <h4 id="tabLoadingTitle" class="text-sm font-bold text-slate-800 mb-1">Membuka Tab Data...</h4>
-      <p id="tabLoadingSub" class="text-xs text-slate-500 mb-4 text-center">Mengambil data dari Spreadsheet...</p>
+      <p id="tabLoadingSub" class="text-xs text-slate-500 mb-4 text-center">Memproses Data...</p>
       <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-200">
         <div id="tabProgressBar" class="h-full bg-brand-primary rounded-full transition-all duration-100 ease-linear" style="width: 0%"></div>
       </div>
@@ -169,22 +169,22 @@
         </div>
         <div>
           <h3 class="text-base font-extrabold text-slate-800">Sinkronisasi Data Real</h3>
-          <p class="text-xs text-slate-500">Mengambil data mutakhir dari Google Spreadsheet</p>
+          <p class="text-xs text-slate-500">Proses Mengambil data</p>
         </div>
       </div>
 
       <div class="space-y-2.5 my-2 text-xs font-medium text-slate-700">
         <div id="syncStep1" class="flex items-center space-x-2 text-slate-400">
           <i class="fa-solid fa-circle-check text-sm step-icon"></i>
-          <span>1. Memeriksa koneksi token & backend</span>
+          <span>1. Memeriksa koneksi</span>
         </div>
         <div id="syncStep2" class="flex items-center space-x-2 text-slate-400">
           <i class="fa-solid fa-circle-check text-sm step-icon"></i>
-          <span>2. Membaca lembar data inti toko</span>
+          <span>2. Membaca data toko</span>
         </div>
         <div id="syncStep3" class="flex items-center space-x-2 text-slate-400">
           <i class="fa-solid fa-circle-check text-sm step-icon"></i>
-          <span>3. Memperbarui penyimpanan cache lokal</span>
+          <span>3. Memperbarui penyimpanan</span>
         </div>
         <div id="syncStep4" class="flex items-center space-x-2 text-slate-400">
           <i class="fa-solid fa-circle-check text-sm step-icon"></i>
@@ -293,12 +293,12 @@
 
       <div class="mt-4 space-y-3">
         <p class="text-xs text-slate-500 leading-relaxed">
-          Masukkan kode toko Anda (contoh input: <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">X052</code>, <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">2J25 - CIJALINGAN</code>, atau <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">AC</code>). Sistem regex otomatis mengekstrak kode bersih.
+          Masukkan kode toko Anda (contoh: <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">X2J7K</code>, <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">X212 - MAWAR</code>, atau <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">AC</code> Jika Jabatan Area Coordinator).
         </p>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Input Kode Toko / Teks Toko</label>
-          <input type="text" id="inputRawKodeToko" placeholder="Contoh: 2J25-CIJALINGAN atau X052"
+          <label class="block text-xs font-bold text-slate-700 mb-1">Input Kode Toko</label>
+          <input type="text" id="inputRawKodeToko" placeholder="Input Kode Toko"
                  class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold uppercase text-slate-800 focus:outline-none focus:border-brand-primary">
         </div>
 
@@ -312,7 +312,7 @@
         <!-- Box Preview Hasil Pencarian Toko -->
         <div id="previewTokoContainer" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs hidden space-y-1.5">
           <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/80">
-            <span class="text-slate-500 font-medium">Kode Terdeteksi Regex:</span>
+            <span class="text-slate-500 font-medium">Kode Toko Terdeteksi:</span>
             <span id="previewCleanCode" class="font-extrabold text-brand-dark bg-emerald-100 px-2 py-0.5 rounded font-mono">-</span>
           </div>
           <div class="grid grid-cols-2 gap-1 text-[11px] pt-1">
@@ -568,7 +568,7 @@
           Swal.fire({
             icon: 'error',
             title: 'Toko Tidak Ditemukan',
-            text: res.message || 'Kode Toko tidak terdaftar di Sheet Master_User'
+            text: res.message || 'Kode Toko tidak terdaftar di Database'
           });
         }
       }, function(err) {
@@ -621,7 +621,7 @@
 
       Swal.fire({
         title: 'Memverifikasi NIK...',
-        text: 'Mencocokkan data personil di Master_User',
+        text: 'Memproses Data Personil',
         allowOutsideClick: false,
         didOpen: function() { Swal.showLoading(); }
       });
@@ -702,7 +702,7 @@
       // HANYA tampilkan pop-up loading jika BUKAN mode hening (isSilent === false)
       if (!isSilent) {
         tampilkanOverlayTabLoading(sheetName);
-        updateTabLoadingProgress(35, 'Mengambil data dari Spreadsheet...');
+        updateTabLoadingProgress(35, 'Proses Mengambil Data...');
       }
 
       var payload = {
@@ -3313,7 +3313,7 @@
               '</div>' +
               '<div>' +
                 '<h3 class="text-sm md:text-base font-black tracking-tight text-white">PANEL KONTROL SUPER ADMIN (DATABASE LIVE)</h3>' +
-                '<p class="text-[10px] text-indigo-300">Live CRUD 16 Sheet Spreadsheet & Monitoring Personil Lengkap</p>' +
+                '<p class="text-[10px] text-indigo-300">Live Database & Monitoring Personil Lengkap</p>' +
               '</div>' +
             '</div>' +
             '<button onclick="tutupModalSuperAdminPanel()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">' +
@@ -3787,7 +3787,7 @@
         var base64 = e.target.result;
         Swal.fire({
           title: 'Memperbarui Foto Profil...',
-          html: 'Mengunggah ke Google Drive & memperbarui data berdasarkan <b>NIK: ' + currentSessionUser.nik + '</b>',
+          html: 'Mengunggah & memperbarui tampilan berdasarkan <b>NIK: ' + currentSessionUser.nik + '</b>',
           allowOutsideClick: false,
           didOpen: function() { Swal.showLoading(); }
         });
@@ -3828,7 +3828,7 @@
       if (!currentSessionUser) return;
       Swal.fire({
         title: 'Kembalikan Foto Default?',
-        text: 'URL foto di Master_User akan dikosongkan dan menampilkan avatar default.',
+        text: 'Seluruh tampilan akan di reset tanpa foto.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#059669',
@@ -3958,11 +3958,11 @@
           '</div>' +
           '<div id="accInfoFaq" class="hidden p-5 border-t border-slate-100 space-y-3 text-xs text-slate-700 leading-relaxed bg-white">' +
             '<div><b class="text-slate-900 block">• Tab apa yang harus dibuka pertama?</b><span class="text-slate-500">Tab Beranda, karena merupakan ringkasan utama performa toko Anda.</span></div>' +
-            '<div><b class="text-slate-900 block">• Chat AI bisa jawab apa saja?</b><span class="text-slate-500">Hanya seputar aplikasi dan operasional toko ritel. Untuk masalah koreksi data spreadsheet, tetap hubungi Admin.</span></div>' +
+            '<div><b class="text-slate-900 block">• Chat AI bisa jawab apa saja?</b><span class="text-slate-500">Hanya seputar aplikasi dan operasional toko ritel. Untuk masalah koreksi data Database, tetap hubungi Admin.</span></div>' +
             '<div><b class="text-slate-900 block">• Kenapa Kalender kosong?</b><span class="text-slate-500">Karena belum ada agenda kerja atau kegiatan promo yang di-input.</span></div>' +
             '<div><b class="text-slate-900 block">• Kenapa di Profil ada Token / Hak Akses?</b><span class="text-slate-500">Itu untuk informasi sistem dan keamanan akun. Jangan dibagikan ke orang lain / di-screenshot ke luar.</span></div>' +
             '<div><b class="text-slate-900 block">• Kenapa menu di Tab Menu Operasional kepotong?</b><span class="text-slate-500">Karena menunya banyak. Scroll ke bawah atau tap <code>Lihat Semua</code>.</span></div>' +
-            '<div><b class="text-slate-900 block">• Kenapa angka di salah satu Tab Menu masih 0 / loading?</b><span class="text-slate-500">Data masih diambil dari spreadsheet. Tunggu 5-10 detik lalu Refresh dengan tarik layar ke bawah atau klik ikon Sync di layar Beranda atas.</span></div>' +
+            '<div><b class="text-slate-900 block">• Kenapa angka di salah satu Tab Menu masih 0 / loading?</b><span class="text-slate-500">Data masih diambil dari Database. Tunggu 5-10 detik lalu Refresh dengan tarik layar ke bawah atau klik ikon Sync di layar Beranda atas.</span></div>' +
           '</div>' +
         '</div>' +
 
@@ -4543,7 +4543,7 @@
           '<div class="p-3 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 font-bold uppercase">Belum Dikerjakan</span><span class="text-base font-black text-red-950 font-mono mt-0.5 block">' + belumSelesai + '</span></div>' +
         '</div>' +
 
-        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Penugasan Rak per Toko Binaan (AC Area)</h4>' +
+        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Penugasan Rak per Toko</h4>' +
         '<div class="space-y-3 pt-1">';
 
       storeList.forEach(function(s, idx) {
@@ -4757,7 +4757,7 @@
 
           Swal.fire({
             title: 'Menyimpan Hasil Ceklis...',
-            text: 'Mengunggah foto bukti ke Google Drive...',
+            text: 'Menyimpan Foto Bukti...',
             allowOutsideClick: false,
             didOpen: function() { Swal.showLoading(); }
           });
@@ -5086,14 +5086,14 @@
       var html = 
         // 5 Kotak Resume AC
         '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs text-center mb-4">' +
-          '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Total Toko Binaan</span><span class="text-base font-black text-slate-800 font-mono mt-0.5 block">' + totalToko + ' Toko</span></div>' +
+          '<div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Total Toko</span><span class="text-base font-black text-slate-800 font-mono mt-0.5 block">' + totalToko + ' Toko</span></div>' +
           '<div class="p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm"><span class="text-[10px] text-blue-700 font-bold uppercase">Total Item Area</span><span class="text-base font-black text-blue-900 font-mono mt-0.5 block">' + totalItem + '</span></div>' +
           '<div class="p-3 bg-amber-50 rounded-xl border border-amber-200 shadow-sm"><span class="text-[10px] text-amber-700 font-bold uppercase">Akan Exp (&le;30H)</span><span class="text-base font-black text-amber-900 font-mono mt-0.5 block">' + totalAkanExp + '</span></div>' +
           '<div class="p-3 bg-red-50 rounded-xl border border-red-200 shadow-sm"><span class="text-[10px] text-red-700 font-bold uppercase">Lewat Batas Exp</span><span class="text-base font-black text-red-900 font-mono mt-0.5 block">' + totalLewatExp + '</span></div>' +
           '<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm"><span class="text-[10px] text-emerald-700 font-bold uppercase">Selesai Eksekusi</span><span class="text-base font-black text-emerald-950 font-mono mt-0.5 block">' + totalSelesai + '</span></div>' +
         '</div>' +
 
-        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Item Expired per Toko Binaan (AC Area)</h4>' +
+        '<h4 class="text-xs font-black text-slate-800 pb-1 border-b border-slate-200">Pengawasan Item Expired per Toko</h4>' +
         '<div class="space-y-3 pt-1">';
 
       storeList.forEach(function(s, idx) {
@@ -5283,7 +5283,7 @@
             '</button>' +
             '<div>' +
               '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Tabunganku – Rekap Finansial Pribadi</h3>' +
-              '<p class="text-[10px] text-emerald-200">Isolasi Mutlak NIK Pribadi – Menabung Terarah & Analisa Efisiensi</p>' +
+              '<p class="text-[10px] text-emerald-200">Menabung Terarah & Analisa Efisiensi</p>' +
             '</div>' +
           '</div>' +
           '<div class="flex items-center space-x-2">' +
@@ -5944,7 +5944,7 @@
         Swal.fire({
           icon: 'error',
           title: 'Anda Tidak Berhak Akses Menu Ini',
-          html: 'Menu Kas Area khusus untuk Jabatan <b>Chief Of Store (COS)</b> dan <b>Area Coordinator (AC)</b> saja.<br><br>Jabatan Anda: <b class="text-red-600">' + (currentSessionUser ? currentSessionUser.jabatan : '-') + '</b> tidak memiliki izin akses.',
+          html: 'Jabatan Anda: <b class="text-red-600">' + (currentSessionUser ? currentSessionUser.jabatan : '-') + '</b> tidak memiliki izin akses.',
           confirmButtonColor: '#059669',
           confirmButtonText: 'Tutup'
         });
@@ -5961,7 +5961,7 @@
               '<i class="fa-solid fa-arrow-left text-sm"></i>' +
             '</button>' +
             '<div>' +
-              '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Kas Area Retail</h3>' +
+              '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Kas Area Kacida Bersatu</h3>' +
               '<p class="text-[10px] text-emerald-200">' + (isAdminKasArea ? 'Kelola Transaksi Kas, Modal Awal & Pembukuan' : 'Monitoring Saldo & Transparansi Pengeluaran Kas Area') + '</p>' +
             '</div>' +
           '</div>' +
@@ -6611,7 +6611,7 @@
               '<i class="fa-solid fa-arrow-left text-sm"></i>' +
             '</button>' +
             '<div>' +
-              '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Donasi Area Retail</h3>' +
+              '<h3 class="text-sm md:text-base font-extrabold tracking-tight truncate">Donasi Area Kacida Bersatu</h3>' +
               '<p class="text-[10px] text-emerald-200">' + 
                 (isAdminDonasi ? 'Kelola Program Amal, Mutasi & Penyaluran Donasi' : 'Transparansi Program Sosial, Yatim Piatu, Bencana & Masjid') + 
               '</p>' +
@@ -7426,7 +7426,7 @@
 
       container.innerHTML = renderHeaderModalUniversal(
         'Sales MTD 2025 vs 2026', 
-        isAC ? 'Konsolidasi Area & Akordion Toko Binaan (YTD Sales)' : 'Analisa Performa Pertumbuhan Bulanan & Harian Toko'
+        isAC ? 'Konsolidasi Area & Detail per Toko' : 'Analisa Performa Pertumbuhan Bulanan & Harian Toko'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="mtdMainContainerWrapper">' +
           '<div id="mtdDynamicContentArea"></div>' +
@@ -7438,7 +7438,7 @@
 
       muatDataSheetLazy('YTD_Sales', false, function(allYtdRows, isFromCache) {
         if (!allYtdRows || allYtdRows.length === 0) {
-          document.getElementById('mtdDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data YTD_Sales belum tersedia di Spreadsheet.</div>';
+          document.getElementById('mtdDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data YTD_Sales belum tersedia di Database.</div>';
           return;
         }
 
@@ -7715,7 +7715,7 @@
       // 8. JIKA ROLE AC: AKORDION GROUPED PER TOKO BINAAN
       if (isAC) {
         html += '<div class="space-y-3 pt-2">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko Binaan (AC Area)</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko</h4>';
 
         var storeGrouping = {};
         finalDataRows.forEach(function(r) {
@@ -7989,8 +7989,8 @@
       var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
       container.innerHTML = renderHeaderModalUniversal(
-        'Sales Harian & Toleransi Operasional', 
-        isAC ? 'Konsolidasi Area & Akordion Toko Binaan (Toleransi NSB & OOS)' : 'Monitoring NSB, OOS, Gross Margin & Penanda Akhir Pekan'
+        'Sales Harian Operasional', 
+        isAC ? 'Monitoring Sales Harian, NSB, OOS & Gross Margin.' : 'Monitoring Sales Harian, NSB, OOS & Gross Margin.'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="shMainContainerWrapper">' +
           '<div id="shDynamicContentArea"></div>' +
@@ -8002,7 +8002,7 @@
 
       muatDataSheetLazy('Sales_Harian', false, function(allSalesRows, isFromCache) {
         if (!allSalesRows || allSalesRows.length === 0) {
-          document.getElementById('shDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Sales_Harian belum tersedia di Spreadsheet.</div>';
+          document.getElementById('shDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Sales_Harian belum tersedia di Database.</div>';
           return;
         }
 
@@ -8352,7 +8352,7 @@
       // 7. JIKA ROLE AC: AKORDION GROUPED PER TOKO BINAAN
       if (isAC) {
         html += '<div class="space-y-3 pt-2">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Sales Harian per Toko Binaan (AC Area)</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Sales Harian per Toko</h4>';
 
         var storeGroupingSh = {};
         finalDataRows.forEach(function(r) {
@@ -8661,7 +8661,7 @@
 
       container.innerHTML = renderHeaderModalUniversal(
         'Monitoring IKT Toko', 
-        isAC ? 'Scorecard Area, Agregasi Time Factor & Akordion Toko Binaan' : 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan'
+        isAC ? 'Scorecard Area, Agregasi Time Factor & Report Pertoko' : 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="iktMainContainerWrapper">' +
           '<div id="iktDynamicContentArea"></div>' +
@@ -8673,7 +8673,7 @@
 
       muatDataSheetLazy('Ikt', false, function(allIktRows, isFromCache) {
         if (!allIktRows || allIktRows.length === 0) {
-          document.getElementById('iktDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data IKT belum tersedia di Spreadsheet.</div>';
+          document.getElementById('iktDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data IKT belum tersedia di Database.</div>';
           return;
         }
 
@@ -8946,7 +8946,7 @@
               '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
               '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI IKT TINGKAT AREA</h3>' +
             '</div>' +
-            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko Binaan</p>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko</p>' +
           '</div>' +
           '<div class="flex items-center space-x-2">' +
             '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm">' +
@@ -9059,7 +9059,7 @@
 
         // Akordion Toko Binaan (Tetap Dipertahankan Bersih Tanpa Baris Kosong)
         '<div class="space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian IKT per Toko Binaan (Klik SHOW/HIDE)</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian IKT per Toko</h4>';
 
       var storeListOnly = allIktRows.filter(function(item) {
         var k = String(item['KODE'] || '').toUpperCase().trim();
@@ -9296,10 +9296,10 @@
 
     // ==================== [10] MODUL KONVERSI NO BON / STRUK ====================
     function renderModulKonversiBon(container) {
-      container.innerHTML = renderHeaderModalUniversal('Konversi Nomor Bon / Struk', 'Cipher Dekripsi Ritel Alfamart: MOYDTUHCIK') +
+      container.innerHTML = renderHeaderModalUniversal('Konversi Nomor Bon / Struk', 'Cetak Ulang Struk') +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4">' +
           '<div class="bg-white p-6 rounded-card border border-slate-200 shadow-sm max-w-md mx-auto space-y-4 text-center">' +
-            '<p class="text-xs text-slate-500 font-medium">Masukkan nomor bon kasir (0–9999). Sistem otomatis memformat 4 digit.</p>' +
+            '<p class="text-xs text-slate-500 font-medium">Masukkan nomor bon Transaksi yang ada di Report SIS.</p>' +
             '<div class="relative">' +
               '<input type="text" id="inputNoBonCipher" maxlength="4" inputmode="numeric" placeholder="Contoh: 123 atau 0123"' +
                      'oninput="eksekusiKonversiBonCipher(this.value)" autofocus' +
@@ -9430,7 +9430,7 @@
 
       container.innerHTML = renderHeaderModalUniversal(
         'Penawaran Langsung & Leaderboard', 
-        isAC ? 'Monitoring Capaian Area Coordinator & Akordion Toko Binaan' : 'Scorecard Toko, Leaderboard 3 Atas & 3 Bawah & Simulasi Poin'
+        isAC ? 'Monitoring Capaian Area Coordinator & Report per Toko' : 'Scorecard Toko, Leaderboard 3 Atas & 3 Bawah & Simulasi Poin'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-5" id="plMainContainerWrapper">' +
           '<div id="plDynamicContentArea"></div>' +
@@ -9438,7 +9438,7 @@
 
       muatDataSheetLazy('Penawaran_Langsung', false, function(allPlRows) {
         if (!allPlRows || allPlRows.length === 0) {
-          document.getElementById('plDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Penawaran Langsung belum tersedia di Spreadsheet.</div>';
+          document.getElementById('plDynamicContentArea').innerHTML = '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Data Penawaran Langsung belum tersedia di Database.</div>';
           return;
         }
 
@@ -9734,7 +9734,7 @@
             '<div>' +
               '<div class="flex items-center space-x-2">' +
                 '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
-                '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI SELURUH TOKO BINAAN</h3>' +
+                '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI SELURUH TOKO</h3>' +
               '</div>' +
               '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Penawaran Langsung Tingkat Area Coordinator</p>' +
             '</div>' +
@@ -9755,7 +9755,7 @@
             '</div>' +
 
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white">' +
-              '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-100">TOTAL TOKO BINAAN</span>' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-100">TOTAL TOKO</span>' +
               '<span class="text-2xl font-black font-mono mt-1 block">' + totalTokoBinaan + ' Toko</span>' +
               '<span class="text-[10px] text-blue-100 mt-1 font-medium">Toko Aktif Terdaftar</span>' +
             '</div>' +
@@ -9805,7 +9805,7 @@
 
         // --- AKORDION GROUPED PER NAMA TOKO (HANYA TOKO VALID) ---
         '<div class="space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Capaian per Toko Binaan (Klik SHOW/HIDE)</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Capaian per Toko</h4>';
 
       storeListOnly.forEach(function(st, idx) {
         var accId = 'accPlStore_' + idx;
@@ -10067,7 +10067,7 @@
                 (psmViewMode === 'AREA' ? 'Monitoring PSM Kasir Area' : 'Rekap PSM Kasir Harian') +
               '</h3>' +
               '<p class="text-[10px] text-emerald-200">' +
-                (psmViewMode === 'AREA' ? 'Pengawasan Penjualan Kasir Seluruh Toko Binaan' : 'Pencatatan Day 1–8, Diagnosa Defisit & Validasi Otomatis') +
+                (psmViewMode === 'AREA' ? 'Pengawasan Penjualan Kasir Seluruh Toko' : 'Pencatatan Day 1–8, Diagnosa & Validasi Otomatis') +
               '</p>' +
             '</div>' +
           '</div>' +
@@ -10586,7 +10586,7 @@
       var html = 
         // 4 KOTAK RESUME KONSOLIDASI SELURUH AREA
         '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center">' +
-          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-2xl font-black font-mono mt-1 block">' + totalTokoArea + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Seluruh Toko Binaan</span></div>' +
+          '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-2xl font-black font-mono mt-1 block">' + totalTokoArea + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Seluruh Toko</span></div>' +
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-emerald-200 uppercase">Toko Sudah Input</span><span class="text-2xl font-black font-mono mt-1 block">' + countTokoInput + ' Toko</span><span class="text-[9px] text-emerald-200 mt-1">Progress Toko Rekap</span></div>' +
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-blue-200 uppercase">Total Personil</span><span class="text-2xl font-black font-mono mt-1 block">' + totalPersonilMaster + ' Orang</span><span class="text-[9px] text-blue-200 mt-1">Seluruh Personil Area</span></div>' +
           '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-purple-200 uppercase">Total Personil Input</span><span class="text-2xl font-black font-mono mt-1 block">' + countPersonilInput + ' Orang</span><span class="text-[9px] text-purple-200 mt-1">Kasir Sudah Rekap</span></div>' +
@@ -10597,7 +10597,7 @@
           '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Rekap PSM Seluruh Toko Binaan (AC Area)</h4>';
 
       if (storeList.length === 0) {
-        html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Data toko binaan belum terdaftar di Master_User.</div>';
+        html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Data toko belum terdaftar di Database.</div>';
       }
 
       storeList.forEach(function(st, idx) {
@@ -10732,7 +10732,7 @@
 
       container.innerHTML = renderHeaderModalUniversal(
         'Monitoring Sales Operasional (OPR)', 
-        isAC ? 'Dashboard Pengawasan Konsolidasi Area (Semua Shift)' : '2 Tab Jam: 06:07 dan 22:23 - Validasi Waktu Real-Time'
+        isAC ? 'Dashboard Pengawasan Konsolidasi Area (Semua Shift)' : '- Validasi Waktu Real-Time'
       ) +
         '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">' +
           // TAB 06:07 DAN 22:23 HANYA MUNCUL DI ROLE TOKO (DISEMBUNYIKAN UNTUK AC)
@@ -11119,7 +11119,7 @@
 
       var storeList = Object.values(storeGroups);
       var html = '<div class="space-y-3 pt-2">' +
-        '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian OPR per Toko Binaan (AC Area)</h4>';
+        '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian OPR per Toko</h4>';
 
       if (storeList.length === 0) {
         html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Belum ada data inputan OPR area pada periode ini.</div>';
@@ -11415,7 +11415,7 @@
                 (isAC ? 'Monitoring KWH Area Coordinator' : 'Monitoring KWH & Biaya Listrik') + 
               '</h3>' +
               '<p class="text-[10px] text-emerald-200">' + 
-                (isAC ? 'Pengawasan Pemakaian Listrik Seluruh Toko Binaan' : 'Pengendalian Biaya Operasional Toko') + 
+                (isAC ? 'Pengawasan Pemakaian Listrik Seluruh Toko' : 'Pengendalian Biaya Operasional Toko') + 
               '</p>' +
             '</div>' +
           '</div>' +
@@ -11644,7 +11644,7 @@
           var avgRpArea = sortedRows.length > 0 ? (totAreaRp / sortedRows.length) : 0;
 
           html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs text-center">' +
-            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-xl font-black font-mono mt-1">' + totTokoBinaan + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Area Binaan</span></div>' +
+            '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-slate-300 uppercase">Total Toko</span><span class="text-xl font-black font-mono mt-1">' + totTokoBinaan + ' Toko</span><span class="text-[9px] text-slate-400 mt-1">Area</span></div>' +
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-blue-600 to-cyan-700 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-blue-200 uppercase">Toko Prepaid</span><span class="text-xl font-black font-mono mt-1">' + countPrepaid + ' Toko</span><span class="text-[9px] text-blue-200 mt-1">Token Listrik</span></div>' +
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-purple-200 uppercase">Toko Postpaid</span><span class="text-xl font-black font-mono mt-1">' + countPostpaid + ' Toko</span><span class="text-[9px] text-purple-200 mt-1">Tagihan Meteran</span></div>' +
             '<div class="p-3.5 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between"><span class="text-[10px] font-bold text-emerald-200 uppercase">Input Hari Ini</span><span class="text-xl font-black font-mono mt-1">' + countSudahInputHariIni + ' / ' + totTokoBinaan + '</span><span class="text-[9px] text-emerald-200 mt-1">Toko Sudah Input</span></div>' +
@@ -11746,7 +11746,7 @@
 
       var storeList = Object.values(storeGroups);
       var html = '<div class="space-y-3 pt-2">' +
-        '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Pemakaian KWH per Toko Binaan (AC Area)</h4>';
+        '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Pemakaian KWH per Toko</h4>';
 
       if (storeList.length === 0) {
         html += '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">Belum ada pencatatan KWH area pada periode ini.</div>';
@@ -12345,7 +12345,7 @@
 
       container.innerHTML = renderHeaderModalUniversal(
         'Catatan Return Barang', 
-        isAC ? 'Dashboard Pengawasan Retur Toko Binaan (Area Coordinator)' : '3 Tab: DC Reg, DC Fresh, dan BKL - Bukti Foto Fisik LH3'
+        isAC ? 'Dashboard Pengawasan Retur Toko' : 'DC Reg, DC Fresh, dan BKL (Barang Kirim Langsung'
       ) +
         '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">' +
           // 3 TAB UTAMA ATAS DENGAN BADGE
@@ -12785,7 +12785,7 @@
             '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
               '<label class="block font-bold text-slate-800">Foto Bukti Fisik / Surat Jalan</label>' +
               '<input type="file" id="mRetFoto" accept="image/*" class="w-full text-xs text-slate-500">' +
-              '<p class="text-[10px] text-slate-400">Unggah foto nota / surat jalan return (otomatis masuk ke Google Drive)</p>' +
+              '<p class="text-[10px] text-slate-400">Unggah foto fisik / surat jalan return</p>' +
             '</div>' +
           '</div>' +
 

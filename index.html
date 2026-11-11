@@ -1080,6 +1080,8 @@
                     </button>
                   </div>
                   <span id="heroSalesHMin1" class="font-black text-sm md:text-base text-white font-mono block">Rp 0</span>
+                  <!-- TAMBAHKAN BARIS INI: Teks SPD Rata-rata Penjualan per Toko -->
+                  <span id="heroSpdSubText" class="text-[10px] text-emerald-300 font-mono font-bold block mt-0.5 hidden">SPD: Rp 0</span>
                 </div>
               </div>
 
@@ -2113,71 +2115,157 @@
         icon.className = isSalesHidden ? 'fa-solid fa-eye-slash text-[11px] text-amber-300' : 'fa-solid fa-eye text-[11px] text-white';
       }
 
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
+
       var elHero = document.getElementById('heroSalesHMin1');
+      var elHeroSpd = document.getElementById('heroSpdSubText');
       var elMtd26 = document.getElementById('carouselMtdSales');
       var elMtd25 = document.getElementById('carouselMtdSalesLalu');
       var elShAct = document.getElementById('carouselShActual');
 
       if (isSalesHidden) {
         if (elHero) elHero.innerText = 'Rp ••••••••';
+        if (elHeroSpd) elHeroSpd.innerText = 'SPD: Rp ••••••••';
         if (elMtd26) elMtd26.innerText = 'Rp ••••••••';
         if (elMtd25) elMtd25.innerText = 'Rp ••••••••';
         if (elShAct) elShAct.innerText = 'Rp ••••••••';
       } else {
         if (elHero) elHero.innerText = 'Rp ' + Math.round(cachedNominalSales.hMin1).toLocaleString('id-ID');
+        
+        // Tampilkan SPD rata-rata jika Role AC
+        if (elHeroSpd) {
+          if (isAC && cachedNominalSales.spdH1 > 0) {
+            elHeroSpd.innerText = 'SPD: Rp ' + Math.round(cachedNominalSales.spdH1).toLocaleString('id-ID');
+            elHeroSpd.classList.remove('hidden');
+          } else {
+            elHeroSpd.classList.add('hidden');
+          }
+        }
+
         if (elMtd26) elMtd26.innerText = 'Rp ' + Math.round(cachedNominalSales.mtd2026).toLocaleString('id-ID');
         if (elMtd25) elMtd25.innerText = 'Rp ' + Math.round(cachedNominalSales.mtd2025).toLocaleString('id-ID');
         if (elShAct) elShAct.innerText = 'Rp ' + Math.round(cachedNominalSales.shActual).toLocaleString('id-ID');
       }
     }
 
+    // ==================== RENDER SALES HARIAN BERANDA (KONSOLIDASI KHUSUS ROLE AC) ====================
     function renderSalesHarianBeranda(salesRows) {
       if (!salesRows || salesRows.length === 0) return;
+
+      var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      // 1. Filter hanya toko yang aktif
-      var storeRows = salesRows.filter(function(r) {
-        return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
-      });
+      var rowsSettle = [];
 
-      var dataToUse = storeRows.length > 0 ? storeRows : salesRows;
+      // ==================== A. JIKA ROLE AC: KONSOLIDASI TOTAL PER TANGGAL ====================
+      if (isAC) {
+        var dateGroupMap = {};
 
-      // 2. Urutkan tanggal tertua ke terbaru
-      var sorted = dataToUse.slice().sort(function(a, b) {
-        return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
-      });
+        salesRows.forEach(function(r) {
+          var rawTgl = String(r['TANGGAL'] || '').trim();
+          if (!rawTgl || rawTgl === '-' || rawTgl === 'undefined') return;
+          var d = parseDateIndo(rawTgl);
+          if (isNaN(d.getTime()) || d.getTime() <= 86400000) return;
 
-      // 3. Filter hari yang sudah settle (Actual > 0)
-      var settledRows = sorted.filter(function(r) {
-        return parseAngkaIndo(r['ACTUAL']) > 0;
-      });
+          var tglKey = formatTanggalTampilan(d);
+          if (!dateGroupMap[tglKey]) {
+            dateGroupMap[tglKey] = {
+              TANGGAL: rawTgl,
+              tglRapi: tglKey,
+              dateObj: d,
+              ACTUAL: 0,
+              TARGET: 0,
+              BULAN_LALU: 0,
+              gmList: [],
+              storeCount: 0
+            };
+          }
 
-      var rowsSettle = settledRows.length > 0 ? settledRows : sorted;
+          var act = parseAngkaIndo(r['ACTUAL']);
+          var tgt = parseAngkaIndo(r['TARGET']);
+          var bl = parseAngkaIndo(r['BULAN LALU']);
+          var gm = parseAngkaIndo(r['GROSS MARGIN']);
+          if (Math.abs(gm) <= 1 && gm > 0) gm *= 100;
 
+          dateGroupMap[tglKey].ACTUAL += act;
+          dateGroupMap[tglKey].TARGET += tgt;
+          dateGroupMap[tglKey].BULAN_LALU += bl;
+          if (gm > 0) dateGroupMap[tglKey].gmList.push(gm);
+          dateGroupMap[tglKey].storeCount++;
+        });
+
+        // Konversi map menjadi daftar tanggal unik konsolidasi area
+        var consolidatedDates = Object.values(dateGroupMap).map(function(item) {
+          var avgGm = item.gmList.length > 0 ? (item.gmList.reduce(function(a,b){ return a + b; }, 0) / item.gmList.length) : 0;
+          var spd = item.storeCount > 0 ? Math.round(item.ACTUAL / item.storeCount) : 0;
+          return {
+            TANGGAL: item.TANGGAL,
+            tglRapi: item.tglRapi,
+            dateObj: item.dateObj,
+            ACTUAL: item.ACTUAL,
+            TARGET: item.TARGET,
+            BULAN_LALU: item.BULAN_LALU,
+            GROSS_MARGIN: avgGm,
+            SPD: spd,
+            storeCount: item.storeCount
+          };
+        }).sort(function(a, b) {
+          return a.dateObj - b.dateObj;
+        });
+
+        // Saring hari yang sudah ada penjualan aktual (Actual > 0)
+        var settled = consolidatedDates.filter(function(r) { return r.ACTUAL > 0; });
+        rowsSettle = settled.length > 0 ? settled : consolidatedDates;
+
+      } else {
+        // ==================== B. JIKA ROLE TOKO: DATA MURNI TOKO SENDIRI ====================
+        var storeRows = salesRows.filter(function(r) {
+          return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
+        });
+
+        var sorted = storeRows.slice().sort(function(a, b) {
+          return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
+        });
+
+        var settledStore = sorted.filter(function(r) {
+          return parseAngkaIndo(r['ACTUAL']) > 0;
+        });
+
+        rowsSettle = settledStore.length > 0 ? settledStore : sorted;
+      }
+
+      if (rowsSettle.length === 0) return;
+
+      // 1. DATA H-1 & H-2 KONSOLIDASI
       var hMin1 = rowsSettle[rowsSettle.length - 1] || {};
       var hMin2 = rowsSettle.length >= 2 ? rowsSettle[rowsSettle.length - 2] : {};
 
-      // AMBIL NILAI ACTUAL H-1 & SIMPAN KE CACHE GLOBAL
       var actualH1 = parseAngkaIndo(hMin1['ACTUAL']);
       rawSalesHMin1Value = actualH1;
       cachedNominalSales.hMin1 = actualH1;
       cachedNominalSales.shActual = actualH1;
 
-      // Gross Margin H-1 & Perbandingan vs H-2
-      var gmH1Formatted = formatPersenIndo(hMin1['GROSS MARGIN']);
-      var elHeroGm = document.getElementById('heroGmHMin1');
-      if (elHeroGm) elHeroGm.innerText = gmH1Formatted;
+      // Hitung SPD Khusus Role AC
+      var spdH1 = isAC ? (hMin1.SPD || Math.round(actualH1 / Math.max(1, (hMin1.storeCount || 19)))) : 0;
+      cachedNominalSales.spdH1 = spdH1;
 
-      var gmH1 = parseAngkaIndo(hMin1['GROSS MARGIN']);
-      if (Math.abs(gmH1) <= 1) gmH1 *= 100;
-      var gmH2 = parseAngkaIndo(hMin2['GROSS MARGIN']);
-      if (Math.abs(gmH2) <= 1) gmH2 *= 100;
+      // 2. GROSS MARGIN H-1 (RATA-RATA AREA JIKA AC / MARGIN TOKO JIKA TOKO)
+      var gmH1 = parseAngkaIndo(hMin1['GROSS_MARGIN'] || hMin1['GROSS MARGIN']);
+      if (Math.abs(gmH1) <= 1 && gmH1 > 0) gmH1 *= 100;
+
+      var gmH2 = parseAngkaIndo(hMin2['GROSS_MARGIN'] || hMin2['GROSS MARGIN']);
+      if (Math.abs(gmH2) <= 1 && gmH2 > 0) gmH2 *= 100;
+
+      var elHeroGm = document.getElementById('heroGmHMin1');
+      if (elHeroGm) elHeroGm.innerText = gmH1.toFixed(2).replace('.', ',') + '%';
 
       var gmDiff = gmH1 - gmH2;
       var elDiff = document.getElementById('heroGmDiffBadge');
       if (elDiff) {
-        if (hMin2 && hMin2['GROSS MARGIN']) {
+        if (hMin2 && (hMin2['GROSS MARGIN'] || hMin2['GROSS_MARGIN'])) {
           elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2).replace('.', ',') + '% vs H-2';
           elDiff.className = gmDiff >= 0
             ? 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/40 text-emerald-200 font-mono'
@@ -2187,7 +2275,7 @@
         }
       }
 
-      // Update Carousel Sales Harian (Target & Gap)
+      // 3. CAROUSEL SALES HARIAN (TOTAL KONSOLIDASI AREA H-1)
       var targetH1 = parseAngkaIndo(hMin1['TARGET']);
       var acvH1 = targetH1 > 0 ? ((actualH1 / targetH1) * 100).toFixed(1) : '0.0';
       var elAcvTgt = document.getElementById('carouselShAcvTarget');
@@ -2200,10 +2288,9 @@
         elGap.className = gapH1 >= 0 ? 'font-bold font-mono text-purple-950' : 'font-bold font-mono text-red-600';
       }
 
-      // Jalankan fungsi update display
       updateDisplaySeluruhSales();
 
-      // 4. Render Grafik 7 Hari Terakhir
+      // 4. GRAFIK TREN 7 HARI TERAKHIR (7 TANGGAL BERURUTAN KONSOLIDASI)
       var last7 = rowsSettle.slice(-7);
       var labels = [];
       var actualData = [];
@@ -2211,7 +2298,11 @@
       var totalSales7 = 0;
 
       last7.forEach(function(r) {
-        labels.push(getFormattedDateLabel(r['TANGGAL']));
+        var d = r.dateObj || parseDateIndo(r['TANGGAL']);
+        var day = String(d.getDate()).padStart(2, '0');
+        var month = String(d.getMonth() + 1).padStart(2, '0');
+        labels.push(day + '/' + month); // Label tanggal unik DD/MM
+
         var act = parseAngkaIndo(r['ACTUAL']);
         var tgt = parseAngkaIndo(r['TARGET']);
         actualData.push(act);
@@ -2220,7 +2311,7 @@
       });
 
       var elTot7 = document.getElementById('infoTotalSales7Hari');
-      if (elTot7) elTot7.innerText = 'Total: Rp ' + Math.round(totalSales7).toLocaleString('id-ID');
+      if (elTot7) elTot7.innerText = 'Total 7 Hari: Rp ' + Math.round(totalSales7).toLocaleString('id-ID');
 
       var canvasEl = document.getElementById('chartSales7HariBeranda');
       if (canvasEl) {
@@ -2233,7 +2324,7 @@
             labels: labels,
             datasets: [
               {
-                label: 'Aktual Sales',
+                label: 'Aktual Sales Area',
                 data: actualData,
                 borderColor: '#059669',
                 backgroundColor: 'rgba(5, 150, 105, 0.15)',
@@ -2244,7 +2335,7 @@
                 pointHoverRadius: 6
               },
               {
-                label: 'Target Sales',
+                label: 'Target Sales Area',
                 data: targetData,
                 borderColor: '#94a3b8',
                 borderDash: [4, 4],
@@ -2257,7 +2348,16 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(c) {
+                    return c.dataset.label + ': Rp ' + Math.round(c.raw).toLocaleString('id-ID');
+                  }
+                }
+              }
+            },
             scales: {
               y: {
                 beginAtZero: false,

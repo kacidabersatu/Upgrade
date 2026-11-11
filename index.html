@@ -293,7 +293,7 @@
 
       <div class="mt-4 space-y-3">
         <p class="text-xs text-slate-500 leading-relaxed">
-          Masukkan kode toko Anda (contoh: <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">X2J7K</code>, <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">X212 - MAWAR</code>, atau <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">AC</code> Jika Jabatan Area Coordinator).
+          Masukkan kode toko (contoh: <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">2J7K</code>, Atau <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">AC</code> Jika Jabatan Area Coordinator).
         </p>
 
         <div>
@@ -808,7 +808,7 @@
       setTimeout(function() {
         bar.style.width = '45%';
         pctText.innerText = '45%';
-        statusLbl.innerText = 'Menarik 6 Sheet data inti toko...';
+        statusLbl.innerText = 'Memproses Data...';
         document.getElementById('syncStep2').className = 'flex items-center space-x-2 text-brand-primary font-bold';
 
         kirimBackendRequest('SYNC_ALL_DATA', payload, function(syncRes) {

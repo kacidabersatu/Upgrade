@@ -3181,7 +3181,11 @@
       var modal = document.getElementById('universalModalMenuFrame');
       if (modal) {
         modal.className = 'fixed inset-0 z-50 bg-white flex flex-col modal-slide-up closed overflow-hidden';
-        setTimeout(function() { modal.remove(); }, 300);
+        setTimeout(function() { 
+          modal.remove(); 
+          // KUNCI: Perbarui running text Beranda saat modal ditutup
+          renderMarqueePengumumanBeranda();
+        }, 300);
       }
     }
 
@@ -12319,88 +12323,116 @@
       });
     }
 
-    // ==================== RUNNING TEXT / MARQUEE DI BERANDA (AUTO-MOUNT & PARSER AKURAT) ====================
-    function renderMarqueePengumumanBeranda() {
-      // Pasang otomatis elemen jika belum ada di HTML
+    // ==================== RUNNING TEXT / MARQUEE DI BERANDA (AUTO-LOAD & PASTI MUNCUL) ====================
+    function renderMarqueePengumumanBeranda(optionalData) {
+      // 1. Pastikan elemen wadah ada di Beranda (otomatis dipasang di atas Hero Card jika belum ada)
+      var viewBeranda = document.getElementById('viewBeranda');
+      if (!viewBeranda) return;
+
       var container = document.getElementById('containerMarqueeBeranda');
       if (!container) {
-        var viewBeranda = document.getElementById('viewBeranda');
-        if (viewBeranda) {
-          container = document.createElement('div');
-          container.id = 'containerMarqueeBeranda';
-          container.className = 'hidden';
-          viewBeranda.insertBefore(container, viewBeranda.firstElementChild);
-        } else {
-          return;
-        }
+        container = document.createElement('div');
+        container.id = 'containerMarqueeBeranda';
+        container.style.display = 'none';
+        // Sisipkan tepat di urutan paling atas Beranda (di atas Hero Card)
+        viewBeranda.insertBefore(container, viewBeranda.firstElementChild);
       }
 
       var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
       var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
       var now = new Date();
 
-      var cached = localStorage.getItem('kacida_cache_Pengumuman');
-      if (!cached) {
-        container.classList.add('hidden');
-        return;
-      }
+      // Helper untuk memproses dan merender teks berjalan
+      function prosesRenderTeks(allAnn) {
+        if (!Array.isArray(allAnn) || allAnn.length === 0) {
+          container.style.display = 'none';
+          container.innerHTML = '';
+          return;
+        }
 
-      try {
-        var allAnn = JSON.parse(cached).data || [];
         var activeAnn = allAnn.filter(function(ann) {
           var tgKode = String(ann['TARGET_KODE'] || 'ALL').toUpperCase().trim();
           var tgJab = String(ann['TARGET_JABATAN'] || 'ALL').toUpperCase().trim();
 
+          // Saring Toko (ALL atau Toko Pengguna atau Role AC)
           var matchToko = (tgKode === 'ALL' || tgKode === myCode || isAC);
-          var matchJab = (tgJab === 'ALL' || tgJab === userRole || isAC || (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || (tgJab === 'ACOS' && userRole.indexOf('ASSISTANT') !== -1));
+
+          // Saring Jabatan (ALL, atau Jabatan Pengguna seperti ACOS, COS, Crew)
+          var matchJab = (
+            tgJab === 'ALL' || 
+            tgJab === userRole || 
+            isAC || 
+            (tgJab === 'COS' && (userRole === 'CHIEF OF STORE' || userRole === 'COS')) || 
+            (tgJab === 'ACOS' && (userRole.indexOf('ASSISTANT') !== -1 || userRole.indexOf('ACOS') !== -1)) ||
+            (tgJab === 'CREW' && userRole.indexOf('CREW') !== -1)
+          );
 
           if (!matchToko || !matchJab) return false;
 
-          // Periksa masa aktif deadline
-          var dEnd = parseDateTimeUniversal(ann['TGL_SELESAI']);
-          if (dEnd && now > dEnd) return false;
-
-          var dStart = parseDateTimeUniversal(ann['TGL_MULAI']);
-          if (dStart && now < dStart) return false;
+          // Periksa apakah waktu saat ini sudah melewati deadline
+          if (ann['TGL_SELESAI']) {
+            var dEnd = parseDateTimeUniversal(ann['TGL_SELESAI']);
+            if (dEnd && now > dEnd) return false;
+          }
 
           return true;
         });
 
         if (activeAnn.length === 0) {
-          container.classList.add('hidden');
+          container.style.display = 'none';
           container.innerHTML = '';
           return;
         }
 
         // Susun teks pengumuman
         var teksBerjalan = activeAnn.map(function(a) {
+          var judul = String(a['JUDUL'] || 'PENGUMUMAN').trim();
+          var isi = String(a['ISI'] || '').replace(/\r?\n|\r/g, ' ').trim();
           var sisaDeadline = a['TGL_SELESAI'] ? ' (Batas: ' + formatDateTimeTampilan(a['TGL_SELESAI']) + ')' : '';
-          return '📢 [' + a['JUDUL'] + ']: ' + a['ISI'].replace(/\n/g, ' ') + sisaDeadline;
+          return '📢 [' + judul + ']: ' + isi + sisaDeadline;
         }).join(' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ');
 
-        container.className = 'w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-2.5 shadow-md border border-amber-400 flex items-center space-x-2.5 overflow-hidden cursor-pointer';
+        // Styling Elemen Marquee (Warna Oranye-Amber Mewah & Bergerak dari Kiri ke Kanan)
+        container.className = 'w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-2.5 shadow-md border border-amber-400 flex items-center space-x-2.5 overflow-hidden cursor-pointer mb-2';
+        container.style.display = 'flex';
         container.onclick = function() { bukaModalMenuTerpilih('PENGUMUMAN'); };
 
-        // MARQUEE BERGERAK DARI KIRI KE KANAN SESUAI PERMINTAAN
         container.innerHTML = 
           '<div class="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-800/80 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-inner">' +
             '<i class="fa-solid fa-bullhorn animate-pulse text-amber-200"></i>' +
-            '<span>PENGUMUMAN</span>' +
+            '<span>INFO</span>' +
           '</div>' +
           '<div class="flex-1 overflow-hidden">' +
             '<marquee direction="right" scrollamount="6" class="font-bold text-xs text-white tracking-wide">' +
               teksBerjalan +
             '</marquee>' +
           '</div>';
-
-        container.classList.remove('hidden');
-
-      } catch (e) {
-        container.classList.add('hidden');
       }
-    }
+
+      // 2. Jika data sudah dipasok langsung, proses seketika
+      if (optionalData && Array.isArray(optionalData)) {
+        prosesRenderTeks(optionalData);
+        return;
+      }
+
+      // 3. Cek dari Cache lokal
+      var cached = localStorage.getItem('kacida_cache_Pengumuman');
+      if (cached) {
+        try {
+          var parsed = JSON.parse(cached).data || [];
+          prosesRenderTeks(parsed);
+          return;
+        } catch(e) {}
+      }
+
+      // 4. Jika cache belum ada, tarik diam-diam dari Spreadsheet secara otomatis
+      // Tarik pengumuman dan jalankan marquee otomatis di Beranda
+      muatDataSheetLazy('Pengumuman', false, function(annData) {
+        renderMarqueePengumumanBeranda(annData);
+      }, null, true);
 
     // ==================== MODAL BUAT PENGUMUMAN BARU (FAB +) ====================
     function bukaModalInputPengumuman() {

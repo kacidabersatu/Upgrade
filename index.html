@@ -125,23 +125,47 @@
       z-index: 10;
       background-color: #ffffff;
     }
+
+    /* ==================== ANIMASI SHIMMER SKELETON ALA ANDROID ==================== */
+    @keyframes shimmerAnim {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton-shimmer {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmerAnim 1.2s infinite linear;
+    }
+    body.theme-dark .skeleton-shimmer {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+      animation: shimmerAnim 1.2s infinite linear;
+    }
+
+    @keyframes fadeInBeranda {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-beranda {
+      animation: fadeInBeranda 0.4s ease-out forwards;
+    }
   </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-white">
 
-  <!-- ==================== 1. SPLASH SCREEN (FOTO JERNIH TANPA HIJAU, TANPA LOGO/TEKS, HANYA PROGRES BAR) ==================== -->
-  <div id="splashScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-end p-8 bg-cover bg-center transition-opacity duration-300"
-       style="background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.45)), url('https://lh3.googleusercontent.com/d/13s7CfV9C0h6NXGZQzA79AdbuycKiFRc9');">
+  <!-- ==================== 1. SPLASH SCREEN TUNGGAL (DRIVE ID RESMI, TANPA OVERLAY HIJAU, PROGRESS 0-100%) ==================== -->
+  <div id="splashScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-end p-6 md:p-8 bg-white bg-cover bg-center transition-opacity duration-300"
+       style="background-image: url('https://lh3.googleusercontent.com/d/1zIWjEXO9tkbVHum2Lbo6jEMIYkHBW854'); background-color: #ffffff;">
     
-    <!-- Bagian Tengah Dikosongkan Sesuai Permintaan -->
+    <!-- Bagian Tengah Bersih (Tanpa Logo & Tanpa Teks) -->
     <div class="flex-1"></div>
 
-    <!-- Hanya Bar Progres di Bagian Bawah -->
+    <!-- Hanya Bar Progres Persentase di Bagian Bawah -->
     <div class="w-full max-w-xs mb-8 flex flex-col items-center">
-      <div class="w-full bg-black/40 backdrop-blur-md h-2.5 rounded-full overflow-hidden p-0.5 border border-white/30 shadow-lg">
-        <div id="splashProgressBar" class="h-full bg-emerald-400 rounded-full transition-all duration-150 ease-out" style="width: 0%"></div>
+      <div class="w-full bg-black/40 backdrop-blur-md h-2 rounded-full overflow-hidden p-0.5 border border-white/40 shadow-lg">
+        <div id="splashProgressBar" class="h-full bg-emerald-400 rounded-full transition-all duration-100 ease-out" style="width: 0%"></div>
       </div>
-      <span id="splashProgressText" class="text-xs text-white font-mono font-bold mt-2 drop-shadow">Memuat Sistem... 0%</span>
+      <span id="splashProgressText" class="text-xs text-white font-mono font-bold mt-2 drop-shadow-md">Memuat Sistem... 0%</span>
     </div>
   </div>
 
@@ -466,22 +490,26 @@
       var splash = document.getElementById('splashScreen');
       var progress = 0;
 
+      // Jalankan bar progres dari 0% ke 100%
       var timer = setInterval(function() {
-        progress += Math.floor(Math.random() * 25) + 15;
+        progress += Math.floor(Math.random() * 20) + 15;
         if (progress > 100) progress = 100;
-        bar.style.width = progress + '%';
-        txt.innerText = 'Memuat Sistem... ' + progress + '%';
+        if (bar) bar.style.width = progress + '%';
+        if (txt) txt.innerText = 'Memuat Sistem... ' + progress + '%';
 
         if (progress >= 100) {
           clearInterval(timer);
           setTimeout(function() {
-            splash.style.opacity = '0';
-            setTimeout(function() {
-              splash.classList.add('hidden');
-            }, 300);
-          }, 350);
+            if (splash) {
+              splash.style.opacity = '0';
+              setTimeout(function() {
+                splash.classList.add('hidden');
+                // Setelah splash hilang, Skeleton Shimmer sudah menyala di layar menunggu data siap 100%
+              }, 250);
+            }
+          }, 200);
         }
-      }, 70);
+      }, 50);
     }
 
     // ==================== 3. MODAL CONFIG GERIGI ====================
@@ -1038,320 +1066,292 @@
       <main class="flex-1 p-4 md:p-6 pb-28 md:pb-12 max-w-7xl w-full mx-auto space-y-6">
 
         <!-- ==================== VIEW 1: BERANDA ==================== -->
-        <section id="viewBeranda" class="space-y-6">
-          <!-- WADAH RUNNING TEXT / MARQUEE PENGUMUMAN MANAJEMEN -->
+        <section id="viewBeranda" class="space-y-4 md:space-y-6">
+
+          <!-- WADAH RUNNING TEXT MARQUEE -->
           <div id="containerMarqueeBeranda" class="hidden"></div>
 
-          <!-- 1. HERO CARD PERSONIL (TRANSPARAN KACA ELEGAN + ICON MATA) -->
-          <div class="relative w-full rounded-card overflow-hidden shadow-xl border border-white/20 text-white p-5 md:p-6 flex flex-col justify-between min-h-[185px] bg-cover bg-center"
-               style="background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.75) 100%), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa');">
-            
-            <div class="flex items-start justify-between relative z-10">
-              <div class="flex items-center space-x-3.5">
-                <img id="heroUserAvatar" src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-"
-                     alt="Avatar" class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white/80 shadow-md">
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span id="heroGreeting" class="text-xs text-slate-200 font-semibold drop-shadow">Selamat Bertugas</span>
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <!-- ==================== A. SKELETON SHIMMER SCREEN (TAMPIL SELAMA DATA DIMUAT) ==================== -->
+          <div id="berandaSkeleton" class="space-y-6">
+            <!-- 1. Skeleton Hero Card -->
+            <div class="w-full h-44 rounded-card skeleton-shimmer shadow-sm"></div>
+
+            <!-- 2. Skeleton Carousel 4 Kotak -->
+            <div class="flex space-x-3.5 overflow-hidden py-1">
+              <div class="min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] h-32 rounded-card skeleton-shimmer"></div>
+              <div class="min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] h-32 rounded-card skeleton-shimmer"></div>
+              <div class="min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] h-32 rounded-card skeleton-shimmer hidden sm:block"></div>
+              <div class="min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] h-32 rounded-card skeleton-shimmer hidden lg:block"></div>
+            </div>
+
+            <!-- 3. Skeleton Grid Menu 16 Kotak -->
+            <div class="space-y-3">
+              <div class="h-4 w-44 rounded-lg skeleton-shimmer"></div>
+              <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3">
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+                <div class="h-24 rounded-2xl skeleton-shimmer"></div>
+              </div>
+            </div>
+
+            <!-- 4. Skeleton Grafik -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div class="h-64 rounded-card skeleton-shimmer"></div>
+              <div class="lg:col-span-2 h-64 rounded-card skeleton-shimmer"></div>
+            </div>
+          </div>
+
+          <!-- ==================== B. KONTEN ASLI BERANDA (DISEMBUNYIKAN TOTAL SAMPAI DATA 100% SIAP) ==================== -->
+          <div id="berandaRealContent" class="space-y-6" style="display: none; opacity: 0;">
+
+            <!-- 1. HERO CARD PERSONIL -->
+            <div class="relative w-full rounded-card overflow-hidden shadow-xl border border-white/20 text-white p-5 md:p-6 flex flex-col justify-between min-h-[185px] bg-cover bg-center"
+                 style="background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.75) 100%), url('https://lh3.googleusercontent.com/d/16LWQVS2khktL1miWFSAzMnHU_tf0blDa');">
+              <div class="flex items-start justify-between relative z-10">
+                <div class="flex items-center space-x-3.5">
+                  <img id="heroUserAvatar" src="https://lh3.googleusercontent.com/d/1gLnfmRQsyrHAmuo1xiyulHEKfg1iYk0-"
+                       alt="Avatar" class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white/80 shadow-md">
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span id="heroGreeting" class="text-xs text-slate-200 font-semibold drop-shadow">Selamat Bertugas</span>
+                      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <h3 id="heroUserName" class="text-lg md:text-xl font-black tracking-tight text-white leading-tight drop-shadow-md">-</h3>
+                    <p id="heroUserJabatan" class="text-xs text-slate-200 font-medium drop-shadow">-</p>
                   </div>
-                  <h3 id="heroUserName" class="text-lg md:text-xl font-black tracking-tight text-white leading-tight drop-shadow-md">
-                    Personil Toko
-                  </h3>
-                  <p id="heroUserJabatan" class="text-xs text-slate-200 font-medium drop-shadow">
-                    -
-                  </p>
                 </div>
+                <span id="heroCurrentDate" class="text-[10px] md:text-xs font-mono font-bold bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-white shadow-inner">-</span>
               </div>
-              <span id="heroCurrentDate" class="text-[10px] md:text-xs font-mono font-bold bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-white shadow-inner">
-                -
-              </span>
-            </div>
 
-            <!-- Rangkuman Sales Kemarin (H-1) & Gross Margin Vs Kemarin -->
-            <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between relative z-10 text-xs">
-              <!-- Sales H-1 dengan Icon Mata -->
-              <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner flex items-center space-x-3">
-                <div>
-                  <div class="flex items-center space-x-1.5">
-                    <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Sales Kemarin (H-1)</span>
-                    <button onclick="toggleSembunyikanSalesHMin1()" title="Sembunyikan / Tampilkan Nominal" class="text-slate-300 hover:text-white p-0.5">
-                      <i id="iconMataSales" class="fa-solid fa-eye text-[11px]"></i>
-                    </button>
+              <!-- Rangkuman Sales Kemarin (H-1) & Gross Margin Vs Kemarin -->
+              <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between relative z-10 text-xs">
+                <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner flex items-center space-x-3">
+                  <div>
+                    <div class="flex items-center space-x-1.5">
+                      <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Sales Kemarin (H-1)</span>
+                      <button onclick="toggleSembunyikanSalesHMin1()" title="Sembunyikan / Tampilkan Nominal" class="text-slate-300 hover:text-white p-0.5">
+                        <i id="iconMataSales" class="fa-solid fa-eye text-[11px]"></i>
+                      </button>
+                    </div>
+                    <span id="heroSalesHMin1" class="font-black text-sm md:text-base text-white font-mono block">Rp 0</span>
+                    <span id="heroSpdSubText" class="text-[10px] text-emerald-300 font-mono font-bold block mt-0.5 hidden">SPD: Rp 0</span>
                   </div>
-                  <span id="heroSalesHMin1" class="font-black text-sm md:text-base text-white font-mono block">Rp 0</span>
-                  <!-- TAMBAHKAN BARIS INI: Teks SPD Rata-rata Penjualan per Toko -->
-                  <span id="heroSpdSubText" class="text-[10px] text-emerald-300 font-mono font-bold block mt-0.5 hidden">SPD: Rp 0</span>
                 </div>
-              </div>
 
-              <!-- Gross Margin H-1 dengan Perbandingan vs H-2 -->
-              <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner text-right">
-                <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold block">Gross Margin H-1</span>
-                <div class="flex items-center justify-end space-x-1.5">
-                  <span id="heroGmHMin1" class="font-black text-xs md:text-sm text-emerald-300 font-mono">0.00%</span>
-                  <span id="heroGmDiffBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/20 text-white font-mono">+0.0%</span>
+                <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner text-right">
+                  <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold block">Gross Margin H-1</span>
+                  <div class="flex items-center justify-end space-x-1.5">
+                    <span id="heroGmHMin1" class="font-black text-xs md:text-sm text-emerald-300 font-mono">0.00%</span>
+                    <span id="heroGmDiffBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/20 text-white font-mono">+0.0%</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 2. CAROUSEL AUTO GESER & MANUAL SWIPE 4 KPI UTAMA -->
-          <div class="relative w-full">
-            <div id="carouselWrapper" 
-                 class="flex overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory space-x-3.5 py-1.5 cursor-grab active:cursor-grabbing">
-              
-              <!-- Card 1: IKT (Tema Mint Elegan) -->
-              <div onclick="bukaModalMenuTerpilih('MONITORING IKT')"
-                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-emerald-50 to-teal-50/60 rounded-card p-4 shadow-sm border border-emerald-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Indikator IKT</span>
-                  <span class="w-7 h-7 rounded-lg bg-emerald-200/60 text-brand-dark flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-bullseye"></i>
+            <!-- 2. CAROUSEL 4 KPI UTAMA -->
+            <div class="relative w-full">
+              <div id="carouselWrapper" class="flex overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory space-x-3.5 py-1.5 cursor-grab active:cursor-grabbing">
+                <!-- Card 1: IKT -->
+                <div onclick="bukaModalMenuTerpilih('MONITORING IKT')" class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-emerald-50 to-teal-50/60 rounded-card p-4 shadow-sm border border-emerald-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Indikator IKT</span>
+                    <span class="w-7 h-7 rounded-lg bg-emerald-200/60 text-brand-dark flex items-center justify-center text-xs"><i class="fa-solid fa-bullseye"></i></span>
+                  </div>
+                  <div>
+                    <h4 id="carouselIktAcv" class="text-2xl font-black text-brand-dark font-mono">0%</h4>
+                    <p id="carouselIktKet" class="text-xs font-bold text-emerald-700 mt-0.5">ACV Sales IKT</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-emerald-200/60 flex justify-between text-[11px] font-medium text-emerald-800">
+                    <span>Target Net Sales</span>
+                    <span id="carouselIktTarget" class="font-bold font-mono">Rp 0</span>
+                  </div>
+                </div>
+
+                <!-- Card 2: Sales MTD -->
+                <div onclick="bukaModalMenuTerpilih('SALES MTD')" class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-blue-50 to-sky-50/60 rounded-card p-4 shadow-sm border border-blue-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wider" id="labelMtdBulanBerjalan">Sales MTD</span>
+                    <span class="w-7 h-7 rounded-lg bg-blue-200/60 text-blue-800 flex items-center justify-center text-xs"><i class="fa-solid fa-sack-dollar"></i></span>
+                  </div>
+                  <div>
+                    <h4 id="carouselMtdSales" class="text-xl font-black text-blue-950 font-mono truncate">Rp 0</h4>
+                    <p id="carouselMtdGrowth" class="text-xs font-bold text-emerald-600 mt-0.5">Growth: +0.0%</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-blue-200/60 flex justify-between text-[11px] font-medium text-blue-800">
+                    <span>Sales MTD Lalu</span>
+                    <span id="carouselMtdSalesLalu" class="font-bold font-mono">Rp 0</span>
+                  </div>
+                </div>
+
+                <!-- Card 3: Penawaran Langsung -->
+                <div onclick="bukaModalMenuTerpilih('PENAWARAN LANGSUNG')" class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-amber-50 to-yellow-50/60 rounded-card p-4 shadow-sm border border-amber-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Penawaran Langsung</span>
+                    <span class="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-800 flex items-center justify-center text-xs"><i class="fa-solid fa-gift"></i></span>
+                  </div>
+                  <div>
+                    <h4 id="carouselPlPoint" class="text-2xl font-black text-amber-950 font-mono">0.0%</h4>
+                    <p id="carouselPlRank" class="text-xs font-bold text-amber-700 mt-0.5">Point Dashboard Toko</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-amber-200/60 flex justify-between text-[11px] font-medium text-amber-800">
+                    <span>Rank Toko</span>
+                    <span id="carouselPlRankSub" class="font-bold font-mono">#0</span>
+                  </div>
+                </div>
+
+                <!-- Card 4: Sales Harian -->
+                <div onclick="bukaModalMenuTerpilih('SALES HARIAN')" class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-purple-50 to-fuchsia-50/60 rounded-card p-4 shadow-sm border border-purple-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-bold text-purple-900 uppercase tracking-wider">Sales H-1 vs Target</span>
+                    <span class="w-7 h-7 rounded-lg bg-purple-200/60 text-purple-800 flex items-center justify-center text-xs"><i class="fa-solid fa-receipt"></i></span>
+                  </div>
+                  <div>
+                    <h4 id="carouselShActual" class="text-xl font-black text-purple-950 font-mono truncate">Rp 0</h4>
+                    <p id="carouselShAcvTarget" class="text-xs font-bold text-purple-700 mt-0.5">ACV Target: 0.0%</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-purple-200/60 flex justify-between text-[11px] font-medium text-purple-800">
+                    <span>Gap Target</span>
+                    <span id="carouselShGap" class="font-bold font-mono">Rp 0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. DYNAMIC GRID MENU OPERASIONAL -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-brand-primary"></div>
+                  <h3 class="text-sm font-extrabold text-slate-800">Menu Operasional & Kinerja</h3>
+                </div>
+                <button onclick="bukaModalLihatSemuaMenu()" class="text-xs font-bold text-brand-primary hover:underline flex items-center">
+                  Lihat Semua <i class="fa-solid fa-angle-right ml-1 text-[10px]"></i>
+                </button>
+              </div>
+              <div id="gridContainerMenuDinamis" class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3"></div>
+            </div>
+
+            <!-- 4. VISUALISASI PERFORMA TOKO (GRAFIK GM% & TREN 7 HARI) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <!-- Donut Pencapaian GM% -->
+              <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100 flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition-all"
+                   onclick="bukaModalMenuTerpilih('MONITORING IKT')">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-800">Pencapaian GM% (IKT)</h4>
+                    <p class="text-[11px] text-slate-400">Target vs Realisasi Margin Toko</p>
+                  </div>
+                  <span id="badgeKetGmIkt" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">OK</span>
+                </div>
+                <div class="relative w-36 h-36 mx-auto my-3 flex items-center justify-center">
+                  <canvas id="chartPieGmBeranda"></canvas>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span id="chartGmCenterText" class="text-base font-black text-slate-800 font-mono">0%</span>
+                    <span class="text-[9px] text-slate-400 uppercase font-semibold">ACV GM</span>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center text-xs pt-2 border-t border-slate-100">
+                  <div class="p-1.5 bg-slate-50 rounded-lg">
+                    <span class="text-[10px] text-slate-400 block font-medium">Target GM%</span>
+                    <span id="valTargetGmIkt" class="font-bold text-slate-700 font-mono">0.00%</span>
+                  </div>
+                  <div class="p-1.5 bg-slate-50 rounded-lg">
+                    <span class="text-[10px] text-slate-400 block font-medium">Aktual GM%</span>
+                    <span id="valActualGmIkt" class="font-bold text-brand-dark font-mono">0.00%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tren Sales 7 Hari -->
+              <div class="lg:col-span-2 bg-white rounded-card p-5 shadow-sm border border-emerald-100 flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition-all"
+                   onclick="bukaModalMenuTerpilih('SALES HARIAN')">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-800">Tren Sales Harian (7 Hari Terakhir)</h4>
+                    <p class="text-[11px] text-slate-400">Pencapaian penjualan aktual vs target harian</p>
+                  </div>
+                  <span class="text-[10px] font-bold text-brand-primary flex items-center">
+                    Buka Detail <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
                   </span>
                 </div>
-                <div>
-                  <h4 id="carouselIktAcv" class="text-2xl font-black text-brand-dark font-mono">0%</h4>
-                  <p id="carouselIktKet" class="text-xs font-bold text-emerald-700 mt-0.5">ACV Sales IKT</p>
+                <div class="h-44 w-full my-2">
+                  <canvas id="chartSales7HariBeranda"></canvas>
                 </div>
-                <div class="mt-3 pt-2 border-t border-emerald-200/60 flex justify-between text-[11px] font-medium text-emerald-800">
-                  <span>Target Net Sales</span>
-                  <span id="carouselIktTarget" class="font-bold font-mono">Rp 0</span>
-                </div>
-              </div>
-
-              <!-- Card 2: Sales MTD (Tema Biru Laut) -->
-              <div onclick="bukaModalMenuTerpilih('SALES MTD')"
-                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-blue-50 to-sky-50/60 rounded-card p-4 shadow-sm border border-blue-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wider" id="labelMtdBulanBerjalan">Sales MTD</span>
-                  <span class="w-7 h-7 rounded-lg bg-blue-200/60 text-blue-800 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-sack-dollar"></i>
-                  </span>
-                </div>
-                <div>
-                  <h4 id="carouselMtdSales" class="text-xl font-black text-blue-950 font-mono truncate">Rp 0</h4>
-                  <p id="carouselMtdGrowth" class="text-xs font-bold text-emerald-600 mt-0.5">Growth: +0.0%</p>
-                </div>
-                <div class="mt-3 pt-2 border-t border-blue-200/60 flex justify-between text-[11px] font-medium text-blue-800">
-                  <span>Sales MTD Lalu</span>
-                  <span id="carouselMtdSalesLalu" class="font-bold font-mono">Rp 0</span>
+                <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                  <span class="flex items-center"><span class="w-3 h-1 bg-brand-primary rounded mr-1"></span> Aktual Sales</span>
+                  <span class="flex items-center"><span class="w-3 h-1 bg-slate-400 rounded mr-1 border-dashed"></span> Target Sales</span>
+                  <span id="infoTotalSales7Hari" class="font-mono font-bold text-slate-700">Total: Rp 0</span>
                 </div>
               </div>
-
-              <!-- Card 3: Penawaran Langsung (Tema Emas Amber) -->
-              <div onclick="bukaModalMenuTerpilih('PENAWARAN LANGSUNG')"
-                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-amber-50 to-yellow-50/60 rounded-card p-4 shadow-sm border border-amber-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider">Penawaran Langsung</span>
-                  <span class="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-800 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-gift"></i>
-                  </span>
-                </div>
-                <div>
-                  <h4 id="carouselPlPoint" class="text-2xl font-black text-amber-950 font-mono">0.0%</h4>
-                  <p id="carouselPlRank" class="text-xs font-bold text-amber-700 mt-0.5">Point Dashboard Toko</p>
-                </div>
-                <div class="mt-3 pt-2 border-t border-amber-200/60 flex justify-between text-[11px] font-medium text-amber-800">
-                  <span>Rank Toko</span>
-                  <span id="carouselPlRankSub" class="font-bold font-mono">#0</span>
-                </div>
-              </div>
-
-              <!-- Card 4: Sales Harian (Tema Ungu Pastel) -->
-              <div onclick="bukaModalMenuTerpilih('SALES HARIAN')"
-                   class="snap-center min-w-[85%] sm:min-w-[46%] lg:min-w-[24%] bg-gradient-to-br from-purple-50 to-fuchsia-50/60 rounded-card p-4 shadow-sm border border-purple-200 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-purple-900 uppercase tracking-wider">Sales H-1 vs Target</span>
-                  <span class="w-7 h-7 rounded-lg bg-purple-200/60 text-purple-800 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-receipt"></i>
-                  </span>
-                </div>
-                <div>
-                  <h4 id="carouselShActual" class="text-xl font-black text-purple-950 font-mono truncate">Rp 0</h4>
-                  <p id="carouselShAcvTarget" class="text-xs font-bold text-purple-700 mt-0.5">ACV Target: 0.0%</p>
-                </div>
-                <div class="mt-3 pt-2 border-t border-purple-200/60 flex justify-between text-[11px] font-medium text-purple-800">
-                  <span>Gap Target</span>
-                  <span id="carouselShGap" class="font-bold font-mono">Rp 0</span>
-                </div>
-              </div>
-
             </div>
 
-            <!-- Bullet Indikator Carousel -->
-            <div class="flex justify-center space-x-1.5 mt-2">
-              <span class="carousel-dot w-2 h-2 rounded-full bg-brand-primary"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
-              <span class="carousel-dot w-2 h-2 rounded-full bg-slate-300"></span>
-            </div>
-          </div>
-
-          <!-- 3. DYNAMIC GRID MENU (16 UTAMA + VIEW ALL DARI SHEET MENU_NAVIGASI) -->
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-brand-primary"></div>
-                <h3 class="text-sm font-extrabold text-slate-800">Menu Operasional & Kinerja</h3>
-              </div>
-              <button onclick="bukaModalLihatSemuaMenu()" class="text-xs font-bold text-brand-primary hover:underline flex items-center">
-                Lihat Semua <i class="fa-solid fa-angle-right ml-1 text-[10px]"></i>
-              </button>
-            </div>
-
-            <!-- Grid 16 Kotak Menu -->
-            <div id="gridContainerMenuDinamis" class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3">
-              <!-- Item Menu Kotak Digenerate Otomatis Melalui JavaScript Berbasis Frekuensi Klik -->
-            </div>
-          </div>
-
-          <!-- 4. VISUALISASI PERFORMA TOKO (GRAFIK GM% & TREN SALES 7 HARI) -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <!-- Widget Donut Pencapaian Gross Margin % (IKT) -->
-            <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100 flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition-all"
-                 onclick="bukaModalMenuTerpilih('MONITORING IKT')">
+            <!-- 5. RINGKASAN PENAWARAN LANGSUNG -->
+            <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100 cursor-pointer hover:border-emerald-300 transition-all"
+                 onclick="bukaModalMenuTerpilih('PENAWARAN LANGSUNG')">
               <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div>
-                  <h4 class="text-xs font-bold text-slate-800">Pencapaian GM% (IKT)</h4>
-                  <p class="text-[11px] text-slate-400">Target vs Realisasi Margin Toko</p>
+                <div class="flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs"><i class="fa-solid fa-award"></i></div>
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-800">Ringkasan Penawaran Langsung</h4>
+                    <p class="text-[11px] text-slate-400">Pencapaian kasir & penetrasi produk fokus</p>
+                  </div>
                 </div>
-                <span id="badgeKetGmIkt" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">OK</span>
+                <span id="badgePenawaranPoint" class="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-mono">Point: 0.0%</span>
               </div>
-              
-              <div class="relative w-36 h-36 mx-auto my-3 flex items-center justify-center">
-                <canvas id="chartPieGmBeranda"></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span id="chartGmCenterText" class="text-base font-black text-slate-800 font-mono">0%</span>
-                  <span class="text-[9px] text-slate-400 uppercase font-semibold">ACV GM</span>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 text-center text-xs pt-2 border-t border-slate-100">
-                <div class="p-1.5 bg-slate-50 rounded-lg">
-                  <span class="text-[10px] text-slate-400 block font-medium">Target GM%</span>
-                  <span id="valTargetGmIkt" class="font-bold text-slate-700 font-mono">0.00%</span>
-                </div>
-                <div class="p-1.5 bg-slate-50 rounded-lg">
-                  <span class="text-[10px] text-slate-400 block font-medium">Aktual GM%</span>
-                  <span id="valActualGmIkt" class="font-bold text-brand-dark font-mono">0.00%</span>
-                </div>
+              <div class="overflow-x-auto mt-3">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                      <th class="pb-2 font-semibold">Indikator</th>
+                      <th class="pb-2 font-semibold text-right">Target</th>
+                      <th class="pb-2 font-semibold text-right">Aktual</th>
+                      <th class="pb-2 font-semibold text-right">ACV %</th>
+                      <th class="pb-2 font-semibold text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyPenawaranLangsungMini" class="divide-y divide-slate-50 font-medium"></tbody>
+                </table>
               </div>
             </div>
 
-            <!-- Widget Tren Sales 7 Hari Terakhir (Target vs Aktual) -->
-            <div class="lg:col-span-2 bg-white rounded-card p-5 shadow-sm border border-emerald-100 flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition-all"
-                 onclick="bukaModalMenuTerpilih('SALES HARIAN')">
-              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div>
-                  <h4 class="text-xs font-bold text-slate-800">Tren Sales Harian (7 Hari Terakhir)</h4>
-                  <p class="text-[11px] text-slate-400">Pencapaian penjualan aktual vs target harian</p>
+            <!-- 6. INFORMASI SPESIFIKASI TOKO -->
+            <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                  <i class="fa-solid fa-store text-brand-primary text-sm"></i>
+                  <h4 class="text-xs font-bold text-slate-800">Spesifikasi & Profil Toko</h4>
                 </div>
-                <span class="text-[10px] font-bold text-brand-primary flex items-center">
-                  Buka Detail <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
-                </span>
+                <span id="badgeInfoTokoKode" class="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">-</span>
               </div>
-
-              <div class="h-44 w-full my-2">
-                <canvas id="chartSales7HariBeranda"></canvas>
-              </div>
-
-              <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                <span class="flex items-center">
-                  <span class="w-3 h-1 bg-brand-primary rounded mr-1"></span> Aktual Sales
-                </span>
-                <span class="flex items-center">
-                  <span class="w-3 h-1 bg-slate-400 rounded mr-1 border-dashed"></span> Target Sales
-                </span>
-                <span id="infoTotalSales7Hari" class="font-mono font-bold text-slate-700">Total: Rp 0</span>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="rounded-xl overflow-hidden border border-emerald-100 shadow-inner h-32 md:h-36 bg-emerald-50 flex items-center justify-center">
+                  <img src="https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J" alt="Profil Toko" class="w-full h-full object-cover">
+                </div>
+                <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Nama Toko</span><p id="infoNamaToko" class="font-bold text-slate-800 mt-0.5 truncate">-</p></div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Jumlah Personil</span><p id="infoPersonilToko" class="font-bold text-slate-800 mt-0.5">0 Orang</p></div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Jam Operasional</span><p id="infoJamOprToko" class="font-bold text-slate-800 mt-0.5">-</p></div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Tipe Toko</span><p id="infoTypeToko" class="font-bold text-slate-800 mt-0.5">-</p></div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Status Toko</span><p id="infoStatusToko" class="font-bold text-slate-800 mt-0.5">-</p></div>
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><span class="text-[10px] text-slate-400 block font-medium">Tanggal GO</span><p id="infoTanggalGoToko" class="font-bold text-slate-800 mt-0.5">-</p></div>
+                </div>
               </div>
             </div>
 
           </div>
-
-          <!-- 5. RINGKASAN CAPAIAN PENAWARAN LANGSUNG -->
-          <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100 cursor-pointer hover:border-emerald-300 transition-all"
-               onclick="bukaModalMenuTerpilih('PENAWARAN LANGSUNG')">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div class="flex items-center space-x-2">
-                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-award"></i>
-                </div>
-                <div>
-                  <h4 class="text-xs font-bold text-slate-800">Ringkasan Penawaran Langsung</h4>
-                  <p class="text-[11px] text-slate-400">Pencapaian kasir & penetrasi produk fokus</p>
-                </div>
-              </div>
-              <span id="badgePenawaranPoint" class="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-mono">
-                Point: 0 Pt
-              </span>
-            </div>
-
-            <!-- Tabel Mini Capaian Penawaran -->
-            <div class="overflow-x-auto mt-3">
-              <table class="w-full text-xs text-left">
-                <thead>
-                  <tr class="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                    <th class="pb-2 font-semibold">Indikator</th>
-                    <th class="pb-2 font-semibold text-right">Target</th>
-                    <th class="pb-2 font-semibold text-right">Aktual</th>
-                    <th class="pb-2 font-semibold text-right">ACV %</th>
-                    <th class="pb-2 font-semibold text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyPenawaranLangsungMini" class="divide-y divide-slate-50 font-medium">
-                  <!-- Baris PSM, PWP, Serba Gratis, APC di-render otomatis via JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- 6. INFORMASI TOKO LENGKAP -->
-          <div class="bg-white rounded-card p-5 shadow-sm border border-emerald-100">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-store text-brand-primary text-sm"></i>
-                <h4 class="text-xs font-bold text-slate-800">Spesifikasi & Profil Toko</h4>
-              </div>
-              <span id="badgeInfoTokoKode" class="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                -
-              </span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-              <div class="rounded-xl overflow-hidden border border-emerald-100 shadow-inner h-32 md:h-36 bg-emerald-50 flex items-center justify-center">
-                <img src="https://lh3.googleusercontent.com/d/1T-e5lMua-WeSj7VhHy7BE1m8-ukONs4J" alt="Foto Profil Toko" class="w-full h-full object-cover">
-              </div>
-              <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Nama Toko</span>
-                  <p id="infoNamaToko" class="font-bold text-slate-800 mt-0.5 truncate">-</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Jumlah Personil</span>
-                  <p id="infoPersonilToko" class="font-bold text-slate-800 mt-0.5">0 Orang</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Jam Operasional</span>
-                  <p id="infoJamOprToko" class="font-bold text-slate-800 mt-0.5">-</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Tipe Toko</span>
-                  <p id="infoTypeToko" class="font-bold text-slate-800 mt-0.5">-</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Status Toko</span>
-                  <p id="infoStatusToko" class="font-bold text-slate-800 mt-0.5">-</p>
-                </div>
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span class="text-[10px] text-slate-400 block font-medium">Tanggal GO</span>
-                  <p id="infoTanggalGoToko" class="font-bold text-slate-800 mt-0.5">-</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </section>
 
         <!-- CONTAINER CONTAINER VIEW LAINNYA (CHAT AI, KALENDER, PROFIL, DAN MODAL MENU) -->
@@ -1574,8 +1574,7 @@
       return hari + ', ' + d.getDate() + ' ' + bln + ' ' + d.getFullYear();
     }
 
-    // ==================== 2. RENDER BERANDA DARI CACHE CEPAT ====================
-    // ==================== RENDER BERANDA DARI CACHE (100% SILENT) ====================
+    // ==================== RENDER BERANDA: SEMBUNYIKAN ANGKA 0 & GANTI DARI SKELETON SETELAH 100% SIAP ====================
     function renderDataBerandaDariCache() {
       var cfg = getTokoConfig() || {};
       var isAC = currentSessionUser && (
@@ -1584,50 +1583,92 @@
         currentSessionUser.nik === '14125034'
       );
 
-      // Parameter ke-5 disetel TRUE agar tidak memunculkan pop-up loading di layar
+      // Hitung kesiapan 6 sheet data inti
+      var pendingSheets = 6;
+      function checkAllDataReady() {
+        pendingSheets--;
+        if (pendingSheets <= 0) {
+          // Seluruh data sudah selesai dihitung -> Ganti Skeleton ke Beranda Asli Sekaligus!
+          tampilkanBerandaAsliFinal();
+        }
+      }
+
       // 1. Menu Navigasi
       muatDataSheetLazy('Menu_Navigasi', false, function(menuList) {
         renderGridMenuDinamis(menuList);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
       // 2. Sales Harian
       muatDataSheetLazy('Sales_Harian', false, function(salesHarianList) {
         var filteredSales = filterDataBerdasarkanToko(salesHarianList, cfg.cleanCode, isAC);
         renderSalesHarianBeranda(filteredSales);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
       // 3. IKT
       muatDataSheetLazy('Ikt', false, function(iktList) {
         var filteredIkt = filterDataBerdasarkanToko(iktList, cfg.cleanCode, isAC);
         renderIktBeranda(filteredIkt);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
       // 4. Penawaran Langsung
       muatDataSheetLazy('Penawaran_Langsung', false, function(plList) {
         var filteredPl = filterDataBerdasarkanToko(plList, cfg.cleanCode, isAC);
         renderPenawaranLangsungBeranda(filteredPl);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
       // 5. YTD Sales
       muatDataSheetLazy('YTD_Sales', false, function(ytdList) {
         var filteredYtd = filterDataBerdasarkanToko(ytdList, cfg.cleanCode, isAC);
         renderYtdSalesBeranda(filteredYtd);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
       // 6. Master User
       muatDataSheetLazy('Master_User', false, function(masterUsers) {
         renderInfoTokoSpesifikasi(masterUsers, cfg.cleanCode);
-      }, null, true);
+        checkAllDataReady();
+      }, function() { checkAllDataReady(); }, true);
 
-      // 6. PENGUMUMAN
-      muatDataSheetLazy('Pengumuman', false, function() {
-        renderMarqueePengumumanBeranda();
-      }, null, true);
-
-      // 7. Notifikasi (Hening, tidak memicu pop-up Membuka Notifikasi)
+      // 7. Notifikasi & Pengumuman (Silent Background)
       muatDataSheetLazy('Notifikasi', false, function(notifs) {
         renderNotifikasiLonceng(notifs);
       }, null, true);
+
+      muatDataSheetLazy('Pengumuman', false, function(annData) {
+        renderMarqueePengumumanBeranda(annData);
+      }, null, true);
+
+      // Timeout Pengaman (Maksimal 3 detik jika ada sheet lambat, paksa tampilkan)
+      setTimeout(function() {
+        tampilkanBerandaAsliFinal();
+      }, 3000);
+    }
+
+    // FUNGSI GANTI SKELETON KE TAMPILAN BERANDA ASLI SEKALIGUS DALAM 1 DETIK
+    var isBerandaFinalRendered = false;
+    function tampilkanBerandaAsliFinal() {
+      if (isBerandaFinalRendered) return;
+      isBerandaFinalRendered = true;
+
+      var skeleton = document.getElementById('berandaSkeleton');
+      var realContent = document.getElementById('berandaRealContent');
+
+      if (skeleton) {
+        skeleton.style.display = 'none';
+      }
+
+      if (realContent) {
+        realContent.style.display = 'block';
+        realContent.classList.add('animate-fade-in-beranda');
+        realContent.style.opacity = '1';
+      }
+
+      // Pastikan carousel aktif
+      initCarouselBeranda();
     }
 
     function filterDataBerdasarkanToko(dataArray, kodeToko, isBypassAC) {

@@ -4217,12 +4217,11 @@
       }
     }
 
-    // --- TAMPILAN MASTER RAK TOKO DENGAN KARTU GRADIEN MENARIK ---
     function renderSubTabExpRakModeToko(container, dataExp) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
       var role = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
-      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && currentSessionUser.nik === '14125034'));
+      var isCos = (role === 'CHIEF OF STORE' || role === 'COS' || (currentSessionUser && (currentSessionUser.nik === '14125034' || currentSessionUser.nik === '17060061')));
       var currentMonth = new Date().getMonth();
       var currentYear = new Date().getFullYear();
 
@@ -4272,17 +4271,17 @@
           '</div>' +
         '</div>' +
 
-        // Bar Pencarian & Tombol Tambah
+        // Bar Pencarian & Tombol Tambah Rak (Teks diperbaiki)
         '<div class="space-y-2 pt-2">' +
           '<div class="relative w-full">' +
             '<i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>' +
             '<input type="text" id="inputSearchRakStaff" oninput="filterDomRakInstan(this.value)" placeholder="Ketik cari no rak, nama rak, penanggung jawab..." ' +
                    'class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary">' +
           '</div>' +
-          (isCos ? '<button onclick="bukaModalTambahTugasRak()" class="w-full py-2.5 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center space-x-1.5"><i class="fa-solid fa-plus"></i><span>+ Tambah Rak</span></button>' : '') +
+          (isCos ? '<button onclick="bukaModalTambahTugasRak()" class="w-full py-2.5 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center space-x-1.5"><i class="fa-solid fa-plus"></i><span>Tambah Rak</span></button>' : '') +
         '</div>' +
 
-        // Daftar Kartu Rak dengan Gradien Sesuai Status
+        // Daftar Kartu Rak
         '<div id="wrapperListRakCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">';
 
       if (tugasList.length === 0) {
@@ -4296,24 +4295,19 @@
         var isDitolak = (status === 'DITOLAK');
         var isFood = (item['CATEGORY'] === 'FOOD');
 
-        // Style Card Bergradien
         var cardGradientStyle = '';
         var badgeStatus = '';
 
         if (isPending) {
-          // Sangat Mencolok untuk COS: Gradien Kuning-Oranye Emas + Efek Pulsing
           cardGradientStyle = 'bg-gradient-to-r from-amber-500/15 via-amber-100 to-yellow-50 border-2 border-amber-500 shadow-md ring-2 ring-amber-300';
           badgeStatus = '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-sm flex items-center animate-bounce"><i class="fa-solid fa-triangle-exclamation mr-1"></i>BUTUH PERSETUJUAN COS</span>';
         } else if (isApproved) {
-          // Gradien Hijau Lembut
           cardGradientStyle = 'bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border border-emerald-300 shadow-sm';
           badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-lock mr-1"></i>Disetujui</span>';
         } else if (isDitolak) {
-          // Gradien Merah Lembut
           cardGradientStyle = 'bg-gradient-to-br from-red-50 via-rose-50/50 to-white border border-red-300 shadow-sm';
           badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
         } else {
-          // Belum: Gradien Putih Bersih
           cardGradientStyle = 'bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm';
           badgeStatus = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">Belum</span>';
         }
@@ -4351,6 +4345,12 @@
               // Tombol Kerjakan untuk Staf
               (!isApproved && !isPending
                 ? '<button onclick="bukaModalEksekusiSopRak(\'' + item['ID'] + '\')" class="px-3.5 py-1.5 bg-brand-primary hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm">' + (isDitolak ? 'Kerjakan Ulang' : 'Kerjakan') + '</button>'
+                : '') +
+
+              // FITUR BARU: TOMBOL EDIT & HAPUS KHUSUS ROLE COS
+              (isCos ? 
+                '<button onclick="bukaModalEditTugasRak(' + JSON.stringify(item).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-white/80 transition-colors shadow-sm" title="Edit Rak"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
+                '<button onclick="hapusTugasRak(\'' + item['ID'] + '\', \'' + item['NO_RAK'] + ' - ' + item['NAMA_RAK'] + '\')" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-white/80 transition-colors shadow-sm" title="Hapus Rak"><i class="fa-solid fa-trash text-xs"></i></button>'
                 : '') +
             '</div>' +
           '</div>' +
@@ -4842,6 +4842,130 @@
       }
       var confirmBtn = Swal.getConfirmButton();
       if (confirmBtn) confirmBtn.disabled = !allChecked;
+    }
+
+    // ==================== MODAL EDIT PENUGASAN RAK (KHUSUS COS) ====================
+    function bukaModalEditTugasRak(item) {
+      var cfg = getTokoConfig() || {};
+      var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Ambil personil toko dari cache Master_User
+      var userCache = localStorage.getItem('kacida_cache_Master_User');
+      var allUsers = userCache ? JSON.parse(userCache).data || [] : [];
+      var storeUsers = allUsers.filter(function(u) {
+        return String(u['KODE'] || '').toUpperCase().trim() === myStoreCode;
+      });
+
+      var currentPjNik = String(item['PENANGGUNG_JAWAB_NIK'] || '').trim();
+
+      var optionsPersonil = '<option value="">-- Pilih Penanggung Jawab --</option>';
+      storeUsers.forEach(function(u) {
+        var isSelected = (String(u['NIK']).trim() === currentPjNik) ? ' selected' : '';
+        optionsPersonil += '<option value="' + u['NIK'] + '|' + u['NAMA'] + '"' + isSelected + '>' + u['NAMA'] + ' (' + u['JABATAN'] + ')</option>';
+      });
+
+      var currentCat = String(item['CATEGORY'] || 'FOOD').toUpperCase();
+
+      Swal.fire({
+        title: 'Edit Penugasan Rak',
+        html: 
+          '<div class="text-left text-xs space-y-3 text-slate-700 my-2">' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nomor Rak</label>' +
+              '<input type="text" id="editRakNo" value="' + (item['NO_RAK'] || '') + '" placeholder="Contoh: AA1 atau RAK-01" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg uppercase font-mono font-bold">' +
+            '</div>' +
+            '<div>' +
+              '<label class="block font-bold text-slate-700 mb-1">Nama / Deskripsi Rak</label>' +
+              '<input type="text" id="editRakNama" value="' + (item['NAMA_RAK'] || '') + '" placeholder="Contoh: Chiller Susu, Snack, Noodle" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-2">' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Kategori</label>' +
+                '<select id="editRakKat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold">' +
+                  '<option value="FOOD"' + (currentCat === 'FOOD' ? ' selected' : '') + '>FOOD</option>' +
+                  '<option value="NONFOOD"' + (currentCat === 'NONFOOD' ? ' selected' : '') + '>NONFOOD</option>' +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Penanggung Jawab</label>' +
+                '<select id="editRakUser" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold">' +
+                  optionsPersonil +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+          '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Simpan Perubahan',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        preConfirm: function() {
+          var noRak = document.getElementById('editRakNo').value.trim();
+          var namaRak = document.getElementById('editRakNama').value.trim();
+          var kat = document.getElementById('editRakKat').value;
+          var userVal = document.getElementById('editRakUser').value;
+
+          if (!noRak || !namaRak || !userVal) {
+            Swal.showValidationMessage('Semua kolom wajib diisi');
+            return false;
+          }
+
+          var parts = userVal.split('|');
+          return {
+            noRak: noRak,
+            namaRak: namaRak,
+            category: kat,
+            penanggungJawabNik: parts[0],
+            penanggungJawabNama: parts[1]
+          };
+        }
+      }).then(function(res) {
+        if (res.isConfirmed && res.value) {
+          Swal.fire({ title: 'Menyimpan Perubahan...', didOpen: function() { Swal.showLoading(); } });
+
+          var payload = {
+            subAction: 'EDIT_RAK',
+            id: item['ID'],
+            noRak: res.value.noRak,
+            namaRak: res.value.namaRak,
+            category: res.value.category,
+            penanggungJawabNik: res.value.penanggungJawabNik,
+            penanggungJawabNama: res.value.penanggungJawabNama,
+            nik: currentSessionUser ? currentSessionUser.nik : ''
+          };
+
+          kirimBackendRequest('CRUD_CEKLIS_EXP', payload, function() {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Data Rak Diperbarui', timer: 1200, showConfirmButton: false });
+            muatDataSheetLazy('Ceklis_EXP', true, function() {
+              gantiTabCeklisExp('RAK');
+              renderDataBerandaDariCache();
+            });
+          }, function(err) {
+            Swal.close();
+            Swal.fire({ icon: 'error', title: 'Gagal Edit', text: err.toString() });
+          });
+        }
+      });
+    }
+
+    // ==================== HAPUS PENUGASAN RAK (KHUSUS COS) ====================
+    function hapusTugasRak(tugasId, labelRak) {
+      Swal.fire({
+        title: 'Hapus Penugasan Rak?',
+        html: 'Apakah Anda yakin ingin menghapus rak <b>' + labelRak + '</b>?<br><br><span class="text-xs text-red-600 font-semibold">Data tugas rak ini akan dihapus dari sistem.</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Ya, Hapus Rak',
+        cancelButtonText: 'Batal'
+      }).then(function(res) {
+        if (res.isConfirmed) {
+          hapusRowUniversal('Ceklis_EXP', tugasId, function() {
+            gantiTabCeklisExp('RAK');
+            renderDataBerandaDariCache();
+          });
+        }
+      });
     }
 
     // ==================== TAB 2: INPUT EXP ====================

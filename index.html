@@ -2963,7 +2963,7 @@
       }
     }
 
-    // ==================== VIEW A: CHAT AI GROQ DENGAN ANALISA 4 SHEET LENGKAP ====================
+    // ==================== VIEW A: CHAT AI RETAIL PROFESIONAL ====================
     function renderViewChatAi(container) {
       var namaUser = currentSessionUser ? currentSessionUser.nama : 'Rekan';
 
@@ -2977,7 +2977,7 @@
               '</div>' +
               '<div>' +
                 '<h3 class="text-sm font-black tracking-wide">Asisten AI Retail Kacida</h3>' +
-                '<p class="text-[10px] text-emerald-200 font-mono">Didukung Groq LLaMA 3.3 • Analisa 4 Sheet Live</p>' +
+                '<p class="text-[10px] text-emerald-200 font-mono">Sistem Analisa Kinerja & Konsultasi Ritel Terpadu</p>' +
               '</div>' +
             '</div>' +
             '<div class="flex items-center space-x-1.5 bg-emerald-800/80 px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-200 border border-emerald-700">' +
@@ -2994,22 +2994,22 @@
               '</div>' +
               '<div class="p-3.5 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-700 leading-relaxed space-y-1.5">' +
                 '<p>Halo <b>' + namaUser + '</b>! Senang bisa mendampingi Anda hari ini.</p>' +
-                '<p class="text-[11px] text-slate-600">Saya siap menganalisa performa toko Anda dari <b>Sheet IKT, Penawaran Langsung, Sales Harian (vs Bulan Lalu)</b>, hingga <b>YTD Sales (vs Tahun Lalu)</b>. Anda juga bisa mengajak saya bercanda atau meminta trik kejar target harian! Ada yang ingin dianalisa?</p>' +
+                '<p class="text-[11px] text-slate-600">Saya terhubung langsung dengan sistem performa toko Anda untuk menganalisa <b>Capaian Target & Margin</b>, <b>Penjualan Kasir (PSM & PWP)</b>, <b>Evaluasi Tren Harian vs Bulan Lalu</b>, hingga <b>Pertumbuhan Omset vs Tahun Lalu</b>. Anda juga bisa berdiskusi strategi atau sekadar mengobrol santai. Ada yang ingin kita analisa?</p>' +
               '</div>' +
             '</div>' +
           '</div>' +
 
-          // Tombol Pilihan Saran Cepat (Suggestion Pills)
+          // Tombol Pilihan Saran Cepat (Bebas dari Sebutan Kata Sheet)
           '<div class="px-3 py-2 bg-white border-t border-slate-100 flex items-center space-x-1.5 overflow-x-auto no-scrollbar flex-shrink-0 text-[11px]">' +
-            '<button type="button" onclick="isiPesanCepatAi(\'Tolong berikan analisa menyeluruh performa toko saya hari ini berdasarkan data 4 sheet.\')" class="px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-brand-dark border border-emerald-200 font-bold whitespace-nowrap transition-all active:scale-95">📊 Analisa Toko Saya</button>' +
-            '<button type="button" onclick="isiPesanCepatAi(\'Bagaimana perbandingan sales toko saya tahun 2026 ini dibanding tahun lalu 2025 dari data YTD Sales?\')" class="px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold whitespace-nowrap transition-all active:scale-95">📈 Komparasi Tahun Lalu</button>' +
-            '<button type="button" onclick="isiPesanCepatAi(\'Berikan trik dan tips jitu untuk kasir agar target PSM dan penawaran langsung tembus 100% ACV!\')" class="px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold whitespace-nowrap transition-all active:scale-95">🎯 Tips Tembus PSM</button>' +
-            '<button type="button" onclick="isiPesanCepatAi(\'Ceritakan tebak-tebakan atau lelucon lucu khas personil toko ritel dong biar gak tegang!\')" class="px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 font-bold whitespace-nowrap transition-all active:scale-95">😂 Humor Ritel</button>' +
+            '<button type="button" onclick="isiPesanCepatAi(\'Tolong berikan analisa menyeluruh performa toko saya hari ini berdasarkan data sistem penjualan dan target terkini.\')" class="px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-brand-dark border border-emerald-200 font-bold whitespace-nowrap transition-all active:scale-95">📊 Analisa Kinerja Toko</button>' +
+            '<button type="button" onclick="isiPesanCepatAi(\'Bagaimana perbandingan pertumbuhan penjualan toko saya tahun ini dibanding tahun lalu?\')" class="px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold whitespace-nowrap transition-all active:scale-95">📈 Pertumbuhan vs Tahun Lalu</button>' +
+            '<button type="button" onclick="isiPesanCepatAi(\'Berikan trik dan tips jitu untuk kasir agar target penawaran PSM dan APC tembus 100% ACV!\')" class="px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold whitespace-nowrap transition-all active:scale-95">🎯 Tips Tembus PSM</button>' +
+            '<button type="button" onclick="isiPesanCepatAi(\'Ceritakan lelucon atau tebak-tebakan lucu khas personil toko ritel dong biar gak tegang!\')" class="px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 font-bold whitespace-nowrap transition-all active:scale-95">😂 Humor Santai Ritel</button>' +
           '</div>' +
 
           // Input Chat
           '<div class="p-3 bg-white border-t border-slate-200 flex items-center space-x-2 flex-shrink-0">' +
-            '<input type="text" id="inputUserChatMessage" onkeydown="if(event.key===\'Enter\') kirimPesanChatAi()" placeholder="Ketik pertanyaan analisa, komparasi data, atau ajak bercanda..."' +
+            '<input type="text" id="inputUserChatMessage" onkeydown="if(event.key===\'Enter\') kirimPesanChatAi()" placeholder="Ketik pertanyaan performa toko, strategi penjualan, atau ajak bercanda..."' +
                    'class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary focus:bg-white transition-all">' +
             '<button onclick="kirimPesanChatAi()" id="btnKirimChatAi" class="px-4 py-2.5 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95">' +
               '<i class="fa-solid fa-paper-plane"></i>' +
@@ -3019,15 +3019,7 @@
         '</div>';
     }
 
-    function isiPesanCepatAi(teks) {
-      var input = document.getElementById('inputUserChatMessage');
-      if (input) {
-        input.value = teks;
-        kirimPesanChatAi();
-      }
-    }
-
-    // ==================== HELPER KUMPULKAN DATA LENGKAP 4 SHEET UNTUK AI ====================
+    // Helper Kumpulkan Data 4 Domain Utama Tanpa Menyebut Nama Sheet
     function dapatkanKonteksLengkapChatAi() {
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
@@ -3039,15 +3031,15 @@
         nik: currentSessionUser ? currentSessionUser.nik : '',
         jabatan: userRole,
         isRoleAreaCoordinator: isAC,
-        kodeToko: isAC ? 'AREA' : myCode,
+        kodeToko: isAC ? 'KONSOLIDASI_AREA' : myCode,
         namaToko: currentSessionUser ? (currentSessionUser.namaToko || cfg.namaToko || '') : '',
-        ikt: null,
-        penawaranLangsung: null,
-        salesHarian: null,
-        ytdSales: null
+        performaIktDanMargin: null,
+        penetrasiProgramKasir: null,
+        penjualanHarianVsBulanLalu: null,
+        pertumbuhanOmsetTahunan: null
       };
 
-      // 1. DATA SHEET IKT
+      // 1. Data IKT & Margin
       var cachedIkt = localStorage.getItem('kacida_cache_Ikt');
       if (cachedIkt) {
         try {
@@ -3055,11 +3047,11 @@
           var rowIkt = isAC 
             ? (iktRows.find(function(r){ return String(r['KODE']).toUpperCase() === 'AC' || String(r['NAMA TOKO']).toUpperCase() === 'AREA'; }) || iktRows[iktRows.length - 1])
             : (iktRows.find(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; }) || iktRows[0]);
-          konteks.ikt = rowIkt;
+          konteks.performaIktDanMargin = rowIkt;
         } catch(e) {}
       }
 
-      // 2. DATA SHEET PENAWARAN LANGSUNG
+      // 2. Data Penawaran Langsung & Kasir
       var cachedPl = localStorage.getItem('kacida_cache_Penawaran_Langsung');
       if (cachedPl) {
         try {
@@ -3067,17 +3059,16 @@
           var rowPl = isAC 
             ? (plRows.find(function(r){ return String(r['KODE']).toUpperCase() === 'AC'; }) || plRows[0])
             : (plRows.find(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; }) || plRows[0]);
-          konteks.penawaranLangsung = rowPl;
+          konteks.penetrasiProgramKasir = rowPl;
         } catch(e) {}
       }
 
-      // 3. DATA SHEET SALES HARIAN (TERMASUK KOMPARASI BULAN LALU & KONSOLIDASI AC)
+      // 3. Data Penjualan Harian (vs Bulan Lalu)
       var cachedSh = localStorage.getItem('kacida_cache_Sales_Harian');
       if (cachedSh) {
         try {
           var shRows = JSON.parse(cachedSh).data || [];
           if (isAC) {
-            // Konsolidasi Area per Tanggal
             var dateMap = {};
             shRows.forEach(function(r) {
               var t = formatTanggalTampilan(r['TANGGAL']);
@@ -3087,21 +3078,21 @@
               dateMap[t].bulanLalu += parseAngkaIndo(r['BULAN LALU']);
               dateMap[t].nsb += parseAngkaIndo(r['NSB']);
             });
-            konteks.salesHarian = {
-              mode: 'KONSOLIDASI_AREA_SELURUH_TOKO',
-              ringkasanPerTanggal: Object.values(dateMap).slice(-7)
+            konteks.penjualanHarianVsBulanLalu = {
+              mode: 'AREA_KONSOLIDASI',
+              riwayat7HariTerakhir: Object.values(dateMap).slice(-7)
             };
           } else {
             var mySh = shRows.filter(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; });
-            konteks.salesHarian = {
+            konteks.penjualanHarianVsBulanLalu = {
               mode: 'TOKO_PRIBADI',
-              dataTerakhir: mySh.slice(-7) // 7 hari terakhir termasuk H-1 dan bulan lalu
+              riwayat7HariTerakhir: mySh.slice(-7)
             };
           }
         } catch(e) {}
       }
 
-      // 4. DATA SHEET YTD SALES (KOMPARASI TAHUN LALU 2025 VS 2026)
+      // 4. Data Pertumbuhan Tahunan YTD (2025 vs 2026)
       var cachedYtd = localStorage.getItem('kacida_cache_YTD_Sales');
       if (cachedYtd) {
         try {
@@ -3112,11 +3103,11 @@
               sum25 += parseAngkaIndo(r['SALES 2025']);
               sum26 += parseAngkaIndo(r['SALES 2026']);
             });
-            konteks.ytdSales = {
-              mode: 'KONSOLIDASI_AREA_TAHUNAN',
+            konteks.pertumbuhanOmsetTahunan = {
+              mode: 'AREA_TAHUNAN',
               totalSales2025: sum25,
               totalSales2026: sum26,
-              growthPercent: sum25 > 0 ? ((sum26 - sum25) / sum25 * 100).toFixed(2) + '%' : '0%'
+              growth: sum25 > 0 ? ((sum26 - sum25) / sum25 * 100).toFixed(2) + '%' : '0%'
             };
           } else {
             var myYtd = ytdRows.filter(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; });
@@ -3125,12 +3116,11 @@
               s25 += parseAngkaIndo(r['SALES 2025']);
               s26 += parseAngkaIndo(r['SALES 2026']);
             });
-            konteks.ytdSales = {
+            konteks.pertumbuhanOmsetTahunan = {
               mode: 'TOKO_PRIBADI',
               totalSales2025: s25,
               totalSales2026: s26,
-              growthPercent: s25 > 0 ? ((s26 - s25) / s25 * 100).toFixed(2) + '%' : '0%',
-              sampelHarianBulanIni: myYtd.slice(-5)
+              growth: s25 > 0 ? ((s26 - s25) / s25 * 100).toFixed(2) + '%' : '0%'
             };
           }
         } catch(e) {}
@@ -3168,7 +3158,7 @@
           '</div>' +
           '<div class="p-3.5 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-500 italic text-xs flex items-center space-x-2">' +
             '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>' +
-            '<span>Menganalisa data 4 sheet ritel...</span>' +
+            '<span>Menganalisa ...</span>' +
           '</div>' +
         '</div>';
       list.insertAdjacentHTML('beforeend', loadingBubble);

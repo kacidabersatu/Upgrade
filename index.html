@@ -482,6 +482,7 @@
       inisialisasiSplashScreen();
       muatConfigTokoTersimpan();
       cekSesiLoginTersimpan();
+      initDraggableFabPanduan();
     });
 
     function inisialisasiSplashScreen() {
@@ -1358,6 +1359,14 @@
         <div id="containerSubViews" class="space-y-6"></div>
 
       </main>
+
+      <!-- ==================== FAB TANDA TANYA DRAGGABLE PANDUAN AKTIVITAS ==================== -->
+      <div id="fabPanduanDraggable" 
+           style="position: fixed; bottom: 84px; right: 20px; z-index: 35; opacity: 0.88; touch-action: none;"
+           class="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white shadow-xl border border-white/40 flex items-center justify-center cursor-grab active:cursor-grabbing select-none transition-opacity hover:opacity-100"
+           title="Buka Panduan Aktivitas Toko">
+        <span class="font-black text-lg drop-shadow pointer-events-none">?</span>
+      </div>
 
     </div>
 
@@ -14030,6 +14039,442 @@
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js').then(function() {}).catch(function() {});
       });
+    }
+
+    // ==================== MODUL PANDUAN AKTIVITAS & DRAGGABLE FAB ====================
+    var activeTabPanduan = 'HARIAN'; // 'HARIAN', 'MINGGUAN', 'BRIFING'
+    var cachePanduanAktivitas = null;
+
+    // Inisialisasi Fitur Drag & Click FAB ?
+    function initDraggableFabPanduan() {
+      var fab = document.getElementById('fabPanduanDraggable');
+      if (!fab) return;
+
+      var isDragging = false;
+      var startX = 0, startY = 0;
+      var initialLeft = 0, initialTop = 0;
+      var hasMoved = false;
+
+      // Event Mouse (Desktop)
+      fab.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        hasMoved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        var rect = fab.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        var dx = e.clientX - startX;
+        var dy = e.clientY - startY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+          hasMoved = true;
+          var newLeft = Math.max(10, Math.min(window.innerWidth - 56, initialLeft + dx));
+          var newTop = Math.max(70, Math.min(window.innerHeight - 80, initialTop + dy));
+          fab.style.left = newLeft + 'px';
+          fab.style.top = newTop + 'px';
+          fab.style.right = 'auto';
+          fab.style.bottom = 'auto';
+        }
+      });
+
+      window.addEventListener('mouseup', function() {
+        if (isDragging) {
+          isDragging = false;
+        }
+      });
+
+      // Event Touch (Mobile HP)
+      fab.addEventListener('touchstart', function(e) {
+        if (!e.touches || e.touches.length === 0) return;
+        isDragging = true;
+        hasMoved = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        var rect = fab.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+      }, { passive: false });
+
+      window.addEventListener('touchmove', function(e) {
+        if (!isDragging || !e.touches || e.touches.length === 0) return;
+        var dx = e.touches[0].clientX - startX;
+        var dy = e.touches[0].clientY - startY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+          hasMoved = true;
+          var newLeft = Math.max(10, Math.min(window.innerWidth - 56, initialLeft + dx));
+          var newTop = Math.max(70, Math.min(window.innerHeight - 80, initialTop + dy));
+          fab.style.left = newLeft + 'px';
+          fab.style.top = newTop + 'px';
+          fab.style.right = 'auto';
+          fab.style.bottom = 'auto';
+          e.preventDefault(); // Mencegah scrolling saat menggeser tombol
+        }
+      }, { passive: false });
+
+      window.addEventListener('touchend', function() {
+        if (isDragging) {
+          isDragging = false;
+        }
+      });
+
+      // Klik: Buka Modal Panduan Aktivitas jika tombol tidak sedang digeser
+      fab.addEventListener('click', function() {
+        if (!hasMoved) {
+          bukaModalPanduanAktivitas();
+        }
+      });
+    }
+
+    // ==================== MODAL PANDUAN AKTIVITAS (3 TAB) ====================
+    function bukaModalPanduanAktivitas() {
+      var existing = document.getElementById('modalPanduanAktivitasWrapper');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'modalPanduanAktivitasWrapper';
+      modal.className = 'fixed inset-0 z-[85] bg-black/85 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 transition-all duration-200';
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-4xl max-h-[92vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
+          // Header Modal Panduan Resmi
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between flex-shrink-0">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-10 h-10 rounded-2xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner border border-emerald-700">' +
+                '<i class="fa-solid fa-book-bookmark text-base animate-pulse"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">PANDUAN OPERASIONAL & AKTIVITAS TOKO</h3>' +
+                '<p class="text-[10px] text-emerald-200 font-mono">Pedoman Standar Kerja Harian, Jadwal Mingguan & Materi Briefing</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalPanduanAktivitas()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white transition-all">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          // 3 TAB PILIHAN (DAILY AKTIVITAS, MINGGUAN, MATERI BRIEFING)
+          '<div class="flex border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 px-4 pt-2 space-x-2 flex-shrink-0">' +
+            '<button onclick="gantiTabPanduanAktif(\'HARIAN\')" id="tabPanduanHarian" class="py-2.5 px-3 md:px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-clock-rotate-left text-amber-600"></i><span>Daily Aktivitas</span>' +
+            '</button>' +
+            '<button onclick="gantiTabPanduanAktif(\'MINGGUAN\')" id="tabPanduanMingguan" class="py-2.5 px-3 md:px-4 border-b-2 border-transparent hover:text-brand-dark flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-calendar-check text-blue-600"></i><span>Aktivitas Mingguan</span>' +
+            '</button>' +
+            '<button onclick="gantiTabPanduanAktif(\'BRIFING\')" id="tabPanduanBrifing" class="py-2.5 px-3 md:px-4 border-b-2 border-transparent hover:text-brand-dark flex items-center space-x-1.5">' +
+              '<i class="fa-solid fa-chalkboard-user text-purple-600"></i><span>Materi Briefing</span>' +
+            '</button>' +
+          '</div>' +
+
+          // ISI KONTEN TAB PANDUAN
+          '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/70 space-y-4" id="containerIsiPanduanAktivitas">' +
+            '<div class="p-8 text-center text-xs text-slate-400 italic">Memuat panduan operasional...</div>' +
+          '</div>' +
+
+          // FOOTER RESMI
+          '<div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between text-[11px] font-medium text-slate-500">' +
+            '<span><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>SOP Terpadu Ritel Alfamart</span>' +
+            '<button onclick="tutupModalPanduanAktivitas()" class="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-sm">' +
+              'Tutup Panduan' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+
+      // Muat Data dari Spreadsheet atau Gunakan Cache/Fallback Bawaan
+      muatDataPanduanDinamis();
+    }
+
+    function tutupModalPanduanAktivitas() {
+      var modal = document.getElementById('modalPanduanAktivitasWrapper');
+      if (modal) modal.remove();
+    }
+
+    function gantiTabPanduanAktif(tabName) {
+      activeTabPanduan = tabName;
+      ['Harian', 'Mingguan', 'Brifing'].forEach(function(t) {
+        var el = document.getElementById('tabPanduan' + t);
+        if (el) {
+          el.className = (t.toUpperCase() === tabName)
+            ? 'py-2.5 px-3 md:px-4 border-b-2 border-brand-primary text-brand-dark font-extrabold flex items-center space-x-1.5'
+            : 'py-2.5 px-3 md:px-4 border-b-2 border-transparent text-slate-500 hover:text-brand-dark flex items-center space-x-1.5 font-medium';
+        }
+      });
+      renderKontenPanduanSesuaiTab();
+    }
+
+    function muatDataPanduanDinamis() {
+      if (cachePanduanAktivitas) {
+        renderKontenPanduanSesuaiTab();
+        return;
+      }
+
+      kirimBackendRequest('GET_PANDUAN_AKTIVITAS', {}, function(res) {
+        cachePanduanAktivitas = res;
+        renderKontenPanduanSesuaiTab();
+      }, function() {
+        // Fallback jika sheet belum dibuat di Apps Script, data standar tetap tampil sempurna
+        cachePanduanAktivitas = {};
+        renderKontenPanduanSesuaiTab();
+      });
+    }
+
+    // ==================== RENDER KONTEN TAB ====================
+    function renderKontenPanduanSesuaiTab() {
+      var container = document.getElementById('containerIsiPanduanAktivitas');
+      if (!container) return;
+
+      if (activeTabPanduan === 'HARIAN') {
+        renderTabDailyAktivitas(container);
+      } else if (activeTabPanduan === 'MINGGUAN') {
+        renderTabAktivitasMingguan(container);
+      } else if (activeTabPanduan === 'BRIFING') {
+        renderTabMateriBriefing(container);
+      }
+    }
+
+    // --- TAB 1: PANDUAN DAILY AKTIVITAS TIAP SHIFT ---
+    function renderTabDailyAktivitas(container) {
+      // Data Resmi Standar Sheet Aktivitas_Harian
+      var jadwalHarian = [
+        {
+          posisi: 'KASIR', shif: 'SHIF 1', color: 'border-l-4 border-amber-500 bg-amber-50/50',
+          badge: 'bg-amber-100 text-amber-900 border-amber-200',
+          items: [
+            { jam: '07:00 - 07:15 (15 Mnt)', tugas: 'KEBERSIHAN KACA PINTU DAN KACA CHILLER' },
+            { jam: '07:15 - 07:30 (15 Mnt)', tugas: 'KEBERSIHAN AREA KASIR (TIDAK BERDEBU DAN TIDAK ADA SAMPAH BERSERAKAN)' },
+            { jam: '07:30 - 09:30 (2 Jam)', tugas: 'SO ST SHIF SAMBIL MELAYANI KONSUMEN' },
+            { jam: '08:30 - 12:00 (3 Jam)', tugas: 'KEBERSIHAN RAK DAN CEK EXP MINIMAL 1 RAK' },
+            { jam: '12:00 - 13:00 (1 Jam)', tugas: 'ISHOMA SECARA GANTIAN' },
+            { jam: '13:00 - 14:00 (1 Jam)', tugas: 'SISIR HARGA YANG KOSONG' },
+            { jam: '14:00 - 14:45 (45 Mnt)', tugas: 'FULLDISPLAY DAN FACING OUT (KONFIRMASI MAXDISPLAY)' },
+            { jam: '14:45 - 15:00 (15 Mnt)', tugas: 'BIKIN MODAL DAN RAPIHKAN UANG PERSIAPAN KLEREK' },
+            { jam: '15:00 - 15:30 (30 Mnt)', tugas: 'KLEREK DAN RAPIHKAN RAK GUDANG LALU ABSEN PULANG' }
+          ]
+        },
+        {
+          posisi: 'STAF', shif: 'SHIF 1', color: 'border-l-4 border-orange-500 bg-orange-50/50',
+          badge: 'bg-orange-100 text-orange-900 border-orange-200',
+          items: [
+            { jam: '07:00 - 07:15 (15 Mnt)', tugas: 'INPUT KWH DAN RETUR TAG DGS JIKA ADA' },
+            { jam: '07:15 - 07:30 (15 Mnt)', tugas: 'BERSIHKAN GALON DARI DEBU DAN TEMPEL TISSUE DI GALON' },
+            { jam: '07:30 - 08:30 (1 Jam)', tugas: 'CETAK PERUBAHAN HARGA DAN PASANG PERUBAHANNYA' },
+            { jam: '08:30 - 09:00 (30 Mnt)', tugas: 'SETOR SALES KE MESIN CDM (MOTHER STORE)' },
+            { jam: '09:00 - 12:00 (3 Jam)', tugas: 'SO CUSTOMIZE DAN PARTSIAL (INFO HASIL SO DI GRUP UNTUK DI VALIDASI)' },
+            { jam: '12:00 - 13:00 (1 Jam)', tugas: 'ISHOMA SECARA GANTIAN' },
+            { jam: '13:00 - 14:00 (1 Jam)', tugas: 'KEBERSIHAN RAK DAN CEK EXP MINIMAL 1 RAK' },
+            { jam: '14:00 - 14:45 (45 Mnt)', tugas: 'FULL DISPLAY DAN CEK BARANG JIKA DATANG BARANG' },
+            { jam: '14:45 - 15:00 (15 Mnt)', tugas: 'HITUNG ULANG BRANGKAS PERSIAPAN KLEREK' },
+            { jam: '15:00 - 15:30 (30 Mnt)', tugas: 'POSES KLEREK DAN ARSIP ADMINISTRASI LALU ABSEN PULANG' }
+          ]
+        },
+        {
+          posisi: 'KASIR', shif: 'SHIF 2', color: 'border-l-4 border-indigo-500 bg-indigo-50/50',
+          badge: 'bg-indigo-100 text-indigo-900 border-indigo-200',
+          items: [
+            { jam: '14:45 - 15:00 (15 Mnt)', tugas: 'BERSIHKAN KACA PINTU DAN HITUNG MODAL' },
+            { jam: '15:00 - 15:30 (30 Mnt)', tugas: 'BERSIHKAN AREA KASIR DARI DEBU DAN SIAPKAN KANTONG BELANJA' },
+            { jam: '15:30 - 17:30 (2 Jam)', tugas: 'SO ST SHIF SAMBIL MELAYANI KONSUMEN' },
+            { jam: '17:30 - 19:30 (2 Jam)', tugas: 'SISIR HARGA DAN ISHOMA SECARA GANTIAN' },
+            { jam: '19:30 - 21:30 (2 Jam)', tugas: 'KEBERSIHAN RAK DAN CEK EXP MINIMAL 1 RAK' },
+            { jam: '21:30 - 21:45 (15 Mnt)', tugas: 'FULLDISPLAY DAN FACING OUT (KONFIRMASI MAXDISPLAY)' },
+            { jam: '21:45 - 22:00 (15 Mnt)', tugas: 'CEK EXP ROTI DAN TELUR' },
+            { jam: '22:00 - 22:30 (30 Mnt)', tugas: 'SAPU DARI DEPAN SAMPAI BELAKANG' },
+            { jam: '22:30 - 23:00 (30 Mnt)', tugas: 'HITUNG MODAL DAN PROSES KLEREK' },
+            { jam: '23:00 - 23:30 (30 Mnt)', tugas: 'ABSEN PULANG DAN MEMASTIKAN TUTUP TOKO SECARA AMAN' }
+          ]
+        },
+        {
+          posisi: 'STAF', shif: 'SHIF 2', color: 'border-l-4 border-blue-500 bg-blue-50/50',
+          badge: 'bg-blue-100 text-blue-900 border-blue-200',
+          items: [
+            { jam: '14:45 - 15:00 (15 Mnt)', tugas: 'SAPU DARI DEPAN SAMPAI BELAKANG' },
+            { jam: '15:00 - 15:30 (30 Mnt)', tugas: 'SERAH TERIMA BRANGKAS BARENG SHIF 1' },
+            { jam: '15:30 - 17:30 (2 Jam)', tugas: 'FULL DISPLAY DARI KONTENER JIKA DATANG BARANG JIKA TIDAK DARI GUDANG' },
+            { jam: '17:30 - 19:00 (1 Jam)', tugas: 'KONFIRMASI MAXDISPLAY SAMBIL ISHOMA SECARA GANTIAN' },
+            { jam: '19:00 - 21:00 (2 Jam)', tugas: 'KEBERSIHAN RAK DAN CEK EXP MINIMAL 1 RAK' },
+            { jam: '21:00 - 21:30 (30 Mnt)', tugas: 'HITUNG ULANG BRANGKAS' },
+            { jam: '21:45 - 22:00 (15 Mnt)', tugas: 'RETURN ROTI YANG EXP' },
+            { jam: '22:00 - 22:30 (30 Mnt)', tugas: 'SAPU DAN PELL DARI LUAR SAMPAI BELAKANG' },
+            { jam: '22:30 - 23:00 (30 Mnt)', tugas: 'PROSES SETTLEMENT DAN PERSIAPAN KLEREK' },
+            { jam: '23:00 - 23:30 (30 Mnt)', tugas: 'ABSEN PULANG DAN MEMASTIKAN TUTUP TOKO SECARA AMAN' }
+          ]
+        }
+      ];
+
+      var html = 
+        // Banner Atas Oranye Khas Sheet
+        '<div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-2xl p-4 text-white shadow-md text-center border border-amber-400">' +
+          '<h3 class="text-sm md:text-base font-black tracking-widest uppercase">PANDUAN DAILY AKTIVITAS TIAP SHIF</h3>' +
+          '<p class="text-[11px] text-amber-100 font-medium mt-0.5">Disiplin Waktu & Standar Eksekusi Tugas Kasir / Staf</p>' +
+        '</div>' +
+        '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+
+      jadwalHarian.forEach(function(grup) {
+        html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3 ' + grup.color + '">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<span class="font-mono font-black text-xs px-2.5 py-0.5 rounded-full border uppercase ' + grup.badge + '">' + grup.posisi + ' • ' + grup.shif + '</span>' +
+            '<span class="text-[10px] text-slate-400 font-bold font-mono"><i class="fa-solid fa-stopwatch text-amber-500 mr-1 animate-pulse"></i>SOP Terjadwal</span>' +
+          '</div>' +
+          '<div class="divide-y divide-slate-100 text-xs">';
+
+        grup.items.forEach(function(it) {
+          html += '<div class="py-2 flex items-start space-x-2.5">' +
+            '<span class="font-mono font-bold text-slate-500 text-[11px] w-36 shrink-0 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60">' + it.jam + '</span>' +
+            '<span class="text-slate-800 font-semibold leading-relaxed text-[11px]">' + it.tugas + '</span>' +
+          '</div>';
+        });
+
+        html += '</div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // --- TAB 2: AKTIVITAS MINGGUAN (JADWAL KEBERSIHAN PER HARI SENIN - MINGGU) ---
+    function renderTabAktivitasMingguan(container) {
+      var jadwalMingguan = [
+        {
+          hari: 'SENIN', badge: 'bg-emerald-600 text-white', border: 'border-emerald-300', bg: 'bg-emerald-50/40',
+          tugas: ['KEBERSIHAN TOILET ISI CEKLIS', 'CLEANING BEAN SPOT', 'KEBERSIHAN KESET MERAH DI CUCI', 'UPDATE SEWA', 'KEBERSIHAN GALON', 'KEBERSIHAN GENSET']
+        },
+        {
+          hari: 'SELASA', badge: 'bg-blue-600 text-white', border: 'border-blue-300', bg: 'bg-blue-50/40',
+          tugas: ['KEBERSIHAN KACA LUAR DAN DALAM', 'KEBERSIHAN TERAS DAN SARANG LABA-LABA AREA SALES', 'KEBERSIHAN KOLONG RAK', 'KEBERSIHAN ALL FREEZER KISI-KISI NYA DAN KOLONG FREEZER', 'KEBERSIHAN CHILLER KACA DAN TIANG YANG BERKERAK']
+        },
+        {
+          hari: 'RABU', badge: 'bg-amber-600 text-white', border: 'border-amber-300', bg: 'bg-amber-50/40',
+          tugas: ['KEBERSIHAN KERANJANG BELANJA (STANDAR 24 PCS)', 'KEBERSIHAN KOLONG RAK GUDANG', 'KERAPIHAN RAK GUDANG, LABEL EXP KARTONAN DAN GRUPING KARTONAN', 'KEBERSIHAN SARANG LABA-LABA AREA GUDANG DAN KANTOR']
+        },
+        {
+          hari: 'KAMIS', badge: 'bg-red-700 text-white', border: 'border-red-300', bg: 'bg-red-50/40',
+          tugas: ['CLEANING BEAN SPOT', 'GENERAL CEK EXP ALL ITEM INPUT ALL ITEM DI APLIKASI TAB', 'KEBERSIHAN SELASAR']
+        },
+        {
+          hari: 'JUMAT', badge: 'bg-purple-600 text-white', border: 'border-purple-300', bg: 'bg-purple-50/40',
+          tugas: ['KEBERSIHAN TOILET ISI CEKLIS', 'GROUPING RAK ATK, RAK 979 DAN Z51', 'SO RPC MATERIAL BEANSPOT', 'KEBERSIHAN BOX RETURN STERIL NO BAD STOK AJUKAN OTP']
+        },
+        {
+          hari: 'SABTU', badge: 'bg-sky-600 text-white', border: 'border-sky-300', bg: 'bg-sky-50/40',
+          tugas: ['KEBERSIHAN AREA KASIR DAN SERVER', 'KEBERSIHAN BACKWALL', 'PEMASANGAN LABEL EXP KARTONAN']
+        },
+        {
+          hari: 'MINGGU', badge: 'bg-pink-600 text-white', border: 'border-pink-300', bg: 'bg-pink-50/40',
+          tugas: ['PENGECEKAN LINGKUNGAN HALAMAN PARKIR', 'KEBERSIHAN TEMPAT SAMPAH DICUCI', 'KEBERSIHAN RUMPUT LIAR', 'KEBERSIHAN SARANG LABA-LABA AREA TERAS, SALES, SELASAR, KANTOR', 'KEBERSIHAN AREA KANTOR DAN MES']
+        }
+      ];
+
+      var html = 
+        '<div class="bg-gradient-to-r from-blue-700 via-indigo-800 to-slate-900 rounded-2xl p-4 text-white shadow-md text-center border border-indigo-500/30">' +
+          '<h3 class="text-sm md:text-base font-black tracking-widest uppercase">JADWAL DAILY AKTIVITAS MINGGUAN</h3>' +
+          '<p class="text-[11px] text-indigo-200 font-medium mt-0.5">Rotasi Tugas Kebersihan & Pemeliharaan Sarana Toko (Senin s/d Minggu)</p>' +
+        '</div>' +
+        '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">';
+
+      jadwalMingguan.forEach(function(g) {
+        html += '<div class="bg-white rounded-2xl border p-4 shadow-sm space-y-2.5 ' + g.border + ' ' + g.bg + '">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-black/5">' +
+            '<span class="font-black font-mono text-xs px-3 py-1 rounded-full shadow-sm ' + g.badge + '">' + g.hari + '</span>' +
+            '<span class="text-[10px] text-slate-500 font-mono font-bold"><i class="fa-solid fa-list-check text-emerald-600 mr-1 animate-pulse"></i>' + g.tugas.length + ' Poin Tugas</span>' +
+          '</div>' +
+          '<ul class="space-y-1.5 text-xs text-slate-800 font-medium">';
+
+        g.tugas.forEach(function(t, idx) {
+          html += '<li class="flex items-start space-x-2">' +
+            '<span class="w-4 h-4 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-[9px] text-slate-600 shrink-0 border border-slate-200 mt-0.5">' + (idx + 1) + '</span>' +
+            '<span class="leading-relaxed text-[11px]">' + t + '</span>' +
+          '</li>';
+        });
+
+        html += '</ul></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // --- TAB 3: MATERI BRIEFING SHIF 1 DAN 2 ---
+    function renderTabMateriBriefing(container) {
+      var briefingMingguan = [
+        {
+          hari: 'SENIN', badge: 'bg-emerald-600 text-white', border: 'border-emerald-300',
+          shif1: ['MATERI BSP', 'REMAINDER TARGET FOKUS DAN SALES SHIF 1', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'EVALUASI PENCAPAIAN SHIF 1 DAN BREAKDOWN TARGET SHIF 2', 'EVALUASI PENCAPAIAN SALES PASCA JSM']
+        },
+        {
+          hari: 'SELASA', badge: 'bg-blue-600 text-white', border: 'border-blue-300',
+          shif1: ['EVALUASI PENCAPAIAN FOKUS DAN SALES DI LINK REPORT AREA', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'EVALUASI PENCAPAIAN SHIF 1 DAN BREAKDOWN SHIF 2', 'EVALUASI PENCAPAIAN FOKUS YANG DIKIRIM MKT']
+        },
+        {
+          hari: 'RABU', badge: 'bg-amber-600 text-white', border: 'border-amber-300',
+          shif1: ['CEK DAN EVALUASI PENCAPAIAN INDIKATOR DI IKT ONLINE', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'BAHAS PERFORMA SALES DAN FOKUS DI LINK LOOKER STUDIO AREA']
+        },
+        {
+          hari: 'KAMIS', badge: 'bg-red-700 text-white', border: 'border-red-300',
+          shif1: ['EVALUASI PENCAPAIAN FOKUS DAN SALES DI LINK REPORT AREA', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'ATUR STRATEGI JSM DAN TARGET SALES YANG HARUS DI CAPAI']
+        },
+        {
+          hari: 'JUMAT', badge: 'bg-purple-600 text-white', border: 'border-purple-300',
+          shif1: ['CEK DAN EVALUASI PENCAPAIAN INDIKATOR DI IKT ONLINE', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'BAHAS PERFORMA SALES DAN FOKUS DI LINK LOOKER STUDIO AREA']
+        },
+        {
+          hari: 'SABTU', badge: 'bg-sky-600 text-white', border: 'border-sky-300',
+          shif1: ['EVALUASI PENCAPAIAN FOKUS DAN SALES DI LINK REPORT AREA', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'EVALUASI PENCAPAIAN FOKUS YANG DIKIRIM MKT']
+        },
+        {
+          hari: 'MINGGU', badge: 'bg-pink-600 text-white', border: 'border-pink-300',
+          shif1: ['CEK DAN EVALUASI PENCAPAIAN INDIKATOR DI IKT ONLINE', 'PLAN JOBDESK SHIF 1 DAN PERBAIKAN BASIC'],
+          shif2: ['ISI LINK SERAH TERIMA', 'CEK ULANG PERBAIKAN BASIC YANG TERLEWAT', 'BAHAS PERFORMA SALES DAN FOKUS DI LINK LOOKER STUDIO AREA']
+        }
+      ];
+
+      var html = 
+        '<div class="bg-gradient-to-r from-purple-700 via-indigo-900 to-slate-900 rounded-2xl p-4 text-white shadow-md text-center border border-purple-500/30">' +
+          '<h3 class="text-sm md:text-base font-black tracking-widest uppercase">DAILY MATERI BRIEFING SHIF 1 & 2</h3>' +
+          '<p class="text-[11px] text-purple-200 font-medium mt-0.5">Fokus Komunikasi Harian, Evaluasi Target & Strategi Toko (Senin s/d Minggu)</p>' +
+        '</div>' +
+        '<div class="space-y-4">';
+
+      briefingMingguan.forEach(function(b) {
+        html += '<div class="bg-white rounded-2xl border p-4 md:p-5 shadow-sm space-y-3 ' + b.border + '">' +
+          '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
+            '<span class="font-black font-mono text-xs px-3 py-1 rounded-full shadow-sm ' + b.badge + '">' + b.hari + '</span>' +
+            '<span class="text-[10px] text-slate-400 font-mono font-bold"><i class="fa-solid fa-bullhorn text-amber-500 mr-1 animate-pulse"></i>Materi Dua Shift</span>' +
+          '</div>' +
+
+          '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">' +
+            // Shif 1
+            '<div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 space-y-1.5">' +
+              '<div class="flex items-center space-x-1.5 font-black text-amber-950 text-[11px] uppercase">' +
+                '<i class="fa-solid fa-sun text-amber-600"></i><span>Briefing Shif 1 (Pagi)</span>' +
+              '</div>' +
+              '<ul class="space-y-1 text-slate-700 text-[11px] leading-relaxed pl-1">';
+        b.shif1.forEach(function(s1) { html += '<li>• ' + s1 + '</li>'; });
+        html += '</ul></div>' +
+
+            // Shif 2
+            '<div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-1.5">' +
+              '<div class="flex items-center space-x-1.5 font-black text-indigo-950 text-[11px] uppercase">' +
+                '<i class="fa-solid fa-moon text-indigo-600"></i><span>Briefing Shif 2 (Siang/Malam)</span>' +
+              '</div>' +
+              '<ul class="space-y-1 text-slate-700 text-[11px] leading-relaxed pl-1">';
+        b.shif2.forEach(function(s2) { html += '<li>• ' + s2 + '</li>'; });
+        html += '</ul></div></div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
     }
   </script>
 </body>

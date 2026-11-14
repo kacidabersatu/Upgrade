@@ -9164,6 +9164,24 @@
       });
     }
 
+    // ==================== STATE & TOGGLE MODE AREA KHUSUS NIK 14125034 ====================
+    var iktViewMode = 'TOKO'; // 'TOKO' atau 'AREA'
+
+    function toggleIktAdminView() {
+      iktViewMode = (iktViewMode === 'AREA') ? 'TOKO' : 'AREA';
+      var cached = localStorage.getItem('kacida_cache_Ikt');
+      if (cached) {
+        try {
+          var rows = JSON.parse(cached).data || [];
+          if (iktViewMode === 'AREA') {
+            renderMonitoringIktContentAC(rows);
+          } else {
+            renderMonitoringIktContentToko(rows);
+          }
+        } catch(e) {}
+      }
+    }
+
       // ==================== [9] MODUL MONITORING IKT TOKO LENGKAP ====================
     var isIktPrivateHidden = localStorage.getItem('kacida_hide_ikt_private') === 'true';
     var lastIktDisclaimerAgreedTime = 0;
@@ -9195,13 +9213,16 @@
       if (icon) {
         icon.className = isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white';
       }
-      // Re-render isi tanpa panggil backend
       var cached = localStorage.getItem('kacida_cache_Ikt');
       if (cached) {
-        var rows = JSON.parse(cached).data || [];
-        var isAC = currentSessionUser && (currentSessionUser.jabatan === 'AREA COORDINATOR' || currentSessionUser.jabatan === 'AC');
-        if (isAC) renderMonitoringIktContentAC(rows);
-        else renderMonitoringIktContentToko(rows);
+        try {
+          var rows = JSON.parse(cached).data || [];
+          if (iktViewMode === 'AREA') {
+            renderMonitoringIktContentAC(rows);
+          } else {
+            renderMonitoringIktContentToko(rows);
+          }
+        } catch(e) {}
       }
     }
 
@@ -9210,6 +9231,13 @@
       var userRole = currentSessionUser ? String(currentSessionUser.jabatan || '').toUpperCase().trim() : '';
       var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
+    // Tentukan view mode default (Role AC otomatis AREA, selain itu default TOKO)
+      if (isAC) {
+        iktViewMode = 'AREA';
+      } else {
+        iktViewMode = 'TOKO';
+      }
+    
       container.innerHTML = renderHeaderModalUniversal(
         'Monitoring IKT Toko', 
         isAC ? 'Scorecard Area, Agregasi Time Factor & Report Pertoko' : 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan'
@@ -9307,8 +9335,11 @@
       var proyeksiAcv = tgtSales > 0 ? (proyeksiSales / tgtSales * 100) : 0;
 
       var container = document.getElementById('iktDynamicContentArea');
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var isPicAdmin = (userNik === '14125034');
+
       var html = 
-        // Header Info Toko, Ikon Mata & Tombol Simulasi GM Rp
+        // Header Info Toko, Ikon Mata, Tombol Toggle Area (Khusus NIK 14125034) & Tombol Simulasi GM Rp
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">' +
           '<div>' +
             '<div class="flex items-center space-x-2">' +
@@ -9317,7 +9348,14 @@
             '</div>' +
             '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Indikator Kinerja Toko (IKT) & Rencana Bisnis</p>' +
           '</div>' +
-          '<div class="flex items-center space-x-2">' +
+          '<div class="flex flex-wrap items-center gap-2">' +
+            // TOMBOL TOGGLE KHUSUS NIK 14125034 (MASUK KE MODE AC)
+            (isPicAdmin ? 
+              '<button onclick="toggleIktAdminView()" class="px-3.5 py-2 bg-indigo-900 hover:bg-indigo-800 text-amber-300 rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 animate-pulse">' +
+                '<i class="fa-solid fa-repeat"></i>' +
+                '<span>Mode Pantau Area</span>' +
+              '</button>' : '') +
+
             // Tombol Mata
             '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm active:scale-95">' +
               '<i id="iconMataIkt" class="' + (isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white') + '"></i>' +
@@ -9339,11 +9377,11 @@
             '</div>' +
             '<div class="flex-1">' +
               '<h4 class="text-sm font-black tracking-tight">' +
-                (selisihTfRp >= 0 ? 'AGREGASI BISNIS: SURPLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'AGREGASI BISNIS: DEFISIT Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
+                (selisihTfRp >= 0 ? 'PENCAPAIAN: PLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'PENCAPAIAN: MINUS Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
               '</h4>' +
               '<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">' +
                 (selisihTfRp >= 0 
-                  ? 'Posisi penjualan toko berada di atas target Time Factor. Pertahankan laju ini menuju target MAX 105%!' 
+                  ? 'Posisi penjualan toko berada di atas target Time Factor. Pertahankan Pencapaian ini menuju target MAX 105%!' 
                   : 'Dibutuhkan tambahan sales minimal <b>Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID') + '</b> untuk mengejar posisi ideal Time Factor (' + tfPctFormatted + ').') +
               '</p>' +
             '</div>' +
@@ -9371,7 +9409,7 @@
           '<div>' +
             '<span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PROYEKSI SALES AKHIR BULAN</span>' +
             '<h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3>' +
-            '<span class="text-[11px] text-indigo-200">Estimasi berdasarkan kecepatan Time Factor (' + tfPctFormatted + ')</span>' +
+            '<span class="text-[11px] text-indigo-200">Estimasi berdasarkan pencapaian Time Factor (' + tfPctFormatted + ')</span>' +
           '</div>' +
           '<div class="text-right">' +
             '<span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV</span>' +
@@ -9392,7 +9430,7 @@
 
           '<div class="md:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">' +
             '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
-              '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Komparasi ACV Indikator vs Time Factor</h4>' +
+              '<h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">PENCAPAIAN ACV Indikator vs Time Factor</h4>' +
               '<span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">TF: ' + tfPctFormatted + '</span>' +
             '</div>' +
             '<div class="h-36 w-full my-2">' +
@@ -9489,6 +9527,9 @@
       var proyeksiAcv = tgtSales > 0 ? (proyeksiSales / tgtSales * 100) : 0;
 
       var container = document.getElementById('iktDynamicContentArea');
+      var userNik = currentSessionUser ? String(currentSessionUser.nik || '').trim() : '';
+      var isPicAdmin = (userNik === '14125034');
+
       var html = 
         // Header AC
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">' +
@@ -9497,9 +9538,16 @@
               '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
               '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI IKT TINGKAT AREA</h3>' +
             '</div>' +
-            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko</p>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko Binaan</p>' +
           '</div>' +
-          '<div class="flex items-center space-x-2">' +
+          '<div class="flex flex-wrap items-center gap-2">' +
+            // TOMBOL TOGGLE KHUSUS NIK 14125034 (KEMBALI KE TOKO SAYA)
+            (isPicAdmin ? 
+              '<button onclick="toggleIktAdminView()" class="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-700 text-amber-300 rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95">' +
+                '<i class="fa-solid fa-repeat"></i>' +
+                '<span>Mode Toko Saya</span>' +
+              '</button>' : '') +
+
             '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm">' +
               '<i id="iconMataIkt" class="' + (isIktPrivateHidden ? 'fa-solid fa-eye-slash text-amber-300' : 'fa-solid fa-eye text-white') + '"></i>' +
               '<span>' + (isIktPrivateHidden ? 'Buka Sensor' : 'Sembunyikan') + '</span>' +

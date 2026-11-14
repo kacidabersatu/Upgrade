@@ -2985,8 +2985,8 @@
                 '<i class="fa-solid fa-robot animate-pulse"></i>' +
               '</div>' +
               '<div>' +
-                '<h3 class="text-sm font-black tracking-wide">Asisten AI Retail Kacida</h3>' +
-                '<p class="text-[10px] text-emerald-200 font-mono">Sistem Analisa Kinerja & Konsultasi Ritel Terpadu</p>' +
+                '<h3 class="text-sm font-black tracking-wide">Asisten AI Kacida Bersatu</h3>' +
+                '<p class="text-[10px] text-emerald-200 font-mono">Sistem Analisa Kinerja</p>' +
               '</div>' +
             '</div>' +
             '<div class="flex items-center space-x-1.5 bg-emerald-800/80 px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-200 border border-emerald-700">' +
@@ -3003,7 +3003,7 @@
               '</div>' +
               '<div class="p-3.5 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-700 leading-relaxed space-y-1.5">' +
                 '<p>Halo <b>' + namaUser + '</b>! Senang bisa mendampingi Anda hari ini.</p>' +
-                '<p class="text-[11px] text-slate-600">Saya terhubung langsung dengan sistem performa toko Anda untuk menganalisa <b>Capaian Target & Margin</b>, <b>Penjualan Kasir (PSM & PWP)</b>, <b>Evaluasi Tren Harian vs Bulan Lalu</b>, hingga <b>Pertumbuhan Omset vs Tahun Lalu</b>. Anda juga bisa berdiskusi strategi atau sekadar mengobrol santai. Ada yang ingin kita analisa?</p>' +
+                '<p class="text-[11px] text-slate-600">Saya terhubung langsung dengan performa toko Anda untuk menganalisa <b>Capaian Target & Margin</b>, <b>Penjualan Kasir (PSM, PWP, Serba Gratis)</b>, <b>Evaluasi Tren Harian vs Bulan Lalu</b>, hingga <b>Pertumbuhan Omset vs Tahun Lalu</b>. Anda juga bisa berdiskusi strategi atau sekadar mengobrol santai. Ada yang ingin kita analisa?</p>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -3588,7 +3588,7 @@
                 '<div class="flex justify-between py-1 border-b border-slate-50 mt-1"><span class="text-slate-400">Status Sesi:</span><span class="font-bold text-emerald-600 flex items-center"><i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Aktif Terverifikasi</span></div>' +
                 '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Tipe Perangkat:</span><span class="font-bold text-slate-800 font-mono">' + detectUserDeviceType() + '</span></div>' +
                 '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Toko Konfigurasi:</span><span class="font-bold text-slate-800 font-mono">' + (cfg.cleanCode || '-') + '</span></div>' +
-                '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Aplikasi PWA:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed (Mode App)' : 'Browser Web') + '</span></div>' +
+                '<div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">Instal Aplikasi:</span><span class="font-bold text-slate-800">' + (window.matchMedia('(display-mode: standalone)').matches ? 'Installed (Mode App)' : 'Browser Web') + '</span></div>' +
                 '<div class="flex justify-between py-1"><span class="text-slate-400">Hak Akses Sistem:</span><span class="font-black text-slate-900">' + (isSuperAdmin ? 'SUPER ADMIN (Full Bypass)' : currentSessionUser.jabatan) + '</span></div>' +
               '</div>' +
               '<div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-[10px] text-emerald-800 leading-relaxed">' +
@@ -9240,7 +9240,7 @@
     
       container.innerHTML = renderHeaderModalUniversal(
         'Monitoring IKT Toko', 
-        isAC ? 'Scorecard Area, Agregasi Time Factor & Report Pertoko' : 'Scorecard Indikator, Time Factor & Proyeksi Akhir Bulan'
+        isAC ? 'Scorecard Area, Agregasi Time Factor & Report Pertoko' : 'Scorecard Indikator, Time Factor & Perkiraan Akhir Bulan'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="iktMainContainerWrapper">' +
           '<div id="iktDynamicContentArea"></div>' +
@@ -9346,14 +9346,14 @@
               '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-primary text-white font-mono">' + r['KODE'] + '</span>' +
               '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">' + r['NAMA TOKO'] + '</h3>' +
             '</div>' +
-            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Indikator Kinerja Toko (IKT) & Rencana Bisnis</p>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Insentif Kinerja Toko (IKT)</p>' +
           '</div>' +
           '<div class="flex flex-wrap items-center gap-2">' +
             // TOMBOL TOGGLE KHUSUS NIK 14125034 (MASUK KE MODE AC)
             (isPicAdmin ? 
               '<button onclick="toggleIktAdminView()" class="px-3.5 py-2 bg-indigo-900 hover:bg-indigo-800 text-amber-300 rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95 animate-pulse">' +
                 '<i class="fa-solid fa-repeat"></i>' +
-                '<span>Mode Pantau Area</span>' +
+                '<span>Pantau Area</span>' +
               '</button>' : '') +
 
             // Tombol Mata
@@ -9407,12 +9407,12 @@
         // KARTU PROYEKSI SALES AKHIR BULAN
         '<div class="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-md flex items-center justify-between">' +
           '<div>' +
-            '<span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PROYEKSI SALES AKHIR BULAN</span>' +
+            '<span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PERKIRAAN SALES AKHIR BULAN</span>' +
             '<h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3>' +
             '<span class="text-[11px] text-indigo-200">Estimasi berdasarkan pencapaian Time Factor (' + tfPctFormatted + ')</span>' +
           '</div>' +
           '<div class="text-right">' +
-            '<span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV</span>' +
+            '<span class="text-[10px] text-indigo-300 uppercase block font-bold">Perkiraan ACV</span>' +
             '<span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span>' +
           '</div>' +
         '</div>' +
@@ -9536,16 +9536,16 @@
           '<div>' +
             '<div class="flex items-center space-x-2">' +
               '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white font-mono">AC / AREA</span>' +
-              '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">KONSOLIDASI IKT TINGKAT AREA</h3>' +
+              '<h3 class="text-base font-black text-slate-800 uppercase tracking-tight">MONITORING INSENTIF KINERJA TOKO (IKT)</h3>' +
             '</div>' +
-            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Seluruh Toko Binaan</p>' +
+            '<p class="text-[11px] text-slate-400 font-medium mt-0.5">Pengawasan Kinerja Toko Area</p>' +
           '</div>' +
           '<div class="flex flex-wrap items-center gap-2">' +
             // TOMBOL TOGGLE KHUSUS NIK 14125034 (KEMBALI KE TOKO SAYA)
             (isPicAdmin ? 
               '<button onclick="toggleIktAdminView()" class="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-700 text-amber-300 rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5 active:scale-95">' +
                 '<i class="fa-solid fa-repeat"></i>' +
-                '<span>Mode Toko Saya</span>' +
+                '<span>Toko Saya</span>' +
               '</button>' : '') +
 
             '<button onclick="toggleHideIktPrivate()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm">' +
@@ -9567,10 +9567,10 @@
             '</div>' +
             '<div class="flex-1">' +
               '<h4 class="text-sm font-black tracking-tight">' +
-                (selisihTfRp >= 0 ? 'AGREGASI AREA: SURPLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'AGREGASI AREA: DEFISIT Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
+                (selisihTfRp >= 0 ? 'PENCAPAIAN AREA: PLUS Rp ' + Math.round(selisihTfRp).toLocaleString('id-ID') : 'PENCAPAIAN AREA: MINUS Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID')) +
               '</h4>' +
               '<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">' +
-                (selisihTfRp >= 0 ? 'Kinerja total area surplus di atas Time Factor (' + tfPctFormatted + ').' : 'Total area defisit <b>Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID') + '</b> dari garis Time Factor ideal.') +
+                (selisihTfRp >= 0 ? 'Kinerja total area Plus di atas Time Factor (' + tfPctFormatted + ').' : 'Total area Minus <b>Rp ' + Math.abs(Math.round(selisihTfRp)).toLocaleString('id-ID') + '</b> dari garis Time Factor ideal.') +
               '</p>' +
             '</div>' +
           '</div>' +
@@ -9583,8 +9583,8 @@
 
         // Proyeksi Sales Area
         '<div class="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-md flex items-center justify-between">' +
-          '<div><span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PROYEKSI SALES AREA AKHIR BULAN</span><h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3><span class="text-[11px] text-indigo-200">Kecepatan Time Factor: ' + tfPctFormatted + '</span></div>' +
-          '<div class="text-right"><span class="text-[10px] text-indigo-300 uppercase block font-bold">Proyeksi ACV Area</span><span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span></div>' +
+          '<div><span class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">PERKIRAAN SALES AREA AKHIR BULAN</span><h3 class="text-2xl font-black font-mono tracking-tight mt-0.5">' + formatRupiahIkt(proyeksiSales, true) + '</h3><span class="text-[11px] text-indigo-200">Kecepatan Time Factor: ' + tfPctFormatted + '</span></div>' +
+          '<div class="text-right"><span class="text-[10px] text-indigo-300 uppercase block font-bold">Perkiraan ACV Area</span><span class="text-2xl font-black font-mono ' + (proyeksiAcv >= 100 ? 'text-emerald-400' : 'text-amber-300') + '">' + proyeksiAcv.toFixed(1).replace('.', ',') + '%</span></div>' +
         '</div>' +
 
         // Donut & Chart Komparasi
@@ -9602,7 +9602,7 @@
 
         // --- TABEL UTAMA BARIS AC (KOLOM TARGET SEKARANG SUDAH MUNCUL LENGKAP) ---
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-2 border-b border-slate-100">Tabel Konsolidasi Baris Area (AC)</h4>' +
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-2 border-b border-slate-100">Tabel Pencapaian IKT Area (AC)</h4>' +
           '<div class="overflow-x-auto text-xs">' +
             '<table class="w-full text-center divide-y divide-slate-100">' +
               '<thead class="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500"><tr>' +
@@ -14225,7 +14225,7 @@
 
           // FOOTER RESMI
           '<div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between text-[11px] font-medium text-slate-500">' +
-            '<span><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>SOP Terpadu Ritel Alfamart</span>' +
+            '<span><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>SOP Kacida Bersatu</span>' +
             '<button onclick="tutupModalPanduanAktivitas()" class="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-sm">' +
               'Tutup Panduan' +
             '</button>' +

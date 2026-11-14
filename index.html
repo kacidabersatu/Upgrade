@@ -3028,7 +3028,45 @@
       }
     };
 
-    // Helper Kumpulkan Data 4 Domain Utama Tanpa Menyebut Nama Sheet
+    // ==================== PARSER FORMAT PESAN CHAT AI (ANTI-BERANTAKAN DI HP) ====================
+    function formatPesanAi(rawText) {
+      if (!rawText) return '';
+      var s = String(rawText);
+
+      // Ganti Judul ## atau ### menjadi teks tebal ber-emoji rapi
+      s = s.replace(/^### (.*$)/gim, '<div class="font-black text-emerald-950 text-xs sm:text-sm mt-2 mb-1 flex items-center space-x-1.5"><span class="w-1.5 h-3 bg-brand-primary rounded-full"></span><span>$1</span></div>');
+      s = s.replace(/^## (.*$)/gim, '<div class="font-black text-emerald-950 text-sm mt-2.5 mb-1 flex items-center space-x-1.5"><span class="w-2 h-3.5 bg-brand-primary rounded-full"></span><span>$1</span></div>');
+      
+      // Format Bold **teks**
+      s = s.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-slate-900">$1</strong>');
+      // Format Italic *teks*
+      s = s.replace(/\*(.*?)\*/g, '<em class="italic text-slate-700">$1</em>');
+
+      // Ganti kutipan blockquote > menjadi kotak highlight hijau pastel
+      s = s.replace(/^> (.*$)/gim, '<div class="p-2.5 my-1.5 bg-emerald-50/90 border-l-4 border-brand-primary rounded-r-xl text-slate-800 text-xs font-medium shadow-sm leading-relaxed">$1</div>');
+
+      // Jika AI masih tidak sengaja mengirim tabel pipa (|), ubah otomatis menjadi kartu poin rapi
+      if (s.indexOf('|') !== -1) {
+        s = s.replace(/\|(.+?)\|/g, function(match, content) {
+          if (content.indexOf('---') !== -1) return '';
+          return '<div class="text-[11px] py-1 border-b border-slate-100 flex flex-wrap gap-1 text-slate-800 font-medium">' + content.replace(/\|/g, ' • ') + '</div>';
+        });
+      }
+
+      // Format Bullet Points (* atau - atau •)
+      s = s.replace(/^[-•*] (.*$)/gim, '<div class="flex items-start space-x-2 my-1 pl-1"><span class="text-brand-primary font-black mt-0.5">•</span><span class="flex-1 leading-relaxed">$1</span></div>');
+
+      // Format Angka List (1. 2. 3.)
+      s = s.replace(/^(\d+)\. (.*$)/gim, '<div class="flex items-start space-x-2 my-1 pl-1"><span class="font-mono font-bold text-brand-primary">$1.</span><span class="flex-1 leading-relaxed">$2</span></div>');
+
+      // Spasi antar paragraf
+      s = s.replace(/\n\n/g, '<div class="h-2"></div>');
+      s = s.replace(/\n/g, '<br>');
+
+      return s;
+    }
+
+    // ==================== HELPER KUMPULKAN DATA TERFORMAT BERSIH UNTUK AI ====================
     function dapatkanKonteksLengkapChatAi() {
       var cfg = getTokoConfig() || {};
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
@@ -3042,13 +3080,13 @@
         isRoleAreaCoordinator: isAC,
         kodeToko: isAC ? 'KONSOLIDASI_AREA' : myCode,
         namaToko: currentSessionUser ? (currentSessionUser.namaToko || cfg.namaToko || '') : '',
-        performaIktDanMargin: null,
-        penetrasiProgramKasir: null,
-        penjualanHarianVsBulanLalu: null,
-        pertumbuhanOmsetTahunan: null
+        InsentifKinerjaToko_IKT: null,
+        PenawaranKasir_PSM_PWP_APC: null,
+        PenjualanHarianVsBulanLalu: null,
+        PertumbuhanOmset_YTD: null
       };
 
-      // 1. Data IKT & Margin
+      // 1. DATA IKT (TERFORMAT PERSEN & RUPIAH WAJAR)
       var cachedIkt = localStorage.getItem('kacida_cache_Ikt');
       if (cachedIkt) {
         try {
@@ -3056,11 +3094,33 @@
           var rowIkt = isAC 
             ? (iktRows.find(function(r){ return String(r['KODE']).toUpperCase() === 'AC' || String(r['NAMA TOKO']).toUpperCase() === 'AREA'; }) || iktRows[iktRows.length - 1])
             : (iktRows.find(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; }) || iktRows[0]);
-          konteks.performaIktDanMargin = rowIkt;
+          
+          if (rowIkt) {
+            konteks.InsentifKinerjaToko_IKT = {
+              targetNetSales: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['TARGET NET SALES'])).toLocaleString('id-ID'),
+              realisasiNetSales: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['ACTUAL NET SALES'])).toLocaleString('id-ID'),
+              acvNetSales: formatPersenIkt(rowIkt['ACV SALES']),
+              statusSales: rowIkt['KET SALES'] || 'OK',
+              
+              targetMarginPersen: formatPersenIkt(rowIkt['TARGET GM %']),
+              realisasiMarginPersen: formatPersenIkt(rowIkt['ACTUAL GM %']),
+              acvMarginPersen: formatPersenIkt(rowIkt['ACV GM']),
+              statusMarginPersen: rowIkt['KET GM %'] || 'OK',
+
+              targetMarginRupiah: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['TARGET GM RP'])).toLocaleString('id-ID'),
+              realisasiMarginRupiah: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['ACT GM RP'])).toLocaleString('id-ID'),
+              
+              targetProfit: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['TARGET PROFIT'])).toLocaleString('id-ID'),
+              realisasiProfit: 'Rp ' + Math.round(parseAngkaIndo(rowIkt['ACTUAL PROFIT'])).toLocaleString('id-ID'),
+              statusProfit: rowIkt['KET PROFIT'] || 'OK',
+
+              timeFactorBerjalan: formatPersenIkt(rowIkt['TIME FAKTOR'])
+            };
+          }
         } catch(e) {}
       }
 
-      // 2. Data Penawaran Langsung & Kasir
+      // 2. DATA PROGRAM KASIR (PENAWARAN LANGSUNG)
       var cachedPl = localStorage.getItem('kacida_cache_Penawaran_Langsung');
       if (cachedPl) {
         try {
@@ -3068,11 +3128,21 @@
           var rowPl = isAC 
             ? (plRows.find(function(r){ return String(r['KODE']).toUpperCase() === 'AC'; }) || plRows[0])
             : (plRows.find(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; }) || plRows[0]);
-          konteks.penetrasiProgramKasir = rowPl;
+          
+          if (rowPl) {
+            konteks.PenawaranKasir_PSM_PWP_APC = {
+              poinDashboard: formatPersenPl(rowPl['POINT DASHBOARD']),
+              peringkatToko: '#' + (rowPl['RANK'] || '-'),
+              psm: { target: parseAngkaIndo(rowPl['TARGET PSM']), aktual: parseAngkaIndo(rowPl['AKTUAL PSM']), acv: formatPersenPl(rowPl['ACV PSM']) },
+              pwp: { target: parseAngkaIndo(rowPl['TARGET PWP']), aktual: parseAngkaIndo(rowPl['AKTUAL PWP']), acv: formatPersenPl(rowPl['ACV PWP']) },
+              serbaGratis: { target: parseAngkaIndo(rowPl['TARGET SERBA GRATIS']), aktual: parseAngkaIndo(rowPl['AKTUAL SERBA GRATIS']), acv: formatPersenPl(rowPl['ACV SERBA GRATIS']) },
+              apc: { target: 'Rp ' + Math.round(parseAngkaIndo(rowPl['TARGET APC'])).toLocaleString('id-ID'), aktual: 'Rp ' + Math.round(parseAngkaIndo(rowPl['AKTUAL APC'])).toLocaleString('id-ID'), acv: formatPersenPl(rowPl['ACV APC']) }
+            };
+          }
         } catch(e) {}
       }
 
-      // 3. Data Penjualan Harian (vs Bulan Lalu)
+      // 3. DATA PENJUALAN HARIAN VS BULAN LALU
       var cachedSh = localStorage.getItem('kacida_cache_Sales_Harian');
       if (cachedSh) {
         try {
@@ -3087,21 +3157,33 @@
               dateMap[t].bulanLalu += parseAngkaIndo(r['BULAN LALU']);
               dateMap[t].nsb += parseAngkaIndo(r['NSB']);
             });
-            konteks.penjualanHarianVsBulanLalu = {
-              mode: 'AREA_KONSOLIDASI',
-              riwayat7HariTerakhir: Object.values(dateMap).slice(-7)
+            konteks.PenjualanHarianVsBulanLalu = {
+              kategori: 'KONSOLIDASI_AREA_SELURUH_TOKO',
+              ringkasan7HariTerakhir: Object.values(dateMap).slice(-7).map(function(d){
+                return { tanggal: d.tgl, aktual: 'Rp ' + Math.round(d.actual).toLocaleString('id-ID'), target: 'Rp ' + Math.round(d.target).toLocaleString('id-ID'), bulanLalu: 'Rp ' + Math.round(d.bulanLalu).toLocaleString('id-ID') };
+              })
             };
           } else {
             var mySh = shRows.filter(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; });
-            konteks.penjualanHarianVsBulanLalu = {
-              mode: 'TOKO_PRIBADI',
-              riwayat7HariTerakhir: mySh.slice(-7)
+            konteks.PenjualanHarianVsBulanLalu = {
+              kategori: 'TOKO_PRIBADI',
+              ringkasan7HariTerakhir: mySh.slice(-7).map(function(d){
+                return { 
+                  tanggal: formatTanggalTampilan(d['TANGGAL']), 
+                  aktual: 'Rp ' + Math.round(parseAngkaIndo(d['ACTUAL'])).toLocaleString('id-ID'), 
+                  target: 'Rp ' + Math.round(parseAngkaIndo(d['TARGET'])).toLocaleString('id-ID'), 
+                  bulanLalu: 'Rp ' + Math.round(parseAngkaIndo(d['BULAN LALU'])).toLocaleString('id-ID'),
+                  persenNsb: formatPersenNsb(d['% NSB']),
+                  persenOos: formatPersenIndo(d['OOS %']),
+                  grossMargin: formatPersenIndo(d['GROSS MARGIN'])
+                };
+              })
             };
           }
         } catch(e) {}
       }
 
-      // 4. Data Pertumbuhan Tahunan YTD (2025 vs 2026)
+      // 4. DATA PERTUMBUHAN TAHUNAN YTD (2025 VS 2026)
       var cachedYtd = localStorage.getItem('kacida_cache_YTD_Sales');
       if (cachedYtd) {
         try {
@@ -3112,11 +3194,11 @@
               sum25 += parseAngkaIndo(r['SALES 2025']);
               sum26 += parseAngkaIndo(r['SALES 2026']);
             });
-            konteks.pertumbuhanOmsetTahunan = {
-              mode: 'AREA_TAHUNAN',
-              totalSales2025: sum25,
-              totalSales2026: sum26,
-              growth: sum25 > 0 ? ((sum26 - sum25) / sum25 * 100).toFixed(2) + '%' : '0%'
+            konteks.PertumbuhanOmset_YTD = {
+              kategori: 'KONSOLIDASI_AREA',
+              totalSalesTahunLalu2025: 'Rp ' + Math.round(sum25).toLocaleString('id-ID'),
+              totalSalesTahunIni2026: 'Rp ' + Math.round(sum26).toLocaleString('id-ID'),
+              pertumbuhanGrowth: sum25 > 0 ? ((sum26 - sum25) / sum25 * 100).toFixed(2).replace('.', ',') + '%' : '0%'
             };
           } else {
             var myYtd = ytdRows.filter(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; });
@@ -3125,11 +3207,11 @@
               s25 += parseAngkaIndo(r['SALES 2025']);
               s26 += parseAngkaIndo(r['SALES 2026']);
             });
-            konteks.pertumbuhanOmsetTahunan = {
-              mode: 'TOKO_PRIBADI',
-              totalSales2025: s25,
-              totalSales2026: s26,
-              growth: s25 > 0 ? ((s26 - s25) / s25 * 100).toFixed(2) + '%' : '0%'
+            konteks.PertumbuhanOmset_YTD = {
+              kategori: 'TOKO_PRIBADI',
+              totalSalesTahunLalu2025: 'Rp ' + Math.round(s25).toLocaleString('id-ID'),
+              totalSalesTahunIni2026: 'Rp ' + Math.round(s26).toLocaleString('id-ID'),
+              pertumbuhanGrowth: s25 > 0 ? ((s26 - s25) / s25 * 100).toFixed(2).replace('.', ',') + '%' : '0%'
             };
           }
         } catch(e) {}
@@ -3138,7 +3220,7 @@
       return konteks;
     }
 
-    // ==================== EKSEKUSI KIRIM PESAN KE GROQ AI ====================
+    // ==================== EKSEKUSI KIRIM CHAT DENGAN FORMAT TAMPILAN ENIK DIPANDANG ====================
     function kirimPesanChatAi() {
       var input = document.getElementById('inputUserChatMessage');
       var list = document.getElementById('chatMessageList');
@@ -3147,10 +3229,10 @@
       var msg = input.value.trim();
       if (!msg) return;
 
-      // Render Bubble Pesan Pengguna
+      // Bubble Chat Pengguna
       var userBubble = 
         '<div class="flex items-start justify-end space-x-2.5">' +
-          '<div class="p-3 bg-brand-primary text-white rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-xs leading-relaxed font-medium">' +
+          '<div class="p-3 bg-brand-primary text-white rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-xs leading-relaxed font-semibold">' +
             msg +
           '</div>' +
         '</div>';
@@ -3158,36 +3240,37 @@
       input.value = '';
       list.scrollTop = list.scrollHeight;
 
-      // Render Loading Indicator
+      // Animasi Loading
       var loadingId = 'aiLoading_' + Date.now();
       var loadingBubble = 
         '<div id="' + loadingId + '" class="flex items-start space-x-2.5 max-w-[85%]">' +
           '<div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center flex-shrink-0 text-xs shadow-md">' +
             '<i class="fa-solid fa-robot animate-spin"></i>' +
           '</div>' +
-          '<div class="p-3.5 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-500 italic text-xs flex items-center space-x-2">' +
+          '<div class="p-3 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-500 italic text-xs flex items-center space-x-2">' +
             '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>' +
-            '<span>Menganalisa ...</span>' +
+            '<span>Sedang menganalisa performa ritel...</span>' +
           '</div>' +
         '</div>';
       list.insertAdjacentHTML('beforeend', loadingBubble);
       list.scrollTop = list.scrollHeight;
 
-      // Kumpulkan data 4 sheet
       var contextData = dapatkanKonteksLengkapChatAi();
 
-      // Panggil Backend Apps Script
       kirimBackendRequest('CHAT_GROQ_AI', { message: msg, context: contextData }, function(reply) {
         var loader = document.getElementById(loadingId);
         if (loader) loader.remove();
 
+        // KUNCI: Gunakan formatPesanAi() agar tampilan rapi, tidak ada tabel pipa pecah, dan enak dibaca
+        var formattedHtml = formatPesanAi(reply);
+
         var aiBubble = 
-          '<div class="flex items-start space-x-2.5 max-w-[90%]">' +
-            '<div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center flex-shrink-0 text-xs shadow-md">' +
+          '<div class="flex items-start space-x-2.5 max-w-[92%] sm:max-w-[85%]">' +
+            '<div class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center flex-shrink-0 text-xs shadow-md mt-0.5">' +
               '<i class="fa-solid fa-robot"></i>' +
             '</div>' +
-            '<div class="p-3.5 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-800 leading-relaxed text-xs whitespace-pre-line font-medium">' +
-              reply +
+            '<div class="p-4 bg-white rounded-2xl rounded-tl-none border border-emerald-100 shadow-sm text-slate-800 leading-relaxed text-xs space-y-1.5 font-normal">' +
+              formattedHtml +
             '</div>' +
           '</div>';
         list.insertAdjacentHTML('beforeend', aiBubble);

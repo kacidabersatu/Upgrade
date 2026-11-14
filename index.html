@@ -3143,31 +3143,91 @@
       }
 
       // 3. DATA PENJUALAN HARIAN VS BULAN LALU
+      // 3. DATA PENJUALAN HARIAN VS BULAN LALU (Saring Hari Settle agar Aktual Tidak Nol)
       var cachedSh = localStorage.getItem('kacida_cache_Sales_Harian');
       if (cachedSh) {
         try {
           var shRows = JSON.parse(cachedSh).data || [];
           if (isAC) {
+            // Konsolidasi Area per Tanggal untuk Role AC
             var dateMap = {};
             shRows.forEach(function(r) {
               var t = formatTanggalTampilan(r['TANGGAL']);
-              if (!dateMap[t]) dateMap[t] = { tgl: t, actual: 0, target: 0, bulanLalu: 0, nsb: 0 };
+              if (!dateMap[t]) {
+                dateMap[t] = { 
+                  tgl: t, 
+                  dateObj: parseDateIndo(r['TANGGAL']), 
+                  actual: 0, 
+                  target: 0, 
+                  bulanLalu: 0, 
+                  nsb: 0 
+                };
+              }
               dateMap[t].actual += parseAngkaIndo(r['ACTUAL']);
               dateMap[t].target += parseAngkaIndo(r['TARGET']);
               dateMap[t].bulanLalu += parseAngkaIndo(r['BULAN LALU']);
               dateMap[t].nsb += parseAngkaIndo(r['NSB']);
             });
+
+            var sortedConsolidated = Object.values(dateMap).sort(function(a, b) {
+              return a.dateObj - b.dateObj;
+            });
+            var settledArea = sortedConsolidated.filter(function(d) { return d.actual > 0; });
+            var areaRowsUse = settledArea.length > 0 ? settledArea : sortedConsolidated;
+            var h1Area = areaRowsUse[areaRowsUse.length - 1] || {};
+
             konteks.PenjualanHarianVsBulanLalu = {
               kategori: 'KONSOLIDASI_AREA_SELURUH_TOKO',
-              ringkasan7HariTerakhir: Object.values(dateMap).slice(-7).map(function(d){
-                return { tanggal: d.tgl, aktual: 'Rp ' + Math.round(d.actual).toLocaleString('id-ID'), target: 'Rp ' + Math.round(d.target).toLocaleString('id-ID'), bulanLalu: 'Rp ' + Math.round(d.bulanLalu).toLocaleString('id-ID') };
+              salesKemarin_H1: {
+                tanggal: h1Area.tgl || '-',
+                aktualSalesArea: 'Rp ' + Math.round(h1Area.actual || 0).toLocaleString('id-ID'),
+                targetSalesArea: 'Rp ' + Math.round(h1Area.target || 0).toLocaleString('id-ID'),
+                acvTarget: h1Area.target > 0 ? ((h1Area.actual / h1Area.target) * 100).toFixed(1) + '%' : '0%',
+                bulanLalu: 'Rp ' + Math.round(h1Area.bulanLalu || 0).toLocaleString('id-ID')
+              },
+              ringkasan7HariTerakhirSettle: areaRowsUse.slice(-7).map(function(d) {
+                return {
+                  tanggal: d.tgl,
+                  aktual: 'Rp ' + Math.round(d.actual).toLocaleString('id-ID'),
+                  target: 'Rp ' + Math.round(d.target).toLocaleString('id-ID'),
+                  bulanLalu: 'Rp ' + Math.round(d.bulanLalu).toLocaleString('id-ID')
+                };
               })
             };
+
           } else {
+            // Data Toko Pribadi: Filter Hari yang Sudah Settle (Actual > 0)
             var mySh = shRows.filter(function(r){ return String(r['KODE']).toUpperCase().trim() === myCode; });
+            
+            var sortedSh = mySh.slice().sort(function(a, b) {
+              return parseDateIndo(a['TANGGAL']) - parseDateIndo(b['TANGGAL']);
+            });
+
+            // KUNCI: Ambil hanya hari yang sudah ada penjualan aktual (Actual > 0)
+            var settledSh = sortedSh.filter(function(r) {
+              return parseAngkaIndo(r['ACTUAL']) > 0;
+            });
+
+            var rowsToUse = settledSh.length > 0 ? settledSh : sortedSh;
+            var hMin1 = rowsToUse[rowsToUse.length - 1] || {};
+            var actH1 = parseAngkaIndo(hMin1['ACTUAL']);
+            var tgtH1 = parseAngkaIndo(hMin1['TARGET']);
+
             konteks.PenjualanHarianVsBulanLalu = {
               kategori: 'TOKO_PRIBADI',
-              ringkasan7HariTerakhir: mySh.slice(-7).map(function(d){
+              // Data Aktual Riil Kemarin (H-1) Sama Persis dengan Hero Card & Carousel
+              salesKemarin_H1: {
+                tanggal: formatTanggalTampilan(hMin1['TANGGAL']),
+                aktualSalesHarian: 'Rp ' + Math.round(actH1).toLocaleString('id-ID'),
+                targetSalesHarian: 'Rp ' + Math.round(tgtH1).toLocaleString('id-ID'),
+                acvTarget: tgtH1 > 0 ? ((actH1 / tgtH1) * 100).toFixed(1) + '%' : '0%',
+                gapTarget: (actH1 - tgtH1 >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(actH1 - tgtH1)).toLocaleString('id-ID'),
+                grossMargin: formatPersenIndo(hMin1['GROSS MARGIN']),
+                bulanLalu: 'Rp ' + Math.round(parseAngkaIndo(hMin1['BULAN LALU'])).toLocaleString('id-ID'),
+                persenNsb: formatPersenNsb(hMin1['% NSB']),
+                persenOos: formatPersenIndo(hMin1['OOS %'])
+              },
+              ringkasan7HariTerakhirSettle: rowsToUse.slice(-7).map(function(d){
                 return { 
                   tanggal: formatTanggalTampilan(d['TANGGAL']), 
                   aktual: 'Rp ' + Math.round(parseAngkaIndo(d['ACTUAL'])).toLocaleString('id-ID'), 

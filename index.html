@@ -3019,6 +3019,15 @@
         '</div>';
     }
 
+    // Daftarkan fungsi ke window global agar tombol saran cepat tidak error
+    window.isiPesanCepatAi = function(teks) {
+      var input = document.getElementById('inputUserChatMessage');
+      if (input) {
+        input.value = teks;
+        kirimPesanChatAi();
+      }
+    };
+
     // Helper Kumpulkan Data 4 Domain Utama Tanpa Menyebut Nama Sheet
     function dapatkanKonteksLengkapChatAi() {
       var cfg = getTokoConfig() || {};

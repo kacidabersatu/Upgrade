@@ -1142,7 +1142,7 @@
                 <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner flex items-center space-x-3">
                   <div>
                     <div class="flex items-center space-x-1.5">
-                      <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Sales Kemarin (H-1)</span>
+                      <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Sales Kemarin</span>
                       <button onclick="toggleSembunyikanSalesHMin1()" title="Sembunyikan / Tampilkan Nominal" class="text-slate-300 hover:text-white p-0.5">
                         <i id="iconMataSales" class="fa-solid fa-eye text-[11px]"></i>
                       </button>
@@ -1153,7 +1153,7 @@
                 </div>
 
                 <div class="bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-inner text-right">
-                  <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold block">Gross Margin H-1</span>
+                  <span class="text-[10px] text-slate-300 uppercase tracking-wider font-bold block">Gross Margin</span>
                   <div class="flex items-center justify-end space-x-1.5">
                     <span id="heroGmHMin1" class="font-black text-xs md:text-sm text-emerald-300 font-mono">0.00%</span>
                     <span id="heroGmDiffBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/20 text-white font-mono">+0.0%</span>
@@ -2316,7 +2316,7 @@
       var elDiff = document.getElementById('heroGmDiffBadge');
       if (elDiff) {
         if (hMin2 && (hMin2['GROSS MARGIN'] || hMin2['GROSS_MARGIN'])) {
-          elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2).replace('.', ',') + '% vs H-2';
+          elDiff.innerText = (gmDiff >= 0 ? '+' : '') + gmDiff.toFixed(2).replace('.', ',') + '% vs H-1';
           elDiff.className = gmDiff >= 0
             ? 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/40 text-emerald-200 font-mono'
             : 'text-[10px] font-bold px-1.5 py-0.2 rounded bg-red-500/40 text-red-200 font-mono';

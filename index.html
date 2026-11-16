@@ -12939,16 +12939,15 @@
         retActiveFilterBulan = bulanList[new Date().getMonth()];
       }
 
-      // Hitung badge angka untuk 3 tab atas
       var tabBadges = hitungBadgeTabReturn();
 
       container.innerHTML = renderHeaderModalUniversal(
         'Catatan Return Barang', 
-        isAC ? 'Dashboard Pengawasan Retur Toko' : 'DC Reg, DC Fresh, dan BKL (Barang Kirim Langsung'
+        isAC ? 'Dashboard Pengawasan Retur Toko Binaan (Area Coordinator)' : 'DC Reg, DC Fresh, dan BKL (Barang Kirim Langsung)'
       ) +
         '<div class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">' +
-          // 3 TAB UTAMA ATAS DENGAN BADGE
-          '<div class="flex border-b border-slate-200 bg-white text-xs font-bold text-slate-500 px-4 pt-2 space-x-2">' +
+          // 3 TAB ATAS DENGAN BADGE ANGKA
+          '<div class="flex border-b border-slate-200 bg-white text-xs font-bold text-slate-500 px-4 pt-2 space-x-2 flex-shrink-0">' +
             '<button onclick="gantiTabReturn(\'DC_REG\')" id="tabRetReg" class="py-2.5 px-3 md:px-4 border-b-2 flex items-center ' + (retActiveTab === 'DC_REG' ? 'border-brand-primary text-brand-dark font-extrabold' : 'border-transparent hover:text-brand-dark') + '">' +
               '<span>DC Reguler</span>' + (tabBadges.DC_REG > 0 ? '<span class="ml-1.5 px-1.5 py-0.2 text-[9px] font-black rounded-full bg-red-600 text-white badge-pulse-red">' + tabBadges.DC_REG + '</span>' : '') +
             '</button>' +
@@ -12963,9 +12962,9 @@
           // CONTAINER KONTEN RETURN
           '<div id="containerSubTabReturn" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"></div>' +
 
-          // FLOATING ACTION BUTTON (FAB) + MELAYANG (HANYA UNTUK ROLE TOKO)
+          // FLOATING BUTTON (+) UNTUK INPUT DAFTAR FAKTUR BARU
           (!isAC ? 
-            '<button onclick="bukaModalFormInputReturn()" id="btnFabReturn" title="Tambah Catatan Return" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-brand-primary hover:bg-emerald-700 text-white shadow-2xl flex items-center justify-center text-2xl z-30 transition-transform active:scale-95 animate-bounce">' +
+            '<button onclick="bukaModalFormInputReturn()" id="btnFabReturn" title="Tambah Daftar Faktur Retur" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-brand-primary hover:bg-emerald-700 text-white shadow-2xl flex items-center justify-center text-2xl z-30 transition-transform active:scale-95 animate-bounce">' +
               '<i class="fa-solid fa-plus"></i>' +
             '</button>' : '') +
         '</div>';
@@ -12979,7 +12978,6 @@
       if (container) renderModulCatatanReturn(container);
     }
 
-    // Helper Hitung Badge Angka di 3 Tab Atas
     function hitungBadgeTabReturn() {
       var badges = { DC_REG: 0, DC_FRESH: 0, BKL: 0 };
       var cache = localStorage.getItem('kacida_cache_Catatan_Return');
@@ -13015,17 +13013,15 @@
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
       muatDataSheetLazy('Catatan_Return', false, function(allRows) {
-        // 1. Filter Tab Aktif (DC_REG / DC_FRESH / BKL)
         var tabFiltered = allRows.filter(function(r) {
           return String(r['TIPE_TAB'] || 'DC_REG').toUpperCase().trim() === retActiveTab;
         });
 
-        // 2. Filter Toko (Jika bukan AC)
         var storeFiltered = isAC ? tabFiltered : tabFiltered.filter(function(r) {
           return String(r['KODE'] || '').toUpperCase().trim() === myStoreCode;
         });
 
-        // 3. Filter Bulan
+        // Filter Bulan
         var bulanFiltered = storeFiltered.filter(function(r) {
           if (retActiveFilterBulan === 'ALL') return true;
           var d = parseDateIndo(r['TANGGAL']);
@@ -13034,7 +13030,7 @@
           return bulanList[d.getMonth()] === retActiveFilterBulan;
         });
 
-        // 4. Filter Rentang Tanggal
+        // Filter Rentang Tanggal
         var dateFiltered = bulanFiltered.filter(function(r) {
           var d = parseDateIndo(r['TANGGAL']);
           if (isNaN(d.getTime())) return true;
@@ -13051,20 +13047,17 @@
           return true;
         });
 
-        // 5. Urutkan Tanggal Terbaru Paling Atas
         var sortedRows = dateFiltered.slice().sort(function(a, b) {
           return parseDateIndo(b['TANGGAL']) - parseDateIndo(a['TANGGAL']);
         });
 
-        // 6. Hitung Data Resume
         var totalInput = sortedRows.length;
         var countSudah = sortedRows.filter(function(r) { return String(r['STATUS_NAIK'] || '').toUpperCase().trim() === 'SUDAH NAIK'; }).length;
         var countBelum = totalInput - countSudah;
-
         var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
 
         var html = 
-          // --- BAR FILTER (BULAN & RENTANG TANGGAL) ---
+          // BAR FILTER (BULAN & RENTANG TANGGAL)
           '<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">' +
             '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
               '<div>' +
@@ -13091,7 +13084,7 @@
             '</div>' +
           '</div>';
 
-        // --- KOTAK RESUME BERWARNA-WARNI GRADIEN (DAPAT DIKLIK UNTUK FILTER) ---
+        // KOTAK RESUME BERWARNA GRADIEN
         if (!isAC) {
           html += 
             '<div class="grid grid-cols-3 gap-2.5 text-xs text-center">' +
@@ -13109,33 +13102,19 @@
               '</div>' +
             '</div>';
         } else {
-          // Kotak Resume Khusus Role AC
           var uniqueStores = {};
           sortedRows.forEach(function(r) { uniqueStores[r['KODE']] = true; });
           var totTokoInput = Object.keys(uniqueStores).length;
 
           html += 
             '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center">' +
-              '<div onclick="setFilterStatusReturn(\'ALL\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-slate-700 to-indigo-900 text-white shadow-sm">' +
-                '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL TOKO INPUT</span>' +
-                '<span class="text-xl font-black font-mono mt-1 block">' + totTokoInput + ' Toko</span>' +
-              '</div>' +
-              '<div onclick="setFilterStatusReturn(\'ALL\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-sm">' +
-                '<span class="text-[10px] font-bold uppercase tracking-wider text-blue-200">TOTAL FAKTUR AREA</span>' +
-                '<span class="text-xl font-black font-mono mt-1 block">' + totalInput + '</span>' +
-              '</div>' +
-              '<div onclick="setFilterStatusReturn(\'SUDAH\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-sm">' +
-                '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">SUDAH NAIK</span>' +
-                '<span class="text-xl font-black font-mono mt-1 block">' + countSudah + '</span>' +
-              '</div>' +
-              '<div onclick="setFilterStatusReturn(\'BELUM\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-sm">' +
-                '<span class="text-[10px] font-bold uppercase tracking-wider text-red-200">BELUM NAIK</span>' +
-                '<span class="text-xl font-black font-mono mt-1 block ' + (countBelum > 0 ? 'animate-pulse' : '') + '">' + countBelum + '</span>' +
-              '</div>' +
+              '<div onclick="setFilterStatusReturn(\'ALL\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-slate-700 to-indigo-900 text-white shadow-sm"><span class="text-[10px] font-bold uppercase text-slate-300">TOTAL TOKO INPUT</span><span class="text-xl font-black font-mono mt-1 block">' + totTokoInput + ' Toko</span></div>' +
+              '<div onclick="setFilterStatusReturn(\'ALL\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-sm"><span class="text-[10px] font-bold uppercase text-blue-200">TOTAL FAKTUR AREA</span><span class="text-xl font-black font-mono mt-1 block">' + totalInput + '</span></div>' +
+              '<div onclick="setFilterStatusReturn(\'SUDAH\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-sm"><span class="text-[10px] font-bold uppercase text-emerald-200">SUDAH NAIK</span><span class="text-xl font-black font-mono mt-1 block">' + countSudah + '</span></div>' +
+              '<div onclick="setFilterStatusReturn(\'BELUM\')" class="p-3.5 rounded-2xl border cursor-pointer bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-sm"><span class="text-[10px] font-bold uppercase text-red-200">BELUM NAIK</span><span class="text-xl font-black font-mono mt-1 block ' + (countBelum > 0 ? 'animate-pulse' : '') + '">' + countBelum + '</span></div>' +
             '</div>';
         }
 
-        // Filter status kartu resume yang diklik
         var displayedRows = sortedRows.filter(function(r) {
           var st = String(r['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase().trim();
           if (retActiveStatusFilter === 'SUDAH') return st === 'SUDAH NAIK';
@@ -13143,9 +13122,9 @@
           return true;
         });
 
-        // --- AKORDION RIWAYAT (ROLE TOKO: PER TANGGAL | ROLE AC: PER TOKO) ---
+        // AKORDION
         if (!isAC) {
-          html += renderAccordionReturnPerTanggal(displayedRows);
+          html += renderAccordionReturnPerTanggal(displayedRows, sortedRows);
         } else {
           html += renderAccordionReturnPerTokoAC(displayedRows);
         }
@@ -13154,8 +13133,8 @@
       });
     }
 
-    // --- AKORDION PER TANGGAL (ROLE USER TOKO) ---
-    function renderAccordionReturnPerTanggal(rows) {
+    // --- AKORDION PER TANGGAL DENGAN NAMA PEMROSES NAIK ---
+    function renderAccordionReturnPerTanggal(rows, allCurrentTabRows) {
       if (rows.length === 0) {
         return '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200 mt-2">Tidak ada catatan return pada kategori ini.</div>';
       }
@@ -13174,8 +13153,8 @@
       });
 
       var groupList = Object.values(dateGroups).sort(function(a, b) { return b.dateObj - a.dateObj; });
-
       var html = '<div class="space-y-3 pt-1">';
+
       groupList.forEach(function(grp, idx) {
         var accId = 'accRetDate_' + idx;
         var totGrp = grp.items.length;
@@ -13208,37 +13187,39 @@
 
         grp.items.forEach(function(item) {
           var isNaik = String(item['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase() === 'SUDAH NAIK';
+          var noFakturBersih = String(item['NO_FAKTUR'] || '-').replace(/^'/, '');
+          var namaPemroses = String(item['PEMROSES_NAIK_NAMA'] || '').trim();
 
-          html += '<div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-50/70 p-2 rounded-xl transition-colors">' +
-            '<div class="space-y-1">' +
-              '<div class="flex items-center space-x-2">' +
-                '<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ' + (isNaik ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300 animate-pulse') + '">' +
+          html += '<div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-50/70 p-2.5 rounded-xl transition-colors border-b border-slate-50">' +
+            '<div class="space-y-1.5">' +
+              '<div class="flex flex-wrap items-center gap-2">' +
+                '<span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase font-mono ' + 
+                  (isNaik ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300 animate-pulse') + '">' +
                   (isNaik ? '<i class="fa-solid fa-check mr-1"></i>SUDAH NAIK' : '<i class="fa-solid fa-clock mr-1"></i>BELUM NAIK') +
                 '</span>' +
-                '<span class="font-mono font-extrabold text-slate-800 text-xs">Faktur: ' + String(item['NO_FAKTUR'] || '-').replace(/^'/, '')
- + '</span>' +
+                '<span class="font-mono font-extrabold text-slate-900 text-sm">Faktur: ' + noFakturBersih + '</span>' +
               '</div>' +
-              '<p class="text-slate-600 text-[11px]"><b>Ket:</b> ' + (item['KET_RETURN'] || '-') + '</p>' +
-              '<div class="flex flex-wrap items-center gap-x-3 text-[10px] text-slate-400 font-mono">' +
-                '<span><i class="fa-solid fa-truck text-[9px] mr-1"></i>' + (item['NO_FLAT_MOBIL'] || '-') + '</span>' +
-                '<span><i class="fa-solid fa-id-badge text-[9px] mr-1"></i>Sopir: ' + (item['NAMA_DRIVER'] || '-') + '</span>' +
-                '<span><i class="fa-solid fa-user-pen text-[9px] mr-1"></i>Input: ' + (item['NAMA_PENGINPUT'] || '-') + '</span>' +
+              
+              '<p class="text-slate-700 text-xs font-semibold"><b>Ket:</b> ' + (item['KET_RETURN'] || '-') + '</p>' +
+              
+              '<div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-500 font-mono bg-slate-50 p-2 rounded-lg border border-slate-100">' +
+                '<div><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>Input: <b>' + (item['NAMA_PENGINPUT'] || '-') + '</b></div>' +
+                '<div><i class="fa-solid fa-truck text-slate-400 mr-1"></i>Armada: <b>' + (item['NO_FLAT_MOBIL'] || '-') + '</b> (' + (item['NAMA_DRIVER'] || '-') + ')</div>' +
+                (isNaik ? '<div class="col-span-full text-emerald-800 pt-0.5"><i class="fa-solid fa-user-check text-emerald-600 mr-1"></i>Diproses Naik oleh: <b>' + (namaPemroses || 'Personil Toko') + '</b></div>' : '') +
               '</div>' +
             '</div>' +
 
-            '<div class="flex items-center space-x-2">' +
+            '<div class="flex items-center space-x-2 shrink-0 pt-1 sm:pt-0">' +
               (item['FOTO_BUKTI_URL_LH3'] 
-                ? '<button onclick="bukaPreviewFotoFull(\'' + item['FOTO_BUKTI_URL_LH3'] + '\', \'Surat Jalan Faktur: ' + item['NO_FAKTUR'] + '\')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px] shadow-sm flex items-center space-x-1"><i class="fa-solid fa-image text-brand-primary"></i><span>Bukti</span></button>' 
+                ? '<button onclick="bukaPreviewFotoFull(\'' + item['FOTO_BUKTI_URL_LH3'] + '\', \'Surat Jalan Faktur: ' + noFakturBersih + '\')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px] shadow-sm flex items-center space-x-1"><i class="fa-solid fa-image text-brand-primary"></i><span>Bukti</span></button>' 
                 : '<span class="text-slate-300 text-[10px] italic">Tanpa Foto</span>') +
 
-              // Tombol Konfirmasi Naik / Batal
-              '<button onclick="konfirmasiStatusNaikReturn(\'' + item['ID'] + '\', \'' + (isNaik ? 'BELUM NAIK' : 'SUDAH NAIK') + '\')" class="px-2.5 py-1.5 rounded-lg font-black text-[11px] shadow-sm transition-all ' + (isNaik ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-600 hover:bg-emerald-700 text-white') + '">' +
-                (isNaik ? '<i class="fa-solid fa-rotate-left mr-1"></i>Batal' : '<i class="fa-solid fa-check mr-1"></i>Naikkan') +
-              '</button>' +
+              // TOMBOL AKSI NAIKKAN (MEMICU MODAL PILIHAN SATUAN / BATCH)
+              (!isNaik 
+                ? '<button onclick="mulaiProsesNaikkanFaktur(\'' + item['ID'] + '\', \'' + noFakturBersih + '\')" class="px-3 py-1.5 rounded-lg font-black text-xs shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1"><i class="fa-solid fa-truck-arrow-right"></i><span>Naikkan</span></button>'
+                : '<button onclick="batalkanStatusNaikFaktur(\'' + item['ID'] + '\')" class="px-2.5 py-1.5 rounded-lg font-bold text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center space-x-1"><i class="fa-solid fa-rotate-left"></i><span>Batal</span></button>') +
 
-              // Tombol Edit
               '<button onclick="bukaModalEditReturn(' + JSON.stringify(item).replace(/"/g, '&quot;') + ')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors" title="Edit"><i class="fa-solid fa-pen-to-square text-xs"></i></button>' +
-              // Tombol Hapus
               '<button onclick="hapusRowUniversal(\'Catatan_Return\', \'' + item['ID'] + '\', renderSubTabReturnContent)" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button>' +
             '</div>' +
           '</div>';
@@ -13251,7 +13232,7 @@
       return html;
     }
 
-    // --- AKORDION PER NAMA TOKO (ROLE AC) ---
+    // --- AKORDION KHUSUS ROLE AC (GROUPED BY NAMA TOKO) ---
     function renderAccordionReturnPerTokoAC(rows) {
       if (rows.length === 0) {
         return '<div class="p-8 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200 mt-2">Tidak ada catatan return area pada kategori ini.</div>';
@@ -13261,10 +13242,7 @@
       rows.forEach(function(r) {
         var k = String(r['KODE'] || '').toUpperCase().trim();
         if (!storeGroups[k]) {
-          storeGroups[k] = {
-            kode: k,
-            items: []
-          };
+          storeGroups[k] = { kode: k, items: [] };
         }
         storeGroups[k].items.push(r);
       });
@@ -13295,23 +13273,25 @@
           '<div id="' + accId + '" class="hidden p-3.5 border-t border-slate-100 space-y-2 bg-white text-xs">' +
             '<div class="overflow-x-auto">' +
               '<table class="w-full text-center divide-y divide-slate-100">' +
-                '<thead class="text-[10px] uppercase font-bold text-slate-400 bg-slate-50"><tr>' +
-                  '<th class="p-2 text-left">Tanggal</th><th class="p-2">Penginput</th><th class="p-2">Driver / Flat</th><th class="p-2">No Faktur</th><th class="p-2 text-left">Keterangan</th><th class="p-2">Status</th><th class="p-2">Bukti</th>' +
+                '<thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400"><tr>' +
+                  '<th class="p-2 text-left">Tanggal</th><th class="p-2">Penginput</th><th class="p-2">Driver / Plat</th><th class="p-2">No Faktur</th><th class="p-2 text-left">Keterangan</th><th class="p-2">Status</th><th class="p-2">Diproses Naik</th><th class="p-2">Bukti</th>' +
                 '</tr></thead><tbody class="divide-y divide-slate-50 font-medium">';
 
         grp.items.forEach(function(item) {
           var isNaik = String(item['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase() === 'SUDAH NAIK';
+          var noFakturBersih = String(item['NO_FAKTUR'] || '-').replace(/^'/, '');
+
           html += '<tr>' +
             '<td class="p-2 text-left font-mono font-bold text-slate-700">' + formatTanggalTampilan(item['TANGGAL']) + '</td>' +
             '<td class="p-2 text-slate-600">' + (item['NAMA_PENGINPUT'] || '-') + '</td>' +
             '<td class="p-2 font-mono text-[11px]">' + (item['NAMA_DRIVER'] || '-') + '<br><span class="text-slate-400">' + (item['NO_FLAT_MOBIL'] || '-') + '</span></td>' +
-            '<td class="p-2 font-mono font-bold text-slate-800">' + String(item['NO_FAKTUR'] || '-').replace(/^'/, '')
- + '</td>' +
+            '<td class="p-2 font-mono font-bold text-slate-800">' + noFakturBersih + '</td>' +
             '<td class="p-2 text-left text-slate-600">' + (item['KET_RETURN'] || '-') + '</td>' +
             '<td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-black ' + (isNaik ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') + '">' + (isNaik ? 'SUDAH NAIK' : 'BELUM NAIK') + '</span></td>' +
+            '<td class="p-2 font-mono text-emerald-800 font-bold">' + (item['PEMROSES_NAIK_NAMA'] || '-') + '</td>' +
             '<td class="p-2">' +
               (item['FOTO_BUKTI_URL_LH3'] 
-                ? '<button onclick="bukaPreviewFotoFull(\'' + item['FOTO_BUKTI_URL_LH3'] + '\', \'Surat Jalan Faktur: ' + item['NO_FAKTUR'] + '\')" class="text-brand-primary font-bold hover:underline text-xs"><i class="fa-solid fa-image mr-1"></i>Foto</button>' 
+                ? '<button onclick="bukaPreviewFotoFull(\'' + item['FOTO_BUKTI_URL_LH3'] + '\', \'Surat Jalan Faktur: ' + noFakturBersih + '\')" class="text-brand-primary font-bold hover:underline text-xs"><i class="fa-solid fa-image mr-1"></i>Foto</button>' 
                 : '<span class="text-slate-300 text-[10px]">-</span>') +
             '</td>' +
           '</tr>';
@@ -13324,7 +13304,7 @@
       return html;
     }
 
-    // ==================== MODAL FORM INPUT RETURN (MULTI-BARIS FAKTUR) ====================
+    // ==================== 1. MODAL FORM INPUT RETUR AWAL (HANYA FAKTUR & KETERANGAN) ====================
     function bukaModalFormInputReturn() {
       var existing = document.getElementById('modalFormInputReturnWrapper');
       if (existing) existing.remove();
@@ -13333,18 +13313,18 @@
       modal.id = 'modalFormInputReturnWrapper';
       modal.className = 'fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200';
 
-      var tabLabel = retActiveTab === 'DC_REG' ? 'DC Reguler' : (retActiveTab === 'DC_FRESH' ? 'DC Fresh' : 'BKL (Langsung)');
+      var tabLabel = retActiveTab === 'DC_REG' ? 'DC Reguler' : (retActiveTab === 'DC_FRESH' ? 'DC Fresh' : 'BKL (Barang Kirim Langsung)');
 
       modal.innerHTML = 
         '<div class="bg-white rounded-3xl w-full max-w-xl max-h-[92vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">' +
           '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between">' +
             '<div class="flex items-center space-x-2.5">' +
               '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
-                '<i class="fa-solid fa-truck-ramp-box text-base"></i>' +
+                '<i class="fa-solid fa-clipboard-list text-base"></i>' +
               '</div>' +
               '<div>' +
-                '<h3 class="text-sm md:text-base font-black tracking-tight">Input Catatan Return: ' + tabLabel + '</h3>' +
-                '<p class="text-[10px] text-emerald-200">Bisa Menambah Banyak Faktur dalam 1 Kali Pengiriman</p>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Daftar Retur Baru: ' + tabLabel + '</h3>' +
+                '<p class="text-[10px] text-emerald-200">Catat Nomor Faktur & Keterangan Barang yang Akan Diretur</p>' +
               '</div>' +
             '</div>' +
             '<button onclick="tutupModalFormInputReturn()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
@@ -13353,44 +13333,28 @@
           '</div>' +
 
           '<div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 text-xs bg-slate-50">' +
-            '<div class="grid grid-cols-2 gap-3">' +
-              '<div>' +
-                '<label class="block font-bold text-slate-700 mb-1">Nomor Flat Mobil</label>' +
-                '<input type="text" id="mRetFlat" placeholder="Contoh: B 1234 KZ" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono uppercase font-bold">' +
-              '</div>' +
-              '<div>' +
-                '<label class="block font-bold text-slate-700 mb-1">Nama Driver</label>' +
-                '<input type="text" id="mRetDriver" placeholder="Nama sopir armada" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold">' +
-              '</div>' +
-            '</div>' +
-
-            // CONTAINER DAFTAR FAKTUR & KETERANGAN (MULTI-BARIS)
             '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">' +
               '<div class="flex items-center justify-between pb-1 border-b border-slate-100">' +
-                '<span class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Daftar Nomor Faktur & Keterangan</span>' +
-                '<button type="button" onclick="tambahBarisFakturReturn()" class="px-2.5 py-1 bg-emerald-50 text-brand-primary border border-emerald-200 rounded-lg text-[11px] font-bold hover:bg-emerald-100"><i class="fa-solid fa-plus mr-1"></i>Tambah Baris</button>' +
+                '<span class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">Daftar Nomor Faktur & Keterangan Return</span>' +
+                '<button type="button" onclick="tambahBarisFakturReturn()" class="px-2.5 py-1 bg-emerald-50 text-brand-primary border border-emerald-200 rounded-lg text-[11px] font-bold hover:bg-emerald-100 transition-all flex items-center space-x-1">' +
+                  '<i class="fa-solid fa-plus"></i><span>Tambah Baris</span>' +
+                '</button>' +
               '</div>' +
               '<div id="containerBarisFakturItems" class="space-y-2.5">' +
                 // Baris 1 awal
                 '<div class="baris-faktur-item grid grid-cols-12 gap-2 items-center">' +
-                  '<div class="col-span-5"><input type="text" placeholder="No Faktur (misal: 98.0097)" class="input-no-faktur w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs"></div>' +
-                  '<div class="col-span-6"><input type="text" placeholder="Keterangan return (rusak, lebih, dll)" class="input-ket-return w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"></div>' +
+                  '<div class="col-span-5"><input type="text" placeholder="No Faktur (misal: 0007)" class="input-no-faktur w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs"></div>' +
+                  '<div class="col-span-6"><input type="text" placeholder="Keterangan (BKE, BD, BOS, dll)" class="input-ket-return w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"></div>' +
                   '<div class="col-span-1 text-center"><button type="button" onclick="hapusBarisFakturItem(this)" class="text-slate-300 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button></div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
-
-            // Upload Foto Bukti Fisik
-            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
-              '<label class="block font-bold text-slate-800">Foto Bukti Fisik / Surat Jalan</label>' +
-              '<input type="file" id="mRetFoto" accept="image/*" class="w-full text-xs text-slate-500">' +
-              '<p class="text-[10px] text-slate-400">Unggah foto fisik / surat jalan return</p>' +
-            '</div>' +
+            '<p class="text-[10px] text-slate-400 italic leading-relaxed">* Armada truk, nama driver, dan foto surat jalan akan diinput saat truk tiba melalui tombol <b>Naikkan</b>.</p>' +
           '</div>' +
 
           '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-end space-x-2">' +
             '<button onclick="tutupModalFormInputReturn()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Batal</button>' +
-            '<button onclick="simpanFormReturnMulti()" class="px-6 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5"><i class="fa-solid fa-save"></i><span>Simpan Data Return</span></button>' +
+            '<button onclick="simpanDaftarFakturAwal()" class="px-6 py-2 bg-brand-primary hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center space-x-1.5"><i class="fa-solid fa-save"></i><span>Simpan Daftar Retur</span></button>' +
           '</div>' +
         '</div>';
 
@@ -13408,7 +13372,7 @@
       div.className = 'baris-faktur-item grid grid-cols-12 gap-2 items-center';
       div.innerHTML = 
         '<div class="col-span-5"><input type="text" placeholder="No Faktur" class="input-no-faktur w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs"></div>' +
-        '<div class="col-span-6"><input type="text" placeholder="Keterangan return" class="input-ket-return w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"></div>' +
+        '<div class="col-span-6"><input type="text" placeholder="Keterangan return" class="input-ket-return w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"></div>' +
         '<div class="col-span-1 text-center"><button type="button" onclick="hapusBarisFakturItem(this)" class="text-slate-300 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button></div>';
       container.appendChild(div);
     }
@@ -13418,15 +13382,11 @@
       if (container.children.length > 1) {
         btn.closest('.baris-faktur-item').remove();
       } else {
-        Swal.fire({ icon: 'info', title: 'Minimal 1 Baris', text: 'Minimal satu baris nomor faktur harus diisi.' });
+        Swal.fire({ icon: 'info', title: 'Minimal 1 Baris', text: 'Minimal satu baris faktur harus ada.' });
       }
     }
 
-    function simpanFormReturnMulti() {
-      var flat = document.getElementById('mRetFlat').value.trim();
-      var driver = document.getElementById('mRetDriver').value.trim();
-      var fileInput = document.getElementById('mRetFoto');
-
+    function simpanDaftarFakturAwal() {
       var items = [];
       var rowsEl = document.querySelectorAll('.baris-faktur-item');
       rowsEl.forEach(function(row) {
@@ -13437,8 +13397,217 @@
         }
       });
 
-      if (!flat || !driver || items.length === 0) {
-        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Nomor Flat Mobil, Nama Driver, dan minimal 1 Nomor Faktur wajib diisi.' });
+      if (items.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Faktur Kosong', text: 'Harap isi minimal 1 nomor faktur return.' });
+        return;
+      }
+
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      Swal.fire({ title: 'Menyimpan Faktur...', didOpen: function() { Swal.showLoading(); } });
+
+      var payload = {
+        subAction: 'SAVE',
+        kode: myCode,
+        tipeTab: retActiveTab || 'DC_REG',
+        itemsFaktur: items,
+        tanggal: formatTanggalTampilan(new Date()),
+        nik: currentSessionUser ? currentSessionUser.nik : '',
+        nama: currentSessionUser ? currentSessionUser.nama : ''
+      };
+
+      kirimBackendRequest('CRUD_CATATAN_RETURN', payload, function() {
+        Swal.close();
+        tutupModalFormInputReturn();
+        Swal.fire({ icon: 'success', title: 'Daftar Faktur Tersimpan', text: 'Status tercatat BELUM NAIK.', timer: 1200, showConfirmButton: false });
+        muatDataSheetLazy('Catatan_Return', true, function() {
+          renderSubTabReturnContent();
+          renderDataBerandaDariCache();
+        });
+      }, function(err) {
+        Swal.close();
+        Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });
+      });
+    }
+
+    // ==================== 2. MODAL CERDAS PROSES NAIKKAN (SATUAN ATAU SEKALIGUS) ====================
+    function mulaiProsesNaikkanFaktur(selectedId, selectedFaktur) {
+      var cfg = getTokoConfig() || {};
+      var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
+
+      // Ambil seluruh data retur tab aktif yang BELUM NAIK di toko ini
+      var cached = localStorage.getItem('kacida_cache_Catatan_Return');
+      var listBelumNaik = [];
+      if (cached) {
+        try {
+          var all = JSON.parse(cached).data || [];
+          listBelumNaik = all.filter(function(r) {
+            return String(r['KODE'] || '').toUpperCase().trim() === myCode &&
+                   String(r['TIPE_TAB'] || 'DC_REG').toUpperCase().trim() === retActiveTab &&
+                   String(r['STATUS_NAIK'] || 'BELUM NAIK').toUpperCase().trim() !== 'SUDAH NAIK';
+          });
+        } catch(e) {}
+      }
+
+      var existing = document.getElementById('modalProsesNaikkanWrapper');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'modalProsesNaikkanWrapper';
+      modal.className = 'fixed inset-0 z-[75] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-4 transition-all duration-200';
+
+      var tabTitle = retActiveTab === 'DC_REG' ? 'DC Reguler' : (retActiveTab === 'DC_FRESH' ? 'DC Fresh' : 'BKL');
+
+      // Bangun daftar checkbox faktur belum naik
+      var checkboxesHtml = '';
+      listBelumNaik.forEach(function(item) {
+        var isCurrent = (String(item['ID']).trim() === String(selectedId).trim());
+        var noF = String(item['NO_FAKTUR'] || '-').replace(/^'/, '');
+        checkboxesHtml += 
+          '<label class="flex items-start space-x-2.5 p-2 bg-slate-50 hover:bg-emerald-50/50 rounded-xl border border-slate-200 cursor-pointer transition-colors">' +
+            '<input type="checkbox" value="' + item['ID'] + '" class="chk-naik-faktur mt-1 rounded text-brand-primary focus:ring-brand-primary" ' + (isCurrent ? 'checked' : '') + '>' +
+            '<div class="flex-1">' +
+              '<div class="flex items-center justify-between">' +
+                '<span class="font-mono font-black text-slate-800 text-xs">Faktur: ' + noF + '</span>' +
+                '<span class="text-[10px] text-slate-400 font-mono">' + formatTanggalTampilan(item['TANGGAL']) + '</span>' +
+              '</div>' +
+              '<p class="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">Ket: ' + (item['KET_RETURN'] || '-') + '</p>' +
+            '</div>' +
+          '</label>';
+      });
+
+      modal.innerHTML = 
+        '<div class="bg-white rounded-3xl w-full max-w-lg max-h-[92vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-xs">' +
+          // Header Modal Naikkan
+          '<div class="p-4 bg-emerald-900 text-white flex items-center justify-between flex-shrink-0">' +
+            '<div class="flex items-center space-x-2.5">' +
+              '<div class="w-9 h-9 rounded-xl bg-emerald-800 flex items-center justify-center text-amber-300 shadow-inner">' +
+                '<i class="fa-solid fa-truck-arrow-right text-base"></i>' +
+              '</div>' +
+              '<div>' +
+                '<h3 class="text-sm md:text-base font-black tracking-tight">Proses Naikkan Faktur: ' + tabTitle + '</h3>' +
+                '<p class="text-[10px] text-emerald-200">Konfirmasi Pengangkutan Barang ke Armada Truk</p>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="tutupModalProsesNaikkan()" class="w-8 h-8 rounded-full bg-emerald-800 hover:bg-emerald-700 flex items-center justify-center text-white">' +
+              '<i class="fa-solid fa-xmark text-sm"></i>' +
+            '</button>' +
+          '</div>' +
+
+          '<div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 bg-slate-50">' +
+            // PILIHAN MODE: SATUAN vs BANYAK FAKTUR
+            '<div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
+              '<label class="block font-black text-slate-800 text-xs uppercase tracking-wide">Pilih Metode Pengangkutan:</label>' +
+              '<div class="grid grid-cols-2 gap-2">' +
+                '<button type="button" id="btnModeSatuan" onclick="gantiModeNaikkan(\'SATUAN\', \'' + selectedId + '\')" class="py-2 px-3 rounded-xl font-bold border-2 border-brand-primary bg-emerald-50 text-brand-dark transition-all text-center">' +
+                  'Faktur Ini Saja<br><span class="text-[10px] font-mono font-normal">(' + selectedFaktur + ')</span>' +
+                '</button>' +
+                '<button type="button" id="btnModeBatch" onclick="gantiModeNaikkan(\'BATCH\', \'' + selectedId + '\')" class="py-2 px-3 rounded-xl font-bold border-2 border-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all text-center">' +
+                  'Beberapa / Semua<br><span class="text-[10px] font-mono font-normal">(' + listBelumNaik.length + ' Faktur Belum Naik)</span>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+
+            // CONTAINER CHECKBOX (HANYA MUNCUL DI MODE BATCH)
+            '<div id="boxPilihanBatchFaktur" class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
+              '<div class="flex items-center justify-between pb-1 border-b border-slate-100">' +
+                '<span class="font-extrabold text-slate-800 text-[11px] uppercase">Centang Faktur yang Dibawa:</span>' +
+                '<button type="button" onclick="toggleCentangSemuaFaktur(this)" class="text-[10px] font-extrabold text-brand-primary hover:underline">Pilih Semua</button>' +
+              '</div>' +
+              '<div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">' +
+                checkboxesHtml +
+              '</div>' +
+            '</div>' +
+
+            // FORM INPUT ARMADA, DRIVER & FOTO SURAT JALAN
+            '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">' +
+              '<h4 class="font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-100">Informasi Armada & Sopir Pengangkut</h4>' +
+              '<div class="grid grid-cols-2 gap-2.5">' +
+                '<div>' +
+                  '<label class="block font-bold text-slate-700 mb-1">Nomor Flat Mobil</label>' +
+                  '<input type="text" id="pNaikFlat" placeholder="Contoh: B 9677 VCC" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono uppercase font-bold text-xs">' +
+                '</div>' +
+                '<div>' +
+                  '<label class="block font-bold text-slate-700 mb-1">Nama Driver</label>' +
+                  '<input type="text" id="pNaikDriver" placeholder="Nama sopir armada" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs">' +
+                '</div>' +
+              '</div>' +
+
+              '<div>' +
+                '<label class="block font-bold text-slate-700 mb-1">Foto Bukti Fisik / Surat Jalan</label>' +
+                '<input type="file" id="pNaikFoto" accept="image/*" class="w-full text-xs text-slate-500">' +
+                '<p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ambil foto surat jalan yang sudah ditandatangani driver (otomatis tersimpan ke Drive).</p>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // Footer Modal Naikkan
+          '<div class="p-3.5 bg-white border-t border-slate-200 flex items-center justify-between">' +
+            '<span class="text-[11px] text-slate-500 font-medium">Pemroses: <b class="text-slate-800">' + (currentSessionUser ? currentSessionUser.nama : 'Kasir') + '</b></span>' +
+            '<div class="flex items-center space-x-2">' +
+              '<button onclick="tutupModalProsesNaikkan()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs">Batal</button>' +
+              '<button onclick="konfirmasiEksekusiNaikkan(\'' + selectedId + '\')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs shadow-md flex items-center space-x-1.5 active:scale-95">' +
+                '<i class="fa-solid fa-check-double"></i><span>Konfirmasi Naik</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(modal);
+      window.activeNaikMode = 'SATUAN';
+    }
+
+    function tutupModalProsesNaikkan() {
+      var modal = document.getElementById('modalProsesNaikkanWrapper');
+      if (modal) modal.remove();
+    }
+
+    function gantiModeNaikkan(mode, defaultId) {
+      window.activeNaikMode = mode;
+      var btnS = document.getElementById('btnModeSatuan');
+      var btnB = document.getElementById('btnModeBatch');
+      var boxBatch = document.getElementById('boxPilihanBatchFaktur');
+
+      if (mode === 'BATCH') {
+        btnB.className = 'py-2 px-3 rounded-xl font-bold border-2 border-brand-primary bg-emerald-50 text-brand-dark transition-all text-center';
+        btnS.className = 'py-2 px-3 rounded-xl font-bold border-2 border-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all text-center';
+        boxBatch.classList.remove('hidden');
+      } else {
+        btnS.className = 'py-2 px-3 rounded-xl font-bold border-2 border-brand-primary bg-emerald-50 text-brand-dark transition-all text-center';
+        btnB.className = 'py-2 px-3 rounded-xl font-bold border-2 border-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all text-center';
+        boxBatch.classList.add('hidden');
+      }
+    }
+
+    function toggleCentangSemuaFaktur(btn) {
+      var chks = document.querySelectorAll('.chk-naik-faktur');
+      var allChecked = Array.from(chks).every(function(c) { return c.checked; });
+      chks.forEach(function(c) { c.checked = !allChecked; });
+      btn.innerText = allChecked ? 'Pilih Semua' : 'Batal Pilih Semua';
+    }
+
+    function konfirmasiEksekusiNaikkan(singleId) {
+      var flat = document.getElementById('pNaikFlat').value.trim();
+      var driver = document.getElementById('pNaikDriver').value.trim();
+      var fileInput = document.getElementById('pNaikFoto');
+
+      if (!flat || !driver) {
+        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Nomor Plat Mobil dan Nama Driver wajib diisi.' });
+        return;
+      }
+
+      // Tentukan ID yang akan dinaikkan (Satuan atau Batch)
+      var targetIds = [];
+      if (window.activeNaikMode === 'BATCH') {
+        var chks = document.querySelectorAll('.chk-naik-faktur:checked');
+        chks.forEach(function(c) { targetIds.push(c.value); });
+      } else {
+        targetIds = [singleId];
+      }
+
+      if (targetIds.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Faktur Belum Dipilih', text: 'Pilih minimal satu faktur yang akan dinaikkan.' });
         return;
       }
 
@@ -13446,32 +13615,37 @@
       var myCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
       var proceed = function(base64Photo) {
-        Swal.fire({ title: 'Menyimpan Return...', didOpen: function() { Swal.showLoading(); } });
+        Swal.fire({ title: 'Memproses Pengangkutan...', text: 'Mengunggah bukti & memperbarui status...', didOpen: function() { Swal.showLoading(); } });
 
         var payload = {
-          subAction: 'SAVE',
+          subAction: 'PROSES_NAIK',
+          ids: targetIds,
           kode: myCode,
           tipeTab: retActiveTab || 'DC_REG',
           noFlatMobil: flat,
           namaDriver: driver,
-          itemsFaktur: items,
           fotoBase64: base64Photo,
-          statusNaik: 'BELUM NAIK',
-          nik: currentSessionUser ? currentSessionUser.nik : '',
-          nama: currentSessionUser ? currentSessionUser.nama : ''
+          pemrosesNama: currentSessionUser ? currentSessionUser.nama : 'Personil Toko',
+          pemrosesNik: currentSessionUser ? currentSessionUser.nik : ''
         };
 
-        kirimBackendRequest('CRUD_CATATAN_RETURN', payload, function() {
+        kirimBackendRequest('CRUD_CATATAN_RETURN', payload, function(res) {
           Swal.close();
-          tutupModalFormInputReturn();
-          Swal.fire({ icon: 'success', title: 'Data Return Berhasil Disimpan', timer: 1200, showConfirmButton: false });
+          tutupModalProsesNaikkan();
+          Swal.fire({ 
+            icon: 'success', 
+            title: 'Berhasil Dinaikkan!', 
+            text: res.count + ' Faktur berhasil dinaikkan ke armada truk.', 
+            timer: 1500, 
+            showConfirmButton: false 
+          });
           muatDataSheetLazy('Catatan_Return', true, function() {
             renderSubTabReturnContent();
             renderDataBerandaDariCache();
           });
         }, function(err) {
           Swal.close();
-          Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: err.toString() });
+          Swal.fire({ icon: 'error', title: 'Gagal Memproses', text: err.toString() });
         });
       };
 
@@ -13484,36 +13658,35 @@
       }
     }
 
-    // ==================== AKSI KONFIRMASI STATUS NAIK / EDIT ====================
-    function konfirmasiStatusNaikReturn(rowId, statusTujuan) {
+    // ==================== 3. BATALKAN STATUS NAIK ====================
+    function batalkanStatusNaikFaktur(rowId) {
       Swal.fire({
-        title: statusTujuan === 'SUDAH NAIK' ? 'Konfirmasi Sudah Naik?' : 'Kembalikan ke Belum Naik?',
-        html: statusTujuan === 'SUDAH NAIK' ? 'Apakah fisik barang faktur ini sudah dipastikan <b>NAIK ke armada truk</b>?' : 'Status akan dikembalikan ke <b>BELUM NAIK</b>.',
+        title: 'Batalkan Status Naik?',
+        html: 'Status faktur ini akan dikembalikan ke <b>BELUM NAIK</b>.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: statusTujuan === 'SUDAH NAIK' ? '#059669' : '#d97706',
+        confirmButtonColor: '#d97706',
         cancelButtonColor: '#94a3b8',
-        confirmButtonText: statusTujuan === 'SUDAH NAIK' ? 'Ya, Sudah Naik' : 'Ya, Ubah',
+        confirmButtonText: 'Ya, Kembalikan',
         cancelButtonText: 'Batal'
       }).then(function(res) {
         if (res.isConfirmed) {
           Swal.fire({ title: 'Memproses...', didOpen: function() { Swal.showLoading(); } });
 
           kirimBackendRequest('CRUD_CATATAN_RETURN', {
-            subAction: 'UPDATE_STATUS_NAIK',
+            subAction: 'BATAL_NAIK',
             id: rowId,
-            newStatus: statusTujuan,
             nik: currentSessionUser ? currentSessionUser.nik : ''
           }, function() {
             Swal.close();
-            Swal.fire({ icon: 'success', title: 'Status Berhasil Diperbarui', timer: 1000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Status Dikembalikan', timer: 1000, showConfirmButton: false });
             muatDataSheetLazy('Catatan_Return', true, function() {
               renderSubTabReturnContent();
               renderDataBerandaDariCache();
             });
           }, function(err) {
             Swal.close();
-            Swal.fire({ icon: 'error', title: 'Gagal Ubah Status', text: err.toString() });
+            Swal.fire({ icon: 'error', title: 'Gagal', text: err.toString() });
           });
         }
       });
@@ -13521,13 +13694,14 @@
 
     // Modal Edit Return
     function bukaModalEditReturn(item) {
+      var noFakturBersih = String(item['NO_FAKTUR'] || '').replace(/^'/, '');
       Swal.fire({
         title: 'Edit Catatan Return',
         html: 
           '<div class="text-left text-xs space-y-2.5 text-slate-700 my-2">' +
             '<div><label class="block font-bold mb-1">Nomor Flat Mobil</label><input type="text" id="editRetFlat" value="' + (item['NO_FLAT_MOBIL'] || '') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg uppercase font-mono font-bold"></div>' +
             '<div><label class="block font-bold mb-1">Nama Driver</label><input type="text" id="editRetDriver" value="' + (item['NAMA_DRIVER'] || '') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold"></div>' +
-            '<div><label class="block font-bold mb-1">Nomor Faktur</label><input type="text" id="editRetFaktur" value="' + (item['NO_FAKTUR'] || '') + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold"></div>' +
+            '<div><label class="block font-bold mb-1">Nomor Faktur</label><input type="text" id="editRetFaktur" value="' + noFakturBersih + '" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold"></div>' +
             '<div><label class="block font-bold mb-1">Keterangan Return</label><textarea id="editRetKet" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">' + (item['KET_RETURN'] || '') + '</textarea></div>' +
           '</div>',
         showCancelButton: true,
@@ -13564,7 +13738,7 @@
       });
     }
 
-    // --- HANDLER FILTER RETURN ---
+    // Handler Filter Return
     function ubahFilterBulanReturn(val) {
       retActiveFilterBulan = val;
       renderSubTabReturnContent();

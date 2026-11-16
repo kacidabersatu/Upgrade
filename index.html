@@ -8000,12 +8000,12 @@
       });
     }
 
-    // --- RENDER UTAMA SALES MTD (KEBAL BARIS TANGGAL KOSONG) ---
+    // --- RENDER UTAMA SALES MTD (DENGAN FORMULA SPD & GROWTH SPD PRESISI) ---
     function renderSalesMtdBody(allYtdRows, isAC) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
 
-      var bulanList = ['JANUARI', 'FEBUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+      var bulanList = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
       var currentMonthIdx = new Date().getMonth();
       var defaultBulan = bulanList[currentMonthIdx];
 
@@ -8028,16 +8028,14 @@
       // 3. FILTER TANGGAL VALID (BUANG BARIS KOSONG / STRIP / INVALID)
       var validDateRows = bulanFilteredRows.filter(function(r) {
         var rawTgl = String(r['TANGGAL'] || '').trim();
-        // Buang jika tanggal kosong, berupa strip (-), atau null/undefined
         if (!rawTgl || rawTgl === '-' || rawTgl === 'undefined' || rawTgl === 'null') {
           return false;
         }
         var d = parseDateIndo(rawTgl);
-        // Pastikan tanggal valid
         return !isNaN(d.getTime()) && d.getTime() > 86400000;
       });
 
-      // 4. FILTER RENTANG TANGGAL (Jika Dipilih User)
+      // 4. FILTER RENTANG TANGGAL DARI - SAMPAI
       var finalDataRows = validDateRows.filter(function(r) {
         var d = parseDateIndo(r['TANGGAL']);
         if (mtdActiveDateFrom) {
@@ -8118,15 +8116,32 @@
         }).sort(function(a, b) { return a.dateObj - b.dateObj; });
       }
 
-      // 6. HITUNG TOTAL RESUME
+      // 6. HITUNG TOTAL SALES & FORMULA SPD (HANYA HARI BERISI SALES > 0 YANG DIHITUNG)
       var totalSales25 = 0;
       var totalSales26 = 0;
+      var countHari25 = 0; // Hari aktif penjualan 2025
+      var countHari26 = 0; // Hari aktif penjualan 2026
+
       displayDailyList.forEach(function(d) {
-        totalSales25 += d['SALES 2025'];
-        totalSales26 += d['SALES 2026'];
+        var s25 = d['SALES 2025'];
+        var s26 = d['SALES 2026'];
+
+        totalSales25 += s25;
+        totalSales26 += s26;
+
+        // Hanya hitung hari jika nilai penjualan lebih dari 0
+        if (s25 > 0) countHari25++;
+        if (s26 > 0) countHari26++;
       });
 
-      var totalGrowth = totalSales25 > 0 ? ((totalSales26 - totalSales25) / totalSales25 * 100) : 0;
+      // Hitung Rata-rata Harian (SPD)
+      var spd2025 = countHari25 > 0 ? Math.round(totalSales25 / countHari25) : 0;
+      var spd2026 = countHari26 > 0 ? Math.round(totalSales26 / countHari26) : 0;
+
+      // Hitung Pertumbuhan (Growth %) Berdasarkan Nilai SPD Sesuai Permintaan
+      var growthSpd = spd2025 > 0 ? (((spd2026 - spd2025) / spd2025) * 100) : 0;
+
+      // Selisih Rupiah Tetap Mempertahankan Total Sales 2026 - Total Sales 2025
       var totalGapRupiah = totalSales26 - totalSales25;
 
       // 7. BUILD HTML TAMPILAN
@@ -8169,24 +8184,49 @@
           '</div>' +
         '</div>' +
 
-        // 3 KOTAK RESUME BERWARNA GRADIENT
+        // 3 KOTAK RESUME DENGAN INFORMASI SPD & PERTUMBUHAN SPD
         '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">' +
+          // 1. Total Sales 2025 & SPD 2025 (Gradient Slate-Indigo)
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between">' +
-            '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL SALES 2025</span>' +
-            '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales25).toLocaleString('id-ID') + '</span>' +
-            '<span class="text-[10px] text-slate-300 mt-1">Tahun Lalu (Periode Filter)</span>' +
+            '<div>' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL SALES 2025</span>' +
+              '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">Rp ' + Math.round(totalSales25).toLocaleString('id-ID') + '</span>' +
+              '<div class="mt-2 pt-2 border-t border-white/10 flex items-center justify-between">' +
+                '<span class="text-xs font-bold text-amber-300 font-mono">SPD: Rp ' + Math.round(spd2025).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-[9px] text-slate-300 font-mono">(' + countHari25 + ' Hari Aktif)</span>' +
+              '</div>' +
+            '</div>' +
+            '<span class="text-[10px] text-slate-300 mt-2 block">Tahun Lalu (Periode Filter)</span>' +
           '</div>' +
 
+          // 2. Total Sales 2026 & SPD 2026 (Gradient Emerald-Teal)
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
-            '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">TOTAL SALES 2026</span>' +
-            '<span class="text-2xl font-black font-mono tracking-tight mt-1">Rp ' + Math.round(totalSales26).toLocaleString('id-ID') + '</span>' +
-            '<span class="text-[10px] text-emerald-200 mt-1">Tahun Ini (Periode Filter)</span>' +
+            '<div>' +
+              '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">TOTAL SALES 2026</span>' +
+              '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">Rp ' + Math.round(totalSales26).toLocaleString('id-ID') + '</span>' +
+              '<div class="mt-2 pt-2 border-t border-white/15 flex items-center justify-between">' +
+                '<span class="text-xs font-bold text-emerald-200 font-mono">SPD: Rp ' + Math.round(spd2026).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-[9px] text-emerald-200 font-mono">(' + countHari26 + ' Hari Aktif)</span>' +
+              '</div>' +
+            '</div>' +
+            '<span class="text-[10px] text-emerald-200 mt-2 block">Tahun Ini (Periode Filter)</span>' +
           '</div>' +
 
-          '<div class="p-4 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (totalGrowth >= 0 ? 'bg-gradient-to-br from-emerald-500 via-teal-600 to-amber-500' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
-            '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">PERTUMBUHAN (GROWTH)</span>' +
-            '<span class="text-2xl font-black font-mono tracking-tight mt-1">' + (totalGrowth >= 0 ? '+' : '') + totalGrowth.toFixed(2).replace('.', ',') + '%</span>' +
-            '<span class="text-[10px] opacity-90 mt-1 font-mono font-bold">Selisih: ' + (totalGapRupiah >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(totalGapRupiah)).toLocaleString('id-ID') + '</span>' +
+          // 3. Pertumbuhan (Growth) Berdasarkan Nilai SPD (Gradient Dinamis)
+          '<div class="p-4 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (growthSpd >= 0 ? 'bg-gradient-to-br from-emerald-500 via-teal-600 to-amber-500' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
+            '<div>' +
+              '<div class="flex items-center justify-between">' +
+                '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">GROWTH (BERDASARKAN SPD)</span>' +
+                '<span class="text-[9px] font-bold bg-white/20 px-1.5 py-0.2 rounded font-mono">Vs 2025</span>' +
+              '</div>' +
+              '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">' + (growthSpd >= 0 ? '+' : '') + growthSpd.toFixed(2).replace('.', ',') + '%</span>' +
+              '<div class="mt-2 pt-2 border-t border-white/20 text-[11px] font-mono font-bold">' +
+                '<span>Selisih SPD: ' + (spd2026 - spd2025 >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(spd2026 - spd2025)).toLocaleString('id-ID') + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<span class="text-[10px] opacity-90 mt-2 block font-mono font-bold">' +
+              'Selisih Total Sales: ' + (totalGapRupiah >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(totalGapRupiah)).toLocaleString('id-ID') +
+            '</span>' +
           '</div>' +
         '</div>' +
 
@@ -8204,7 +8244,7 @@
           '</div>' +
         '</div>' +
 
-        // TABEL RINCIAN KOMPARASI HARIAN (BERSIH DARI BARIS TANGGAL KOSONG)
+        // TABEL RINCIAN KOMPARASI HARIAN (3 TAB FILTER)
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
           '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">' +
             '<div>' +
@@ -8261,7 +8301,7 @@
       // 8. JIKA ROLE AC: AKORDION GROUPED PER TOKO BINAAN
       if (isAC) {
         html += '<div class="space-y-3 pt-2">' +
-          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko</h4>';
+          '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide pb-1 border-b border-slate-200">Rincian Performa Sales per Toko Binaan (AC Area)</h4>';
 
         var storeGrouping = {};
         finalDataRows.forEach(function(r) {
@@ -8274,6 +8314,8 @@
                 nama: n,
                 tot25: 0,
                 tot26: 0,
+                count25: 0,
+                count26: 0,
                 rows: []
               };
             }
@@ -8286,6 +8328,9 @@
 
             storeGrouping[k].tot25 += s25;
             storeGrouping[k].tot26 += s26;
+            if (s25 > 0) storeGrouping[k].count25++;
+            if (s26 > 0) storeGrouping[k].count26++;
+
             storeGrouping[k].rows.push({
               TANGGAL: r['TANGGAL'],
               tglRapi: formatTanggalTampilan(r['TANGGAL']),
@@ -8303,7 +8348,9 @@
         var storeListAc = Object.values(storeGrouping);
         storeListAc.forEach(function(st, idx) {
           var accId = 'accMtdStore_' + idx;
-          var grToko = st.tot25 > 0 ? ((st.tot26 - st.tot25) / st.tot25 * 100) : 0;
+          var spdStore25 = st.count25 > 0 ? Math.round(st.tot25 / st.count25) : 0;
+          var spdStore26 = st.count26 > 0 ? Math.round(st.tot26 / st.count26) : 0;
+          var grToko = spdStore25 > 0 ? (((spdStore26 - spdStore25) / spdStore25) * 100) : (st.tot25 > 0 ? ((st.tot26 - st.tot25) / st.tot25 * 100) : 0);
           var isGrToko = grToko >= 0;
 
           html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">' +

@@ -7971,7 +7971,7 @@
       var isAC = (userRole === 'AREA COORDINATOR' || userRole === 'AC');
 
       container.innerHTML = renderHeaderModalUniversal(
-        'Sales MTD 2025 vs 2026', 
+        'Sales MTD Tahun Lalu vs Tahun Ini', 
         isAC ? 'Konsolidasi Area & Detail per Toko' : 'Analisa Performa Pertumbuhan Bulanan & Harian Toko'
       ) +
         '<div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4" id="mtdMainContainerWrapper">' +
@@ -8000,7 +8000,7 @@
       });
     }
 
-    // --- RENDER UTAMA SALES MTD (DENGAN FORMULA SPD & GROWTH SPD PRESISI) ---
+    // --- RENDER UTAMA SALES MTD (DENGAN FORMULA SPD ROLE AC RATA-RATA PER TOKO) ---
     function renderSalesMtdBody(allYtdRows, isAC) {
       var cfg = getTokoConfig() || {};
       var myStoreCode = (cfg.cleanCode || (currentSessionUser ? currentSessionUser.kodeToko : '')).toUpperCase().trim();
@@ -8051,7 +8051,7 @@
         return true;
       });
 
-      // 5. KONSOLIDASI DATA JIKA ROLE AC (SUM SALES & AVG APC PER TANGGAL)
+      // 5. KONSOLIDASI DATA: HITUNG SALES DAN TOKO AKTIF PER TANGGAL
       var displayDailyList = [];
       if (isAC) {
         var dateMap = {};
@@ -8065,13 +8065,25 @@
               SALES_2025: 0,
               SALES_2026: 0,
               STD_2025: 0,
-              STD_2026: 0
+              STD_2026: 0,
+              stores25: {}, // Melacak toko aktif tahun 2025 di tanggal ini
+              stores26: {}  // Melacak toko aktif tahun 2026 di tanggal ini
             };
           }
-          dateMap[tglStr].SALES_2025 += parseAngkaIndo(r['SALES 2025']);
-          dateMap[tglStr].SALES_2026 += parseAngkaIndo(r['SALES 2026']);
-          dateMap[tglStr].STD_2025 += parseAngkaIndo(r['STD 2025']);
-          dateMap[tglStr].STD_2026 += parseAngkaIndo(r['STD 2026']);
+          var s25 = parseAngkaIndo(r['SALES 2025']);
+          var s26 = parseAngkaIndo(r['SALES 2026']);
+          var std25 = parseAngkaIndo(r['STD 2025']);
+          var std26 = parseAngkaIndo(r['STD 2026']);
+          var storeCode = String(r['KODE'] || '').toUpperCase().trim();
+
+          dateMap[tglStr].SALES_2025 += s25;
+          dateMap[tglStr].SALES_2026 += s26;
+          dateMap[tglStr].STD_2025 += std25;
+          dateMap[tglStr].STD_2026 += std26;
+
+          // Catat toko jika memiliki transaksi > 0 pada tanggal ini
+          if (s25 > 0 && storeCode) dateMap[tglStr].stores25[storeCode] = true;
+          if (s26 > 0 && storeCode) dateMap[tglStr].stores26[storeCode] = true;
         });
 
         displayDailyList = Object.values(dateMap).map(function(item) {
@@ -8079,6 +8091,14 @@
           var s26 = item.SALES_2026;
           var std25 = item.STD_2025;
           var std26 = item.STD_2026;
+
+          var countToko25 = Object.keys(item.stores25).length;
+          var countToko26 = Object.keys(item.stores26).length;
+
+          // Hitung rata-rata SPD per toko di tanggal tersebut
+          var spdPerToko25 = countToko25 > 0 ? (s25 / countToko25) : 0;
+          var spdPerToko26 = countToko26 > 0 ? (s26 / countToko26) : 0;
+
           return {
             TANGGAL: item.TANGGAL,
             tglRapi: item.tglRapi,
@@ -8089,7 +8109,9 @@
             'STD 2026': std26,
             'APC 2025': std25 > 0 ? Math.round(s25 / std25) : 0,
             'APC 2026': std26 > 0 ? Math.round(s26 / std26) : 0,
-            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0
+            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0,
+            spdPerToko25: spdPerToko25,
+            spdPerToko26: spdPerToko26
           };
         }).sort(function(a, b) { return a.dateObj - b.dateObj; });
 
@@ -8111,16 +8133,20 @@
             'STD 2026': std26,
             'APC 2025': apc25,
             'APC 2026': apc26,
-            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0
+            growth: s25 > 0 ? ((s26 - s25) / s25 * 100) : 0,
+            spdPerToko25: s25,
+            spdPerToko26: s26
           };
         }).sort(function(a, b) { return a.dateObj - b.dateObj; });
       }
 
-      // 6. HITUNG TOTAL SALES & FORMULA SPD (HANYA HARI BERISI SALES > 0 YANG DIHITUNG)
+      // 6. HITUNG TOTAL SALES & FORMULA SPD
       var totalSales25 = 0;
       var totalSales26 = 0;
-      var countHari25 = 0; // Hari aktif penjualan 2025
-      var countHari26 = 0; // Hari aktif penjualan 2026
+      var countHari25 = 0;
+      var countHari26 = 0;
+      var sumSpdPerToko25 = 0;
+      var sumSpdPerToko26 = 0;
 
       displayDailyList.forEach(function(d) {
         var s25 = d['SALES 2025'];
@@ -8129,16 +8155,29 @@
         totalSales25 += s25;
         totalSales26 += s26;
 
-        // Hanya hitung hari jika nilai penjualan lebih dari 0
-        if (s25 > 0) countHari25++;
-        if (s26 > 0) countHari26++;
+        if (s25 > 0) {
+          countHari25++;
+          sumSpdPerToko25 += (d.spdPerToko25 || s25);
+        }
+        if (s26 > 0) {
+          countHari26++;
+          sumSpdPerToko26 += (d.spdPerToko26 || s26);
+        }
       });
 
-      // Hitung Rata-rata Harian (SPD)
-      var spd2025 = countHari25 > 0 ? Math.round(totalSales25 / countHari25) : 0;
-      var spd2026 = countHari26 > 0 ? Math.round(totalSales26 / countHari26) : 0;
+      // KUNCI PERBAIKAN: Untuk Role AC, rata-rata SPD diambil dari rata-rata SPD per toko di setiap tanggal aktif
+      var spd2025 = 0;
+      var spd2026 = 0;
 
-      // Hitung Pertumbuhan (Growth %) Berdasarkan Nilai SPD Sesuai Permintaan
+      if (isAC) {
+        spd2025 = countHari25 > 0 ? Math.round(sumSpdPerToko25 / countHari25) : 0;
+        spd2026 = countHari26 > 0 ? Math.round(sumSpdPerToko26 / countHari26) : 0;
+      } else {
+        spd2025 = countHari25 > 0 ? Math.round(totalSales25 / countHari25) : 0;
+        spd2026 = countHari26 > 0 ? Math.round(totalSales26 / countHari26) : 0;
+      }
+
+      // Hitung Pertumbuhan (Growth %) Berdasarkan Nilai SPD Ritel
       var growthSpd = spd2025 > 0 ? (((spd2026 - spd2025) / spd2025) * 100) : 0;
 
       // Selisih Rupiah Tetap Mempertahankan Total Sales 2026 - Total Sales 2025
@@ -8184,40 +8223,40 @@
           '</div>' +
         '</div>' +
 
-        // 3 KOTAK RESUME DENGAN INFORMASI SPD & PERTUMBUHAN SPD
+        // 3 KOTAK RESUME DENGAN SPD RATA-RATA TOKO PRESISI
         '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">' +
-          // 1. Total Sales 2025 & SPD 2025 (Gradient Slate-Indigo)
+          // 1. Total Sales 2025 & SPD Rata-rata Toko
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-slate-700 to-indigo-900 text-white flex flex-col justify-between">' +
             '<div>' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-300">TOTAL SALES 2025</span>' +
               '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">Rp ' + Math.round(totalSales25).toLocaleString('id-ID') + '</span>' +
               '<div class="mt-2 pt-2 border-t border-white/10 flex items-center justify-between">' +
-                '<span class="text-xs font-bold text-amber-300 font-mono">SPD: Rp ' + Math.round(spd2025).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-xs font-bold text-amber-300 font-mono">' + (isAC ? 'SPD Rata-rata Toko: ' : 'SPD: ') + 'Rp ' + Math.round(spd2025).toLocaleString('id-ID') + '</span>' +
                 '<span class="text-[9px] text-slate-300 font-mono">(' + countHari25 + ' Hari Aktif)</span>' +
               '</div>' +
             '</div>' +
-            '<span class="text-[10px] text-slate-300 mt-2 block">Tahun Lalu (Periode Filter)</span>' +
+            '<span class="text-[10px] text-slate-300 mt-2 block">Tahun Lalu</span>' +
           '</div>' +
 
-          // 2. Total Sales 2026 & SPD 2026 (Gradient Emerald-Teal)
+          // 2. Total Sales 2026 & SPD Rata-rata Toko
           '<div class="p-4 rounded-2xl shadow-sm border bg-gradient-to-br from-emerald-600 to-teal-800 text-white flex flex-col justify-between">' +
             '<div>' +
               '<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200">TOTAL SALES 2026</span>' +
               '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">Rp ' + Math.round(totalSales26).toLocaleString('id-ID') + '</span>' +
               '<div class="mt-2 pt-2 border-t border-white/15 flex items-center justify-between">' +
-                '<span class="text-xs font-bold text-emerald-200 font-mono">SPD: Rp ' + Math.round(spd2026).toLocaleString('id-ID') + '</span>' +
+                '<span class="text-xs font-bold text-emerald-200 font-mono">' + (isAC ? 'SPD Rata-rata Toko: ' : 'SPD: ') + 'Rp ' + Math.round(spd2026).toLocaleString('id-ID') + '</span>' +
                 '<span class="text-[9px] text-emerald-200 font-mono">(' + countHari26 + ' Hari Aktif)</span>' +
               '</div>' +
             '</div>' +
-            '<span class="text-[10px] text-emerald-200 mt-2 block">Tahun Ini (Periode Filter)</span>' +
+            '<span class="text-[10px] text-emerald-200 mt-2 block">Tahun Ini</span>' +
           '</div>' +
 
-          // 3. Pertumbuhan (Growth) Berdasarkan Nilai SPD (Gradient Dinamis)
+          // 3. Pertumbuhan (Growth) Berdasarkan Nilai SPD
           '<div class="p-4 rounded-2xl shadow-sm border text-white flex flex-col justify-between ' + (growthSpd >= 0 ? 'bg-gradient-to-br from-emerald-500 via-teal-600 to-amber-500' : 'bg-gradient-to-br from-red-600 to-rose-800') + '">' +
             '<div>' +
               '<div class="flex items-center justify-between">' +
                 '<span class="text-[10px] font-bold uppercase tracking-wider opacity-90">GROWTH (BERDASARKAN SPD)</span>' +
-                '<span class="text-[9px] font-bold bg-white/20 px-1.5 py-0.2 rounded font-mono">Vs 2025</span>' +
+                '<span class="text-[9px] font-bold bg-white/20 px-1.5 py-0.2 rounded font-mono">Vs Tahun Lalu</span>' +
               '</div>' +
               '<span class="text-2xl font-black font-mono tracking-tight mt-1 block">' + (growthSpd >= 0 ? '+' : '') + growthSpd.toFixed(2).replace('.', ',') + '%</span>' +
               '<div class="mt-2 pt-2 border-t border-white/20 text-[11px] font-mono font-bold">' +
@@ -8230,7 +8269,7 @@
           '</div>' +
         '</div>' +
 
-        // BAGIAN GRAFIK (TANGGAL BERSIH TANPA -/undefined)
+        // BAGIAN GRAFIK
         '<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">' +
           '<div class="flex items-center justify-between pb-2 border-b border-slate-100">' +
             '<h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Tren Komparasi Harian (2025 vs 2026)</h4>' +
@@ -8244,7 +8283,7 @@
           '</div>' +
         '</div>' +
 
-        // TABEL RINCIAN KOMPARASI HARIAN (3 TAB FILTER)
+        // TABEL RINCIAN KOMPARASI HARIAN
         '<div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 space-y-3">' +
           '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">' +
             '<div>' +
@@ -13584,7 +13623,7 @@
               '<div>' +
                 '<label class="block font-bold text-slate-700 mb-1">Foto Bukti Fisik / Surat Jalan</label>' +
                 '<input type="file" id="pNaikFoto" accept="image/*" class="w-full text-xs text-slate-500">' +
-                '<p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ambil foto surat jalan yang sudah ditandatangani driver (otomatis tersimpan ke Drive).</p>' +
+                '<p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ambil foto surat jalan yang sudah ditandatangani driver.</p>' +
               '</div>' +
             '</div>' +
           '</div>' +

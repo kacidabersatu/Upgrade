@@ -2444,7 +2444,7 @@
 
       // Format Point Dashboard ke Persentase (%)
       var rawPoint = parseAngkaIndo(row['POINT DASHBOARD']);
-      var pctPoint = (rawPoint <= 1 && rawPoint > 0 ? rawPoint * 100 : rawPoint).toFixed(1) + '%';
+      var pctPoint = (rawPoint <= 10 && rawPoint > 0 ? rawPoint * 100 : rawPoint).toFixed(1) + '%';
 
       var elPlPoint = document.getElementById('carouselPlPoint');
       var elPlRank = document.getElementById('carouselPlRankSub');
@@ -8865,7 +8865,7 @@
             '<div class="w-full bg-black/20 h-2 rounded-full overflow-hidden p-0.5 my-1">' +
               '<div class="h-full bg-white rounded-full transition-all duration-300" style="width: ' + Math.min(100, Math.max(0, acvByTargetTotal)) + '%"></div>' +
             '</div>' +
-            '<span class="text-[9px] text-teal-100">Sales / Target &times; 100</span>' +
+            '<span class="text-[9px] text-teal-100">Progres Pencapaian</span>' +
           '</div>' +
 
           // 5. Total NSB Rp (Gradient Dark Slate)
